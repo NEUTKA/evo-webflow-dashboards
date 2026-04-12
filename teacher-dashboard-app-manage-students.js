@@ -24,17 +24,17 @@
     return document.getElementById(ROOT_ID);
   }
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, function (m) {
-      return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[m];
-    });
-  }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, function (m) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[m];
+  });
+}
 
   function formatDateTime(value) {
     if (!value) return 'No date';
