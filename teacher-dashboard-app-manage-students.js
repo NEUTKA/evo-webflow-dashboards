@@ -2,6 +2,8 @@
   if (window.__evoTeacherDashboardFullInit) return;
   window.__evoTeacherDashboardFullInit = true;
 
+  console.log('Teacher dashboard script loaded');
+
   const ROOT_ID = 'teacher-dashboard-app';
   const SUBMISSIONS_BUCKET = 'assignment-submissions';
   const RESOURCES_BUCKET = 'assignment-resources';
@@ -918,6 +920,7 @@
   }
 
   async function loadTeacherDashboard() {
+    console.log('Loading teacher dashboard');
     injectStyles();
     setLoading();
     try {
@@ -930,6 +933,7 @@
   }
 
   function start() {
+    console.log('Teacher dashboard start called');
     if (!window.__evoAllowTeacherApp) return;
     loadTeacherDashboard();
   }
