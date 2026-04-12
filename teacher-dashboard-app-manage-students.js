@@ -138,6 +138,11 @@ function escapeHtml(value) {
       .td-textarea{min-height:120px;resize:vertical}
       .td-input:focus,.td-select:focus,.td-textarea:focus{border-color:#4EA9E7;box-shadow:0 0 0 3px rgba(78,169,231,.18)}
       .td-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+      .td-manage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:end}
+      .td-manage-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+      .td-note-inline{max-width:320px;line-height:1.45}
+      .td-btn-add{min-width:180px}
+      .td-btn-compact{padding:10px 14px;font-size:13px;border-radius:10px}
       .td-btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer}
       .td-btn-primary{background:#111213;color:#fff}
       .td-btn-primary:hover,.td-link:hover{filter:brightness(1.05)}
@@ -159,7 +164,7 @@ function escapeHtml(value) {
       .td-comment.student{background:#fcfcfd}
       .td-comment-meta,.td-resource-meta{font-size:12px;color:#667085;margin-bottom:6px}
       .td-comment-body{font-size:14px;line-height:1.55;color:#111213;white-space:pre-wrap}
-      @media (max-width:760px){#${ROOT_ID}{padding:0 12px 28px}.td-head,.td-body{padding:16px}.td-title{font-size:24px}.td-grid-2{grid-template-columns:1fr}.td-student-top,.td-assignment-top{flex-direction:column;align-items:flex-start}}
+      @media (max-width:760px){#${ROOT_ID}{padding:0 12px 28px}.td-head,.td-body{padding:16px}.td-title{font-size:24px}.td-grid-2{grid-template-columns:1fr}.td-student-top,.td-assignment-top{flex-direction:column;align-items:flex-start}.td-manage-row{grid-template-columns:1fr}.td-manage-actions{align-items:flex-start}.td-btn-add{min-width:0;width:100%}.td-note-inline{max-width:none}}
     `;
     document.head.appendChild(style);
   }
@@ -345,7 +350,7 @@ function escapeHtml(value) {
                 </div>
                 <div class="td-actions">
                   <div class="td-badge active">${escapeHtml(link?.status || 'active')}</div>
-                  <button class="td-btn td-btn-danger" type="button" data-action="detach-student" data-student-id="${escapeHtml(student.id)}" data-student-email="${escapeHtml(email)}">Detach</button>
+                  <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="detach-student" data-student-id="${escapeHtml(student.id)}" data-student-email="${escapeHtml(email)}">Detach</button>
                 </div>
               </div>
             </div>
@@ -513,14 +518,15 @@ function escapeHtml(value) {
           </div>
           <div class="td-body">
             <form id="td-student-manage-form" class="td-form">
-              <div class="td-grid-2">
+              <div class="td-manage-row">
                 <label class="td-label">
                   <span>Student email</span>
                   <input class="td-input" id="td-student-email" type="email" placeholder="student@example.com" />
                 </label>
-                <div class="td-actions" style="align-items:end;">
-                  <button class="td-btn td-btn-primary" id="td-add-student-btn" type="submit">Add student</button>
-                  <div class="td-note">Only users who already registered on the site can be added.</div>
+
+                <div class="td-manage-actions">
+                  <button class="td-btn td-btn-primary td-btn-add" id="td-add-student-btn" type="submit">Add student</button>
+                  <div class="td-note td-note-inline">Only users who already registered on the site can be added.</div>
                 </div>
               </div>
             </form>
