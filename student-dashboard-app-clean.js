@@ -112,6 +112,49 @@
     }
   }
 
+  function rememberButton(button) {
+  if (!button) return { text: '' };
+  return { text: button.textContent || '' };
+}
+
+function paintButton(button, tone, text) {
+  if (!button) return;
+  button.classList.remove('is-busy', 'is-success', 'is-error');
+  if (tone) button.classList.add(`is-${tone}`);
+  if (text != null) button.textContent = text;
+}
+
+function startButtonFeedback(button, busyText) {
+  const original = rememberButton(button);
+  if (button) {
+    button.disabled = true;
+    paintButton(button, 'busy', busyText || original.text);
+  }
+  return original;
+}
+
+function finishButtonFeedback(button, original, ok, doneText, delay = 1600) {
+  if (!button) return;
+  button.disabled = true;
+  paintButton(button, ok ? 'success' : 'error', doneText);
+
+  window.setTimeout(() => {
+    button.disabled = false;
+    button.classList.remove('is-busy', 'is-success', 'is-error');
+    button.textContent = original?.text || button.textContent;
+  }, delay);
+}
+
+function finishButtonFeedbackBySelector(selector, original, ok, doneText, delay = 1600) {
+  const button = rootEl()?.querySelector(selector);
+  if (!button) return;
+  finishButtonFeedback(button, original, ok, doneText, delay);
+}
+
+function buttonError(button, original, text) {
+  finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
+}
+
   function injectStyles() {
     if (document.getElementById('student-dashboard-styles')) return;
 
@@ -162,6 +205,9 @@
       .sd-btn-primary{background:#111213;color:#fff}
       .sd-btn-secondary{background:#f8fbff;color:#175cd3;border:1px solid #dbe7f3}
       .sd-btn:disabled{opacity:.65;cursor:not-allowed}
+      .sd-btn.is-busy{opacity:.92;cursor:wait}
+      .sd-btn.is-success{background:#22c55e !important;border-color:#22c55e !important;color:#fff !important}
+      .sd-btn.is-error{background:#ef4444 !important;border-color:#ef4444 !important;color:#fff !important}
       .sd-note{color:#667085;font-size:14px}
       .sd-file,.sd-material-list,.sd-comments-list{display:grid;gap:10px}
       .sd-file-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -507,133 +553,153 @@
     root.__sdBound = true;
   }
 
-  async function handleSaveWork(card, assignmentId, button) {
-    const supabase = window.supabase;
-    if (!supabase) return;
+async function handleSaveWork(card, assignmentId, button) {
+  const supabase = window.supabase;
+  if (!supabase) return;
 
-    const statusEl = card.querySelector('[data-role="status"]');
-    const answerEl = card.querySelector('[data-role="answer"]');
-    const fileEl = card.querySelector('[data-role="file"]');
-    const nextStatus = statusEl?.value || 'not_started';
-    const answerText = answerEl?.value.trim() || '';
-    const file = fileEl?.files?.[0] || null;
-    const studentId = state.userId;
-    const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
+  const statusEl = card.querySelector('[data-role="status"]');
+  const answerEl = card.querySelector('[data-role="answer"]');
+  const fileEl = card.querySelector('[data-role="file"]');
+  const nextStatus = statusEl?.value || 'not_started';
+  const answerText = answerEl?.value.trim() || '';
+  const file = fileEl?.files?.[0] || null;
+  const studentId = state.userId;
+  const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
+  const original = rememberButton(button);
 
-    if (button) button.disabled = true;
+  startButtonFeedback(button, 'Saving...');
 
-    try {
-      const { error: statusErr } = await supabase
-        .from('assignment_recipients')
-        .update({ status: nextStatus })
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', studentId);
-      if (statusErr) throw statusErr;
+  try {
+    const { error: statusErr } = await supabase
+      .from('assignment_recipients')
+      .update({ status: nextStatus })
+      .eq('assignment_id', assignmentId)
+      .eq('student_id', studentId);
+    if (statusErr) throw statusErr;
 
-      let filePayload = {
-        file_path: existingSubmission?.file_path || null,
-        file_name: existingSubmission?.file_name || null,
-        file_size: existingSubmission?.file_size || null,
-        mime_type: existingSubmission?.mime_type || null
+    let filePayload = {
+      file_path: existingSubmission?.file_path || null,
+      file_name: existingSubmission?.file_name || null,
+      file_size: existingSubmission?.file_size || null,
+      mime_type: existingSubmission?.mime_type || null
+    };
+
+    if (file) {
+      const safeName = sanitizeFileName(file.name || 'file');
+      const path = `${studentId}/${assignmentId}/${Date.now()}-${safeName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from(SUBMISSIONS_BUCKET)
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type || 'application/octet-stream'
+        });
+      if (uploadErr) throw uploadErr;
+
+      if (existingSubmission?.file_path && existingSubmission.file_path !== path) {
+        await supabase.storage.from(SUBMISSIONS_BUCKET).remove([existingSubmission.file_path]);
+      }
+
+      filePayload = {
+        file_path: path,
+        file_name: file.name || safeName,
+        file_size: file.size || null,
+        mime_type: file.type || null
+      };
+    }
+
+    const hasSomethingToStore = answerText || filePayload.file_path || existingSubmission;
+
+    if (hasSomethingToStore) {
+      const payload = {
+        assignment_id: assignmentId,
+        student_id: studentId,
+        answer_text: answerText || null,
+        file_path: filePayload.file_path,
+        file_name: filePayload.file_name,
+        file_size: filePayload.file_size,
+        mime_type: filePayload.mime_type,
+        submitted_at: new Date().toISOString()
       };
 
-      if (file) {
-        const safeName = sanitizeFileName(file.name || 'file');
-        const path = `${studentId}/${assignmentId}/${Date.now()}-${safeName}`;
-
-        const { error: uploadErr } = await supabase.storage
-          .from(SUBMISSIONS_BUCKET)
-          .upload(path, file, {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: file.type || 'application/octet-stream'
-          });
-        if (uploadErr) throw uploadErr;
-
-        if (existingSubmission?.file_path && existingSubmission.file_path !== path) {
-          await supabase.storage.from(SUBMISSIONS_BUCKET).remove([existingSubmission.file_path]);
-        }
-
-        filePayload = {
-          file_path: path,
-          file_name: file.name || safeName,
-          file_size: file.size || null,
-          mime_type: file.type || null
-        };
-      }
-
-      const hasSomethingToStore = answerText || filePayload.file_path || existingSubmission;
-
-      if (hasSomethingToStore) {
-        const payload = {
-          assignment_id: assignmentId,
-          student_id: studentId,
-          answer_text: answerText || null,
-          file_path: filePayload.file_path,
-          file_name: filePayload.file_name,
-          file_size: filePayload.file_size,
-          mime_type: filePayload.mime_type,
-          submitted_at: new Date().toISOString()
-        };
-
-        const { error: submissionErr } = await supabase
-          .from('assignment_submissions')
-          .upsert(payload, { onConflict: 'assignment_id,student_id' });
-        if (submissionErr) throw submissionErr;
-      }
-
-      state.flash = { type: 'success', message: 'Your progress was saved successfully.' };
-      await fetchDashboardData(studentId);
-      renderDashboard();
-    } catch (err) {
-      console.error('[student-dashboard] save work error:', err);
-      state.flash = { type: 'error', message: err?.message || 'Failed to save your progress.' };
-      renderDashboard();
-    } finally {
-      if (button) button.disabled = false;
+      const { error: submissionErr } = await supabase
+        .from('assignment_submissions')
+        .upsert(payload, { onConflict: 'assignment_id,student_id' });
+      if (submissionErr) throw submissionErr;
     }
+
+    state.flash = { type: 'success', message: 'Your progress was saved successfully.' };
+    await fetchDashboardData(studentId);
+    renderDashboard();
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
+      original,
+      true,
+      'Saved'
+    );
+  } catch (err) {
+    console.error('[student-dashboard] save work error:', err);
+    state.flash = { type: 'error', message: err?.message || 'Failed to save your progress.' };
+    renderDashboard();
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
+      original,
+      false,
+      'Failed'
+    );
+  }
+}
+
+async function handleSendComment(card, assignmentId, button) {
+  const supabase = window.supabase;
+  if (!supabase) return;
+
+  const commentEl = card.querySelector('[data-role="comment"]');
+  const body = commentEl?.value.trim() || '';
+  const studentId = state.userId;
+  const original = rememberButton(button);
+
+  if (!body) {
+    buttonError(button, original, 'Write comment');
+    return;
   }
 
-  async function handleSendComment(card, assignmentId, button) {
-    const supabase = window.supabase;
-    if (!supabase) return;
+  startButtonFeedback(button, 'Sending...');
 
-    const commentEl = card.querySelector('[data-role="comment"]');
-    const body = commentEl?.value.trim() || '';
-    const studentId = state.userId;
+  try {
+    const { error } = await supabase
+      .from('assignment_comments')
+      .insert({
+        assignment_id: assignmentId,
+        student_id: studentId,
+        author_id: studentId,
+        author_role: 'student',
+        body
+      });
+    if (error) throw error;
 
-    if (!body) {
-      state.flash = { type:'error', message:'Please enter a comment before sending.' };
-      renderDashboard();
-      return;
-    }
-
-    if (button) button.disabled = true;
-
-    try {
-      const { error } = await supabase
-        .from('assignment_comments')
-        .insert({
-          assignment_id: assignmentId,
-          student_id: studentId,
-          author_id: studentId,
-          author_role: 'student',
-          body
-        });
-      if (error) throw error;
-
-      state.flash = { type:'success', message:'Your comment was sent.' };
-      await fetchDashboardData(studentId);
-      renderDashboard();
-    } catch (err) {
-      console.error('[student-dashboard] send comment error:', err);
-      state.flash = { type:'error', message: err?.message || 'Failed to send comment.' };
-      renderDashboard();
-    } finally {
-      if (button) button.disabled = false;
-    }
+    state.flash = { type: 'success', message: 'Your comment was sent.' };
+    await fetchDashboardData(studentId);
+    renderDashboard();
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
+      original,
+      true,
+      'Sent'
+    );
+  } catch (err) {
+    console.error('[student-dashboard] send comment error:', err);
+    state.flash = { type: 'error', message: err?.message || 'Failed to send comment.' };
+    renderDashboard();
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
+      original,
+      false,
+      'Failed'
+    );
   }
-
+}
   async function boot() {
     try {
       const sb = await waitSupabase();
