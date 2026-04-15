@@ -22,6 +22,132 @@
     flash: null
   };
 
+let sdRealtimeChannel = null;
+let sdRealtimeTimer = null;
+let sdRealtimeBusy = false;
+
+function clearStudentRealtime() {
+  if (sdRealtimeTimer) {
+    window.clearTimeout(sdRealtimeTimer);
+    sdRealtimeTimer = null;
+  }
+
+  if (sdRealtimeChannel && window.supabase?.removeChannel) {
+    window.supabase.removeChannel(sdRealtimeChannel);
+  }
+
+  sdRealtimeChannel = null;
+}
+
+function getRealtimeRow(payload) {
+  if (payload?.new && Object.keys(payload.new).length) return payload.new;
+  if (payload?.old && Object.keys(payload.old).length) return payload.old;
+  return null;
+}
+
+function studentHasAssignment(assignmentId) {
+  return !!assignmentId && state.assignments.some((a) => a.id === assignmentId);
+}
+
+function scheduleStudentRealtimeRefresh(userId, reason) {
+  if (sdRealtimeTimer) window.clearTimeout(sdRealtimeTimer);
+
+  sdRealtimeTimer = window.setTimeout(async () => {
+    if (sdRealtimeBusy) return;
+    sdRealtimeBusy = true;
+
+    try {
+      await fetchDashboardData(userId);
+      renderDashboard();
+    } catch (err) {
+      console.error('[student-dashboard] realtime refresh error:', reason, err);
+    } finally {
+      sdRealtimeBusy = false;
+    }
+  }, 220);
+}
+
+function initStudentRealtime(userId) {
+  const supabase = window.supabase;
+  if (!supabase || !userId) return;
+
+  clearStudentRealtime();
+
+  sdRealtimeChannel = supabase
+    .channel(`student-dashboard-${userId}`)
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'teacher_students',
+        filter: `student_id=eq.${userId}`
+      },
+      () => {
+        scheduleStudentRealtimeRefresh(userId, 'teacher_students');
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_recipients',
+        filter: `student_id=eq.${userId}`
+      },
+      () => {
+        scheduleStudentRealtimeRefresh(userId, 'assignment_recipients');
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_submissions',
+        filter: `student_id=eq.${userId}`
+      },
+      () => {
+        scheduleStudentRealtimeRefresh(userId, 'assignment_submissions');
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_comments',
+        filter: `student_id=eq.${userId}`
+      },
+      () => {
+        scheduleStudentRealtimeRefresh(userId, 'assignment_comments');
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_resources'
+      },
+      (payload) => {
+        const row = getRealtimeRow(payload);
+        if (row?.assignment_id && studentHasAssignment(row.assignment_id)) {
+          scheduleStudentRealtimeRefresh(userId, 'assignment_resources');
+        }
+      }
+    )
+
+    .subscribe((status) => {
+      console.log('[student-dashboard] realtime status:', status);
+    });
+}
+
   function go(url) {
     if (window.location.pathname !== url) window.location.replace(url);
   }
@@ -746,8 +872,9 @@ async function handleSendComment(card, assignmentId, button) {
       showPage();
       setLoading();
 
-      await fetchDashboardData(user.id);
-      renderDashboard();
+     await fetchDashboardData(user.id);
+renderDashboard();
+initStudentRealtime(user.id);
     } catch (err) {
       console.error('[student-dashboard] load error:', err);
       showPage();
@@ -755,6 +882,8 @@ async function handleSendComment(card, assignmentId, button) {
       setError(err?.message || 'Failed to load dashboard.');
     }
   }
+
+window.addEventListener('beforeunload', clearStudentRealtime);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot, { once: true });

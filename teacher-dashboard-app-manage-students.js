@@ -9,16 +9,133 @@
   const RESOURCES_BUCKET = 'assignment-resources';
 
   const state = {
-    userId: null,
-    teacher: null,
-    students: [],
-    studentsById: new Map(),
-    studentLinksById: new Map(),
-    assignments: [],
-    commentsByAssignment: new Map(),
-    resourcesByAssignment: new Map(),
-    flash: null
-  };
+  userId: null,
+  teacher: null,
+  students: [],
+  studentsById: new Map(),
+  studentLinksById: new Map(),
+  assignments: [],
+  commentsByAssignment: new Map(),
+  resourcesByAssignment: new Map(),
+  flash: null
+};
+
+let tdRealtimeChannel = null;
+let tdRealtimeTimer = null;
+let tdRealtimeBusy = false;
+
+function clearTeacherRealtime() {
+  if (tdRealtimeTimer) {
+    window.clearTimeout(tdRealtimeTimer);
+    tdRealtimeTimer = null;
+  }
+
+  if (tdRealtimeChannel && window.supabase?.removeChannel) {
+    window.supabase.removeChannel(tdRealtimeChannel);
+  }
+
+  tdRealtimeChannel = null;
+}
+
+function getRealtimeRow(payload) {
+  if (payload?.new && Object.keys(payload.new).length) return payload.new;
+  if (payload?.old && Object.keys(payload.old).length) return payload.old;
+  return null;
+}
+
+function teacherHasStudent(studentId) {
+  return !!studentId && state.studentsById.has(studentId);
+}
+
+function scheduleTeacherRealtimeRefresh(reason) {
+  if (tdRealtimeTimer) window.clearTimeout(tdRealtimeTimer);
+
+  tdRealtimeTimer = window.setTimeout(async () => {
+    if (tdRealtimeBusy) return;
+    tdRealtimeBusy = true;
+
+    try {
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] realtime refresh error:', reason, err);
+    } finally {
+      tdRealtimeBusy = false;
+    }
+  }, 220);
+}
+
+function initTeacherRealtime() {
+  const supabase = window.supabase;
+  if (!supabase || !state.userId) return;
+
+  clearTeacherRealtime();
+
+  tdRealtimeChannel = supabase
+    .channel(`teacher-dashboard-${state.userId}`)
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'teacher_students',
+        filter: `teacher_id=eq.${state.userId}`
+      },
+      () => {
+        scheduleTeacherRealtimeRefresh('teacher_students');
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_recipients'
+      },
+      (payload) => {
+        const row = getRealtimeRow(payload);
+        if (row?.student_id && teacherHasStudent(row.student_id)) {
+          scheduleTeacherRealtimeRefresh('assignment_recipients');
+        }
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_submissions'
+      },
+      (payload) => {
+        const row = getRealtimeRow(payload);
+        if (row?.student_id && teacherHasStudent(row.student_id)) {
+          scheduleTeacherRealtimeRefresh('assignment_submissions');
+        }
+      }
+    )
+
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'assignment_comments'
+      },
+      (payload) => {
+        const row = getRealtimeRow(payload);
+        if (row?.student_id && teacherHasStudent(row.student_id)) {
+          scheduleTeacherRealtimeRefresh('assignment_comments');
+        }
+      }
+    )
+
+    .subscribe((status) => {
+      console.log('[teacher-dashboard] realtime status:', status);
+    });
+}
 
   function rootEl() {
     return document.getElementById(ROOT_ID);
@@ -963,24 +1080,28 @@ async function handleDetachStudent(button) {
     }
   }
 
-  async function loadTeacherDashboard() {
-    console.log('Loading teacher dashboard');
-    injectStyles();
-    setLoading();
-    try {
-      await fetchDashboardData();
-      renderDashboard();
-    } catch (err) {
-      console.error('[teacher-dashboard] load error:', err);
-      setError(err?.message || 'Failed to load dashboard.');
-    }
+async function loadTeacherDashboard() {
+  console.log('Loading teacher dashboard');
+  injectStyles();
+  setLoading();
+
+  try {
+    await fetchDashboardData();
+    renderDashboard();
+    initTeacherRealtime();
+  } catch (err) {
+    console.error('[teacher-dashboard] load error:', err);
+    setError(err?.message || 'Failed to load dashboard.');
   }
+}
 
   function start() {
     console.log('Teacher dashboard start called');
     if (!window.__evoAllowTeacherApp) return;
     loadTeacherDashboard();
   }
+
+  window.addEventListener('beforeunload', clearTeacherRealtime);
 
   if (window.__evoAllowTeacherApp) {
     start();
