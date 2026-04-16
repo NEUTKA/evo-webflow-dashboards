@@ -17,19 +17,26 @@
   const ROLE = config.role;
   const TOKEN_FUNCTION = config.tokenFunction || 'livekit-token';
 
-  const state = {
-    user: null,
-    session: null,
-    students: [],
-    selectedStudentId: '',
-    title: '',
-    room: null,
-    connected: false,
-    audioEnabled: true,
-    videoEnabled: true,
-    livekit: null,
-    realtimeChannel: null,
-  };
+const state = {
+  user: null,
+  session: null,
+  students: [],
+  selectedStudentId: '',
+  title: '',
+  room: null,
+  connected: false,
+  audioEnabled: true,
+  videoEnabled: true,
+  livekit: null,
+  realtimeChannel: null,
+
+  presenceChannel: null,
+  presenceTopic: null,
+  presenceState: {
+    teacher: null,
+    student: null,
+  },
+};
 
   function rootEl() {
     return document.getElementById(ROOT_ID);
@@ -38,6 +45,134 @@
   function miniEl() {
     return document.getElementById(MINI_ID);
   }
+
+  function counterpartRole() {
+  return ROLE === 'teacher' ? 'student' : 'teacher';
+}
+
+function presenceTopic() {
+  return state.session ? `live:session:${state.session.id}` : null;
+}
+
+function flattenPresenceState(raw) {
+  const list = [];
+  Object.values(raw || {}).forEach((entries) => {
+    (entries || []).forEach((entry) => list.push(entry));
+  });
+  return list;
+}
+
+function applyPresenceState(raw) {
+  const next = {
+    teacher: null,
+    student: null,
+  };
+
+  flattenPresenceState(raw).forEach((entry) => {
+    if (!entry || !entry.role) return;
+    if (entry.role === 'teacher') next.teacher = entry;
+    if (entry.role === 'student') next.student = entry;
+  });
+
+  state.presenceState = next;
+  renderApp();
+  renderMini();
+}
+
+function presenceBadgeHtml(role) {
+  const who = role === 'teacher' ? 'Teacher' : 'Student';
+  const presence = state.presenceState[role];
+
+  if (!presence) {
+    return `<span class="ell-pill ell-pill-offline">${who}: Offline</span>`;
+  }
+
+  if (presence.in_room) {
+    return `<span class="ell-pill ell-pill-live">${who}: In room</span>`;
+  }
+
+  return `<span class="ell-pill ell-pill-online">${who}: Online</span>`;
+}
+
+async function syncPresenceTrack() {
+  if (!state.presenceChannel || !state.user || !state.session) return;
+
+  await state.presenceChannel.track({
+    user_id: state.user.id,
+    role: ROLE,
+    online: true,
+    in_room: !!state.connected,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+async function clearPresenceChannel() {
+  if (state.presenceChannel) {
+    try {
+      await state.presenceChannel.untrack();
+    } catch (_) {}
+
+    if (window.supabase?.removeChannel) {
+      window.supabase.removeChannel(state.presenceChannel);
+    }
+  }
+
+  state.presenceChannel = null;
+  state.presenceTopic = null;
+  state.presenceState = { teacher: null, student: null };
+}
+
+function initPresenceChannel() {
+  const supabase = window.supabase;
+  const topic = presenceTopic();
+
+  if (!supabase || !state.user || !topic) return;
+
+  state.presenceChannel = supabase.channel(topic, {
+    config: {
+      presence: {
+        key: state.user.id,
+      },
+    },
+  });
+
+  state.presenceChannel
+    .on('presence', { event: 'sync' }, () => {
+      applyPresenceState(state.presenceChannel.presenceState());
+    })
+    .on('presence', { event: 'join' }, () => {
+      applyPresenceState(state.presenceChannel.presenceState());
+    })
+    .on('presence', { event: 'leave' }, () => {
+      applyPresenceState(state.presenceChannel.presenceState());
+    })
+    .subscribe(async (status) => {
+      console.log('[live-lesson] presence status:', status);
+      if (status === 'SUBSCRIBED') {
+        await syncPresenceTrack();
+      }
+    });
+}
+
+async function refreshPresenceBinding() {
+  const nextTopic = presenceTopic();
+
+  if (!nextTopic) {
+    await clearPresenceChannel();
+    renderApp();
+    renderMini();
+    return;
+  }
+
+  if (state.presenceTopic === nextTopic && state.presenceChannel) {
+    await syncPresenceTrack();
+    return;
+  }
+
+  await clearPresenceChannel();
+  state.presenceTopic = nextTopic;
+  initPresenceChannel();
+}
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, function (m) {
@@ -80,6 +215,9 @@
       .ell-btn:disabled{opacity:.65;cursor:not-allowed}
       .ell-note{color:#667085;font-size:14px}
       .ell-pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3;color:#0f172a;font-size:13px}
+      .ell-pill-live{background:#ecfdf3;border-color:#b7ebc6;color:#027a48}
+      .ell-pill-online{background:#f8fbff;border-color:#dbe7f3;color:#175cd3}
+      .ell-pill-offline{background:#f9fafb;border-color:#e5e7eb;color:#6b7280}
       .ell-label-stack{display:grid;gap:8px}
       .ell-label-stack span{font-size:14px;font-weight:700;color:#344054}
       .ell-input,.ell-select{width:100%;border:1px solid #d0d5dd;border-radius:12px;background:#fff;color:#111213;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:12px 14px;outline:none}
@@ -254,6 +392,7 @@
     if (error) throw error;
 
     state.session = data;
+    await refreshPresenceBinding();
   }
 
   async function markSessionLive() {
@@ -361,15 +500,21 @@
       .on(LK.RoomEvent.ParticipantDisconnected, function (participant) {
         removeRemoteTile(participant.identity);
       })
-      .on(LK.RoomEvent.Disconnected, async function () {
-        state.connected = false;
-        clearRoomUiTiles();
-        renderMini();
-        renderApp();
-        try {
-          await upsertParticipantPresence(false);
-        } catch (_) {}
-      });
+.on(LK.RoomEvent.Disconnected, async function () {
+  state.connected = false;
+  clearRoomUiTiles();
+
+  try {
+    await upsertParticipantPresence(false);
+  } catch (_) {}
+
+  try {
+    await refreshPresenceBinding();
+  } catch (_) {}
+
+  renderMini();
+  renderApp();
+});
   }
 
   async function joinRoom() {
@@ -414,6 +559,7 @@
 
     attachLocalTracks();
     await upsertParticipantPresence(true);
+    await refreshPresenceBinding();
 
     renderMini();
     renderApp();
@@ -429,6 +575,10 @@
 
     try {
       await upsertParticipantPresence(false);
+    } catch (_) {}
+
+    try {
+      await refreshPresenceBinding();
     } catch (_) {}
 
     renderMini();
@@ -608,10 +758,11 @@
         </div>
         <div class="ell-body">
           <div class="ell-actions">
-            <span class="ell-pill">Role: ${escapeHtml(ROLE)}</span>
-            ${state.session ? `<span class="ell-pill">Status: ${escapeHtml(sessionStatusLabel(state.session.status))}</span>` : ''}
-            ${state.session?.starts_at ? `<span class="ell-pill">Start: ${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
-          </div>
+  <span class="ell-pill">Role: ${escapeHtml(ROLE)}</span>
+  ${state.session ? `<span class="ell-pill">Status: ${escapeHtml(sessionStatusLabel(state.session.status))}</span>` : ''}
+  ${state.session ? presenceBadgeHtml(counterpartRole()) : ''}
+  ${state.session?.starts_at ? `<span class="ell-pill">Start: ${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
+</div>
         </div>
       </div>
     `;
@@ -648,10 +799,11 @@
                   <div class="ell-sub">Room: ${escapeHtml(state.session.room_name)}</div>
                 </div>
                 <div class="ell-body">
-                  <div class="ell-actions">
-                    <span class="ell-pill">${escapeHtml(sessionStatusLabel(state.session.status))}</span>
-                    ${state.session.starts_at ? `<span class="ell-pill">${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
-                  </div>
+<div class="ell-actions">
+  <span class="ell-pill">${escapeHtml(sessionStatusLabel(state.session.status))}</span>
+  ${presenceBadgeHtml(counterpartRole())}
+  ${state.session.starts_at ? `<span class="ell-pill">${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
+</div>
                   <div style="margin-top:14px;">
                     ${roomControls()}
                   </div>
@@ -723,26 +875,28 @@
     }
   }
 
-  async function refreshSessionAndRender() {
-    try {
-      state.session = await fetchCurrentSession();
+async function refreshSessionAndRender() {
+  try {
+    state.session = await fetchCurrentSession();
+    await refreshPresenceBinding();
+    renderApp();
+    renderMini();
+
+    if (!state.session && state.connected) {
+      await leaveRoom();
+    }
+
+    if (state.session && state.session.status === 'ended' && state.connected) {
+      await leaveRoom();
+      state.session = null;
+      await refreshPresenceBinding();
       renderApp();
       renderMini();
-
-      if (!state.session && state.connected) {
-        await leaveRoom();
-      }
-
-      if (state.session && state.session.status === 'ended' && state.connected) {
-        await leaveRoom();
-        state.session = null;
-        renderApp();
-        renderMini();
-      }
-    } catch (err) {
-      console.error('[live-lesson] refresh session error:', err);
     }
+  } catch (err) {
+    console.error('[live-lesson] refresh session error:', err);
   }
+}
 
   function initRealtime() {
     const supabase = window.supabase;
@@ -797,20 +951,31 @@
         }
       }
 
-      state.session = await fetchCurrentSession();
-      renderApp();
-      renderMini();
-      initRealtime();
+state.session = await fetchCurrentSession();
+await refreshPresenceBinding();
+renderApp();
+renderMini();
+initRealtime();
     } catch (err) {
       renderAppMessage(err instanceof Error ? err.message : 'Failed to initialize live lesson', 'error');
     }
   }
 
-  window.addEventListener('beforeunload', function () {
-    try {
-      if (state.room) state.room.disconnect();
-    } catch (_) {}
-  });
+window.addEventListener('beforeunload', function () {
+  try {
+    if (state.presenceChannel) state.presenceChannel.untrack();
+  } catch (_) {}
+
+  try {
+    if (window.supabase && state.presenceChannel) {
+      window.supabase.removeChannel(state.presenceChannel);
+    }
+  } catch (_) {}
+
+  try {
+    if (state.room) state.room.disconnect();
+  } catch (_) {}
+});
 
   boot();
 })();
