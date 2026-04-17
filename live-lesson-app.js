@@ -226,9 +226,20 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     const style = document.createElement('style');
     style.id = 'evo-live-lesson-styles';
     style.textContent = `
-      #${ROOT_ID}{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111213}
-      #${ROOT_ID} *{box-sizing:border-box}
-      .ell-wrap{display:grid;gap:16px}
+#${ROOT_ID}{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111213}
+#${ROOT_ID} *{box-sizing:border-box}
+
+.ell-shell{
+  width:min(1280px, calc(100% - 48px));
+  margin:0 auto 24px;
+}
+.ell-shell-live{
+  width:calc(100% - 24px);
+  max-width:none;
+  margin:0 auto 24px;
+}
+
+.ell-wrap{display:grid;gap:16px}
       .ell-card{background:#fff;border:1px solid #dfe5ec;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden}
       .ell-head{padding:18px 20px;border-bottom:1px solid #eef2f6;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
       .ell-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#4EA9E7;font-weight:700;margin-bottom:6px}
@@ -315,6 +326,13 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
         .ell-chat-toggle-badge{top:12px;right:12px}
         .ell-chat-compose-row{flex-direction:column}
       }
+        @media (max-width: 560px){
+  .ell-shell,
+  .ell-shell-live{
+    width:calc(100% - 16px);
+    margin:0 auto 16px;
+  }
+}
     `;
     document.head.appendChild(style);
   }
@@ -322,20 +340,22 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
   function setLoading() {
     const root = rootEl();
     if (!root) return;
-    root.innerHTML = `
-      <div class="ell-wrap">
-        <div class="ell-card">
-          <div class="ell-head">
-            <div class="ell-kicker">Live lesson</div>
-            <h1 class="ell-title">Loading…</h1>
-            <div class="ell-sub">Please wait a moment.</div>
-          </div>
-          <div class="ell-body">
-            <div class="ell-note">Preparing the live lesson workspace.</div>
-          </div>
+root.innerHTML = `
+  <div class="ell-shell">
+    <div class="ell-wrap">
+      <div class="ell-card">
+        <div class="ell-head">
+          <div class="ell-kicker">Live lesson</div>
+          <h1 class="ell-title">Loading…</h1>
+          <div class="ell-sub">Please wait a moment.</div>
+        </div>
+        <div class="ell-body">
+          <div class="ell-note">Preparing the live lesson workspace.</div>
         </div>
       </div>
-    `;
+    </div>
+  </div>
+`;
   }
 
   function waitSupabase(maxMs) {
@@ -888,20 +908,22 @@ function videoSection() {
     if (!root) return;
 
     const klass = type === 'error' ? 'ell-error' : 'ell-success';
-    root.innerHTML = `
-      <div class="ell-wrap">
-        <div class="ell-card">
-          <div class="ell-head">
-            <div class="ell-kicker">Live lesson</div>
-            <h1 class="ell-title">Live lesson</h1>
-            <div class="ell-sub">Classroom video room</div>
-          </div>
-          <div class="ell-body">
-            <div class="${klass}">${escapeHtml(message)}</div>
-          </div>
+root.innerHTML = `
+  <div class="ell-shell">
+    <div class="ell-wrap">
+      <div class="ell-card">
+        <div class="ell-head">
+          <div class="ell-kicker">Live lesson</div>
+          <h1 class="ell-title">Live lesson</h1>
+          <div class="ell-sub">Classroom video room</div>
+        </div>
+        <div class="ell-body">
+          <div class="${klass}">${escapeHtml(message)}</div>
         </div>
       </div>
-    `;
+    </div>
+  </div>
+`;
   }
 
   function infoCardHtml() {
@@ -1389,6 +1411,9 @@ async function sendFileMessage(file) {
       return;
     }
 
+  const shellClass = state.connected ? 'ell-shell-live' : 'ell-shell';
+
+
     const topInfo = `
       <div class="ell-card">
         <div class="ell-head">
@@ -1407,27 +1432,31 @@ async function sendFileMessage(file) {
       </div>
     `;
 
-    if (!state.session) {
-      root.innerHTML = `
-        <div class="ell-wrap">
-          ${topInfo}
-          <div class="ell-card">
-            <div class="ell-head">
-              <div class="ell-kicker">Session</div>
-              <h2 class="ell-title" style="font-size:24px;">${ROLE === 'teacher' ? 'Create a new lesson' : 'Waiting for teacher'}</h2>
-              <div class="ell-sub">${ROLE === 'teacher' ? 'Choose a student and create a live lesson room.' : 'As soon as your teacher starts or schedules a live lesson, it will appear here.'}</div>
-            </div>
-            <div class="ell-body">
-              ${ROLE === 'teacher' ? teacherCreateForm() : '<div class="ell-empty">No active or scheduled live lesson yet.</div>'}
-            </div>
+if (!state.session) {
+  root.innerHTML = `
+    <div class="${shellClass}">
+      <div class="ell-wrap">
+        ${topInfo}
+        <div class="ell-card">
+          <div class="ell-head">
+            <div class="ell-kicker">Session</div>
+            <h2 class="ell-title" style="font-size:24px;">${ROLE === 'teacher' ? 'Create a new lesson' : 'Waiting for teacher'}</h2>
+            <div class="ell-sub">${ROLE === 'teacher' ? 'Choose a student and create a live lesson room.' : 'As soon as your teacher starts or schedules a live lesson, it will appear here.'}</div>
+          </div>
+          <div class="ell-body">
+            ${ROLE === 'teacher' ? teacherCreateForm() : '<div class="ell-empty">No active or scheduled live lesson yet.</div>'}
           </div>
         </div>
-      `;
-    } else {
-    root.innerHTML = `
-  <div class="ell-wrap">
-    ${topInfo}
-    ${videoSection()}
+      </div>
+    </div>
+  `;
+} else {
+root.innerHTML = `
+  <div class="${shellClass}">
+    <div class="ell-wrap">
+      ${topInfo}
+      ${videoSection()}
+    </div>
   </div>
 `;
     }
