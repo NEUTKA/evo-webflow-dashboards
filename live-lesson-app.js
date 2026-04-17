@@ -846,35 +846,42 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     `;
   }
 
-  function videoSection() {
-    return `
-      <div class="ell-card">
-        <div class="ell-head">
-          <div class="ell-kicker">Live room</div>
-          <h2 class="ell-title" style="font-size:24px;">${escapeHtml(state.session?.title || 'Live lesson')}</h2>
-          <div class="ell-sub">Status: ${escapeHtml(sessionStatusLabel(state.session?.status || 'scheduled'))}</div>
-        </div>
+function videoSection() {
+  return `
+    <div class="ell-card">
+      <div class="ell-head">
+        <div class="ell-kicker">Live room</div>
+        <h2 class="ell-title" style="font-size:24px;">${escapeHtml(state.session?.title || 'Live lesson')}</h2>
+        <div class="ell-sub">Room: ${escapeHtml(state.session?.room_name || '')}</div>
 
-        <div class="ell-body">
-          <div class="ell-stage">
-            <div id="ell-remote-stage" class="ell-stage-remote">
-              <div class="ell-stage-placeholder">Waiting for the other person...</div>
-            </div>
-
-            <div id="ell-local-preview" class="ell-stage-local">
-              <div class="ell-label">You</div>
-            </div>
-
-            ${state.connected && !state.chatOpen ? `<button class="ell-btn ell-btn-secondary ell-chat-toggle-badge" type="button" id="ell-toggle-chat-top">Chat</button>` : ''}
-
-            ${stageControlsHtml()}
-
-            ${chatDrawerHtml()}
-          </div>
+        <div class="ell-actions" style="margin-top:12px;">
+          <span class="ell-pill">${escapeHtml(sessionStatusLabel(state.session?.status || 'scheduled'))}</span>
+          ${state.session ? presenceBadgeHtml(counterpartRole()) : ''}
+          ${state.session?.starts_at ? `<span class="ell-pill">${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
+          <span class="ell-pill">${state.connected ? 'You are in room' : 'Not in room yet'}</span>
         </div>
       </div>
-    `;
-  }
+
+      <div class="ell-body">
+        <div class="ell-stage">
+          <div id="ell-remote-stage" class="ell-stage-remote">
+            <div class="ell-stage-placeholder">Waiting for the other person...</div>
+          </div>
+
+          <div id="ell-local-preview" class="ell-stage-local">
+            <div class="ell-label">You</div>
+          </div>
+
+          ${state.connected && !state.chatOpen ? `<button class="ell-btn ell-btn-secondary ell-chat-toggle-badge" type="button" id="ell-toggle-chat-top">Chat</button>` : ''}
+
+          ${stageControlsHtml()}
+
+          ${chatDrawerHtml()}
+        </div>
+      </div>
+    </div>
+  `;
+}
 
   function renderAppMessage(message, type) {
     const root = rootEl();
@@ -1095,10 +1102,10 @@ return `
           },
         },
       })
-      .on('broadcast', { event: 'chat-message' }, ({ payload }) => {
-        if (!payload) return;
-        upsertChatMessage(payload);
-      })
+      .on('broadcast', { event: 'chat-message' }, async ({ payload }) => {
+  if (!payload) return;
+  upsertChatMessage(payload);
+})
       .subscribe((status) => {
         console.log('[live-lesson] chat status:', status);
       });
@@ -1417,19 +1424,12 @@ async function sendFileMessage(file) {
         </div>
       `;
     } else {
-      root.innerHTML = `
-        <div class="ell-wrap">
-          ${topInfo}
-          <div class="ell-grid">
-            <div class="ell-wrap">
-              ${videoSection()}
-            </div>
-            <div class="ell-side">
-              ${infoCardHtml()}
-            </div>
-          </div>
-        </div>
-      `;
+    root.innerHTML = `
+  <div class="ell-wrap">
+    ${topInfo}
+    ${videoSection()}
+  </div>
+`;
     }
 
     const studentSelect = root.querySelector('#ell-student-select');
@@ -1552,9 +1552,9 @@ async function sendFileMessage(file) {
       state.session = await fetchCurrentSession();
       const nextSessionId = state.session?.id || null;
 
-      if (previousSessionId !== nextSessionId) {
-        state.chatMessages = loadChatHistory();
-      }
+    if (previousSessionId !== nextSessionId) {
+  state.chatMessages = [];
+}
 
       await refreshPresenceBinding();
       await refreshChatBinding();
@@ -1631,15 +1631,14 @@ async function sendFileMessage(file) {
         }
       }
 
-      state.session = await fetchCurrentSession();
-      state.chatMessages = loadChatHistory();
+state.session = await fetchCurrentSession();
 
-      await refreshPresenceBinding();
-      await refreshChatBinding();
+await refreshPresenceBinding();
+await refreshChatBinding();
 
-      renderApp();
-      renderMini();
-      initRealtime();
+renderApp();
+renderMini();
+initRealtime();
     } catch (err) {
       renderAppMessage(err instanceof Error ? err.message : 'Failed to initialize live lesson', 'error');
     }
