@@ -19,134 +19,136 @@
     submissionsByAssignment: new Map(),
     commentsByAssignment: new Map(),
     resourcesByAssignment: new Map(),
+    templates: [],
+    modules: [],
     flash: null
   };
 
-let sdRealtimeChannel = null;
-let sdRealtimeTimer = null;
-let sdRealtimeBusy = false;
+  let sdRealtimeChannel = null;
+  let sdRealtimeTimer = null;
+  let sdRealtimeBusy = false;
 
-function clearStudentRealtime() {
-  if (sdRealtimeTimer) {
-    window.clearTimeout(sdRealtimeTimer);
-    sdRealtimeTimer = null;
-  }
-
-  if (sdRealtimeChannel && window.supabase?.removeChannel) {
-    window.supabase.removeChannel(sdRealtimeChannel);
-  }
-
-  sdRealtimeChannel = null;
-}
-
-function getRealtimeRow(payload) {
-  if (payload?.new && Object.keys(payload.new).length) return payload.new;
-  if (payload?.old && Object.keys(payload.old).length) return payload.old;
-  return null;
-}
-
-function studentHasAssignment(assignmentId) {
-  return !!assignmentId && state.assignments.some((a) => a.id === assignmentId);
-}
-
-function scheduleStudentRealtimeRefresh(userId, reason) {
-  if (sdRealtimeTimer) window.clearTimeout(sdRealtimeTimer);
-
-  sdRealtimeTimer = window.setTimeout(async () => {
-    if (sdRealtimeBusy) return;
-    sdRealtimeBusy = true;
-
-    try {
-      await fetchDashboardData(userId);
-      renderDashboard();
-    } catch (err) {
-      console.error('[student-dashboard] realtime refresh error:', reason, err);
-    } finally {
-      sdRealtimeBusy = false;
+  function clearStudentRealtime() {
+    if (sdRealtimeTimer) {
+      window.clearTimeout(sdRealtimeTimer);
+      sdRealtimeTimer = null;
     }
-  }, 220);
-}
 
-function initStudentRealtime(userId) {
-  const supabase = window.supabase;
-  if (!supabase || !userId) return;
+    if (sdRealtimeChannel && window.supabase?.removeChannel) {
+      window.supabase.removeChannel(sdRealtimeChannel);
+    }
 
-  clearStudentRealtime();
+    sdRealtimeChannel = null;
+  }
 
-  sdRealtimeChannel = supabase
-    .channel(`student-dashboard-${userId}`)
+  function getRealtimeRow(payload) {
+    if (payload?.new && Object.keys(payload.new).length) return payload.new;
+    if (payload?.old && Object.keys(payload.old).length) return payload.old;
+    return null;
+  }
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'teacher_students',
-        filter: `student_id=eq.${userId}`
-      },
-      () => {
-        scheduleStudentRealtimeRefresh(userId, 'teacher_students');
+  function studentHasAssignment(assignmentId) {
+    return !!assignmentId && state.assignments.some((a) => a.id === assignmentId);
+  }
+
+  function scheduleStudentRealtimeRefresh(userId, reason) {
+    if (sdRealtimeTimer) window.clearTimeout(sdRealtimeTimer);
+
+    sdRealtimeTimer = window.setTimeout(async () => {
+      if (sdRealtimeBusy) return;
+      sdRealtimeBusy = true;
+
+      try {
+        await fetchDashboardData(userId);
+        renderDashboard();
+      } catch (err) {
+        console.error('[student-dashboard] realtime refresh error:', reason, err);
+      } finally {
+        sdRealtimeBusy = false;
       }
-    )
+    }, 220);
+  }
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_recipients',
-        filter: `student_id=eq.${userId}`
-      },
-      () => {
-        scheduleStudentRealtimeRefresh(userId, 'assignment_recipients');
-      }
-    )
+  function initStudentRealtime(userId) {
+    const supabase = window.supabase;
+    if (!supabase || !userId) return;
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_submissions',
-        filter: `student_id=eq.${userId}`
-      },
-      () => {
-        scheduleStudentRealtimeRefresh(userId, 'assignment_submissions');
-      }
-    )
+    clearStudentRealtime();
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_comments',
-        filter: `student_id=eq.${userId}`
-      },
-      () => {
-        scheduleStudentRealtimeRefresh(userId, 'assignment_comments');
-      }
-    )
+    sdRealtimeChannel = supabase
+      .channel(`student-dashboard-${userId}`)
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_resources'
-      },
-      (payload) => {
-        const row = getRealtimeRow(payload);
-        if (row?.assignment_id && studentHasAssignment(row.assignment_id)) {
-          scheduleStudentRealtimeRefresh(userId, 'assignment_resources');
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_students',
+          filter: `student_id=eq.${userId}`
+        },
+        () => {
+          scheduleStudentRealtimeRefresh(userId, 'teacher_students');
         }
-      }
-    )
+      )
 
-    .subscribe((status) => {
-      console.log('[student-dashboard] realtime status:', status);
-    });
-}
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_recipients',
+          filter: `student_id=eq.${userId}`
+        },
+        () => {
+          scheduleStudentRealtimeRefresh(userId, 'assignment_recipients');
+        }
+      )
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_submissions',
+          filter: `student_id=eq.${userId}`
+        },
+        () => {
+          scheduleStudentRealtimeRefresh(userId, 'assignment_submissions');
+        }
+      )
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_comments',
+          filter: `student_id=eq.${userId}`
+        },
+        () => {
+          scheduleStudentRealtimeRefresh(userId, 'assignment_comments');
+        }
+      )
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_resources'
+        },
+        (payload) => {
+          const row = getRealtimeRow(payload);
+          if (row?.assignment_id && studentHasAssignment(row.assignment_id)) {
+            scheduleStudentRealtimeRefresh(userId, 'assignment_resources');
+          }
+        }
+      )
+
+      .subscribe((status) => {
+        console.log('[student-dashboard] realtime status:', status);
+      });
+  }
 
   function go(url) {
     if (window.location.pathname !== url) window.location.replace(url);
@@ -177,7 +179,7 @@ function initStudentRealtime(userId) {
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, function (m) {
-      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[m];
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
     });
   }
 
@@ -187,11 +189,11 @@ function initStudentRealtime(userId) {
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return 'No date';
       return d.toLocaleString(undefined, {
-        year:'numeric',
-        month:'short',
-        day:'numeric',
-        hour:'2-digit',
-        minute:'2-digit'
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
     } catch {
       return 'No date';
@@ -218,6 +220,13 @@ function initStudentRealtime(userId) {
     return 'Not reviewed';
   }
 
+  function assignmentModeLabel(mode) {
+    if (mode === 'template') return 'Template';
+    if (mode === 'cards') return 'Cards';
+    if (mode === 'template_cards') return 'Template + cards';
+    return 'Manual';
+  }
+
   function sanitizeFileName(name) {
     return String(name || 'file')
       .normalize('NFKD')
@@ -239,47 +248,47 @@ function initStudentRealtime(userId) {
   }
 
   function rememberButton(button) {
-  if (!button) return { text: '' };
-  return { text: button.textContent || '' };
-}
-
-function paintButton(button, tone, text) {
-  if (!button) return;
-  button.classList.remove('is-busy', 'is-success', 'is-error');
-  if (tone) button.classList.add(`is-${tone}`);
-  if (text != null) button.textContent = text;
-}
-
-function startButtonFeedback(button, busyText) {
-  const original = rememberButton(button);
-  if (button) {
-    button.disabled = true;
-    paintButton(button, 'busy', busyText || original.text);
+    if (!button) return { text: '' };
+    return { text: button.textContent || '' };
   }
-  return original;
-}
 
-function finishButtonFeedback(button, original, ok, doneText, delay = 1600) {
-  if (!button) return;
-  button.disabled = true;
-  paintButton(button, ok ? 'success' : 'error', doneText);
-
-  window.setTimeout(() => {
-    button.disabled = false;
+  function paintButton(button, tone, text) {
+    if (!button) return;
     button.classList.remove('is-busy', 'is-success', 'is-error');
-    button.textContent = original?.text || button.textContent;
-  }, delay);
-}
+    if (tone) button.classList.add(`is-${tone}`);
+    if (text != null) button.textContent = text;
+  }
 
-function finishButtonFeedbackBySelector(selector, original, ok, doneText, delay = 1600) {
-  const button = rootEl()?.querySelector(selector);
-  if (!button) return;
-  finishButtonFeedback(button, original, ok, doneText, delay);
-}
+  function startButtonFeedback(button, busyText) {
+    const original = rememberButton(button);
+    if (button) {
+      button.disabled = true;
+      paintButton(button, 'busy', busyText || original.text);
+    }
+    return original;
+  }
 
-function buttonError(button, original, text) {
-  finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
-}
+  function finishButtonFeedback(button, original, ok, doneText, delay = 1600) {
+    if (!button) return;
+    button.disabled = true;
+    paintButton(button, ok ? 'success' : 'error', doneText);
+
+    window.setTimeout(() => {
+      button.disabled = false;
+      button.classList.remove('is-busy', 'is-success', 'is-error');
+      button.textContent = original?.text || button.textContent;
+    }, delay);
+  }
+
+  function finishButtonFeedbackBySelector(selector, original, ok, doneText, delay = 1600) {
+    const button = rootEl()?.querySelector(selector);
+    if (!button) return;
+    finishButtonFeedback(button, original, ok, doneText, delay);
+  }
+
+  function buttonError(button, original, text) {
+    finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
+  }
 
   function injectStyles() {
     if (document.getElementById('student-dashboard-styles')) return;
@@ -405,10 +414,23 @@ function buttonError(button, original, text) {
     let commentsByAssignment = new Map();
     let resourcesByAssignment = new Map();
 
+    const { data: templatesRows, error: templatesErr } = await supabase
+      .from('assignment_templates')
+      .select('id, template_key, title, category, answer_mode, default_instructions, is_active')
+      .eq('is_active', true)
+      .order('title', { ascending: true });
+    if (templatesErr) throw templatesErr;
+
+    const { data: moduleRows, error: modulesErr } = await supabase
+      .from('modules')
+      .select('id, user_id, name, is_active, created_at')
+      .eq('is_active', true);
+    if (modulesErr) throw modulesErr;
+
     if (assignmentIds.length) {
       const { data: assignmentRows, error: assignmentsErr } = await supabase
         .from('assignments')
-        .select('id, teacher_id, title, description, due_date, created_at, miro_link')
+        .select('id, teacher_id, title, description, due_date, created_at, miro_link, status, template_id, cards_module_id, assignment_mode, content_json')
         .in('id', assignmentIds);
       if (assignmentsErr) throw assignmentsErr;
 
@@ -461,10 +483,17 @@ function buttonError(button, original, text) {
       });
 
       const assignmentsById = new Map((assignmentRows || []).map(a => [a.id, a]));
+      const templatesById = new Map((templatesRows || []).map(t => [t.id, t]));
+      const modulesById = new Map((moduleRows || []).map(m => [m.id, m]));
+
       assignments = (recipientRows || []).map(recipient => {
         const assignment = assignmentsById.get(recipient.assignment_id);
         if (!assignment) return null;
+
         const submission = submissionsByAssignment.get(recipient.assignment_id) || null;
+        const tpl = assignment.template_id ? templatesById.get(assignment.template_id) : null;
+        const mod = assignment.cards_module_id ? modulesById.get(assignment.cards_module_id) : null;
+
         return {
           ...assignment,
           recipient_status: recipient.status || 'not_started',
@@ -474,7 +503,12 @@ function buttonError(button, original, text) {
           reviewed_status: recipient.reviewed_status || 'not_reviewed',
           reviewed_at: recipient.reviewed_at || null,
           reviewed_by: recipient.reviewed_by || null,
-          submission
+          submission,
+          template_title: tpl?.title || '',
+          template_category: tpl?.category || '',
+          template_answer_mode: tpl?.answer_mode || '',
+          module_name: mod?.name || '',
+          linked_student_id: assignment.content_json?.student_id || null
         };
       }).filter(Boolean);
     }
@@ -487,6 +521,8 @@ function buttonError(button, original, text) {
     state.submissionsByAssignment = submissionsByAssignment;
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
+    state.templates = templatesRows || [];
+    state.modules = moduleRows || [];
   }
 
   function renderDashboard() {
@@ -519,6 +555,7 @@ function buttonError(button, original, text) {
           const hasFeedback = !!(assignment.teacher_feedback || '').trim();
           const effectiveReview = effectiveReviewState(assignment);
           const effectiveReviewText = effectiveReviewLabel(assignment);
+          const modeText = assignmentModeLabel(assignment.assignment_mode);
 
           const fileInfo = submission?.file_name
             ? `<div class="sd-file"><div class="sd-file-meta">Current file: ${escapeHtml(submission.file_name)} ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}</div><div class="sd-file-row">${submission.signed_url ? `<a class="sd-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}</div></div>`
@@ -552,10 +589,25 @@ function buttonError(button, original, text) {
                 <div class="sd-tag">Teacher: ${escapeHtml(teacherLabel)}</div>
                 <div class="sd-tag">Due: ${escapeHtml(formatDateTime(assignment.due_date))}</div>
                 <div class="sd-tag">Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
+                <div class="sd-tag">Mode: ${escapeHtml(modeText)}</div>
+                ${assignment.template_title ? `<div class="sd-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
+                ${assignment.module_name ? `<div class="sd-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
                 <div class="sd-tag">Review: ${escapeHtml(effectiveReviewText)}</div>
                 ${assignment.reviewed_at ? `<div class="sd-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
                 ${submission?.submitted_at ? `<div class="sd-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
               </div>
+
+              ${assignment.template_title ? `
+                <div style="margin-top:14px;">
+                  <div class="sd-feedback-box">Assignment template: ${escapeHtml(assignment.template_title)}</div>
+                </div>
+              ` : ''}
+
+              ${assignment.module_name ? `
+                <div style="margin-top:14px;">
+                  <div class="sd-feedback-box">Attached cards module: ${escapeHtml(assignment.module_name)}</div>
+                </div>
+              ` : ''}
 
               ${hasMiro ? `<div style="margin-top:14px;"><a class="sd-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
 
@@ -679,153 +731,154 @@ function buttonError(button, original, text) {
     root.__sdBound = true;
   }
 
-async function handleSaveWork(card, assignmentId, button) {
-  const supabase = window.supabase;
-  if (!supabase) return;
+  async function handleSaveWork(card, assignmentId, button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
 
-  const statusEl = card.querySelector('[data-role="status"]');
-  const answerEl = card.querySelector('[data-role="answer"]');
-  const fileEl = card.querySelector('[data-role="file"]');
-  const nextStatus = statusEl?.value || 'not_started';
-  const answerText = answerEl?.value.trim() || '';
-  const file = fileEl?.files?.[0] || null;
-  const studentId = state.userId;
-  const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
-  const original = rememberButton(button);
+    const statusEl = card.querySelector('[data-role="status"]');
+    const answerEl = card.querySelector('[data-role="answer"]');
+    const fileEl = card.querySelector('[data-role="file"]');
+    const nextStatus = statusEl?.value || 'not_started';
+    const answerText = answerEl?.value.trim() || '';
+    const file = fileEl?.files?.[0] || null;
+    const studentId = state.userId;
+    const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
+    const original = rememberButton(button);
 
-  startButtonFeedback(button, 'Saving...');
+    startButtonFeedback(button, 'Saving...');
 
-  try {
-    const { error: statusErr } = await supabase
-      .from('assignment_recipients')
-      .update({ status: nextStatus })
-      .eq('assignment_id', assignmentId)
-      .eq('student_id', studentId);
-    if (statusErr) throw statusErr;
+    try {
+      const { error: statusErr } = await supabase
+        .from('assignment_recipients')
+        .update({ status: nextStatus })
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', studentId);
+      if (statusErr) throw statusErr;
 
-    let filePayload = {
-      file_path: existingSubmission?.file_path || null,
-      file_name: existingSubmission?.file_name || null,
-      file_size: existingSubmission?.file_size || null,
-      mime_type: existingSubmission?.mime_type || null
-    };
+      let filePayload = {
+        file_path: existingSubmission?.file_path || null,
+        file_name: existingSubmission?.file_name || null,
+        file_size: existingSubmission?.file_size || null,
+        mime_type: existingSubmission?.mime_type || null
+      };
 
-    if (file) {
-      const safeName = sanitizeFileName(file.name || 'file');
-      const path = `${studentId}/${assignmentId}/${Date.now()}-${safeName}`;
+      if (file) {
+        const safeName = sanitizeFileName(file.name || 'file');
+        const path = `${studentId}/${assignmentId}/${Date.now()}-${safeName}`;
 
-      const { error: uploadErr } = await supabase.storage
-        .from(SUBMISSIONS_BUCKET)
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type || 'application/octet-stream'
-        });
-      if (uploadErr) throw uploadErr;
+        const { error: uploadErr } = await supabase.storage
+          .from(SUBMISSIONS_BUCKET)
+          .upload(path, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type || 'application/octet-stream'
+          });
+        if (uploadErr) throw uploadErr;
 
-      if (existingSubmission?.file_path && existingSubmission.file_path !== path) {
-        await supabase.storage.from(SUBMISSIONS_BUCKET).remove([existingSubmission.file_path]);
+        if (existingSubmission?.file_path && existingSubmission.file_path !== path) {
+          await supabase.storage.from(SUBMISSIONS_BUCKET).remove([existingSubmission.file_path]);
+        }
+
+        filePayload = {
+          file_path: path,
+          file_name: file.name || safeName,
+          file_size: file.size || null,
+          mime_type: file.type || null
+        };
       }
 
-      filePayload = {
-        file_path: path,
-        file_name: file.name || safeName,
-        file_size: file.size || null,
-        mime_type: file.type || null
-      };
+      const hasSomethingToStore = answerText || filePayload.file_path || existingSubmission;
+
+      if (hasSomethingToStore) {
+        const payload = {
+          assignment_id: assignmentId,
+          student_id: studentId,
+          answer_text: answerText || null,
+          file_path: filePayload.file_path,
+          file_name: filePayload.file_name,
+          file_size: filePayload.file_size,
+          mime_type: filePayload.mime_type,
+          submitted_at: new Date().toISOString()
+        };
+
+        const { error: submissionErr } = await supabase
+          .from('assignment_submissions')
+          .upsert(payload, { onConflict: 'assignment_id,student_id' });
+        if (submissionErr) throw submissionErr;
+      }
+
+      state.flash = { type: 'success', message: 'Your progress was saved successfully.' };
+      await fetchDashboardData(studentId);
+      renderDashboard();
+      finishButtonFeedbackBySelector(
+        `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
+        original,
+        true,
+        'Saved'
+      );
+    } catch (err) {
+      console.error('[student-dashboard] save work error:', err);
+      state.flash = { type: 'error', message: err?.message || 'Failed to save your progress.' };
+      renderDashboard();
+      finishButtonFeedbackBySelector(
+        `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
+        original,
+        false,
+        'Failed'
+      );
+    }
+  }
+
+  async function handleSendComment(card, assignmentId, button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    const commentEl = card.querySelector('[data-role="comment"]');
+    const body = commentEl?.value.trim() || '';
+    const studentId = state.userId;
+    const original = rememberButton(button);
+
+    if (!body) {
+      buttonError(button, original, 'Write comment');
+      return;
     }
 
-    const hasSomethingToStore = answerText || filePayload.file_path || existingSubmission;
+    startButtonFeedback(button, 'Sending...');
 
-    if (hasSomethingToStore) {
-      const payload = {
-        assignment_id: assignmentId,
-        student_id: studentId,
-        answer_text: answerText || null,
-        file_path: filePayload.file_path,
-        file_name: filePayload.file_name,
-        file_size: filePayload.file_size,
-        mime_type: filePayload.mime_type,
-        submitted_at: new Date().toISOString()
-      };
+    try {
+      const { error } = await supabase
+        .from('assignment_comments')
+        .insert({
+          assignment_id: assignmentId,
+          student_id: studentId,
+          author_id: studentId,
+          author_role: 'student',
+          body
+        });
+      if (error) throw error;
 
-      const { error: submissionErr } = await supabase
-        .from('assignment_submissions')
-        .upsert(payload, { onConflict: 'assignment_id,student_id' });
-      if (submissionErr) throw submissionErr;
+      state.flash = { type: 'success', message: 'Your comment was sent.' };
+      await fetchDashboardData(studentId);
+      renderDashboard();
+      finishButtonFeedbackBySelector(
+        `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
+        original,
+        true,
+        'Sent'
+      );
+    } catch (err) {
+      console.error('[student-dashboard] send comment error:', err);
+      state.flash = { type: 'error', message: err?.message || 'Failed to send comment.' };
+      renderDashboard();
+      finishButtonFeedbackBySelector(
+        `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
+        original,
+        false,
+        'Failed'
+      );
     }
-
-    state.flash = { type: 'success', message: 'Your progress was saved successfully.' };
-    await fetchDashboardData(studentId);
-    renderDashboard();
-    finishButtonFeedbackBySelector(
-      `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
-      original,
-      true,
-      'Saved'
-    );
-  } catch (err) {
-    console.error('[student-dashboard] save work error:', err);
-    state.flash = { type: 'error', message: err?.message || 'Failed to save your progress.' };
-    renderDashboard();
-    finishButtonFeedbackBySelector(
-      `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
-      original,
-      false,
-      'Failed'
-    );
-  }
-}
-
-async function handleSendComment(card, assignmentId, button) {
-  const supabase = window.supabase;
-  if (!supabase) return;
-
-  const commentEl = card.querySelector('[data-role="comment"]');
-  const body = commentEl?.value.trim() || '';
-  const studentId = state.userId;
-  const original = rememberButton(button);
-
-  if (!body) {
-    buttonError(button, original, 'Write comment');
-    return;
   }
 
-  startButtonFeedback(button, 'Sending...');
-
-  try {
-    const { error } = await supabase
-      .from('assignment_comments')
-      .insert({
-        assignment_id: assignmentId,
-        student_id: studentId,
-        author_id: studentId,
-        author_role: 'student',
-        body
-      });
-    if (error) throw error;
-
-    state.flash = { type: 'success', message: 'Your comment was sent.' };
-    await fetchDashboardData(studentId);
-    renderDashboard();
-    finishButtonFeedbackBySelector(
-      `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
-      original,
-      true,
-      'Sent'
-    );
-  } catch (err) {
-    console.error('[student-dashboard] send comment error:', err);
-    state.flash = { type: 'error', message: err?.message || 'Failed to send comment.' };
-    renderDashboard();
-    finishButtonFeedbackBySelector(
-      `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
-      original,
-      false,
-      'Failed'
-    );
-  }
-}
   async function boot() {
     try {
       const sb = await waitSupabase();
@@ -872,9 +925,9 @@ async function handleSendComment(card, assignmentId, button) {
       showPage();
       setLoading();
 
-     await fetchDashboardData(user.id);
-renderDashboard();
-initStudentRealtime(user.id);
+      await fetchDashboardData(user.id);
+      renderDashboard();
+      initStudentRealtime(user.id);
     } catch (err) {
       console.error('[student-dashboard] load error:', err);
       showPage();
@@ -883,7 +936,7 @@ initStudentRealtime(user.id);
     }
   }
 
-window.addEventListener('beforeunload', clearStudentRealtime);
+  window.addEventListener('beforeunload', clearStudentRealtime);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot, { once: true });
