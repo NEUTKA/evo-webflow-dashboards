@@ -9,149 +9,162 @@
   const RESOURCES_BUCKET = 'assignment-resources';
 
   const state = {
-  userId: null,
-  teacher: null,
-  students: [],
-  studentsById: new Map(),
-  studentLinksById: new Map(),
-  assignments: [],
-  commentsByAssignment: new Map(),
-  resourcesByAssignment: new Map(),
-  flash: null
-};
-
-let tdRealtimeChannel = null;
-let tdRealtimeTimer = null;
-let tdRealtimeBusy = false;
-
-function clearTeacherRealtime() {
-  if (tdRealtimeTimer) {
-    window.clearTimeout(tdRealtimeTimer);
-    tdRealtimeTimer = null;
-  }
-
-  if (tdRealtimeChannel && window.supabase?.removeChannel) {
-    window.supabase.removeChannel(tdRealtimeChannel);
-  }
-
-  tdRealtimeChannel = null;
-}
-
-function getRealtimeRow(payload) {
-  if (payload?.new && Object.keys(payload.new).length) return payload.new;
-  if (payload?.old && Object.keys(payload.old).length) return payload.old;
-  return null;
-}
-
-function teacherHasStudent(studentId) {
-  return !!studentId && state.studentsById.has(studentId);
-}
-
-function scheduleTeacherRealtimeRefresh(reason) {
-  if (tdRealtimeTimer) window.clearTimeout(tdRealtimeTimer);
-
-  tdRealtimeTimer = window.setTimeout(async () => {
-    if (tdRealtimeBusy) return;
-    tdRealtimeBusy = true;
-
-    try {
-      await fetchDashboardData();
-      renderDashboard();
-    } catch (err) {
-      console.error('[teacher-dashboard] realtime refresh error:', reason, err);
-    } finally {
-      tdRealtimeBusy = false;
+    userId: null,
+    teacher: null,
+    students: [],
+    studentsById: new Map(),
+    studentLinksById: new Map(),
+    assignments: [],
+    commentsByAssignment: new Map(),
+    resourcesByAssignment: new Map(),
+    templates: [],
+    modules: [],
+    flash: null,
+    draftAssignmentId: null,
+    assignmentDraft: {
+      id: '',
+      studentId: '',
+      dueDate: '',
+      title: '',
+      description: '',
+      miroLink: '',
+      templateId: '',
+      cardsModuleId: ''
     }
-  }, 220);
-}
+  };
 
-function initTeacherRealtime() {
-  const supabase = window.supabase;
-  if (!supabase || !state.userId) return;
+  let tdRealtimeChannel = null;
+  let tdRealtimeTimer = null;
+  let tdRealtimeBusy = false;
 
-  clearTeacherRealtime();
+  function clearTeacherRealtime() {
+    if (tdRealtimeTimer) {
+      window.clearTimeout(tdRealtimeTimer);
+      tdRealtimeTimer = null;
+    }
 
-  tdRealtimeChannel = supabase
-    .channel(`teacher-dashboard-${state.userId}`)
+    if (tdRealtimeChannel && window.supabase?.removeChannel) {
+      window.supabase.removeChannel(tdRealtimeChannel);
+    }
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'teacher_students',
-        filter: `teacher_id=eq.${state.userId}`
-      },
-      () => {
-        scheduleTeacherRealtimeRefresh('teacher_students');
+    tdRealtimeChannel = null;
+  }
+
+  function getRealtimeRow(payload) {
+    if (payload?.new && Object.keys(payload.new).length) return payload.new;
+    if (payload?.old && Object.keys(payload.old).length) return payload.old;
+    return null;
+  }
+
+  function teacherHasStudent(studentId) {
+    return !!studentId && state.studentsById.has(studentId);
+  }
+
+  function scheduleTeacherRealtimeRefresh(reason) {
+    if (tdRealtimeTimer) window.clearTimeout(tdRealtimeTimer);
+
+    tdRealtimeTimer = window.setTimeout(async () => {
+      if (tdRealtimeBusy) return;
+      tdRealtimeBusy = true;
+
+      try {
+        await fetchDashboardData();
+        renderDashboard();
+      } catch (err) {
+        console.error('[teacher-dashboard] realtime refresh error:', reason, err);
+      } finally {
+        tdRealtimeBusy = false;
       }
-    )
+    }, 220);
+  }
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_recipients'
-      },
-      (payload) => {
-        const row = getRealtimeRow(payload);
-        if (row?.student_id && teacherHasStudent(row.student_id)) {
-          scheduleTeacherRealtimeRefresh('assignment_recipients');
+  function initTeacherRealtime() {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    clearTeacherRealtime();
+
+    tdRealtimeChannel = supabase
+      .channel(`teacher-dashboard-${state.userId}`)
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'teacher_students',
+          filter: `teacher_id=eq.${state.userId}`
+        },
+        () => {
+          scheduleTeacherRealtimeRefresh('teacher_students');
         }
-      }
-    )
+      )
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_submissions'
-      },
-      (payload) => {
-        const row = getRealtimeRow(payload);
-        if (row?.student_id && teacherHasStudent(row.student_id)) {
-          scheduleTeacherRealtimeRefresh('assignment_submissions');
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_recipients'
+        },
+        (payload) => {
+          const row = getRealtimeRow(payload);
+          if (row?.student_id && teacherHasStudent(row.student_id)) {
+            scheduleTeacherRealtimeRefresh('assignment_recipients');
+          }
         }
-      }
-    )
+      )
 
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'assignment_comments'
-      },
-      (payload) => {
-        const row = getRealtimeRow(payload);
-        if (row?.student_id && teacherHasStudent(row.student_id)) {
-          scheduleTeacherRealtimeRefresh('assignment_comments');
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_submissions'
+        },
+        (payload) => {
+          const row = getRealtimeRow(payload);
+          if (row?.student_id && teacherHasStudent(row.student_id)) {
+            scheduleTeacherRealtimeRefresh('assignment_submissions');
+          }
         }
-      }
-    )
+      )
 
-    .subscribe((status) => {
-      console.log('[teacher-dashboard] realtime status:', status);
-    });
-}
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_comments'
+        },
+        (payload) => {
+          const row = getRealtimeRow(payload);
+          if (row?.student_id && teacherHasStudent(row.student_id)) {
+            scheduleTeacherRealtimeRefresh('assignment_comments');
+          }
+        }
+      )
+
+      .subscribe((status) => {
+        console.log('[teacher-dashboard] realtime status:', status);
+      });
+  }
 
   function rootEl() {
     return document.getElementById(ROOT_ID);
   }
 
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, function (m) {
-    return {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[m];
-  });
-}
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function (m) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m];
+    });
+  }
 
   function formatDateTime(value) {
     if (!value) return 'No date';
@@ -170,13 +183,40 @@ function escapeHtml(value) {
     }
   }
 
+  function formatDatetimeLocalValue(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  }
+
   function statusLabel(status) {
     if (status === 'completed') return 'Completed';
     if (status === 'in_progress') return 'In progress';
     return 'Not started';
   }
 
+  function assignmentStatusLabel(status) {
+    if (status === 'ready') return 'Ready';
+    if (status === 'archived') return 'Archived';
+    return 'Draft';
+  }
+
+  function assignmentModeLabel(mode) {
+    if (mode === 'template') return 'Template';
+    if (mode === 'cards') return 'Cards';
+    if (mode === 'template_cards') return 'Template + cards';
+    return 'Manual';
+  }
+
   function effectiveReviewState(item) {
+    if (!item?.student_id) return 'draft';
     if (item?.recipient_status === 'completed' && item?.reviewed_status !== 'reviewed') {
       return 'awaiting_review';
     }
@@ -184,6 +224,7 @@ function escapeHtml(value) {
   }
 
   function effectiveReviewLabel(item) {
+    if (!item?.student_id) return 'Draft';
     const s = effectiveReviewState(item);
     if (s === 'awaiting_review') return 'Awaiting review';
     if (s === 'reviewed') return 'Reviewed';
@@ -259,9 +300,84 @@ function escapeHtml(value) {
   function buttonError(button, original, text) {
     finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
   }
+
   function wait(ms) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
+  function resolveAssignmentMode(templateId, cardsModuleId) {
+    if (templateId && cardsModuleId) return 'template_cards';
+    if (templateId) return 'template';
+    if (cardsModuleId) return 'cards';
+    return 'manual';
+  }
+
+  function collectAssignmentFormData(form) {
+    const draftId = form.querySelector('#td-draft-id')?.value || '';
+    const studentId = form.querySelector('#td-student-id')?.value || '';
+    const dueDateRaw = form.querySelector('#td-due-date')?.value || '';
+    const title = form.querySelector('#td-title')?.value.trim() || '';
+    const description = form.querySelector('#td-description')?.value.trim() || '';
+    const miroLink = form.querySelector('#td-miro-link')?.value.trim() || '';
+    const templateId = form.querySelector('#td-template-id')?.value || '';
+    const cardsModuleId = form.querySelector('#td-cards-module-id')?.value || '';
+
+    return {
+      draftId,
+      studentId,
+      dueDateRaw,
+      title,
+      description,
+      miroLink,
+      templateId,
+      cardsModuleId,
+      assignmentMode: resolveAssignmentMode(templateId, cardsModuleId)
+    };
+  }
+
+  function persistDraftFormState(form) {
+    const data = collectAssignmentFormData(form);
+    state.assignmentDraft = {
+      id: data.draftId || '',
+      studentId: data.studentId || '',
+      dueDate: data.dueDateRaw || '',
+      title: data.title || '',
+      description: data.description || '',
+      miroLink: data.miroLink || '',
+      templateId: data.templateId || '',
+      cardsModuleId: data.cardsModuleId || ''
+    };
+    state.draftAssignmentId = data.draftId || '';
+  }
+
+  function setDraftStateFromAssignment(assignment) {
+    const content = assignment?.content_json || {};
+    state.assignmentDraft = {
+      id: assignment?.id || '',
+      studentId: content?.student_id || '',
+      dueDate: formatDatetimeLocalValue(assignment?.due_date),
+      title: assignment?.title || '',
+      description: assignment?.description || '',
+      miroLink: assignment?.miro_link || '',
+      templateId: assignment?.template_id || '',
+      cardsModuleId: assignment?.cards_module_id || ''
+    };
+    state.draftAssignmentId = assignment?.id || '';
+  }
+
+  function resetDraftState() {
+    state.assignmentDraft = {
+      id: '',
+      studentId: '',
+      dueDate: '',
+      title: '',
+      description: '',
+      miroLink: '',
+      templateId: '',
+      cardsModuleId: ''
+    };
+    state.draftAssignmentId = null;
+  }
 
   function injectStyles() {
     if (document.getElementById('teacher-dashboard-styles')) return;
@@ -287,9 +403,10 @@ function escapeHtml(value) {
       .td-name{font-size:18px;font-weight:700;line-height:1.2}
       .td-email{margin-top:4px;color:#667085;font-size:14px;overflow-wrap:anywhere}
       .td-badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
-      .td-badge.active,.td-badge.completed,.td-badge.reviewed{background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
-      .td-badge.not_started,.td-badge.not_reviewed{background:#f8fbff;border:1px solid #dbe7f3;color:#175cd3}
+      .td-badge.active,.td-badge.completed,.td-badge.reviewed,.td-badge.ready{background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
+      .td-badge.not_started,.td-badge.not_reviewed,.td-badge.draft{background:#f8fbff;border:1px solid #dbe7f3;color:#175cd3}
       .td-badge.in_progress,.td-badge.awaiting_review{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c}
+      .td-badge.archived{background:#f9fafb;border:1px solid #e5e7eb;color:#475467}
       .td-empty{padding:24px;border:1px dashed #cfd8e3;border-radius:14px;background:#fbfdff;color:#667085;text-align:center}
       .td-error{padding:16px 18px;border-radius:14px;background:#fff2f2;border:1px solid #fecaca;color:#b42318}
       .td-success{padding:16px 18px;border-radius:14px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
@@ -387,9 +504,24 @@ function escapeHtml(value) {
       students = studentIds.map((id) => byId.get(id)).filter(Boolean);
     }
 
+    const { data: templatesRows, error: templatesErr } = await supabase
+      .from('assignment_templates')
+      .select('id, template_key, title, description, category, level_range, estimated_time, answer_mode, default_instructions, default_fields_json, is_active')
+      .eq('is_active', true)
+      .order('title', { ascending: true });
+    if (templatesErr) throw templatesErr;
+
+    const { data: moduleRows, error: modulesErr } = await supabase
+      .from('modules')
+      .select('id, user_id, name, is_active, created_at')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (modulesErr) throw modulesErr;
+
     const { data: assignmentsRows, error: assignmentsErr } = await supabase
       .from('assignments')
-      .select('id, teacher_id, title, description, due_date, created_at, miro_link')
+      .select('id, teacher_id, title, description, due_date, created_at, miro_link, status, template_id, cards_module_id, assignment_mode, content_json')
       .eq('teacher_id', user.id)
       .order('created_at', { ascending: false });
     if (assignmentsErr) throw assignmentsErr;
@@ -398,6 +530,9 @@ function escapeHtml(value) {
     let assignments = [];
     let commentsByAssignment = new Map();
     let resourcesByAssignment = new Map();
+
+    const templatesById = new Map((templatesRows || []).map((t) => [t.id, t]));
+    const modulesById = new Map((moduleRows || []).map((m) => [m.id, m]));
 
     if (assignmentIds.length) {
       const { data: recipients, error: recipientsErr } = await supabase
@@ -453,22 +588,33 @@ function escapeHtml(value) {
       });
 
       const recipientsByAssignment = new Map();
-      (recipients || []).forEach((r) => recipientsByAssignment.set(r.assignment_id, r));
+      (recipients || []).forEach((r) => {
+        if (!recipientsByAssignment.has(r.assignment_id)) {
+          recipientsByAssignment.set(r.assignment_id, r);
+        }
+      });
 
       assignments = (assignmentsRows || []).map((a) => {
         const recipient = recipientsByAssignment.get(a.id) || null;
         const submission = submissionsByAssignment.get(a.id) || null;
+        const tpl = a.template_id ? templatesById.get(a.template_id) : null;
+        const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
+
         return {
           ...a,
-          student_id: recipient?.student_id || null,
-          recipient_status: recipient?.status || 'not_started',
+          student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
+          recipient_status: recipient?.status || null,
           recipient_created_at: recipient?.created_at || null,
           recipient_submitted_at: recipient?.submitted_at || null,
           teacher_feedback: recipient?.teacher_feedback || '',
           reviewed_status: recipient?.reviewed_status || 'not_reviewed',
           reviewed_at: recipient?.reviewed_at || null,
           reviewed_by: recipient?.reviewed_by || null,
-          submission
+          submission,
+          template_title: tpl?.title || '',
+          template_category: tpl?.category || '',
+          module_name: mod?.name || '',
+          is_sent: !!recipient
         };
       });
     }
@@ -480,6 +626,8 @@ function escapeHtml(value) {
     state.assignments = assignments;
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
+    state.templates = templatesRows || [];
+    state.modules = moduleRows || [];
   }
 
   function renderDashboard() {
@@ -489,17 +637,42 @@ function escapeHtml(value) {
     const teacher = state.teacher || {};
     const students = state.students || [];
     const assignments = state.assignments || [];
+    const templates = state.templates || [];
+    const modules = state.modules || [];
     const awaitingReviewCount = assignments.filter((a) => effectiveReviewState(a) === 'awaiting_review').length;
     const teacherName = (teacher.full_name || '').trim() || teacher.email || 'Teacher';
     const teacherEmail = teacher.email || '';
     const flashHtml = '';
 
+    const draft = state.assignmentDraft || {};
+    const selectedStudentId = draft.studentId || '';
+    const selectedTemplateId = draft.templateId || '';
+    const selectedModuleId = draft.cardsModuleId || '';
+    const draftDueDate = draft.dueDate || '';
+    const draftTitle = draft.title || '';
+    const draftDescription = draft.description || '';
+    const draftMiro = draft.miroLink || '';
+    const draftId = draft.id || '';
+
     const studentOptions = students.length
       ? students.map((student) => {
           const label = ((student.full_name || '').trim() || student.email || 'Student') + ' — ' + (student.email || '');
-          return `<option value="${escapeHtml(student.id)}">${escapeHtml(label)}</option>`;
+          return `<option value="${escapeHtml(student.id)}" ${selectedStudentId === student.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
         }).join('')
       : '<option value="">No students available</option>';
+
+    const templateOptions = templates.length
+      ? `<option value="">No template</option>` + templates.map((tpl) => {
+          const label = `${tpl.title} — ${tpl.category}`;
+          return `<option value="${escapeHtml(tpl.id)}" ${selectedTemplateId === tpl.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No templates available</option>';
+
+    const moduleOptions = modules.length
+      ? `<option value="">No cards module</option>` + modules.map((mod) => {
+          return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(mod.name)}</option>`;
+        }).join('')
+      : '<option value="">No modules available</option>';
 
     const manageStudentsHtml = students.length
       ? students.map((student) => {
@@ -527,12 +700,14 @@ function escapeHtml(value) {
     const assignmentsHtml = assignments.length
       ? assignments.map((assignment) => {
           const student = assignment.student_id ? state.studentsById.get(assignment.student_id) : null;
-          const studentLabel = student?.email || 'Unknown student';
+          const studentLabel = student?.email || (assignment.is_sent ? 'Unknown student' : 'Not sent yet');
           const submission = assignment.submission || null;
           const comments = state.commentsByAssignment.get(assignment.id) || [];
           const resources = state.resourcesByAssignment.get(assignment.id) || [];
           const effectiveReview = effectiveReviewState(assignment);
           const effectiveReviewText = effectiveReviewLabel(assignment);
+          const modeText = assignmentModeLabel(assignment.assignment_mode);
+          const assignmentStatusText = assignmentStatusLabel(assignment.status);
 
           const answerHtml = submission?.answer_text
             ? `<div class="td-answer">${escapeHtml(submission.answer_text)}</div>`
@@ -564,6 +739,74 @@ function escapeHtml(value) {
               `).join('')
             : `<div class="td-empty">No reference files yet.</div>`;
 
+          const topBadges = assignment.is_sent
+            ? `
+              <div class="td-badge ${escapeHtml(assignment.recipient_status || 'not_started')}">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))}</div>
+              <div class="td-badge ${escapeHtml(effectiveReview)}">${escapeHtml(effectiveReviewText)}</div>
+            `
+            : `
+              <div class="td-badge ${escapeHtml(assignment.status || 'draft')}">${escapeHtml(assignmentStatusText)}</div>
+              <div class="td-badge draft">Draft</div>
+            `;
+
+          const actionsForDraft = !assignment.is_sent
+            ? `
+              <div class="td-actions" style="margin-top:14px;">
+                <button class="td-btn td-btn-secondary" type="button" data-action="load-draft" data-assignment-id="${escapeHtml(assignment.id)}">Open draft in form</button>
+              </div>
+            `
+            : '';
+
+          const reviewSection = assignment.is_sent
+            ? `
+              <div class="td-section">
+                <div class="td-label"><span>Teacher review</span></div>
+                <div class="td-grid-2">
+                  <div class="td-label">
+                    <span>Student status</span>
+                    <div class="td-answer">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))}</div>
+                  </div>
+
+                  <label class="td-label">
+                    <span>Review state</span>
+                    <select class="td-select" data-role="reviewed-status">
+                      <option value="not_reviewed" ${assignment.reviewed_status === 'not_reviewed' ? 'selected' : ''}>Not reviewed</option>
+                      <option value="reviewed" ${assignment.reviewed_status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label class="td-label">
+                  <span>Teacher feedback</span>
+                  <textarea class="td-textarea" data-role="teacher-feedback" placeholder="Write feedback for the student.">${escapeHtml(assignment.teacher_feedback || '')}</textarea>
+                </label>
+
+                <div class="td-actions">
+                  <button class="td-btn td-btn-primary" type="button" data-action="save-review">Save review</button>
+                  <div class="td-note">Update review state and feedback.</div>
+                </div>
+              </div>
+            `
+            : '';
+
+          const commentsSection = assignment.is_sent
+            ? `
+              <div class="td-section">
+                <div class="td-label"><span>Comments</span></div>
+                <div class="td-comments">
+                  <div class="td-comments-list">${commentsHtml}</div>
+                  <label class="td-label">
+                    <span>New comment</span>
+                    <textarea class="td-textarea" data-role="comment" placeholder="Write a message to your student."></textarea>
+                  </label>
+                  <div class="td-actions">
+                    <button class="td-btn td-btn-secondary" type="button" data-action="send-comment">Send comment</button>
+                  </div>
+                </div>
+              </div>
+            `
+            : '';
+
           return `
             <div class="td-assignment" data-assignment-id="${escapeHtml(assignment.id)}">
               <div class="td-assignment-top">
@@ -572,8 +815,7 @@ function escapeHtml(value) {
                   <div class="td-assignment-desc">${escapeHtml(assignment.description || 'No description')}</div>
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <div class="td-badge ${escapeHtml(assignment.recipient_status || 'not_started')}">${escapeHtml(statusLabel(assignment.recipient_status))}</div>
-                  <div class="td-badge ${escapeHtml(effectiveReview)}">${escapeHtml(effectiveReviewText)}</div>
+                  ${topBadges}
                 </div>
               </div>
 
@@ -581,12 +823,18 @@ function escapeHtml(value) {
                 <div class="td-tag">Student: ${escapeHtml(studentLabel)}</div>
                 <div class="td-tag">Due: ${escapeHtml(formatDateTime(assignment.due_date))}</div>
                 <div class="td-tag">Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
-                <div class="td-tag">Review: ${escapeHtml(effectiveReviewText)}</div>
+                <div class="td-tag">Assignment status: ${escapeHtml(assignmentStatusText)}</div>
+                <div class="td-tag">Mode: ${escapeHtml(modeText)}</div>
+                ${assignment.template_title ? `<div class="td-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
+                ${assignment.module_name ? `<div class="td-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
+                ${assignment.is_sent ? `<div class="td-tag">Review: ${escapeHtml(effectiveReviewText)}</div>` : ''}
                 ${assignment.reviewed_at ? `<div class="td-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
                 ${submission?.submitted_at ? `<div class="td-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
               </div>
 
               ${assignment.miro_link ? `<div style="margin-top:14px;"><a class="td-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
+
+              ${actionsForDraft}
 
               <div class="td-section">
                 <div class="td-label"><span>Reference files</span></div>
@@ -612,47 +860,8 @@ function escapeHtml(value) {
                 ${fileHtml}
               </div>
 
-              <div class="td-section">
-                <div class="td-label"><span>Teacher review</span></div>
-                <div class="td-grid-2">
-                  <div class="td-label">
-                    <span>Student status</span>
-                    <div class="td-answer">${escapeHtml(statusLabel(assignment.recipient_status))}</div>
-                  </div>
-
-                  <label class="td-label">
-                    <span>Review state</span>
-                    <select class="td-select" data-role="reviewed-status">
-                      <option value="not_reviewed" ${assignment.reviewed_status === 'not_reviewed' ? 'selected' : ''}>Not reviewed</option>
-                      <option value="reviewed" ${assignment.reviewed_status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label class="td-label">
-                  <span>Teacher feedback</span>
-                  <textarea class="td-textarea" data-role="teacher-feedback" placeholder="Write feedback for the student.">${escapeHtml(assignment.teacher_feedback || '')}</textarea>
-                </label>
-
-                <div class="td-actions">
-                  <button class="td-btn td-btn-primary" type="button" data-action="save-review">Save review</button>
-                  <div class="td-note">Update review state and feedback.</div>
-                </div>
-              </div>
-
-              <div class="td-section">
-                <div class="td-label"><span>Comments</span></div>
-                <div class="td-comments">
-                  <div class="td-comments-list">${commentsHtml}</div>
-                  <label class="td-label">
-                    <span>New comment</span>
-                    <textarea class="td-textarea" data-role="comment" placeholder="Write a message to your student."></textarea>
-                  </label>
-                  <div class="td-actions">
-                    <button class="td-btn td-btn-secondary" type="button" data-action="send-comment">Send comment</button>
-                  </div>
-                </div>
-              </div>
+              ${reviewSection}
+              ${commentsSection}
             </div>
           `;
         }).join('')
@@ -708,10 +917,12 @@ function escapeHtml(value) {
           <div class="td-head">
             <div class="td-kicker">Assignments</div>
             <h2 class="td-title" style="font-size:24px;">Create assignment</h2>
-            <div class="td-sub">Create homework and assign it to one of your students.</div>
+            <div class="td-sub">Create homework, save it as a draft, and send it only when it is ready.</div>
           </div>
           <div class="td-body">
             <form id="td-assignment-form" class="td-form">
+              <input id="td-draft-id" type="hidden" value="${escapeHtml(draftId)}" />
+
               <div class="td-grid-2">
                 <label class="td-label">
                   <span>Student</span>
@@ -719,28 +930,41 @@ function escapeHtml(value) {
                 </label>
                 <label class="td-label">
                   <span>Due date</span>
-                  <input class="td-input" id="td-due-date" type="datetime-local" />
+                  <input class="td-input" id="td-due-date" type="datetime-local" value="${escapeHtml(draftDueDate)}" />
+                </label>
+              </div>
+
+              <div class="td-grid-2">
+                <label class="td-label">
+                  <span>Use template</span>
+                  <select class="td-select" id="td-template-id">${templateOptions}</select>
+                </label>
+
+                <label class="td-label">
+                  <span>Attach cards module</span>
+                  <select class="td-select" id="td-cards-module-id">${moduleOptions}</select>
                 </label>
               </div>
 
               <label class="td-label">
                 <span>Title</span>
-                <input class="td-input" id="td-title" type="text" placeholder="For example: Writing practice — daily routine" />
+                <input class="td-input" id="td-title" type="text" placeholder="For example: Writing practice — daily routine" value="${escapeHtml(draftTitle)}" />
               </label>
 
               <label class="td-label">
                 <span>Description</span>
-                <textarea class="td-textarea" id="td-description" placeholder="Write the homework instructions here."></textarea>
+                <textarea class="td-textarea" id="td-description" placeholder="Write the homework instructions here.">${escapeHtml(draftDescription)}</textarea>
               </label>
 
               <label class="td-label">
                 <span>Miro link (optional)</span>
-                <input class="td-input" id="td-miro-link" type="url" placeholder="https://miro.com/..." />
+                <input class="td-input" id="td-miro-link" type="url" placeholder="https://miro.com/..." value="${escapeHtml(draftMiro)}" />
               </label>
 
               <div class="td-actions">
-                <button class="td-btn td-btn-primary" id="td-submit-btn" type="submit" ${students.length ? '' : 'disabled'}>Create assignment</button>
-                <div class="td-note">${students.length ? 'The assignment will be created and assigned immediately.' : 'Add a student first to create an assignment.'}</div>
+                <button class="td-btn td-btn-secondary" id="td-save-draft-btn" type="button" ${students.length ? '' : 'disabled'}>Save draft</button>
+                <button class="td-btn td-btn-primary" id="td-send-btn" type="submit" ${students.length ? '' : 'disabled'}>Send to student</button>
+                <div class="td-note">${students.length ? 'Save the assignment first, then send it to the selected student.' : 'Add a student first to create an assignment.'}</div>
               </div>
             </form>
           </div>
@@ -750,7 +974,7 @@ function escapeHtml(value) {
           <div class="td-head">
             <div class="td-kicker">Assignments</div>
             <h2 class="td-title" style="font-size:24px;">My assignments</h2>
-            <div class="td-sub">Assignments created by this teacher account.</div>
+            <div class="td-sub">Drafts and sent assignments created by this teacher account.</div>
           </div>
           <div class="td-body">
             <div class="td-grid">${assignmentsHtml}</div>
@@ -771,7 +995,7 @@ function escapeHtml(value) {
       const assignmentForm = event.target.closest('#td-assignment-form');
       if (assignmentForm) {
         event.preventDefault();
-        await handleCreateAssignment(assignmentForm);
+        await handleSendAssignment(assignmentForm);
         return;
       }
 
@@ -783,12 +1007,26 @@ function escapeHtml(value) {
     });
 
     root.addEventListener('click', async function (event) {
-      const button = event.target.closest('[data-action]');
+      const button = event.target.closest('[data-action], #td-save-draft-btn');
       if (!button) return;
+
+      if (button.id === 'td-save-draft-btn') {
+        const form = root.querySelector('#td-assignment-form');
+        if (form) {
+          await handleSaveDraft(form, button);
+        }
+        return;
+      }
+
       const action = button.getAttribute('data-action');
 
       if (action === 'detach-student') {
         await handleDetachStudent(button);
+        return;
+      }
+
+      if (action === 'load-draft') {
+        await handleLoadDraft(button);
         return;
       }
 
@@ -801,6 +1039,39 @@ function escapeHtml(value) {
       if (action === 'save-review') await handleSaveReview(card, assignmentId, button);
       if (action === 'upload-resource') await handleUploadResource(card, assignmentId, button);
       if (action === 'delete-resource') await handleDeleteResource(button);
+    });
+
+    root.addEventListener('change', function (event) {
+      const templateEl = event.target.closest('#td-template-id');
+      if (!templateEl) return;
+
+      const templateId = templateEl.value;
+      const form = root.querySelector('#td-assignment-form');
+      if (!form) return;
+
+      persistDraftFormState(form);
+
+      const tpl = (state.templates || []).find((x) => x.id === templateId);
+      if (!tpl) return;
+
+      const titleEl = form.querySelector('#td-title');
+      const descEl = form.querySelector('#td-description');
+
+      if (titleEl && !titleEl.value.trim()) {
+        titleEl.value = tpl.title || '';
+      }
+
+      if (descEl && !descEl.value.trim()) {
+        descEl.value = tpl.default_instructions || tpl.description || '';
+      }
+
+      persistDraftFormState(form);
+    });
+
+    root.addEventListener('input', function (event) {
+      const form = event.target.closest('#td-assignment-form');
+      if (!form) return;
+      persistDraftFormState(form);
     });
 
     root.__tdBound = true;
@@ -834,92 +1105,216 @@ function escapeHtml(value) {
     }
   }
 
-async function handleDetachStudent(button) {
-  const supabase = window.supabase;
-  if (!supabase) return;
-
-  const studentId = button.getAttribute('data-student-id');
-  const studentEmail = button.getAttribute('data-student-email') || 'this student';
-  if (!studentId) return;
-
-  if (!confirm(`Detach ${studentEmail} from your student list? Existing assignments will stay in the system.`)) {
-    return;
-  }
-
-  const original = rememberButton(button);
-  startButtonFeedback(button, 'Detaching...');
-
-  try {
-    const { error } = await supabase.rpc('teacher_remove_student', { _student_id: studentId });
-    if (error) throw error;
-
-    finishButtonFeedback(button, original, true, 'Detached', 900);
-    await wait(900);
-
-    await fetchDashboardData();
-    renderDashboard();
-  } catch (err) {
-    console.error('[teacher-dashboard] detach student error:', err);
-    buttonError(button, original, 'Failed');
-  }
-}
-  async function handleCreateAssignment(form) {
+  async function handleDetachStudent(button) {
     const supabase = window.supabase;
     if (!supabase) return;
-    const submitBtn = form.querySelector('#td-submit-btn');
-    const studentId = form.querySelector('#td-student-id')?.value || '';
-    const title = form.querySelector('#td-title')?.value.trim() || '';
-    const description = form.querySelector('#td-description')?.value.trim() || '';
-    const dueDateRaw = form.querySelector('#td-due-date')?.value || '';
-    const miroLink = form.querySelector('#td-miro-link')?.value.trim() || '';
-    const original = rememberButton(submitBtn);
 
-    if (!studentId) {
-      buttonError(submitBtn, original, 'Choose student');
+    const studentId = button.getAttribute('data-student-id');
+    const studentEmail = button.getAttribute('data-student-email') || 'this student';
+    if (!studentId) return;
+
+    if (!confirm(`Detach ${studentEmail} from your student list? Existing assignments will stay in the system.`)) {
       return;
     }
 
-    if (!title) {
-      buttonError(submitBtn, original, 'Enter title');
-      return;
-    }
-
-    startButtonFeedback(submitBtn, 'Creating...');
+    const original = rememberButton(button);
+    startButtonFeedback(button, 'Detaching...');
 
     try {
-      const teacherId = state.teacher?.id;
-      if (!teacherId) throw new Error('Teacher profile not found.');
+      const { error } = await supabase.rpc('teacher_remove_student', { _student_id: studentId });
+      if (error) throw error;
 
-      const { data: createdAssignment, error: assignmentErr } = await supabase
-        .from('assignments')
-        .insert({
-          teacher_id: teacherId,
-          title,
-          description: description || null,
-          miro_link: miroLink || null,
-          due_date: toIsoFromDatetimeLocal(dueDateRaw)
-        })
-        .select('id')
-        .single();
-      if (assignmentErr) throw assignmentErr;
-
-      const { error: recipientErr } = await supabase
-        .from('assignment_recipients')
-        .insert({
-          assignment_id: createdAssignment.id,
-          student_id: studentId,
-          status: 'not_started',
-          reviewed_status: 'not_reviewed'
-        });
-      if (recipientErr) throw recipientErr;
+      finishButtonFeedback(button, original, true, 'Detached', 900);
+      await wait(900);
 
       await fetchDashboardData();
       renderDashboard();
-      finishButtonFeedbackBySelector('#td-submit-btn', original, true, 'Created');
     } catch (err) {
-      console.error('[teacher-dashboard] create assignment error:', err);
-      buttonError(submitBtn, original, 'Failed');
+      console.error('[teacher-dashboard] detach student error:', err);
+      buttonError(button, original, 'Failed');
     }
+  }
+
+  async function handleSaveDraft(form, button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    persistDraftFormState(form);
+
+    const saveBtn = button || form.querySelector('#td-save-draft-btn');
+    const original = rememberButton(saveBtn);
+    const teacherId = state.teacher?.id;
+    if (!teacherId) {
+      buttonError(saveBtn, original, 'No teacher');
+      return;
+    }
+
+    const data = collectAssignmentFormData(form);
+
+    if (!data.title) {
+      buttonError(saveBtn, original, 'Enter title');
+      return;
+    }
+
+    startButtonFeedback(saveBtn, 'Saving...');
+
+    try {
+      const payload = {
+        teacher_id: teacherId,
+        title: data.title,
+        description: data.description || null,
+        miro_link: data.miroLink || null,
+        due_date: toIsoFromDatetimeLocal(data.dueDateRaw),
+        status: 'draft',
+        template_id: data.templateId || null,
+        cards_module_id: data.cardsModuleId || null,
+        assignment_mode: data.assignmentMode,
+        content_json: {
+          student_id: data.studentId || null
+        }
+      };
+
+      let saved;
+      if (data.draftId) {
+        const { data: updated, error } = await supabase
+          .from('assignments')
+          .update(payload)
+          .eq('id', data.draftId)
+          .select('id')
+          .single();
+        if (error) throw error;
+        saved = updated;
+      } else {
+        const { data: created, error } = await supabase
+          .from('assignments')
+          .insert(payload)
+          .select('id')
+          .single();
+        if (error) throw error;
+        saved = created;
+      }
+
+      const draftIdEl = form.querySelector('#td-draft-id');
+      if (draftIdEl) draftIdEl.value = saved.id;
+      state.draftAssignmentId = saved.id;
+      state.assignmentDraft.id = saved.id;
+
+      finishButtonFeedback(saveBtn, original, true, 'Saved');
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] save draft error:', err);
+      buttonError(saveBtn, original, 'Failed');
+    }
+  }
+
+  async function handleSendAssignment(form) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    persistDraftFormState(form);
+
+    const sendBtn = form.querySelector('#td-send-btn');
+    const original = rememberButton(sendBtn);
+    const teacherId = state.teacher?.id;
+    if (!teacherId) {
+      buttonError(sendBtn, original, 'No teacher');
+      return;
+    }
+
+    const data = collectAssignmentFormData(form);
+
+    if (!data.studentId) {
+      buttonError(sendBtn, original, 'Choose student');
+      return;
+    }
+
+    if (!data.title) {
+      buttonError(sendBtn, original, 'Enter title');
+      return;
+    }
+
+    startButtonFeedback(sendBtn, 'Sending...');
+
+    try {
+      let assignmentId = data.draftId;
+
+      const payload = {
+        teacher_id: teacherId,
+        title: data.title,
+        description: data.description || null,
+        miro_link: data.miroLink || null,
+        due_date: toIsoFromDatetimeLocal(data.dueDateRaw),
+        status: 'ready',
+        template_id: data.templateId || null,
+        cards_module_id: data.cardsModuleId || null,
+        assignment_mode: data.assignmentMode,
+        content_json: {
+          student_id: data.studentId || null
+        }
+      };
+
+      if (assignmentId) {
+        const { data: updated, error } = await supabase
+          .from('assignments')
+          .update(payload)
+          .eq('id', assignmentId)
+          .select('id')
+          .single();
+        if (error) throw error;
+        assignmentId = updated.id;
+      } else {
+        const { data: created, error } = await supabase
+          .from('assignments')
+          .insert(payload)
+          .select('id')
+          .single();
+        if (error) throw error;
+        assignmentId = created.id;
+      }
+
+      const { data: existingRecipient } = await supabase
+        .from('assignment_recipients')
+        .select('id')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', data.studentId)
+        .maybeSingle();
+
+      if (!existingRecipient) {
+        const { error: recipientErr } = await supabase
+          .from('assignment_recipients')
+          .insert({
+            assignment_id: assignmentId,
+            student_id: data.studentId,
+            status: 'not_started',
+            reviewed_status: 'not_reviewed'
+          });
+        if (recipientErr) throw recipientErr;
+      }
+
+      resetDraftState();
+
+      finishButtonFeedback(sendBtn, original, true, 'Sent');
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] send assignment error:', err);
+      buttonError(sendBtn, original, 'Failed');
+    }
+  }
+
+  async function handleLoadDraft(button) {
+    const assignmentId = button.getAttribute('data-assignment-id');
+    if (!assignmentId) return;
+
+    const assignment = (state.assignments || []).find((a) => a.id === assignmentId);
+    if (!assignment) return;
+
+    setDraftStateFromAssignment(assignment);
+    renderDashboard();
+
+    const form = rootEl()?.querySelector('#td-assignment-form');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function handleSendComment(card, assignmentId, button) {
@@ -1080,20 +1475,20 @@ async function handleDetachStudent(button) {
     }
   }
 
-async function loadTeacherDashboard() {
-  console.log('Loading teacher dashboard');
-  injectStyles();
-  setLoading();
+  async function loadTeacherDashboard() {
+    console.log('Loading teacher dashboard');
+    injectStyles();
+    setLoading();
 
-  try {
-    await fetchDashboardData();
-    renderDashboard();
-    initTeacherRealtime();
-  } catch (err) {
-    console.error('[teacher-dashboard] load error:', err);
-    setError(err?.message || 'Failed to load dashboard.');
+    try {
+      await fetchDashboardData();
+      renderDashboard();
+      initTeacherRealtime();
+    } catch (err) {
+      console.error('[teacher-dashboard] load error:', err);
+      setError(err?.message || 'Failed to load dashboard.');
+    }
   }
-}
 
   function start() {
     console.log('Teacher dashboard start called');
