@@ -10,6 +10,39 @@
   const SUBMISSIONS_BUCKET = 'assignment-submissions';
   const RESOURCES_BUCKET = 'assignment-resources';
 
+  const TEMPLATE_TYPE_REGISTRY = {
+    grammar_dropdown: {
+      label: 'Grammar Dropdown',
+      category: 'grammar',
+      answerMode: 'dropdown'
+    },
+    grammar_typed_gap_fill: {
+      label: 'Grammar Typed Gap Fill',
+      category: 'grammar',
+      answerMode: 'typed_gap_fill'
+    },
+    reading_multiple_choice: {
+      label: 'Reading Multiple Choice',
+      category: 'reading',
+      answerMode: 'multiple_choice'
+    },
+    reading_order: {
+      label: 'Reading Order',
+      category: 'reading',
+      answerMode: 'order'
+    },
+    vocabulary_matching: {
+      label: 'Vocabulary Matching',
+      category: 'vocabulary',
+      answerMode: 'matching'
+    },
+    vocabulary_dropdown: {
+      label: 'Vocabulary Dropdown',
+      category: 'vocabulary',
+      answerMode: 'dropdown'
+    }
+  };
+
   const state = {
     userId: null,
     student: null,
@@ -183,6 +216,14 @@
     });
   }
 
+  function cloneData(value) {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return value;
+    }
+  }
+
   function formatDateTime(value) {
     if (!value) return 'No date';
     try {
@@ -290,6 +331,307 @@
     finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
   }
 
+  function inferTemplateTypeFromLegacy(row) {
+    const cat = row?.category || '';
+    const mode = row?.answer_mode || '';
+    if (cat === 'grammar' && mode === 'dropdown') return 'grammar_dropdown';
+    if (cat === 'grammar' && mode === 'typed_gap_fill') return 'grammar_typed_gap_fill';
+    if (cat === 'reading' && mode === 'multiple_choice') return 'reading_multiple_choice';
+    if (cat === 'reading' && mode === 'order') return 'reading_order';
+    if (cat === 'vocabulary' && mode === 'matching') return 'vocabulary_matching';
+    if (cat === 'vocabulary' && mode === 'dropdown') return 'vocabulary_dropdown';
+    return '';
+  }
+
+  function normalizeTemplateRow(tpl) {
+    const inferredType = tpl.template_type || inferTemplateTypeFromLegacy(tpl);
+    const schemaJson =
+      tpl.schema_json && typeof tpl.schema_json === 'object' && Object.keys(tpl.schema_json).length
+        ? tpl.schema_json
+        : tpl.default_fields_json && typeof tpl.default_fields_json === 'object'
+          ? tpl.default_fields_json
+          : {};
+
+    return {
+      ...tpl,
+      template_type: inferredType,
+      topic: tpl.topic || '',
+      instruction: tpl.instruction || tpl.default_instructions || '',
+      schema_json: schemaJson
+    };
+  }
+
+  function getAssignmentTemplateSchema(assignment) {
+    const schema = assignment?.template_schema_json;
+    if (schema && typeof schema === 'object' && schema.content) return schema;
+    const fallback = assignment?.template_default_fields_json;
+    if (fallback && typeof fallback === 'object' && fallback.content) return fallback;
+    return null;
+  }
+
+  function getStoredTemplateAnswers(assignment) {
+    const raw = assignment?.submission?.answers_json;
+    if (raw && typeof raw === 'object' && raw.answers && typeof raw.answers === 'object') {
+      return raw.answers;
+    }
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      return raw;
+    }
+    return {};
+  }
+
+  function hasNonEmptyStructuredAnswers(answers) {
+    if (!answers || typeof answers !== 'object') return false;
+    return Object.values(answers).some((value) => {
+      if (Array.isArray(value)) return value.some(Boolean);
+      if (value && typeof value === 'object') return Object.values(value).some(Boolean);
+      return value !== null && value !== undefined && String(value).trim() !== '';
+    });
+  }
+
+  function normalizeReadingOrderContent(content) {
+    if (!content || !Array.isArray(content.items)) return content;
+    const itemIds = content.items.map((x) => x.id).filter(Boolean);
+    const seen = new Set();
+    const order = [];
+
+    (content.correct_order || []).forEach((id) => {
+      if (itemIds.includes(id) && !seen.has(id)) {
+        seen.add(id);
+        order.push(id);
+      }
+    });
+
+    itemIds.forEach((id) => {
+      if (!seen.has(id)) order.push(id);
+    });
+
+    content.correct_order = order;
+    return content;
+  }
+
+  function renderTemplateTypeBadge(type) {
+    const label = TEMPLATE_TYPE_REGISTRY[type]?.label || type || 'Template';
+    return `<span class="sd-type-badge">${escapeHtml(label)}</span>`;
+  }
+
+  function renderAssignmentTemplate(assignment) {
+    const schema = getAssignmentTemplateSchema(assignment);
+    const type = assignment?.template_type || '';
+    if (!schema || !type || !schema.content) return '';
+
+    const content = cloneData(schema.content || {});
+    if (type === 'reading_order') normalizeReadingOrderContent(content);
+    const answers = getStoredTemplateAnswers(assignment);
+    const instruction = assignment?.template_instruction || assignment?.template_default_instructions || '';
+
+    let inner = '';
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
+      const questions = content.questions || [];
+      inner = questions.map((q, idx) => {
+        const selected = answers[q.id] || '';
+        const optionsHtml = (q.options || []).map((opt) => {
+          return `<option value="${escapeHtml(opt.id)}" ${selected === opt.id ? 'selected' : ''}>${escapeHtml(opt.text || '')}</option>`;
+        }).join('');
+
+        return `
+          <div class="sd-template-item">
+            <div class="sd-template-qtitle">Question ${idx + 1}</div>
+            <div class="sd-template-text">${escapeHtml(q.sentence || '')}</div>
+            <label class="sd-label">
+              <span>Your answer</span>
+              <select class="sd-select" data-role="tpl-choice" data-qid="${escapeHtml(q.id)}">
+                <option value="">Choose an option</option>
+                ${optionsHtml}
+              </select>
+            </label>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (type === 'grammar_typed_gap_fill') {
+      const questions = content.questions || [];
+      inner = questions.map((q, idx) => {
+        const value = answers[q.id] || '';
+        return `
+          <div class="sd-template-item">
+            <div class="sd-template-qtitle">Question ${idx + 1}</div>
+            <div class="sd-template-text">${escapeHtml(q.sentence || '')}</div>
+            ${q.hint ? `<div class="sd-template-hint">Hint: ${escapeHtml(q.hint)}</div>` : ''}
+            <label class="sd-label">
+              <span>Your answer</span>
+              <input class="sd-input" type="text" value="${escapeHtml(value)}" data-role="tpl-gap" data-qid="${escapeHtml(q.id)}" placeholder="Type your answer" />
+            </label>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (type === 'reading_multiple_choice') {
+      const passageHtml = `
+        <div class="sd-template-passages">
+          ${content.passage_title ? `<div class="sd-template-passage-title">${escapeHtml(content.passage_title)}</div>` : ''}
+          ${(content.passage_paragraphs || []).map((p) => `<p class="sd-template-passage-p">${escapeHtml(p.text || '')}</p>`).join('')}
+        </div>
+      `;
+
+      const questionsHtml = (content.questions || []).map((q, idx) => {
+        const selected = answers[q.id] || '';
+        const optionsHtml = (q.options || []).map((opt) => {
+          return `<option value="${escapeHtml(opt.id)}" ${selected === opt.id ? 'selected' : ''}>${escapeHtml(opt.text || '')}</option>`;
+        }).join('');
+
+        return `
+          <div class="sd-template-item">
+            <div class="sd-template-qtitle">Question ${idx + 1}</div>
+            <div class="sd-template-text">${escapeHtml(q.question || '')}</div>
+            <label class="sd-label">
+              <span>Your answer</span>
+              <select class="sd-select" data-role="tpl-choice" data-qid="${escapeHtml(q.id)}">
+                <option value="">Choose an option</option>
+                ${optionsHtml}
+              </select>
+            </label>
+          </div>
+        `;
+      }).join('');
+
+      inner = `${passageHtml}<div class="sd-template-list">${questionsHtml}</div>`;
+    }
+
+    if (type === 'reading_order') {
+      const total = (content.items || []).length;
+      const positions = Array.from({ length: total }, (_, i) => i + 1);
+      const passageHtml = `
+        <div class="sd-template-passages">
+          ${content.passage_title ? `<div class="sd-template-passage-title">${escapeHtml(content.passage_title)}</div>` : ''}
+          ${(content.passage_paragraphs || []).map((p) => `<p class="sd-template-passage-p">${escapeHtml(p.text || '')}</p>`).join('')}
+        </div>
+      `;
+
+      const itemsHtml = (content.items || []).map((item, idx) => {
+        const selected = answers[item.id] || '';
+        const optionsHtml = positions.map((pos) => {
+          return `<option value="${pos}" ${String(selected) === String(pos) ? 'selected' : ''}>${pos}</option>`;
+        }).join('');
+
+        return `
+          <div class="sd-template-item">
+            <div class="sd-template-qtitle">Event ${idx + 1}</div>
+            <div class="sd-template-text">${escapeHtml(item.text || '')}</div>
+            <label class="sd-label">
+              <span>Correct position</span>
+              <select class="sd-select" data-role="tpl-order" data-item-id="${escapeHtml(item.id)}">
+                <option value="">Choose position</option>
+                ${optionsHtml}
+              </select>
+            </label>
+          </div>
+        `;
+      }).join('');
+
+      inner = `
+        ${passageHtml}
+        ${content.prompt ? `<div class="sd-template-prompt">${escapeHtml(content.prompt)}</div>` : ''}
+        <div class="sd-template-list">${itemsHtml}</div>
+      `;
+    }
+
+    if (type === 'vocabulary_matching') {
+      const pairs = content.pairs || [];
+      const optionsHtml = pairs.map((pair) => {
+        return `<option value="${escapeHtml(pair.id)}">${escapeHtml(pair.right_text || '')}</option>`;
+      }).join('');
+
+      inner = `
+        ${content.prompt ? `<div class="sd-template-prompt">${escapeHtml(content.prompt)}</div>` : ''}
+        <div class="sd-template-list">
+          ${pairs.map((pair, idx) => {
+            const selected = answers[pair.id] || '';
+            return `
+              <div class="sd-template-item">
+                <div class="sd-template-qtitle">Pair ${idx + 1}</div>
+                <div class="sd-template-text"><strong>${escapeHtml(pair.left_text || '')}</strong></div>
+                ${pair.example ? `<div class="sd-template-hint">Example: ${escapeHtml(pair.example)}</div>` : ''}
+                <label class="sd-label">
+                  <span>Match with</span>
+                  <select class="sd-select" data-role="tpl-match" data-pair-id="${escapeHtml(pair.id)}">
+                    <option value="">Choose meaning</option>
+                    ${pairs.map((opt) => `<option value="${escapeHtml(opt.id)}" ${selected === opt.id ? 'selected' : ''}>${escapeHtml(opt.right_text || '')}</option>`).join('')}
+                  </select>
+                </label>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="sd-template-block">
+        <div class="sd-template-head">
+          <div>
+            <div class="sd-template-title">Template exercise</div>
+            ${instruction ? `<div class="sd-template-sub">${escapeHtml(instruction)}</div>` : ''}
+          </div>
+          <div>${renderTemplateTypeBadge(type)}</div>
+        </div>
+        ${inner}
+      </div>
+    `;
+  }
+
+  function collectTemplateAnswers(card, assignment) {
+    const schema = getAssignmentTemplateSchema(assignment);
+    const type = assignment?.template_type || '';
+    if (!schema || !type) return null;
+
+    const answers = {};
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'reading_multiple_choice') {
+      card.querySelectorAll('[data-role="tpl-choice"]').forEach((el) => {
+        const qid = el.getAttribute('data-qid');
+        if (!qid) return;
+        const value = el.value || '';
+        if (value) answers[qid] = value;
+      });
+    }
+
+    if (type === 'grammar_typed_gap_fill') {
+      card.querySelectorAll('[data-role="tpl-gap"]').forEach((el) => {
+        const qid = el.getAttribute('data-qid');
+        if (!qid) return;
+        const value = (el.value || '').trim();
+        if (value) answers[qid] = value;
+      });
+    }
+
+    if (type === 'reading_order') {
+      card.querySelectorAll('[data-role="tpl-order"]').forEach((el) => {
+        const itemId = el.getAttribute('data-item-id');
+        if (!itemId) return;
+        const value = el.value || '';
+        if (value) answers[itemId] = value;
+      });
+    }
+
+    if (type === 'vocabulary_matching') {
+      card.querySelectorAll('[data-role="tpl-match"]').forEach((el) => {
+        const pairId = el.getAttribute('data-pair-id');
+        if (!pairId) return;
+        const value = el.value || '';
+        if (value) answers[pairId] = value;
+      });
+    }
+
+    return {
+      template_type: type,
+      answers
+    };
+  }
+
   function injectStyles() {
     if (document.getElementById('student-dashboard-styles')) return;
 
@@ -353,7 +695,29 @@
       .sd-comment-meta,.sd-material-meta{font-size:12px;color:#667085;margin-bottom:6px}
       .sd-comment-body{font-size:14px;line-height:1.55;color:#111213;white-space:pre-wrap}
       .sd-feedback-box{border:1px solid #dbe7f3;border-radius:12px;padding:12px 14px;background:#f8fbff;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
-      @media (max-width:760px){#${ROOT_ID}{padding:0 12px 28px}.sd-head,.sd-body{padding:16px}.sd-title{font-size:24px}.sd-grid-2{grid-template-columns:1fr}.sd-assignment-top{flex-direction:column;align-items:flex-start}}
+
+      .sd-template-block{margin-top:16px;padding:16px;border:1px solid #dbe7f3;border-radius:14px;background:#fbfdff}
+      .sd-template-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+      .sd-template-title{font-size:18px;font-weight:700;line-height:1.2}
+      .sd-template-sub{margin-top:6px;color:#667085;font-size:14px;line-height:1.5}
+      .sd-type-badge{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#eef6ff;border:1px solid #c7e2ff;color:#175cd3;font-size:12px;font-weight:700}
+      .sd-template-passages{display:grid;gap:10px;margin-bottom:16px}
+      .sd-template-passage-title{font-size:16px;font-weight:700;color:#111213}
+      .sd-template-passage-p{margin:0;color:#344054;line-height:1.65}
+      .sd-template-prompt{margin-bottom:14px;color:#344054;font-weight:700}
+      .sd-template-list{display:grid;gap:12px}
+      .sd-template-item{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;gap:10px}
+      .sd-template-qtitle{font-size:14px;font-weight:700;color:#175cd3}
+      .sd-template-text{font-size:15px;line-height:1.6;color:#111213;white-space:pre-wrap}
+      .sd-template-hint{font-size:13px;color:#667085;line-height:1.5}
+
+      @media (max-width:760px){
+        #${ROOT_ID}{padding:0 12px 28px}
+        .sd-head,.sd-body{padding:16px}
+        .sd-title{font-size:24px}
+        .sd-grid-2{grid-template-columns:1fr}
+        .sd-assignment-top,.sd-template-head{flex-direction:column;align-items:flex-start}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -416,10 +780,26 @@
 
     const { data: templatesRows, error: templatesErr } = await supabase
       .from('assignment_templates')
-      .select('id, template_key, title, category, answer_mode, default_instructions, is_active')
+      .select(`
+        id,
+        teacher_id,
+        template_key,
+        title,
+        category,
+        answer_mode,
+        default_instructions,
+        default_fields_json,
+        is_active,
+        template_type,
+        topic,
+        instruction,
+        schema_json
+      `)
       .eq('is_active', true)
       .order('title', { ascending: true });
     if (templatesErr) throw templatesErr;
+
+    const templatesNormalized = (templatesRows || []).map(normalizeTemplateRow);
 
     const { data: moduleRows, error: modulesErr } = await supabase
       .from('modules')
@@ -436,7 +816,7 @@
 
       const { data: submissionRows, error: submissionsErr } = await supabase
         .from('assignment_submissions')
-        .select('id, assignment_id, student_id, answer_text, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
+        .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
         .eq('student_id', userId)
         .in('assignment_id', assignmentIds);
       if (submissionsErr) throw submissionsErr;
@@ -483,7 +863,7 @@
       });
 
       const assignmentsById = new Map((assignmentRows || []).map(a => [a.id, a]));
-      const templatesById = new Map((templatesRows || []).map(t => [t.id, t]));
+      const templatesById = new Map(templatesNormalized.map(t => [t.id, t]));
       const modulesById = new Map((moduleRows || []).map(m => [m.id, m]));
 
       assignments = (recipientRows || []).map(recipient => {
@@ -507,6 +887,12 @@
           template_title: tpl?.title || '',
           template_category: tpl?.category || '',
           template_answer_mode: tpl?.answer_mode || '',
+          template_type: tpl?.template_type || '',
+          template_topic: tpl?.topic || '',
+          template_instruction: tpl?.instruction || tpl?.default_instructions || '',
+          template_schema_json: tpl?.schema_json || null,
+          template_default_fields_json: tpl?.default_fields_json || null,
+          template_default_instructions: tpl?.default_instructions || '',
           module_name: mod?.name || '',
           linked_student_id: assignment.content_json?.student_id || null
         };
@@ -521,7 +907,7 @@
     state.submissionsByAssignment = submissionsByAssignment;
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
-    state.templates = templatesRows || [];
+    state.templates = templatesNormalized;
     state.modules = moduleRows || [];
   }
 
@@ -609,6 +995,8 @@
                 </div>
               ` : ''}
 
+              ${renderAssignmentTemplate(assignment)}
+
               ${hasMiro ? `<div style="margin-top:14px;"><a class="sd-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
 
               <div class="sd-materials">
@@ -638,15 +1026,15 @@
                 </div>
 
                 <label class="sd-label">
-                  <span>My answer</span>
-                  <textarea class="sd-textarea" data-role="answer" placeholder="Write your answer here.">${escapeHtml(submission?.answer_text || '')}</textarea>
+                  <span>${assignment.template_title ? 'Additional note' : 'My answer'}</span>
+                  <textarea class="sd-textarea" data-role="answer" placeholder="${assignment.template_title ? 'Optional note for your teacher.' : 'Write your answer here.'}">${escapeHtml(submission?.answer_text || '')}</textarea>
                 </label>
 
                 ${fileInfo}
 
                 <div class="sd-actions">
                   <button class="sd-btn sd-btn-primary" type="button" data-action="save-work">Save progress</button>
-                  <div class="sd-note">Save your status, text answer, and optional file.</div>
+                  <div class="sd-note">Save your status, template answers, text answer, and optional file.</div>
                 </div>
               </div>
 
@@ -743,6 +1131,11 @@
     const file = fileEl?.files?.[0] || null;
     const studentId = state.userId;
     const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
+    const assignment = state.assignments.find((a) => a.id === assignmentId) || null;
+    const templateAnswersPayload = collectTemplateAnswers(card, assignment);
+    const answersJson = templateAnswersPayload && hasNonEmptyStructuredAnswers(templateAnswersPayload.answers)
+      ? templateAnswersPayload
+      : null;
     const original = rememberButton(button);
 
     startButtonFeedback(button, 'Saving...');
@@ -787,13 +1180,18 @@
         };
       }
 
-      const hasSomethingToStore = answerText || filePayload.file_path || existingSubmission;
+      const hasSomethingToStore =
+        answerText ||
+        filePayload.file_path ||
+        answersJson ||
+        existingSubmission;
 
       if (hasSomethingToStore) {
         const payload = {
           assignment_id: assignmentId,
           student_id: studentId,
           answer_text: answerText || null,
+          answers_json: answersJson,
           file_path: filePayload.file_path,
           file_name: filePayload.file_name,
           file_size: filePayload.file_size,
