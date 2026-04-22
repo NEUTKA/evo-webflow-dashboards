@@ -8,6 +8,39 @@
   const SUBMISSIONS_BUCKET = 'assignment-submissions';
   const RESOURCES_BUCKET = 'assignment-resources';
 
+  const TEMPLATE_TYPE_REGISTRY = {
+    grammar_dropdown: {
+      label: 'Grammar Dropdown',
+      category: 'grammar',
+      answerMode: 'dropdown'
+    },
+    grammar_typed_gap_fill: {
+      label: 'Grammar Typed Gap Fill',
+      category: 'grammar',
+      answerMode: 'typed_gap_fill'
+    },
+    reading_multiple_choice: {
+      label: 'Reading Multiple Choice',
+      category: 'reading',
+      answerMode: 'multiple_choice'
+    },
+    reading_order: {
+      label: 'Reading Order',
+      category: 'reading',
+      answerMode: 'order'
+    },
+    vocabulary_matching: {
+      label: 'Vocabulary Matching',
+      category: 'vocabulary',
+      answerMode: 'matching'
+    },
+    vocabulary_dropdown: {
+      label: 'Vocabulary Dropdown',
+      category: 'vocabulary',
+      answerMode: 'dropdown'
+    }
+  };
+
   const state = {
     userId: null,
     teacher: null,
@@ -20,6 +53,7 @@
     templates: [],
     modules: [],
     flash: null,
+    activeView: 'dashboard',
     draftAssignmentId: null,
     assignmentDraft: {
       id: '',
@@ -30,7 +64,13 @@
       miroLink: '',
       templateId: '',
       cardsModuleId: ''
-    }
+    },
+    templateFilters: {
+      query: '',
+      ownership: 'mine',
+      type: ''
+    },
+    templateEditor: getInitialTemplateEditorState('grammar_dropdown')
   };
 
   let tdRealtimeChannel = null;
@@ -164,6 +204,14 @@
         "'": '&#39;'
       }[m];
     });
+  }
+
+  function cloneData(value) {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return value;
+    }
   }
 
   function formatDateTime(value) {
@@ -305,6 +353,14 @@
     return new Promise((resolve) => window.setTimeout(resolve, ms));
   }
 
+  function setFlash(type, message) {
+    state.flash = { type, message };
+  }
+
+  function clearFlash() {
+    state.flash = null;
+  }
+
   function resolveAssignmentMode(templateId, cardsModuleId) {
     if (templateId && cardsModuleId) return 'template_cards';
     if (templateId) return 'template';
@@ -379,300 +435,1051 @@
     state.draftAssignmentId = null;
   }
 
-  function injectStyles() {
-    if (document.getElementById('teacher-dashboard-styles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'teacher-dashboard-styles';
-    style.textContent = `
-      #${ROOT_ID}{max-width:980px;margin:32px auto;padding:0 16px 40px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111213}
-      #${ROOT_ID} *{box-sizing:border-box}
-      .td-wrap{display:grid;gap:18px}
-      .td-card{background:#fff;border:1px solid #dfe5ec;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden}
-      .td-head{padding:18px 20px;border-bottom:1px solid #eef2f6;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
-      .td-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#4EA9E7;font-weight:700;margin-bottom:6px}
-      .td-title{margin:0;font-size:28px;line-height:1.15}
-      .td-sub{margin-top:8px;color:#667085;font-size:15px}
-      .td-body{padding:18px 20px 20px}
-      .td-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-      .td-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid #dbe7f3;background:#f8fbff;color:#0f172a;font-size:14px}
-      .td-grid{display:grid;gap:12px}
-      .td-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-      .td-student{border:1px solid #e6ebf1;border-radius:14px;padding:14px 16px;background:#fff}
-      .td-student-top{display:flex;align-items:start;justify-content:space-between;gap:12px}
-      .td-name{font-size:18px;font-weight:700;line-height:1.2}
-      .td-email{margin-top:4px;color:#667085;font-size:14px;overflow-wrap:anywhere}
-      .td-badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
-      .td-badge.active,.td-badge.completed,.td-badge.reviewed,.td-badge.ready{background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
-      .td-badge.not_started,.td-badge.not_reviewed,.td-badge.draft{background:#f8fbff;border:1px solid #dbe7f3;color:#175cd3}
-      .td-badge.in_progress,.td-badge.awaiting_review{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c}
-      .td-badge.archived{background:#f9fafb;border:1px solid #e5e7eb;color:#475467}
-      .td-empty{padding:24px;border:1px dashed #cfd8e3;border-radius:14px;background:#fbfdff;color:#667085;text-align:center}
-      .td-error{padding:16px 18px;border-radius:14px;background:#fff2f2;border:1px solid #fecaca;color:#b42318}
-      .td-success{padding:16px 18px;border-radius:14px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
-      .td-loading{color:#667085}
-      .td-form,.td-section,.td-comments{display:grid;gap:14px}
-      .td-label{display:grid;gap:8px}
-      .td-label span{font-size:14px;font-weight:700;color:#344054}
-      .td-input,.td-select,.td-textarea{width:100%;border:1px solid #d0d5dd;border-radius:12px;background:#fff;color:#111213;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:12px 14px;outline:none}
-      .td-textarea{min-height:120px;resize:vertical}
-      .td-input:focus,.td-select:focus,.td-textarea:focus{border-color:#4EA9E7;box-shadow:0 0 0 3px rgba(78,169,231,.18)}
-      .td-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-      .td-manage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:end}
-      .td-manage-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-      .td-note-inline{max-width:320px;line-height:1.45}
-      .td-btn-add{min-width:180px}
-      .td-btn-compact{padding:10px 14px;font-size:13px;border-radius:10px}
-      .td-btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer}
-      .td-btn-primary{background:#111213;color:#fff}
-      .td-btn-primary:hover,.td-link:hover{filter:brightness(1.05)}
-      .td-btn-secondary{background:#f8fbff;color:#175cd3;border:1px solid #dbe7f3}
-      .td-btn-danger{background:#fff2f2;color:#b42318;border:1px solid #fecaca}
-      .td-btn:disabled{opacity:.65;cursor:not-allowed}
-      .td-btn.is-busy{opacity:.92;cursor:wait}
-      .td-btn.is-success{background:#22c55e !important;border-color:#22c55e !important;color:#fff !important}
-      .td-btn.is-error{background:#ef4444 !important;border-color:#ef4444 !important;color:#fff !important}
-      .td-note{color:#667085;font-size:14px}
-      .td-assignment{border:1px solid #e6ebf1;border-radius:14px;padding:16px;background:#fff}
-      .td-assignment-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-      .td-assignment-title{font-size:18px;font-weight:700;line-height:1.25}
-      .td-assignment-desc{margin-top:8px;color:#475467;font-size:14px;line-height:1.55;white-space:pre-wrap}
-      .td-assignment-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
-      .td-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3;color:#0f172a;font-size:13px}
-      .td-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:none;border-radius:12px;padding:11px 14px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#111213;color:#fff}
-      .td-answer{border:1px solid #e6ebf1;border-radius:12px;padding:12px 14px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
-      .td-comments-list,.td-resource-list{display:grid;gap:10px}
-      .td-comment,.td-resource{border:1px solid #e6ebf1;border-radius:12px;padding:12px 14px;background:#fff}
-      .td-comment.teacher{background:#f8fbff;border-color:#dbe7f3}
-      .td-comment.student{background:#fcfcfd}
-      .td-comment-meta,.td-resource-meta{font-size:12px;color:#667085;margin-bottom:6px}
-      .td-comment-body{font-size:14px;line-height:1.55;color:#111213;white-space:pre-wrap}
-      @media (max-width:760px){#${ROOT_ID}{padding:0 12px 28px}.td-head,.td-body{padding:16px}.td-title{font-size:24px}.td-grid-2{grid-template-columns:1fr}.td-student-top,.td-assignment-top{flex-direction:column;align-items:flex-start}.td-manage-row{grid-template-columns:1fr}.td-manage-actions{align-items:flex-start}.td-btn-add{min-width:0;width:100%}.td-note-inline{max-width:none}}
-    `;
-    document.head.appendChild(style);
+  function makeLocalId(prefix) {
+    return `${prefix}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
   }
 
-  function setLoading() {
-    const root = rootEl();
-    if (!root) return;
-    root.innerHTML = `<div class="td-wrap"><div class="td-card"><div class="td-head"><div class="td-kicker">Teacher dashboard</div><h1 class="td-title">Loading dashboard…</h1><div class="td-sub">Please wait a moment.</div></div><div class="td-body"><div class="td-loading">Loading students and assignments…</div></div></div></div>`;
+  function slugify(value) {
+    return String(value || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/--+/g, '-');
   }
 
-  function setError(message) {
-    const root = rootEl();
-    if (!root) return;
-    root.innerHTML = `<div class="td-wrap"><div class="td-card"><div class="td-head"><div class="td-kicker">Teacher dashboard</div><h1 class="td-title">Something went wrong</h1><div class="td-sub">The dashboard could not be loaded.</div></div><div class="td-body"><div class="td-error">${escapeHtml(message)}</div></div></div></div>`;
+  function inferTemplateTypeFromLegacy(row) {
+    const cat = row?.category || '';
+    const mode = row?.answer_mode || '';
+    if (cat === 'grammar' && mode === 'dropdown') return 'grammar_dropdown';
+    if (cat === 'grammar' && mode === 'typed_gap_fill') return 'grammar_typed_gap_fill';
+    if (cat === 'reading' && mode === 'multiple_choice') return 'reading_multiple_choice';
+    if (cat === 'reading' && mode === 'order') return 'reading_order';
+    if (cat === 'vocabulary' && mode === 'matching') return 'vocabulary_matching';
+    if (cat === 'vocabulary' && mode === 'dropdown') return 'vocabulary_dropdown';
+    return 'grammar_dropdown';
   }
 
-  async function fetchDashboardData() {
-    const supabase = window.supabase;
-    if (!supabase) throw new Error('Supabase is not available on this page.');
+  function getBlankDropdownQuestion(prefix = 'q') {
+    const optionA = { id: 'a', text: '' };
+    const optionB = { id: 'b', text: '' };
+    return {
+      id: makeLocalId(prefix),
+      sentence: '',
+      options: [optionA, optionB],
+      correct_option_id: 'a',
+      explanation: ''
+    };
+  }
 
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    if (userErr) throw userErr;
-    const user = userData?.user;
-    if (!user) throw new Error('User session not found.');
-    state.userId = user.id;
+  function getBlankTypedGapQuestion() {
+    return {
+      id: makeLocalId('q'),
+      sentence: '',
+      accepted_answers: [''],
+      hint: '',
+      explanation: ''
+    };
+  }
 
-    const { data: teacherProfile, error: teacherErr } = await supabase
-      .from('profiles')
-      .select('id, email, full_name, role')
-      .eq('id', user.id)
-      .single();
-    if (teacherErr) throw teacherErr;
+  function getBlankParagraph() {
+    return {
+      id: makeLocalId('p'),
+      text: ''
+    };
+  }
 
-    const { data: links, error: linksErr } = await supabase
-      .from('teacher_students')
-      .select('student_id, status, created_at')
-      .eq('teacher_id', user.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
-    if (linksErr) throw linksErr;
+  function getBlankReadingMcQuestion() {
+    const optionA = { id: 'a', text: '' };
+    const optionB = { id: 'b', text: '' };
+    return {
+      id: makeLocalId('q'),
+      question: '',
+      options: [optionA, optionB],
+      correct_option_id: 'a',
+      explanation: ''
+    };
+  }
 
-    const studentIds = [...new Set((links || []).map((r) => r.student_id).filter(Boolean))];
-    const linkMap = new Map((links || []).map((r) => [r.student_id, r]));
-    let students = [];
+  function getBlankOrderItem() {
+    return {
+      id: makeLocalId('i'),
+      text: ''
+    };
+  }
 
-    if (studentIds.length) {
-      const { data: studentProfiles, error: studentsErr } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, role')
-        .in('id', studentIds);
-      if (studentsErr) throw studentsErr;
+  function getBlankMatchingPair() {
+    return {
+      id: makeLocalId('m'),
+      left_text: '',
+      right_text: '',
+      example: ''
+    };
+  }
 
-      const byId = new Map((studentProfiles || []).map((p) => [p.id, p]));
-      students = studentIds.map((id) => byId.get(id)).filter(Boolean);
+  function getInitialSchemaContent(type) {
+    if (type === 'grammar_dropdown') {
+      return {
+        questions: [getBlankDropdownQuestion('q')]
+      };
     }
 
-    const { data: templatesRows, error: templatesErr } = await supabase
-      .from('assignment_templates')
-      .select('id, template_key, title, description, category, level_range, estimated_time, answer_mode, default_instructions, default_fields_json, is_active')
-      .eq('is_active', true)
-      .order('title', { ascending: true });
-    if (templatesErr) throw templatesErr;
+    if (type === 'grammar_typed_gap_fill') {
+      return {
+        questions: [getBlankTypedGapQuestion()]
+      };
+    }
 
-    const { data: moduleRows, error: modulesErr } = await supabase
-      .from('modules')
-      .select('id, user_id, name, is_active, created_at')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-    if (modulesErr) throw modulesErr;
+    if (type === 'reading_multiple_choice') {
+      return {
+        passage_title: '',
+        passage_paragraphs: [getBlankParagraph()],
+        questions: [getBlankReadingMcQuestion()]
+      };
+    }
 
-    const { data: assignmentsRows, error: assignmentsErr } = await supabase
-      .from('assignments')
-      .select('id, teacher_id, title, description, due_date, created_at, miro_link, status, template_id, cards_module_id, assignment_mode, content_json')
-      .eq('teacher_id', user.id)
-      .order('created_at', { ascending: false });
-    if (assignmentsErr) throw assignmentsErr;
+    if (type === 'reading_order') {
+      const item1 = getBlankOrderItem();
+      const item2 = getBlankOrderItem();
+      return {
+        passage_title: '',
+        passage_paragraphs: [getBlankParagraph()],
+        prompt: 'Put the events in the correct order.',
+        items: [item1, item2],
+        correct_order: [item1.id, item2.id],
+        explanation: ''
+      };
+    }
 
-    const assignmentIds = (assignmentsRows || []).map((a) => a.id);
-    let assignments = [];
-    let commentsByAssignment = new Map();
-    let resourcesByAssignment = new Map();
+    if (type === 'vocabulary_matching') {
+      return {
+        prompt: 'Match the words with their definitions.',
+        pairs: [getBlankMatchingPair(), getBlankMatchingPair()]
+      };
+    }
 
-    const templatesById = new Map((templatesRows || []).map((t) => [t.id, t]));
-    const modulesById = new Map((moduleRows || []).map((m) => [m.id, m]));
+    if (type === 'vocabulary_dropdown') {
+      return {
+        questions: [getBlankDropdownQuestion('q')]
+      };
+    }
 
-    if (assignmentIds.length) {
-      const { data: recipients, error: recipientsErr } = await supabase
-        .from('assignment_recipients')
-        .select('assignment_id, student_id, status, created_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
-        .in('assignment_id', assignmentIds);
-      if (recipientsErr) throw recipientsErr;
+    return {
+      questions: [getBlankDropdownQuestion('q')]
+    };
+  }
 
-      const { data: submissionRows, error: submissionsErr } = await supabase
-        .from('assignment_submissions')
-        .select('id, assignment_id, student_id, answer_text, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
-        .in('assignment_id', assignmentIds);
-      if (submissionsErr) throw submissionsErr;
+  function getInitialTemplateEditorState(type = 'grammar_dropdown') {
+    return {
+      mode: 'create',
+      id: '',
+      teacherId: '',
+      templateKey: '',
+      title: '',
+      topic: '',
+      instruction: '',
+      templateType: type,
+      schemaContent: getInitialSchemaContent(type)
+    };
+  }
 
-      const submissionsWithUrls = await Promise.all(
-        (submissionRows || []).map(async (row) => ({
-          ...row,
-          signed_url: row.file_path ? await createSignedUrl(SUBMISSIONS_BUCKET, row.file_path) : ''
-        }))
-      );
-      const submissionsByAssignment = new Map(submissionsWithUrls.map((row) => [row.assignment_id, row]));
+  function resetTemplateEditor(type = 'grammar_dropdown') {
+    state.templateEditor = getInitialTemplateEditorState(type);
+  }
 
-      const { data: commentRows, error: commentsErr } = await supabase
-        .from('assignment_comments')
-        .select('id, assignment_id, student_id, author_id, author_role, body, created_at')
-        .in('assignment_id', assignmentIds)
-        .order('created_at', { ascending: true });
-      if (commentsErr) throw commentsErr;
+  function normalizeReadingOrderContent(content) {
+    if (!content || !Array.isArray(content.items)) return content;
+    const itemIds = content.items.map((x) => x.id).filter(Boolean);
+    const seen = new Set();
+    const order = [];
 
-      commentsByAssignment = new Map();
-      (commentRows || []).forEach((row) => {
-        if (!commentsByAssignment.has(row.assignment_id)) commentsByAssignment.set(row.assignment_id, []);
-        commentsByAssignment.get(row.assignment_id).push(row);
-      });
+    (content.correct_order || []).forEach((id) => {
+      if (itemIds.includes(id) && !seen.has(id)) {
+        seen.add(id);
+        order.push(id);
+      }
+    });
 
-      const { data: resourceRows, error: resourcesErr } = await supabase
-        .from('assignment_resources')
-        .select('id, assignment_id, teacher_id, file_path, file_name, file_size, mime_type, created_at')
-        .in('assignment_id', assignmentIds)
-        .order('created_at', { ascending: true });
-      if (resourcesErr) throw resourcesErr;
+    itemIds.forEach((id) => {
+      if (!seen.has(id)) order.push(id);
+    });
 
-      const resourcesWithUrls = await Promise.all(
-        (resourceRows || []).map(async (row) => ({
-          ...row,
-          signed_url: row.file_path ? await createSignedUrl(RESOURCES_BUCKET, row.file_path) : ''
-        }))
-      );
-      resourcesByAssignment = new Map();
-      resourcesWithUrls.forEach((row) => {
-        if (!resourcesByAssignment.has(row.assignment_id)) resourcesByAssignment.set(row.assignment_id, []);
-        resourcesByAssignment.get(row.assignment_id).push(row);
-      });
+    content.correct_order = order;
+    return content;
+  }
 
-      const recipientsByAssignment = new Map();
-      (recipients || []).forEach((r) => {
-        if (!recipientsByAssignment.has(r.assignment_id)) {
-          recipientsByAssignment.set(r.assignment_id, r);
+  function buildTemplateKey(title, type) {
+    const base = slugify(title) || slugify(type) || 'template';
+    return `${base}-${Date.now()}`;
+  }
+
+  function buildTemplateSchemaJson(editor) {
+    const type = editor?.templateType || 'grammar_dropdown';
+    const content = cloneData(editor?.schemaContent || getInitialSchemaContent(type));
+
+    if (type === 'reading_order') {
+      normalizeReadingOrderContent(content);
+    }
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'reading_multiple_choice') {
+      if (Array.isArray(content.questions)) {
+        content.questions.forEach((q) => {
+          if (Array.isArray(q.options) && q.options.length) {
+            const ids = q.options.map((opt, idx) => {
+              if (!opt.id) opt.id = String.fromCharCode(97 + idx);
+              return opt.id;
+            });
+            if (!ids.includes(q.correct_option_id)) {
+              q.correct_option_id = ids[0];
+            }
+          }
+        });
+      }
+    }
+
+    return {
+      version: 1,
+      type,
+      settings: getDefaultSettingsForType(type),
+      content
+    };
+  }
+
+  function getDefaultSettingsForType(type) {
+    if (type === 'grammar_dropdown') {
+      return {
+        shuffle_questions: false,
+        shuffle_options: false,
+        show_explanations: true
+      };
+    }
+
+    if (type === 'grammar_typed_gap_fill') {
+      return {
+        shuffle_questions: false,
+        show_explanations: true,
+        case_sensitive: false,
+        trim_whitespace: true
+      };
+    }
+
+    if (type === 'reading_multiple_choice') {
+      return {
+        shuffle_questions: false,
+        shuffle_options: false,
+        show_explanations: true
+      };
+    }
+
+    if (type === 'reading_order') {
+      return {
+        show_explanations: true
+      };
+    }
+
+    if (type === 'vocabulary_matching') {
+      return {
+        shuffle_left_column: true,
+        shuffle_right_column: true,
+        show_explanations: true
+      };
+    }
+
+    if (type === 'vocabulary_dropdown') {
+      return {
+        shuffle_questions: false,
+        shuffle_options: false,
+        show_explanations: true
+      };
+    }
+
+    return {};
+  }
+
+  function buildTemplatePayload(editor) {
+    const tplType = editor.templateType;
+    const meta = TEMPLATE_TYPE_REGISTRY[tplType] || TEMPLATE_TYPE_REGISTRY.grammar_dropdown;
+    const schemaJson = buildTemplateSchemaJson(editor);
+    const topic = (editor.topic || '').trim();
+    const instruction = (editor.instruction || '').trim();
+    const title = (editor.title || '').trim();
+
+    return {
+      teacher_id: state.userId,
+      template_key: editor.templateKey || buildTemplateKey(title, tplType),
+      title,
+      category: meta.category,
+      answer_mode: meta.answerMode,
+      template_type: tplType,
+      topic: topic || null,
+      instruction: instruction || null,
+      schema_json: schemaJson,
+
+      // legacy compatibility
+      description: topic || null,
+      default_instructions: instruction || null,
+      default_fields_json: schemaJson,
+      is_active: true
+    };
+  }
+
+  function validateTemplateEditor(editor) {
+    const errors = [];
+    const type = editor?.templateType;
+    const content = editor?.schemaContent || {};
+
+    if (!editor?.title?.trim()) {
+      errors.push('Enter template title.');
+    }
+
+    if (!type || !TEMPLATE_TYPE_REGISTRY[type]) {
+      errors.push('Choose template type.');
+    }
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
+      const questions = content.questions || [];
+      if (!questions.length) {
+        errors.push('Add at least one question.');
+      }
+
+      questions.forEach((q, idx) => {
+        if (!String(q.sentence || '').trim()) {
+          errors.push(`Question ${idx + 1}: enter sentence with gap.`);
+        }
+
+        const options = q.options || [];
+        if (options.length < 2) {
+          errors.push(`Question ${idx + 1}: add at least two options.`);
+        }
+
+        const nonEmptyOptions = options.filter((opt) => String(opt.text || '').trim());
+        if (nonEmptyOptions.length < 2) {
+          errors.push(`Question ${idx + 1}: at least two options must have text.`);
+        }
+
+        const optionIds = options.map((opt) => opt.id);
+        if (!q.correct_option_id || !optionIds.includes(q.correct_option_id)) {
+          errors.push(`Question ${idx + 1}: choose a correct option.`);
         }
       });
+    }
 
-      assignments = (assignmentsRows || []).map((a) => {
-        const recipient = recipientsByAssignment.get(a.id) || null;
-        const submission = submissionsByAssignment.get(a.id) || null;
-        const tpl = a.template_id ? templatesById.get(a.template_id) : null;
-        const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
+    if (type === 'grammar_typed_gap_fill') {
+      const questions = content.questions || [];
+      if (!questions.length) {
+        errors.push('Add at least one question.');
+      }
 
-        return {
-          ...a,
-          student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
-          recipient_status: recipient?.status || null,
-          recipient_created_at: recipient?.created_at || null,
-          recipient_submitted_at: recipient?.submitted_at || null,
-          teacher_feedback: recipient?.teacher_feedback || '',
-          reviewed_status: recipient?.reviewed_status || 'not_reviewed',
-          reviewed_at: recipient?.reviewed_at || null,
-          reviewed_by: recipient?.reviewed_by || null,
-          submission,
-          template_title: tpl?.title || '',
-          template_category: tpl?.category || '',
-          module_name: mod?.name || '',
-          is_sent: !!recipient
-        };
+      questions.forEach((q, idx) => {
+        if (!String(q.sentence || '').trim()) {
+          errors.push(`Question ${idx + 1}: enter sentence with gap.`);
+        }
+
+        const answers = (q.accepted_answers || []).map((x) => String(x || '').trim()).filter(Boolean);
+        if (!answers.length) {
+          errors.push(`Question ${idx + 1}: add at least one accepted answer.`);
+        }
       });
     }
 
-    state.teacher = teacherProfile;
-    state.students = students;
-    state.studentsById = new Map(students.map((s) => [s.id, s]));
-    state.studentLinksById = linkMap;
-    state.assignments = assignments;
-    state.commentsByAssignment = commentsByAssignment;
-    state.resourcesByAssignment = resourcesByAssignment;
-    state.templates = templatesRows || [];
-    state.modules = moduleRows || [];
+    if (type === 'reading_multiple_choice') {
+      if (!String(content.passage_title || '').trim()) {
+        errors.push('Enter passage title.');
+      }
+
+      const paragraphs = content.passage_paragraphs || [];
+      if (!paragraphs.length || !paragraphs.some((p) => String(p.text || '').trim())) {
+        errors.push('Add at least one passage paragraph.');
+      }
+
+      const questions = content.questions || [];
+      if (!questions.length) {
+        errors.push('Add at least one question.');
+      }
+
+      questions.forEach((q, idx) => {
+        if (!String(q.question || '').trim()) {
+          errors.push(`Question ${idx + 1}: enter question text.`);
+        }
+
+        const options = q.options || [];
+        const nonEmptyOptions = options.filter((opt) => String(opt.text || '').trim());
+        if (nonEmptyOptions.length < 2) {
+          errors.push(`Question ${idx + 1}: add at least two options.`);
+        }
+
+        const optionIds = options.map((opt) => opt.id);
+        if (!q.correct_option_id || !optionIds.includes(q.correct_option_id)) {
+          errors.push(`Question ${idx + 1}: choose a correct option.`);
+        }
+      });
+    }
+
+    if (type === 'reading_order') {
+      if (!String(content.passage_title || '').trim()) {
+        errors.push('Enter passage title.');
+      }
+
+      const paragraphs = content.passage_paragraphs || [];
+      if (!paragraphs.length || !paragraphs.some((p) => String(p.text || '').trim())) {
+        errors.push('Add at least one passage paragraph.');
+      }
+
+      const items = content.items || [];
+      const nonEmptyItems = items.filter((x) => String(x.text || '').trim());
+      if (items.length < 2 || nonEmptyItems.length < 2) {
+        errors.push('Add at least two order items.');
+      }
+
+      normalizeReadingOrderContent(content);
+      if ((content.correct_order || []).length !== items.length) {
+        errors.push('Correct order is incomplete.');
+      }
+    }
+
+    if (type === 'vocabulary_matching') {
+      const pairs = content.pairs || [];
+      const validPairs = pairs.filter((pair) => String(pair.left_text || '').trim() && String(pair.right_text || '').trim());
+      if (pairs.length < 2 || validPairs.length < 2) {
+        errors.push('Add at least two complete matching pairs.');
+      }
+    }
+
+    return {
+      ok: errors.length === 0,
+      errors
+    };
   }
 
-  function renderDashboard() {
-    const root = rootEl();
-    if (!root) return;
+  function isOwnTemplate(row) {
+    return !!row?.teacher_id && row.teacher_id === state.userId;
+  }
 
-    const teacher = state.teacher || {};
+  function fillTemplateEditorFromTemplateRow(row, mode = 'edit') {
+    const type = row?.template_type || inferTemplateTypeFromLegacy(row);
+    let schemaContent = null;
+    const schemaJson = row?.schema_json;
+    const legacyJson = row?.default_fields_json;
+
+    if (schemaJson && typeof schemaJson === 'object' && schemaJson.content) {
+      schemaContent = cloneData(schemaJson.content);
+    } else if (legacyJson && typeof legacyJson === 'object' && legacyJson.content) {
+      schemaContent = cloneData(legacyJson.content);
+    } else {
+      schemaContent = getInitialSchemaContent(type);
+    }
+
+    if (type === 'reading_order') {
+      normalizeReadingOrderContent(schemaContent);
+    }
+
+    state.templateEditor = {
+      mode,
+      id: mode === 'edit' ? (row?.id || '') : '',
+      teacherId: mode === 'edit' ? (row?.teacher_id || '') : '',
+      templateKey: mode === 'edit' ? (row?.template_key || '') : '',
+      title: mode === 'edit' ? (row?.title || '') : `${row?.title || 'Template'} Copy`,
+      topic: row?.topic || row?.description || '',
+      instruction: row?.instruction || row?.default_instructions || '',
+      templateType: type,
+      schemaContent
+    };
+  }
+
+  function renderTemplateTypeBadge(type) {
+    const label = TEMPLATE_TYPE_REGISTRY[type]?.label || type || 'Template';
+    return `<span class="td-type-badge">${escapeHtml(label)}</span>`;
+  }
+
+  function getFilteredTemplates() {
+    const q = (state.templateFilters.query || '').trim().toLowerCase();
+    const ownership = state.templateFilters.ownership || 'mine';
+    const type = state.templateFilters.type || '';
+
+    return (state.templates || []).filter((tpl) => {
+      if (ownership === 'mine' && !tpl.is_own) return false;
+      if (ownership === 'system' && !tpl.is_system) return false;
+      if (type && tpl.template_type !== type) return false;
+
+      if (!q) return true;
+
+      const hay = [
+        tpl.title,
+        tpl.topic,
+        tpl.category,
+        tpl.answer_mode,
+        tpl.template_type,
+        tpl.instruction
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return hay.includes(q);
+    });
+  }
+
+  function setOrderPosition(content, itemId, newPos) {
+    normalizeReadingOrderContent(content);
+    const order = content.correct_order || [];
+    const currentIndex = order.indexOf(itemId);
+    if (currentIndex >= 0) {
+      order.splice(currentIndex, 1);
+    }
+    const safePos = Math.max(0, Math.min(order.length, (Number(newPos) || 1) - 1));
+    order.splice(safePos, 0, itemId);
+    content.correct_order = order;
+  }
+
+  function renderTextOptions(list, selectedValue) {
+    return list
+      .map((item) => `<option value="${escapeHtml(item.value)}" ${selectedValue === item.value ? 'selected' : ''}>${escapeHtml(item.label)}</option>`)
+      .join('');
+  }
+
+  function renderTemplateEditorHtml() {
+    const editor = state.templateEditor || getInitialTemplateEditorState('grammar_dropdown');
+    const modeLabel = editor.mode === 'edit' ? 'Edit template' : 'Create template';
+    const saveLabel = editor.mode === 'edit' ? 'Update template' : 'Create template';
+
+    const typeOptions = Object.entries(TEMPLATE_TYPE_REGISTRY).map(([value, meta]) => ({
+      value,
+      label: meta.label
+    }));
+
+    return `
+      <div class="td-template-editor">
+        <div class="td-section">
+          <div class="td-actions" style="justify-content:space-between;align-items:center;">
+            <div>
+              <div class="td-name" style="font-size:20px;">${escapeHtml(modeLabel)}</div>
+              <div class="td-note">Build a typed JSON template and store it in assignment_templates.</div>
+            </div>
+            <div class="td-actions">
+              <button class="td-btn td-btn-secondary" type="button" data-action="template-new">New</button>
+              <button class="td-btn td-btn-secondary" type="button" data-action="template-reset">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="td-grid-2">
+          <label class="td-label">
+            <span>Template type</span>
+            <select class="td-select" id="td-template-type-editor">
+              ${renderTextOptions(typeOptions, editor.templateType)}
+            </select>
+          </label>
+
+          <label class="td-label">
+            <span>Template key</span>
+            <input class="td-input" id="td-template-key-editor" type="text" value="${escapeHtml(editor.templateKey || '')}" placeholder="Auto-generated if empty" />
+          </label>
+        </div>
+
+        <div class="td-grid-2">
+          <label class="td-label">
+            <span>Title</span>
+            <input class="td-input" id="td-template-title-editor" type="text" value="${escapeHtml(editor.title || '')}" placeholder="For example: Present Simple vs Present Continuous" />
+          </label>
+
+          <label class="td-label">
+            <span>Topic</span>
+            <input class="td-input" id="td-template-topic-editor" type="text" value="${escapeHtml(editor.topic || '')}" placeholder="For example: Grammar basics" />
+          </label>
+        </div>
+
+        <label class="td-label">
+          <span>Instruction</span>
+          <textarea class="td-textarea td-textarea-sm" id="td-template-instruction-editor" placeholder="For example: Choose the correct option.">${escapeHtml(editor.instruction || '')}</textarea>
+        </label>
+
+        <div class="td-template-content-box">
+          ${renderTemplateContentEditor(editor)}
+        </div>
+
+        <div class="td-actions">
+          <button class="td-btn td-btn-primary" id="td-template-save-btn" type="button" data-action="template-save">${escapeHtml(saveLabel)}</button>
+          <div class="td-note">
+            ${editor.mode === 'edit'
+              ? 'Save changes to this template.'
+              : 'Template created. You can find it in Dashboard and attach it to an assignment.'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTemplateContentEditor(editor) {
+    const type = editor.templateType;
+    const content = editor.schemaContent || getInitialSchemaContent(type);
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
+      const questionsHtml = (content.questions || []).map((q, qi) => {
+        const optionRows = (q.options || []).map((opt, oi) => `
+          <div class="td-repeat-row">
+            <label class="td-label" style="margin:0;">
+              <span>Option ${oi + 1}</span>
+              <input
+                class="td-input"
+                type="text"
+                value="${escapeHtml(opt.text || '')}"
+                data-role="tpl-option-text"
+                data-qi="${qi}"
+                data-oi="${oi}"
+                placeholder="Option text"
+              />
+            </label>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-option" data-qi="${qi}" data-oi="${oi}">Remove</button>
+          </div>
+        `).join('');
+
+        const correctOptions = (q.options || []).map((opt, idx) => ({
+          value: opt.id || String.fromCharCode(97 + idx),
+          label: `${String.fromCharCode(65 + idx)} — ${opt.text || 'Option'}`
+        }));
+
+        return `
+          <div class="td-repeat-item">
+            <div class="td-repeat-head">
+              <div class="td-name" style="font-size:16px;">Question ${qi + 1}</div>
+              <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-question" data-index="${qi}">Remove question</button>
+            </div>
+
+            <label class="td-label">
+              <span>Sentence with gap</span>
+              <textarea class="td-textarea td-textarea-sm" data-role="tpl-question-sentence" data-index="${qi}" placeholder="She ___ to work every day.">${escapeHtml(q.sentence || '')}</textarea>
+            </label>
+
+            <div class="td-repeat-list">
+              ${optionRows}
+            </div>
+
+            <div class="td-actions">
+              <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-add-option" data-qi="${qi}">Add option</button>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Correct option</span>
+                <select class="td-select" data-role="tpl-correct-option" data-index="${qi}">
+                  ${renderTextOptions(correctOptions, q.correct_option_id || (q.options?.[0]?.id || 'a'))}
+                </select>
+              </label>
+
+              <label class="td-label">
+                <span>Explanation</span>
+                <textarea class="td-textarea td-textarea-sm" data-role="tpl-question-explanation" data-index="${qi}" placeholder="Optional explanation">${escapeHtml(q.explanation || '')}</textarea>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const heading = type === 'grammar_dropdown' ? 'Grammar questions' : 'Vocabulary questions';
+      return `
+        <div class="td-section">
+          <div class="td-name" style="font-size:18px;">${escapeHtml(heading)}</div>
+          <div class="td-note">Each question stores sentence, options, correct answer and explanation.</div>
+          <div class="td-repeat-list">${questionsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-question">Add question</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (type === 'grammar_typed_gap_fill') {
+      const questionsHtml = (content.questions || []).map((q, qi) => {
+        const answersHtml = (q.accepted_answers || []).map((answer, ai) => `
+          <div class="td-repeat-row">
+            <label class="td-label" style="margin:0;">
+              <span>Accepted answer ${ai + 1}</span>
+              <input
+                class="td-input"
+                type="text"
+                value="${escapeHtml(answer || '')}"
+                data-role="tpl-accepted-answer"
+                data-qi="${qi}"
+                data-ai="${ai}"
+                placeholder="For example: goes"
+              />
+            </label>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-answer" data-qi="${qi}" data-ai="${ai}">Remove</button>
+          </div>
+        `).join('');
+
+        return `
+          <div class="td-repeat-item">
+            <div class="td-repeat-head">
+              <div class="td-name" style="font-size:16px;">Question ${qi + 1}</div>
+              <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-question" data-index="${qi}">Remove question</button>
+            </div>
+
+            <label class="td-label">
+              <span>Sentence with gap</span>
+              <textarea class="td-textarea td-textarea-sm" data-role="tpl-typed-sentence" data-index="${qi}" placeholder="I ___ to work by bus every day.">${escapeHtml(q.sentence || '')}</textarea>
+            </label>
+
+            <div class="td-repeat-list">${answersHtml}</div>
+
+            <div class="td-actions">
+              <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-add-answer" data-qi="${qi}">Add accepted answer</button>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Hint</span>
+                <input class="td-input" type="text" value="${escapeHtml(q.hint || '')}" data-role="tpl-typed-hint" data-index="${qi}" placeholder="Optional hint" />
+              </label>
+
+              <label class="td-label">
+                <span>Explanation</span>
+                <textarea class="td-textarea td-textarea-sm" data-role="tpl-typed-explanation" data-index="${qi}" placeholder="Optional explanation">${escapeHtml(q.explanation || '')}</textarea>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="td-section">
+          <div class="td-name" style="font-size:18px;">Typed gap-fill questions</div>
+          <div class="td-note">Each question stores sentence, accepted answers, hint and explanation.</div>
+          <div class="td-repeat-list">${questionsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-question">Add question</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (type === 'reading_multiple_choice') {
+      const paragraphsHtml = (content.passage_paragraphs || []).map((p, pi) => `
+        <div class="td-repeat-item">
+          <div class="td-repeat-head">
+            <div class="td-name" style="font-size:16px;">Paragraph ${pi + 1}</div>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-paragraph" data-index="${pi}">Remove paragraph</button>
+          </div>
+          <textarea class="td-textarea td-textarea-sm" data-role="tpl-passage-text" data-index="${pi}" placeholder="Passage paragraph">${escapeHtml(p.text || '')}</textarea>
+        </div>
+      `).join('');
+
+      const questionsHtml = (content.questions || []).map((q, qi) => {
+        const optionRows = (q.options || []).map((opt, oi) => `
+          <div class="td-repeat-row">
+            <label class="td-label" style="margin:0;">
+              <span>Option ${oi + 1}</span>
+              <input class="td-input" type="text" value="${escapeHtml(opt.text || '')}" data-role="tpl-mc-option-text" data-qi="${qi}" data-oi="${oi}" placeholder="Option text" />
+            </label>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-option" data-qi="${qi}" data-oi="${oi}">Remove</button>
+          </div>
+        `).join('');
+
+        const correctOptions = (q.options || []).map((opt, idx) => ({
+          value: opt.id || String.fromCharCode(97 + idx),
+          label: `${String.fromCharCode(65 + idx)} — ${opt.text || 'Option'}`
+        }));
+
+        return `
+          <div class="td-repeat-item">
+            <div class="td-repeat-head">
+              <div class="td-name" style="font-size:16px;">Question ${qi + 1}</div>
+              <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-question" data-index="${qi}">Remove question</button>
+            </div>
+
+            <label class="td-label">
+              <span>Question</span>
+              <textarea class="td-textarea td-textarea-sm" data-role="tpl-mc-question" data-index="${qi}" placeholder="Why did Anna leave early?">${escapeHtml(q.question || '')}</textarea>
+            </label>
+
+            <div class="td-repeat-list">${optionRows}</div>
+
+            <div class="td-actions">
+              <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-add-option" data-qi="${qi}">Add option</button>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Correct option</span>
+                <select class="td-select" data-role="tpl-correct-option" data-index="${qi}">
+                  ${renderTextOptions(correctOptions, q.correct_option_id || (q.options?.[0]?.id || 'a'))}
+                </select>
+              </label>
+
+              <label class="td-label">
+                <span>Explanation</span>
+                <textarea class="td-textarea td-textarea-sm" data-role="tpl-question-explanation" data-index="${qi}" placeholder="Optional explanation">${escapeHtml(q.explanation || '')}</textarea>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="td-section">
+          <div class="td-grid-2">
+            <label class="td-label">
+              <span>Passage title</span>
+              <input class="td-input" type="text" value="${escapeHtml(content.passage_title || '')}" data-role="tpl-passage-title" placeholder="For example: A Weekend at the Lake" />
+            </label>
+            <div class="td-note" style="align-self:end;">Passage and questions are stored in the same schema_json object.</div>
+          </div>
+
+          <div class="td-name" style="font-size:18px;">Passage</div>
+          <div class="td-repeat-list">${paragraphsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-paragraph">Add paragraph</button>
+          </div>
+
+          <div class="td-name" style="font-size:18px;">Questions</div>
+          <div class="td-repeat-list">${questionsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-question">Add question</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (type === 'reading_order') {
+      normalizeReadingOrderContent(content);
+
+      const paragraphsHtml = (content.passage_paragraphs || []).map((p, pi) => `
+        <div class="td-repeat-item">
+          <div class="td-repeat-head">
+            <div class="td-name" style="font-size:16px;">Paragraph ${pi + 1}</div>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-paragraph" data-index="${pi}">Remove paragraph</button>
+          </div>
+          <textarea class="td-textarea td-textarea-sm" data-role="tpl-passage-text" data-index="${pi}" placeholder="Passage paragraph">${escapeHtml(p.text || '')}</textarea>
+        </div>
+      `).join('');
+
+      const itemsHtml = (content.items || []).map((item, ii) => {
+        const currentPos = Math.max(1, (content.correct_order || []).indexOf(item.id) + 1);
+        const positions = (content.items || []).map((_, pos) => ({
+          value: String(pos + 1),
+          label: `Position ${pos + 1}`
+        }));
+
+        return `
+          <div class="td-repeat-item">
+            <div class="td-repeat-head">
+              <div class="td-name" style="font-size:16px;">Event ${ii + 1}</div>
+              <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-order-item" data-index="${ii}">Remove event</button>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Event text</span>
+                <textarea class="td-textarea td-textarea-sm" data-role="tpl-order-item-text" data-index="${ii}" placeholder="Tom missed the bus.">${escapeHtml(item.text || '')}</textarea>
+              </label>
+
+              <label class="td-label">
+                <span>Correct position</span>
+                <select class="td-select" data-role="tpl-order-select" data-item-id="${escapeHtml(item.id)}">
+                  ${renderTextOptions(positions, String(currentPos))}
+                </select>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="td-section">
+          <div class="td-grid-2">
+            <label class="td-label">
+              <span>Passage title</span>
+              <input class="td-input" type="text" value="${escapeHtml(content.passage_title || '')}" data-role="tpl-passage-title" placeholder="For example: A Day That Went Wrong" />
+            </label>
+
+            <label class="td-label">
+              <span>Prompt</span>
+              <input class="td-input" type="text" value="${escapeHtml(content.prompt || '')}" data-role="tpl-order-prompt" placeholder="Put the events in the correct order." />
+            </label>
+          </div>
+
+          <div class="td-name" style="font-size:18px;">Passage</div>
+          <div class="td-repeat-list">${paragraphsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-paragraph">Add paragraph</button>
+          </div>
+
+          <div class="td-name" style="font-size:18px;">Events and order</div>
+          <div class="td-repeat-list">${itemsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-order-item">Add event</button>
+          </div>
+
+          <label class="td-label">
+            <span>Explanation</span>
+            <textarea class="td-textarea td-textarea-sm" data-role="tpl-order-explanation" placeholder="Optional explanation">${escapeHtml(content.explanation || '')}</textarea>
+          </label>
+        </div>
+      `;
+    }
+
+    if (type === 'vocabulary_matching') {
+      const pairsHtml = (content.pairs || []).map((pair, pi) => `
+        <div class="td-repeat-item">
+          <div class="td-repeat-head">
+            <div class="td-name" style="font-size:16px;">Pair ${pi + 1}</div>
+            <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-remove-pair" data-index="${pi}">Remove pair</button>
+          </div>
+          <div class="td-grid-2">
+            <label class="td-label">
+              <span>Left text</span>
+              <input class="td-input" type="text" value="${escapeHtml(pair.left_text || '')}" data-role="tpl-pair-left" data-index="${pi}" placeholder="For example: book" />
+            </label>
+            <label class="td-label">
+              <span>Right text</span>
+              <input class="td-input" type="text" value="${escapeHtml(pair.right_text || '')}" data-role="tpl-pair-right" data-index="${pi}" placeholder="For example: to reserve something in advance" />
+            </label>
+          </div>
+          <label class="td-label">
+            <span>Example</span>
+            <textarea class="td-textarea td-textarea-sm" data-role="tpl-pair-example" data-index="${pi}" placeholder="Optional example">${escapeHtml(pair.example || '')}</textarea>
+          </label>
+        </div>
+      `).join('');
+
+      return `
+        <div class="td-section">
+          <label class="td-label">
+            <span>Prompt</span>
+            <input class="td-input" type="text" value="${escapeHtml(content.prompt || '')}" data-role="tpl-matching-prompt" placeholder="Match the words with their definitions." />
+          </label>
+          <div class="td-repeat-list">${pairsHtml}</div>
+          <div class="td-actions">
+            <button class="td-btn td-btn-secondary" type="button" data-action="template-add-pair">Add pair</button>
+          </div>
+        </div>
+      `;
+    }
+
+    return `<div class="td-empty">Unsupported template type.</div>`;
+  }
+
+  function renderTemplatesListHtml() {
+    const filteredTemplates = getFilteredTemplates();
+    const typeOptions = [{ value: '', label: 'All types' }].concat(
+      Object.entries(TEMPLATE_TYPE_REGISTRY).map(([value, meta]) => ({
+        value,
+        label: meta.label
+      }))
+    );
+
+    const ownershipOptions = [
+      { value: 'mine', label: 'My templates' },
+      { value: 'all', label: 'All available' },
+      { value: 'system', label: 'System templates' }
+    ];
+
+    const itemsHtml = filteredTemplates.length
+      ? filteredTemplates.map((tpl) => {
+          const canEdit = tpl.is_own;
+          const metaBadges = [
+            `<span class="td-tag">${escapeHtml(tpl.category || 'template')}</span>`,
+            tpl.answer_mode ? `<span class="td-tag">${escapeHtml(tpl.answer_mode)}</span>` : '',
+            tpl.topic ? `<span class="td-tag">${escapeHtml(tpl.topic)}</span>` : '',
+            tpl.is_system ? `<span class="td-tag">System</span>` : `<span class="td-tag">Mine</span>`
+          ].filter(Boolean).join('');
+
+          return `
+            <div class="td-template-item">
+              <div class="td-template-item-top">
+                <div>
+                  <div class="td-assignment-title" style="font-size:17px;">${escapeHtml(tpl.title || 'Untitled template')}</div>
+                  <div class="td-note">${escapeHtml(formatDateTime(tpl.updated_at || tpl.created_at))}</div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  ${renderTemplateTypeBadge(tpl.template_type)}
+                </div>
+              </div>
+
+              <div class="td-assignment-meta">${metaBadges}</div>
+
+              <div class="td-note" style="margin-top:10px; line-height:1.55;">
+                ${escapeHtml(tpl.instruction || tpl.default_instructions || tpl.description || 'No instruction')}
+              </div>
+
+              <div class="td-actions" style="margin-top:14px;">
+                ${canEdit ? `<button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-edit" data-template-id="${escapeHtml(tpl.id)}">Edit</button>` : ''}
+                <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-duplicate" data-template-id="${escapeHtml(tpl.id)}">Duplicate</button>
+                ${canEdit ? `<button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-archive" data-template-id="${escapeHtml(tpl.id)}">Archive</button>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')
+      : `<div class="td-empty">No templates match these filters.</div>`;
+
+    return `
+      <div class="td-template-list">
+        <div class="td-section">
+          <div class="td-name" style="font-size:20px;">Template library</div>
+          <div class="td-note">Templates created here will appear in Dashboard and can be attached to assignments.</div>
+        </div>
+
+        <div class="td-grid-2">
+          <label class="td-label">
+            <span>Search</span>
+            <input class="td-input" id="td-template-search" type="text" value="${escapeHtml(state.templateFilters.query || '')}" placeholder="Search by title, topic or type" />
+          </label>
+
+          <label class="td-label">
+            <span>Ownership</span>
+            <select class="td-select" id="td-template-filter-ownership">
+              ${renderTextOptions(ownershipOptions, state.templateFilters.ownership || 'mine')}
+            </select>
+          </label>
+        </div>
+
+        <label class="td-label">
+          <span>Filter by type</span>
+          <select class="td-select" id="td-template-filter-type">
+            ${renderTextOptions(typeOptions, state.templateFilters.type || '')}
+          </select>
+        </label>
+
+        <div class="td-repeat-list">${itemsHtml}</div>
+      </div>
+    `;
+  }
+
+  function renderWelcomeCardHtml(teacherName, teacherEmail, studentsCount, assignmentsCount, awaitingReviewCount) {
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Teacher dashboard</div>
+          <h1 class="td-title">Welcome, ${escapeHtml(teacherName)}</h1>
+          <div class="td-sub">Here you can manage your students, assignments, and templates.</div>
+          <div class="td-meta">
+            <div class="td-pill">Role: teacher</div>
+            <div class="td-pill">${studentsCount} student${studentsCount === 1 ? '' : 's'}</div>
+            <div class="td-pill">${assignmentsCount} assignment${assignmentsCount === 1 ? '' : 's'}</div>
+            <div class="td-pill">${awaitingReviewCount} awaiting review</div>
+            <div class="td-pill">${escapeHtml(teacherEmail)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTopNavHtml() {
+    const activeView = state.activeView || 'dashboard';
+    return `
+      <div class="td-card">
+        <div class="td-body">
+          <div class="td-actions td-topnav">
+            <button class="td-btn ${activeView === 'dashboard' ? 'td-btn-primary' : 'td-btn-secondary'}" type="button" data-action="switch-view" data-view="dashboard">Dashboard</button>
+            <button class="td-btn ${activeView === 'templates' ? 'td-btn-primary' : 'td-btn-secondary'}" type="button" data-action="switch-view" data-view="templates">Templates</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStudentsSectionHtml() {
     const students = state.students || [];
-    const assignments = state.assignments || [];
-    const templates = state.templates || [];
-    const modules = state.modules || [];
-    const awaitingReviewCount = assignments.filter((a) => effectiveReviewState(a) === 'awaiting_review').length;
-    const teacherName = (teacher.full_name || '').trim() || teacher.email || 'Teacher';
-    const teacherEmail = teacher.email || '';
-    const flashHtml = '';
-
-    const draft = state.assignmentDraft || {};
-    const selectedStudentId = draft.studentId || '';
-    const selectedTemplateId = draft.templateId || '';
-    const selectedModuleId = draft.cardsModuleId || '';
-    const draftDueDate = draft.dueDate || '';
-    const draftTitle = draft.title || '';
-    const draftDescription = draft.description || '';
-    const draftMiro = draft.miroLink || '';
-    const draftId = draft.id || '';
-
-    const studentOptions = students.length
-      ? students.map((student) => {
-          const label = ((student.full_name || '').trim() || student.email || 'Student') + ' — ' + (student.email || '');
-          return `<option value="${escapeHtml(student.id)}" ${selectedStudentId === student.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
-        }).join('')
-      : '<option value="">No students available</option>';
-
-    const templateOptions = templates.length
-      ? `<option value="">No template</option>` + templates.map((tpl) => {
-          const label = `${tpl.title} — ${tpl.category}`;
-          return `<option value="${escapeHtml(tpl.id)}" ${selectedTemplateId === tpl.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
-        }).join('')
-      : '<option value="">No templates available</option>';
-
-    const moduleOptions = modules.length
-      ? `<option value="">No cards module</option>` + modules.map((mod) => {
-          return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(mod.name)}</option>`;
-        }).join('')
-      : '<option value="">No modules available</option>';
 
     const manageStudentsHtml = students.length
       ? students.map((student) => {
@@ -696,6 +1503,136 @@
           `;
         }).join('')
       : `<div class="td-empty">You do not have any students yet.</div>`;
+
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Students</div>
+          <h2 class="td-title" style="font-size:24px;">Manage students</h2>
+          <div class="td-sub">Add a registered user by email and manage active student links.</div>
+        </div>
+        <div class="td-body">
+          <form id="td-student-manage-form" class="td-form">
+            <div class="td-manage-row">
+              <label class="td-label">
+                <span>Student email</span>
+                <input class="td-input" id="td-student-email" type="email" placeholder="student@example.com" />
+              </label>
+
+              <div class="td-manage-actions">
+                <button class="td-btn td-btn-primary td-btn-add" id="td-add-student-btn" type="submit">Add student</button>
+                <div class="td-note td-note-inline">Only users who already registered on the site can be added.</div>
+              </div>
+            </div>
+          </form>
+
+          <div class="td-section">
+            <div class="td-label"><span>Linked students</span></div>
+            <div class="td-grid">${manageStudentsHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAssignmentComposerHtml() {
+    const students = state.students || [];
+    const templates = state.templates || [];
+    const modules = state.modules || [];
+
+    const draft = state.assignmentDraft || {};
+    const selectedStudentId = draft.studentId || '';
+    const selectedTemplateId = draft.templateId || '';
+    const selectedModuleId = draft.cardsModuleId || '';
+    const draftDueDate = draft.dueDate || '';
+    const draftTitle = draft.title || '';
+    const draftDescription = draft.description || '';
+    const draftMiro = draft.miroLink || '';
+    const draftId = draft.id || '';
+
+    const studentOptions = students.length
+      ? students.map((student) => {
+          const label = ((student.full_name || '').trim() || student.email || 'Student') + ' — ' + (student.email || '');
+          return `<option value="${escapeHtml(student.id)}" ${selectedStudentId === student.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No students available</option>';
+
+    const templateOptions = templates.length
+      ? `<option value="">No template</option>` + templates.map((tpl) => {
+          const typeLabel = TEMPLATE_TYPE_REGISTRY[tpl.template_type]?.label || tpl.category || 'Template';
+          const label = `${tpl.title} — ${typeLabel}`;
+          return `<option value="${escapeHtml(tpl.id)}" ${selectedTemplateId === tpl.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No templates available</option>';
+
+    const moduleOptions = modules.length
+      ? `<option value="">No cards module</option>` + modules.map((mod) => {
+          return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(mod.name)}</option>`;
+        }).join('')
+      : '<option value="">No modules available</option>';
+
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Assignments</div>
+          <h2 class="td-title" style="font-size:24px;">Create assignment</h2>
+          <div class="td-sub">Create homework, save it as a draft, and send it only when it is ready.</div>
+        </div>
+        <div class="td-body">
+          <form id="td-assignment-form" class="td-form">
+            <input id="td-draft-id" type="hidden" value="${escapeHtml(draftId)}" />
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Student</span>
+                <select class="td-select" id="td-student-id" ${students.length ? '' : 'disabled'}>${studentOptions}</select>
+              </label>
+              <label class="td-label">
+                <span>Due date</span>
+                <input class="td-input" id="td-due-date" type="datetime-local" value="${escapeHtml(draftDueDate)}" />
+              </label>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Use template</span>
+                <select class="td-select" id="td-template-id">${templateOptions}</select>
+              </label>
+
+              <label class="td-label">
+                <span>Attach cards module</span>
+                <select class="td-select" id="td-cards-module-id">${moduleOptions}</select>
+              </label>
+            </div>
+
+            <label class="td-label">
+              <span>Title</span>
+              <input class="td-input" id="td-title" type="text" placeholder="For example: Writing practice — daily routine" value="${escapeHtml(draftTitle)}" />
+            </label>
+
+            <label class="td-label">
+              <span>Description</span>
+              <textarea class="td-textarea" id="td-description" placeholder="Write the homework instructions here.">${escapeHtml(draftDescription)}</textarea>
+            </label>
+
+            <label class="td-label">
+              <span>Miro link (optional)</span>
+              <input class="td-input" id="td-miro-link" type="url" placeholder="https://miro.com/..." value="${escapeHtml(draftMiro)}" />
+            </label>
+
+            <div class="td-actions">
+              <button class="td-btn td-btn-secondary" id="td-save-draft-btn" type="button" ${students.length ? '' : 'disabled'}>Save draft</button>
+              <button class="td-btn td-btn-primary" id="td-send-btn" type="submit" ${students.length ? '' : 'disabled'}>Send to student</button>
+              <div class="td-note">${students.length ? 'Save the assignment first, then send it to the selected student.' : 'Add a student first to create an assignment.'}</div>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAssignmentsListHtml() {
+    const assignments = state.assignments || [];
 
     const assignmentsHtml = assignments.length
       ? assignments.map((assignment) => {
@@ -867,124 +1804,396 @@
         }).join('')
       : `<div class="td-empty">You have not created any assignments yet.</div>`;
 
-    root.innerHTML = `
-      <div class="td-wrap">
-        ${flashHtml}
-        <div class="td-card">
-          <div class="td-head">
-            <div class="td-kicker">Teacher dashboard</div>
-            <h1 class="td-title">Welcome, ${escapeHtml(teacherName)}</h1>
-            <div class="td-sub">Here you can manage your students and assignments.</div>
-            <div class="td-meta">
-              <div class="td-pill">Role: teacher</div>
-              <div class="td-pill">${students.length} student${students.length === 1 ? '' : 's'}</div>
-              <div class="td-pill">${assignments.length} assignment${assignments.length === 1 ? '' : 's'}</div>
-              <div class="td-pill">${awaitingReviewCount} awaiting review</div>
-              <div class="td-pill">${escapeHtml(teacherEmail)}</div>
-            </div>
-          </div>
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Assignments</div>
+          <h2 class="td-title" style="font-size:24px;">My assignments</h2>
+          <div class="td-sub">Drafts and sent assignments created by this teacher account.</div>
         </div>
+        <div class="td-body">
+          <div class="td-grid">${assignmentsHtml}</div>
+        </div>
+      </div>
+    `;
+  }
 
-        <div class="td-card">
-          <div class="td-head">
-            <div class="td-kicker">Students</div>
-            <h2 class="td-title" style="font-size:24px;">Manage students</h2>
-            <div class="td-sub">Add a registered user by email and manage active student links.</div>
-          </div>
-          <div class="td-body">
-            <form id="td-student-manage-form" class="td-form">
-              <div class="td-manage-row">
-                <label class="td-label">
-                  <span>Student email</span>
-                  <input class="td-input" id="td-student-email" type="email" placeholder="student@example.com" />
-                </label>
-
-                <div class="td-manage-actions">
-                  <button class="td-btn td-btn-primary td-btn-add" id="td-add-student-btn" type="submit">Add student</button>
-                  <div class="td-note td-note-inline">Only users who already registered on the site can be added.</div>
-                </div>
-              </div>
-            </form>
-
+  function renderTemplatesViewHtml() {
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Templates</div>
+          <h2 class="td-title" style="font-size:24px;">Manage templates</h2>
+          <div class="td-sub">Create typed templates with JSON schema and attach them later in Dashboard.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-grid-2 td-template-layout">
             <div class="td-section">
-              <div class="td-label"><span>Linked students</span></div>
-              <div class="td-grid">${manageStudentsHtml}</div>
+              ${renderTemplateEditorHtml()}
             </div>
-          </div>
-        </div>
-
-        <div class="td-card">
-          <div class="td-head">
-            <div class="td-kicker">Assignments</div>
-            <h2 class="td-title" style="font-size:24px;">Create assignment</h2>
-            <div class="td-sub">Create homework, save it as a draft, and send it only when it is ready.</div>
-          </div>
-          <div class="td-body">
-            <form id="td-assignment-form" class="td-form">
-              <input id="td-draft-id" type="hidden" value="${escapeHtml(draftId)}" />
-
-              <div class="td-grid-2">
-                <label class="td-label">
-                  <span>Student</span>
-                  <select class="td-select" id="td-student-id" ${students.length ? '' : 'disabled'}>${studentOptions}</select>
-                </label>
-                <label class="td-label">
-                  <span>Due date</span>
-                  <input class="td-input" id="td-due-date" type="datetime-local" value="${escapeHtml(draftDueDate)}" />
-                </label>
-              </div>
-
-              <div class="td-grid-2">
-                <label class="td-label">
-                  <span>Use template</span>
-                  <select class="td-select" id="td-template-id">${templateOptions}</select>
-                </label>
-
-                <label class="td-label">
-                  <span>Attach cards module</span>
-                  <select class="td-select" id="td-cards-module-id">${moduleOptions}</select>
-                </label>
-              </div>
-
-              <label class="td-label">
-                <span>Title</span>
-                <input class="td-input" id="td-title" type="text" placeholder="For example: Writing practice — daily routine" value="${escapeHtml(draftTitle)}" />
-              </label>
-
-              <label class="td-label">
-                <span>Description</span>
-                <textarea class="td-textarea" id="td-description" placeholder="Write the homework instructions here.">${escapeHtml(draftDescription)}</textarea>
-              </label>
-
-              <label class="td-label">
-                <span>Miro link (optional)</span>
-                <input class="td-input" id="td-miro-link" type="url" placeholder="https://miro.com/..." value="${escapeHtml(draftMiro)}" />
-              </label>
-
-              <div class="td-actions">
-                <button class="td-btn td-btn-secondary" id="td-save-draft-btn" type="button" ${students.length ? '' : 'disabled'}>Save draft</button>
-                <button class="td-btn td-btn-primary" id="td-send-btn" type="submit" ${students.length ? '' : 'disabled'}>Send to student</button>
-                <div class="td-note">${students.length ? 'Save the assignment first, then send it to the selected student.' : 'Add a student first to create an assignment.'}</div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div class="td-card">
-          <div class="td-head">
-            <div class="td-kicker">Assignments</div>
-            <h2 class="td-title" style="font-size:24px;">My assignments</h2>
-            <div class="td-sub">Drafts and sent assignments created by this teacher account.</div>
-          </div>
-          <div class="td-body">
-            <div class="td-grid">${assignmentsHtml}</div>
+            <div class="td-section">
+              ${renderTemplatesListHtml()}
+            </div>
           </div>
         </div>
       </div>
     `;
+  }
 
-    bindEvents();
+  function injectStyles() {
+    if (document.getElementById('teacher-dashboard-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'teacher-dashboard-styles';
+    style.textContent = `
+      #${ROOT_ID}{max-width:1120px;margin:32px auto;padding:0 16px 40px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#111213}
+      #${ROOT_ID} *{box-sizing:border-box}
+      .td-wrap{display:grid;gap:18px}
+      .td-card{background:#fff;border:1px solid #dfe5ec;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.05);overflow:hidden}
+      .td-head{padding:18px 20px;border-bottom:1px solid #eef2f6;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%)}
+      .td-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#4EA9E7;font-weight:700;margin-bottom:6px}
+      .td-title{margin:0;font-size:28px;line-height:1.15}
+      .td-sub{margin-top:8px;color:#667085;font-size:15px}
+      .td-body{padding:18px 20px 20px}
+      .td-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+      .td-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid #dbe7f3;background:#f8fbff;color:#0f172a;font-size:14px}
+      .td-grid{display:grid;gap:12px}
+      .td-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .td-student{border:1px solid #e6ebf1;border-radius:14px;padding:14px 16px;background:#fff}
+      .td-student-top{display:flex;align-items:start;justify-content:space-between;gap:12px}
+      .td-name{font-size:18px;font-weight:700;line-height:1.2}
+      .td-email{margin-top:4px;color:#667085;font-size:14px;overflow-wrap:anywhere}
+      .td-badge{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+      .td-badge.active,.td-badge.completed,.td-badge.reviewed,.td-badge.ready{background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
+      .td-badge.not_started,.td-badge.not_reviewed,.td-badge.draft{background:#f8fbff;border:1px solid #dbe7f3;color:#175cd3}
+      .td-badge.in_progress,.td-badge.awaiting_review{background:#fff7ed;border:1px solid #fed7aa;color:#c2410c}
+      .td-badge.archived{background:#f9fafb;border:1px solid #e5e7eb;color:#475467}
+      .td-empty{padding:24px;border:1px dashed #cfd8e3;border-radius:14px;background:#fbfdff;color:#667085;text-align:center}
+      .td-error{padding:16px 18px;border-radius:14px;background:#fff2f2;border:1px solid #fecaca;color:#b42318}
+      .td-success{padding:16px 18px;border-radius:14px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48}
+      .td-loading{color:#667085}
+      .td-form,.td-section,.td-comments{display:grid;gap:14px}
+      .td-label{display:grid;gap:8px}
+      .td-label span{font-size:14px;font-weight:700;color:#344054}
+      .td-input,.td-select,.td-textarea{width:100%;border:1px solid #d0d5dd;border-radius:12px;background:#fff;color:#111213;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:12px 14px;outline:none}
+      .td-textarea{min-height:120px;resize:vertical}
+      .td-textarea-sm{min-height:92px}
+      .td-input:focus,.td-select:focus,.td-textarea:focus{border-color:#4EA9E7;box-shadow:0 0 0 3px rgba(78,169,231,.18)}
+      .td-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+      .td-manage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:end}
+      .td-manage-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+      .td-note-inline{max-width:320px;line-height:1.45}
+      .td-btn-add{min-width:180px}
+      .td-btn-compact{padding:10px 14px;font-size:13px;border-radius:10px}
+      .td-btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer}
+      .td-btn-primary{background:#111213;color:#fff}
+      .td-btn-primary:hover,.td-link:hover{filter:brightness(1.05)}
+      .td-btn-secondary{background:#f8fbff;color:#175cd3;border:1px solid #dbe7f3}
+      .td-btn-danger{background:#fff2f2;color:#b42318;border:1px solid #fecaca}
+      .td-btn:disabled{opacity:.65;cursor:not-allowed}
+      .td-btn.is-busy{opacity:.92;cursor:wait}
+      .td-btn.is-success{background:#22c55e !important;border-color:#22c55e !important;color:#fff !important}
+      .td-btn.is-error{background:#ef4444 !important;border-color:#ef4444 !important;color:#fff !important}
+      .td-note{color:#667085;font-size:14px}
+      .td-assignment{border:1px solid #e6ebf1;border-radius:14px;padding:16px;background:#fff}
+      .td-assignment-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+      .td-assignment-title{font-size:18px;font-weight:700;line-height:1.25}
+      .td-assignment-desc{margin-top:8px;color:#475467;font-size:14px;line-height:1.55;white-space:pre-wrap}
+      .td-assignment-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+      .td-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3;color:#0f172a;font-size:13px}
+      .td-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:none;border-radius:12px;padding:11px 14px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#111213;color:#fff}
+      .td-answer{border:1px solid #e6ebf1;border-radius:12px;padding:12px 14px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
+      .td-comments-list,.td-resource-list{display:grid;gap:10px}
+      .td-comment,.td-resource{border:1px solid #e6ebf1;border-radius:12px;padding:12px 14px;background:#fff}
+      .td-comment.teacher{background:#f8fbff;border-color:#dbe7f3}
+      .td-comment.student{background:#fcfcfd}
+      .td-comment-meta,.td-resource-meta{font-size:12px;color:#667085;margin-bottom:6px}
+      .td-comment-body{font-size:14px;line-height:1.55;color:#111213;white-space:pre-wrap}
+
+      .td-topnav{gap:12px}
+      .td-template-layout{align-items:start}
+      .td-template-editor,.td-template-list{display:grid;gap:14px}
+      .td-template-item{border:1px solid #e6ebf1;border-radius:14px;padding:14px;background:#fff}
+      .td-template-item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+      .td-type-badge{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#eef6ff;border:1px solid #c7e2ff;color:#175cd3;font-size:12px;font-weight:700}
+      .td-template-content-box{border:1px solid #e6ebf1;border-radius:14px;background:#fbfdff;padding:14px}
+      .td-repeat-list{display:grid;gap:12px}
+      .td-repeat-item{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;gap:12px}
+      .td-repeat-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .td-repeat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+      @media (max-width:900px){
+        .td-template-layout{grid-template-columns:1fr}
+      }
+      @media (max-width:760px){
+        #${ROOT_ID}{padding:0 12px 28px}
+        .td-head,.td-body{padding:16px}
+        .td-title{font-size:24px}
+        .td-grid-2{grid-template-columns:1fr}
+        .td-student-top,.td-assignment-top,.td-template-item-top,.td-repeat-head{flex-direction:column;align-items:flex-start}
+        .td-manage-row{grid-template-columns:1fr}
+        .td-manage-actions{align-items:flex-start}
+        .td-btn-add{min-width:0;width:100%}
+        .td-note-inline{max-width:none}
+        .td-repeat-row{grid-template-columns:1fr}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function setLoading() {
+    const root = rootEl();
+    if (!root) return;
+    root.innerHTML = `<div class="td-wrap"><div class="td-card"><div class="td-head"><div class="td-kicker">Teacher dashboard</div><h1 class="td-title">Loading dashboard…</h1><div class="td-sub">Please wait a moment.</div></div><div class="td-body"><div class="td-loading">Loading students and assignments…</div></div></div></div>`;
+  }
+
+  function setError(message) {
+    const root = rootEl();
+    if (!root) return;
+    root.innerHTML = `<div class="td-wrap"><div class="td-card"><div class="td-head"><div class="td-kicker">Teacher dashboard</div><h1 class="td-title">Something went wrong</h1><div class="td-sub">The dashboard could not be loaded.</div></div><div class="td-body"><div class="td-error">${escapeHtml(message)}</div></div></div></div>`;
+  }
+
+  function normalizeTemplateRow(tpl, currentUserId) {
+    const inferredType = tpl.template_type || inferTemplateTypeFromLegacy(tpl);
+    const instruction = tpl.instruction || tpl.default_instructions || '';
+    const topic = tpl.topic || tpl.description || '';
+    const schemaJson =
+      tpl.schema_json && typeof tpl.schema_json === 'object' && Object.keys(tpl.schema_json).length
+        ? tpl.schema_json
+        : tpl.default_fields_json && typeof tpl.default_fields_json === 'object'
+          ? tpl.default_fields_json
+          : {};
+
+    return {
+      ...tpl,
+      template_type: inferredType,
+      topic,
+      instruction,
+      schema_json: schemaJson,
+      is_system: !tpl.teacher_id,
+      is_own: tpl.teacher_id === currentUserId
+    };
+  }
+
+  async function fetchDashboardData() {
+    const supabase = window.supabase;
+    if (!supabase) throw new Error('Supabase is not available on this page.');
+
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr) throw userErr;
+    const user = userData?.user;
+    if (!user) throw new Error('User session not found.');
+    state.userId = user.id;
+
+    const { data: teacherProfile, error: teacherErr } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role')
+      .eq('id', user.id)
+      .single();
+    if (teacherErr) throw teacherErr;
+
+    const { data: links, error: linksErr } = await supabase
+      .from('teacher_students')
+      .select('student_id, status, created_at')
+      .eq('teacher_id', user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    if (linksErr) throw linksErr;
+
+    const studentIds = [...new Set((links || []).map((r) => r.student_id).filter(Boolean))];
+    const linkMap = new Map((links || []).map((r) => [r.student_id, r]));
+    let students = [];
+
+    if (studentIds.length) {
+      const { data: studentProfiles, error: studentsErr } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, role')
+        .in('id', studentIds);
+      if (studentsErr) throw studentsErr;
+
+      const byId = new Map((studentProfiles || []).map((p) => [p.id, p]));
+      students = studentIds.map((id) => byId.get(id)).filter(Boolean);
+    }
+
+    const { data: templatesRows, error: templatesErr } = await supabase
+      .from('assignment_templates')
+      .select(`
+        id,
+        teacher_id,
+        template_key,
+        title,
+        description,
+        category,
+        level_range,
+        estimated_time,
+        answer_mode,
+        default_instructions,
+        default_fields_json,
+        is_active,
+        created_at,
+        updated_at,
+        template_type,
+        topic,
+        instruction,
+        schema_json
+      `)
+      .eq('is_active', true)
+      .order('title', { ascending: true });
+    if (templatesErr) throw templatesErr;
+
+    const { data: moduleRows, error: modulesErr } = await supabase
+      .from('modules')
+      .select('id, user_id, name, is_active, created_at')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    if (modulesErr) throw modulesErr;
+
+    const { data: assignmentsRows, error: assignmentsErr } = await supabase
+      .from('assignments')
+      .select('id, teacher_id, title, description, due_date, created_at, miro_link, status, template_id, cards_module_id, assignment_mode, content_json')
+      .eq('teacher_id', user.id)
+      .order('created_at', { ascending: false });
+    if (assignmentsErr) throw assignmentsErr;
+
+    const assignmentIds = (assignmentsRows || []).map((a) => a.id);
+    let assignments = [];
+    let commentsByAssignment = new Map();
+    let resourcesByAssignment = new Map();
+
+    const templatesNormalized = (templatesRows || []).map((tpl) => normalizeTemplateRow(tpl, user.id));
+    const templatesById = new Map(templatesNormalized.map((t) => [t.id, t]));
+    const modulesById = new Map((moduleRows || []).map((m) => [m.id, m]));
+
+    if (assignmentIds.length) {
+      const { data: recipients, error: recipientsErr } = await supabase
+        .from('assignment_recipients')
+        .select('assignment_id, student_id, status, created_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
+        .in('assignment_id', assignmentIds);
+      if (recipientsErr) throw recipientsErr;
+
+      const { data: submissionRows, error: submissionsErr } = await supabase
+        .from('assignment_submissions')
+        .select('id, assignment_id, student_id, answer_text, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
+        .in('assignment_id', assignmentIds);
+      if (submissionsErr) throw submissionsErr;
+
+      const submissionsWithUrls = await Promise.all(
+        (submissionRows || []).map(async (row) => ({
+          ...row,
+          signed_url: row.file_path ? await createSignedUrl(SUBMISSIONS_BUCKET, row.file_path) : ''
+        }))
+      );
+      const submissionsByAssignment = new Map(submissionsWithUrls.map((row) => [row.assignment_id, row]));
+
+      const { data: commentRows, error: commentsErr } = await supabase
+        .from('assignment_comments')
+        .select('id, assignment_id, student_id, author_id, author_role, body, created_at')
+        .in('assignment_id', assignmentIds)
+        .order('created_at', { ascending: true });
+      if (commentsErr) throw commentsErr;
+
+      commentsByAssignment = new Map();
+      (commentRows || []).forEach((row) => {
+        if (!commentsByAssignment.has(row.assignment_id)) commentsByAssignment.set(row.assignment_id, []);
+        commentsByAssignment.get(row.assignment_id).push(row);
+      });
+
+      const { data: resourceRows, error: resourcesErr } = await supabase
+        .from('assignment_resources')
+        .select('id, assignment_id, teacher_id, file_path, file_name, file_size, mime_type, created_at')
+        .in('assignment_id', assignmentIds)
+        .order('created_at', { ascending: true });
+      if (resourcesErr) throw resourcesErr;
+
+      const resourcesWithUrls = await Promise.all(
+        (resourceRows || []).map(async (row) => ({
+          ...row,
+          signed_url: row.file_path ? await createSignedUrl(RESOURCES_BUCKET, row.file_path) : ''
+        }))
+      );
+      resourcesByAssignment = new Map();
+      resourcesWithUrls.forEach((row) => {
+        if (!resourcesByAssignment.has(row.assignment_id)) resourcesByAssignment.set(row.assignment_id, []);
+        resourcesByAssignment.get(row.assignment_id).push(row);
+      });
+
+      const recipientsByAssignment = new Map();
+      (recipients || []).forEach((r) => {
+        if (!recipientsByAssignment.has(r.assignment_id)) {
+          recipientsByAssignment.set(r.assignment_id, r);
+        }
+      });
+
+      assignments = (assignmentsRows || []).map((a) => {
+        const recipient = recipientsByAssignment.get(a.id) || null;
+        const submission = submissionsByAssignment.get(a.id) || null;
+        const tpl = a.template_id ? templatesById.get(a.template_id) : null;
+        const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
+
+        return {
+          ...a,
+          student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
+          recipient_status: recipient?.status || null,
+          recipient_created_at: recipient?.created_at || null,
+          recipient_submitted_at: recipient?.submitted_at || null,
+          teacher_feedback: recipient?.teacher_feedback || '',
+          reviewed_status: recipient?.reviewed_status || 'not_reviewed',
+          reviewed_at: recipient?.reviewed_at || null,
+          reviewed_by: recipient?.reviewed_by || null,
+          submission,
+          template_title: tpl?.title || '',
+          template_category: tpl?.category || '',
+          module_name: mod?.name || '',
+          is_sent: !!recipient
+        };
+      });
+    }
+
+    state.teacher = teacherProfile;
+    state.students = students;
+    state.studentsById = new Map(students.map((s) => [s.id, s]));
+    state.studentLinksById = linkMap;
+    state.assignments = assignments;
+    state.commentsByAssignment = commentsByAssignment;
+    state.resourcesByAssignment = resourcesByAssignment;
+    state.templates = templatesNormalized;
+    state.modules = moduleRows || [];
+  }
+
+  function renderDashboard() {
+    const root = rootEl();
+    if (!root) return;
+
+    const teacher = state.teacher || {};
+    const students = state.students || [];
+    const assignments = state.assignments || [];
+    const awaitingReviewCount = assignments.filter((a) => effectiveReviewState(a) === 'awaiting_review').length;
+    const teacherName = (teacher.full_name || '').trim() || teacher.email || 'Teacher';
+    const teacherEmail = teacher.email || '';
+
+    const flashHtml = state.flash
+      ? `<div class="${state.flash.type === 'error' ? 'td-error' : 'td-success'}">${escapeHtml(state.flash.message)}</div>`
+      : '';
+
+    const dashboardViewHtml = `
+      ${renderStudentsSectionHtml()}
+      ${renderAssignmentComposerHtml()}
+      ${renderAssignmentsListHtml()}
+    `;
+
+    const templatesViewHtml = renderTemplatesViewHtml();
+
+    root.innerHTML = `
+      <div class="td-wrap">
+        ${flashHtml}
+        ${renderWelcomeCardHtml(teacherName, teacherEmail, students.length, assignments.length, awaitingReviewCount)}
+        ${renderTopNavHtml()}
+        ${state.activeView === 'templates' ? templatesViewHtml : dashboardViewHtml}
+      </div>
+    `;
+
     state.flash = null;
+    bindEvents();
   }
 
   function bindEvents() {
@@ -1020,6 +2229,101 @@
 
       const action = button.getAttribute('data-action');
 
+      if (action === 'switch-view') {
+        handleSwitchView(button);
+        return;
+      }
+
+      if (action === 'template-new') {
+        handleTemplateNew();
+        return;
+      }
+
+      if (action === 'template-reset') {
+        handleTemplateReset();
+        return;
+      }
+
+      if (action === 'template-edit') {
+        handleTemplateEdit(button);
+        return;
+      }
+
+      if (action === 'template-duplicate') {
+        handleTemplateDuplicate(button);
+        return;
+      }
+
+      if (action === 'template-archive') {
+        await handleTemplateArchive(button);
+        return;
+      }
+
+      if (action === 'template-save') {
+        await handleTemplateSave(button);
+        return;
+      }
+
+      if (action === 'template-add-question') {
+        handleTemplateAddQuestion();
+        return;
+      }
+
+      if (action === 'template-remove-question') {
+        handleTemplateRemoveQuestion(button);
+        return;
+      }
+
+      if (action === 'template-add-option') {
+        handleTemplateAddOption(button);
+        return;
+      }
+
+      if (action === 'template-remove-option') {
+        handleTemplateRemoveOption(button);
+        return;
+      }
+
+      if (action === 'template-add-answer') {
+        handleTemplateAddAnswer(button);
+        return;
+      }
+
+      if (action === 'template-remove-answer') {
+        handleTemplateRemoveAnswer(button);
+        return;
+      }
+
+      if (action === 'template-add-paragraph') {
+        handleTemplateAddParagraph();
+        return;
+      }
+
+      if (action === 'template-remove-paragraph') {
+        handleTemplateRemoveParagraph(button);
+        return;
+      }
+
+      if (action === 'template-add-order-item') {
+        handleTemplateAddOrderItem();
+        return;
+      }
+
+      if (action === 'template-remove-order-item') {
+        handleTemplateRemoveOrderItem(button);
+        return;
+      }
+
+      if (action === 'template-add-pair') {
+        handleTemplateAddPair();
+        return;
+      }
+
+      if (action === 'template-remove-pair') {
+        handleTemplateRemovePair(button);
+        return;
+      }
+
       if (action === 'detach-student') {
         await handleDetachStudent(button);
         return;
@@ -1043,38 +2347,570 @@
 
     root.addEventListener('change', function (event) {
       const templateEl = event.target.closest('#td-template-id');
-      if (!templateEl) return;
+      if (templateEl) {
+        const templateId = templateEl.value;
+        const form = root.querySelector('#td-assignment-form');
+        if (!form) return;
 
-      const templateId = templateEl.value;
-      const form = root.querySelector('#td-assignment-form');
-      if (!form) return;
+        persistDraftFormState(form);
 
-      persistDraftFormState(form);
+        const tpl = (state.templates || []).find((x) => x.id === templateId);
+        if (!tpl) return;
 
-      const tpl = (state.templates || []).find((x) => x.id === templateId);
-      if (!tpl) return;
+        const titleEl = form.querySelector('#td-title');
+        const descEl = form.querySelector('#td-description');
 
-      const titleEl = form.querySelector('#td-title');
-      const descEl = form.querySelector('#td-description');
+        if (titleEl && !titleEl.value.trim()) {
+          titleEl.value = tpl.title || '';
+        }
 
-      if (titleEl && !titleEl.value.trim()) {
-        titleEl.value = tpl.title || '';
+        if (descEl && !descEl.value.trim()) {
+          descEl.value =
+            tpl.instruction ||
+            tpl.default_instructions ||
+            tpl.description ||
+            '';
+        }
+
+        persistDraftFormState(form);
+        return;
       }
 
-      if (descEl && !descEl.value.trim()) {
-        descEl.value = tpl.default_instructions || tpl.description || '';
+      if (handleTemplateEditorChange(event.target)) {
+        return;
       }
 
-      persistDraftFormState(form);
+      const assignmentForm = event.target.closest('#td-assignment-form');
+      if (assignmentForm) {
+        persistDraftFormState(assignmentForm);
+      }
     });
 
     root.addEventListener('input', function (event) {
-      const form = event.target.closest('#td-assignment-form');
+      const target = event.target;
+
+      if (handleTemplateEditorInput(target)) {
+        return;
+      }
+
+      const form = target.closest('#td-assignment-form');
       if (!form) return;
       persistDraftFormState(form);
     });
 
     root.__tdBound = true;
+  }
+
+  function handleSwitchView(button) {
+    const view = button.getAttribute('data-view');
+    if (!view || (view !== 'dashboard' && view !== 'templates')) return;
+    state.activeView = view;
+    renderDashboard();
+  }
+
+  function handleTemplateNew() {
+    resetTemplateEditor('grammar_dropdown');
+    state.activeView = 'templates';
+    renderDashboard();
+  }
+
+  function handleTemplateReset() {
+    const currentType = state.templateEditor?.templateType || 'grammar_dropdown';
+    resetTemplateEditor(currentType);
+    state.activeView = 'templates';
+    renderDashboard();
+  }
+
+  function handleTemplateEdit(button) {
+    const templateId = button.getAttribute('data-template-id');
+    if (!templateId) return;
+    const row = (state.templates || []).find((x) => x.id === templateId);
+    if (!row) return;
+    fillTemplateEditorFromTemplateRow(row, 'edit');
+    state.activeView = 'templates';
+    renderDashboard();
+  }
+
+  function handleTemplateDuplicate(button) {
+    const templateId = button.getAttribute('data-template-id');
+    if (!templateId) return;
+    const row = (state.templates || []).find((x) => x.id === templateId);
+    if (!row) return;
+    fillTemplateEditorFromTemplateRow(row, 'create');
+    state.activeView = 'templates';
+    setFlash('success', 'Template duplicated into the editor. Save it to create a new template.');
+    renderDashboard();
+  }
+
+  async function handleTemplateArchive(button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    const templateId = button.getAttribute('data-template-id');
+    if (!templateId) return;
+
+    const row = (state.templates || []).find((x) => x.id === templateId);
+    if (!row || !row.is_own) return;
+
+    if (!confirm(`Archive template "${row.title}"? Existing assignments will keep their template link.`)) {
+      return;
+    }
+
+    const original = rememberButton(button);
+    startButtonFeedback(button, 'Archiving...');
+
+    try {
+      const { error } = await supabase
+        .from('assignment_templates')
+        .update({ is_active: false })
+        .eq('id', templateId);
+      if (error) throw error;
+
+      if (state.templateEditor?.id === templateId) {
+        resetTemplateEditor('grammar_dropdown');
+      }
+
+      setFlash('success', 'Template archived.');
+      await fetchDashboardData();
+      renderDashboard();
+      finishButtonFeedbackBySelector(`[data-action="template-archive"][data-template-id="${templateId}"]`, original, true, 'Archived');
+    } catch (err) {
+      console.error('[teacher-dashboard] archive template error:', err);
+      buttonError(button, original, 'Failed');
+    }
+  }
+
+  async function handleTemplateSave(button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    const editor = state.templateEditor || getInitialTemplateEditorState('grammar_dropdown');
+    const original = rememberButton(button);
+
+    const validation = validateTemplateEditor(editor);
+    if (!validation.ok) {
+      setFlash('error', validation.errors[0] || 'Please complete the template form.');
+      renderDashboard();
+      const newBtn = rootEl()?.querySelector('#td-template-save-btn');
+      if (newBtn) buttonError(newBtn, original, 'Check form');
+      return;
+    }
+
+    startButtonFeedback(button, editor.mode === 'edit' ? 'Updating...' : 'Creating...');
+
+    try {
+      const payload = buildTemplatePayload(editor);
+
+      if (editor.mode === 'edit' && editor.id) {
+        const { error } = await supabase
+          .from('assignment_templates')
+          .update(payload)
+          .eq('id', editor.id);
+        if (error) throw error;
+
+        setFlash('success', 'Template updated.');
+      } else {
+        const { error } = await supabase
+          .from('assignment_templates')
+          .insert(payload);
+        if (error) throw error;
+
+        setFlash('success', 'Template created. You can find it in Dashboard and attach it to an assignment.');
+      }
+
+      resetTemplateEditor(editor.templateType || 'grammar_dropdown');
+      state.activeView = 'templates';
+      await fetchDashboardData();
+      renderDashboard();
+      finishButtonFeedbackBySelector('#td-template-save-btn', original, true, editor.mode === 'edit' ? 'Updated' : 'Created');
+    } catch (err) {
+      console.error('[teacher-dashboard] save template error:', err);
+      setFlash('error', err?.message || 'Failed to save template.');
+      renderDashboard();
+      const newBtn = rootEl()?.querySelector('#td-template-save-btn');
+      if (newBtn) buttonError(newBtn, original, 'Failed');
+    }
+  }
+
+  function handleTemplateAddQuestion() {
+    const editor = state.templateEditor;
+    const type = editor.templateType;
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
+      editor.schemaContent.questions.push(getBlankDropdownQuestion('q'));
+    } else if (type === 'grammar_typed_gap_fill') {
+      editor.schemaContent.questions.push(getBlankTypedGapQuestion());
+    } else if (type === 'reading_multiple_choice') {
+      editor.schemaContent.questions.push(getBlankReadingMcQuestion());
+    } else {
+      return;
+    }
+    renderDashboard();
+  }
+
+  function handleTemplateRemoveQuestion(button) {
+    const editor = state.templateEditor;
+    const index = Number(button.getAttribute('data-index'));
+    if (Number.isNaN(index)) return;
+
+    if (editor.templateType === 'grammar_dropdown' || editor.templateType === 'vocabulary_dropdown' || editor.templateType === 'grammar_typed_gap_fill' || editor.templateType === 'reading_multiple_choice') {
+      const list = editor.schemaContent.questions || [];
+      if (list.length <= 1) {
+        setFlash('error', 'At least one question is required.');
+        renderDashboard();
+        return;
+      }
+      list.splice(index, 1);
+      renderDashboard();
+    }
+  }
+
+  function handleTemplateAddOption(button) {
+    const editor = state.templateEditor;
+    const qi = Number(button.getAttribute('data-qi'));
+    if (Number.isNaN(qi)) return;
+
+    const questions = editor.schemaContent.questions || [];
+    const q = questions[qi];
+    if (!q) return;
+
+    const nextId = String.fromCharCode(97 + (q.options?.length || 0));
+    if (!Array.isArray(q.options)) q.options = [];
+    q.options.push({ id: nextId, text: '' });
+    if (!q.correct_option_id) q.correct_option_id = nextId;
+    renderDashboard();
+  }
+
+  function handleTemplateRemoveOption(button) {
+    const editor = state.templateEditor;
+    const qi = Number(button.getAttribute('data-qi'));
+    const oi = Number(button.getAttribute('data-oi'));
+    if (Number.isNaN(qi) || Number.isNaN(oi)) return;
+
+    const q = editor.schemaContent.questions?.[qi];
+    if (!q || !Array.isArray(q.options)) return;
+
+    if (q.options.length <= 2) {
+      setFlash('error', 'At least two options are required.');
+      renderDashboard();
+      return;
+    }
+
+    const removed = q.options.splice(oi, 1)[0];
+    q.options.forEach((opt, idx) => {
+      opt.id = String.fromCharCode(97 + idx);
+    });
+
+    if (removed?.id === q.correct_option_id) {
+      q.correct_option_id = q.options[0]?.id || 'a';
+    } else if (!q.options.some((opt) => opt.id === q.correct_option_id)) {
+      q.correct_option_id = q.options[0]?.id || 'a';
+    }
+
+    renderDashboard();
+  }
+
+  function handleTemplateAddAnswer(button) {
+    const qi = Number(button.getAttribute('data-qi'));
+    if (Number.isNaN(qi)) return;
+
+    const q = state.templateEditor.schemaContent.questions?.[qi];
+    if (!q) return;
+    if (!Array.isArray(q.accepted_answers)) q.accepted_answers = [];
+    q.accepted_answers.push('');
+    renderDashboard();
+  }
+
+  function handleTemplateRemoveAnswer(button) {
+    const qi = Number(button.getAttribute('data-qi'));
+    const ai = Number(button.getAttribute('data-ai'));
+    if (Number.isNaN(qi) || Number.isNaN(ai)) return;
+
+    const q = state.templateEditor.schemaContent.questions?.[qi];
+    if (!q || !Array.isArray(q.accepted_answers)) return;
+
+    if (q.accepted_answers.length <= 1) {
+      setFlash('error', 'At least one accepted answer is required.');
+      renderDashboard();
+      return;
+    }
+
+    q.accepted_answers.splice(ai, 1);
+    renderDashboard();
+  }
+
+  function handleTemplateAddParagraph() {
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.passage_paragraphs)) content.passage_paragraphs = [];
+    content.passage_paragraphs.push(getBlankParagraph());
+    renderDashboard();
+  }
+
+  function handleTemplateRemoveParagraph(button) {
+    const index = Number(button.getAttribute('data-index'));
+    if (Number.isNaN(index)) return;
+
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.passage_paragraphs)) return;
+
+    if (content.passage_paragraphs.length <= 1) {
+      setFlash('error', 'At least one passage paragraph is required.');
+      renderDashboard();
+      return;
+    }
+
+    content.passage_paragraphs.splice(index, 1);
+    renderDashboard();
+  }
+
+  function handleTemplateAddOrderItem() {
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.items)) content.items = [];
+    const item = getBlankOrderItem();
+    content.items.push(item);
+    normalizeReadingOrderContent(content);
+    renderDashboard();
+  }
+
+  function handleTemplateRemoveOrderItem(button) {
+    const index = Number(button.getAttribute('data-index'));
+    if (Number.isNaN(index)) return;
+
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.items)) return;
+
+    if (content.items.length <= 2) {
+      setFlash('error', 'At least two order items are required.');
+      renderDashboard();
+      return;
+    }
+
+    const removed = content.items.splice(index, 1)[0];
+    content.correct_order = (content.correct_order || []).filter((id) => id !== removed?.id);
+    normalizeReadingOrderContent(content);
+    renderDashboard();
+  }
+
+  function handleTemplateAddPair() {
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.pairs)) content.pairs = [];
+    content.pairs.push(getBlankMatchingPair());
+    renderDashboard();
+  }
+
+  function handleTemplateRemovePair(button) {
+    const index = Number(button.getAttribute('data-index'));
+    if (Number.isNaN(index)) return;
+
+    const content = state.templateEditor.schemaContent;
+    if (!Array.isArray(content.pairs)) return;
+
+    if (content.pairs.length <= 2) {
+      setFlash('error', 'At least two matching pairs are required.');
+      renderDashboard();
+      return;
+    }
+
+    content.pairs.splice(index, 1);
+    renderDashboard();
+  }
+
+  function handleTemplateEditorChange(target) {
+    if (!target) return false;
+
+    const id = target.id;
+    const editor = state.templateEditor;
+
+    if (id === 'td-template-type-editor') {
+      const nextType = target.value || 'grammar_dropdown';
+      if (nextType === editor.templateType) return true;
+
+      const hadTypedData =
+        editor.id ||
+        editor.title ||
+        editor.topic ||
+        editor.instruction;
+
+      if (hadTypedData && !confirm('Change template type? Current editor content for this template will be reset.')) {
+        target.value = editor.templateType;
+        return true;
+      }
+
+      editor.templateType = nextType;
+      editor.schemaContent = getInitialSchemaContent(nextType);
+      renderDashboard();
+      return true;
+    }
+
+    if (id === 'td-template-filter-ownership') {
+      state.templateFilters.ownership = target.value || 'mine';
+      renderDashboard();
+      return true;
+    }
+
+    if (id === 'td-template-filter-type') {
+      state.templateFilters.type = target.value || '';
+      renderDashboard();
+      return true;
+    }
+
+    const role = target.getAttribute('data-role');
+    if (!role) return false;
+
+    const content = editor.schemaContent;
+
+    if (role === 'tpl-correct-option') {
+      const qi = Number(target.getAttribute('data-index'));
+      const q = content.questions?.[qi];
+      if (q) q.correct_option_id = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-order-select') {
+      const itemId = target.getAttribute('data-item-id');
+      if (itemId) {
+        setOrderPosition(content, itemId, target.value);
+        renderDashboard();
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  function handleTemplateEditorInput(target) {
+    if (!target) return false;
+
+    const id = target.id;
+    const editor = state.templateEditor;
+    const content = editor.schemaContent;
+
+    if (id === 'td-template-title-editor') {
+      editor.title = target.value || '';
+      return true;
+    }
+
+    if (id === 'td-template-key-editor') {
+      editor.templateKey = target.value || '';
+      return true;
+    }
+
+    if (id === 'td-template-topic-editor') {
+      editor.topic = target.value || '';
+      return true;
+    }
+
+    if (id === 'td-template-instruction-editor') {
+      editor.instruction = target.value || '';
+      return true;
+    }
+
+    if (id === 'td-template-search') {
+      state.templateFilters.query = target.value || '';
+      return true;
+    }
+
+    const role = target.getAttribute('data-role');
+    if (!role) return false;
+
+    const qi = Number(target.getAttribute('data-qi'));
+    const oi = Number(target.getAttribute('data-oi'));
+    const ai = Number(target.getAttribute('data-ai'));
+    const idx = Number(target.getAttribute('data-index'));
+
+    if (role === 'tpl-question-sentence' && !Number.isNaN(idx)) {
+      content.questions[idx].sentence = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-option-text' && !Number.isNaN(qi) && !Number.isNaN(oi)) {
+      const q = content.questions?.[qi];
+      if (q?.options?.[oi]) q.options[oi].text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-question-explanation' && !Number.isNaN(idx)) {
+      content.questions[idx].explanation = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-typed-sentence' && !Number.isNaN(idx)) {
+      content.questions[idx].sentence = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-accepted-answer' && !Number.isNaN(qi) && !Number.isNaN(ai)) {
+      const q = content.questions?.[qi];
+      if (q?.accepted_answers) q.accepted_answers[ai] = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-typed-hint' && !Number.isNaN(idx)) {
+      content.questions[idx].hint = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-typed-explanation' && !Number.isNaN(idx)) {
+      content.questions[idx].explanation = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-passage-title') {
+      content.passage_title = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-passage-text' && !Number.isNaN(idx)) {
+      content.passage_paragraphs[idx].text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-mc-question' && !Number.isNaN(idx)) {
+      content.questions[idx].question = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-mc-option-text' && !Number.isNaN(qi) && !Number.isNaN(oi)) {
+      const q = content.questions?.[qi];
+      if (q?.options?.[oi]) q.options[oi].text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-order-prompt') {
+      content.prompt = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-order-item-text' && !Number.isNaN(idx)) {
+      content.items[idx].text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-order-explanation') {
+      content.explanation = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-matching-prompt') {
+      content.prompt = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-pair-left' && !Number.isNaN(idx)) {
+      content.pairs[idx].left_text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-pair-right' && !Number.isNaN(idx)) {
+      content.pairs[idx].right_text = target.value || '';
+      return true;
+    }
+
+    if (role === 'tpl-pair-example' && !Number.isNaN(idx)) {
+      content.pairs[idx].example = target.value || '';
+      return true;
+    }
+
+    return false;
   }
 
   async function handleAddStudent(form) {
@@ -1311,6 +3147,7 @@
     if (!assignment) return;
 
     setDraftStateFromAssignment(assignment);
+    state.activeView = 'dashboard';
     renderDashboard();
 
     const form = rootEl()?.querySelector('#td-assignment-form');
