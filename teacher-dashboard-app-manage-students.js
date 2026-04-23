@@ -937,6 +937,214 @@
       .join('');
   }
 
+  function getAssignmentTemplateSchema(assignment) {
+  const schema = assignment?.template_schema_json;
+  if (schema && typeof schema === 'object' && schema.content) return schema;
+
+  const fallback = assignment?.template_default_fields_json;
+  if (fallback && typeof fallback === 'object' && fallback.content) return fallback;
+
+  return null;
+}
+
+function getStoredTemplateAnswers(assignment) {
+  const raw = assignment?.submission?.answers_json;
+
+  if (raw && typeof raw === 'object' && raw.answers && typeof raw.answers === 'object') {
+    return raw.answers;
+  }
+
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw;
+  }
+
+  return {};
+}
+
+function getOptionTextById(options, id) {
+  const opt = (options || []).find((x) => x.id === id);
+  return opt?.text || '';
+}
+
+function renderAnswerValue(value) {
+  const hasValue = value !== null && value !== undefined && String(value).trim() !== '';
+  if (!hasValue) {
+    return `<div class="td-template-answer-empty">No answer submitted.</div>`;
+  }
+
+  return `<div class="td-template-answer-value">${escapeHtml(value)}</div>`;
+}
+
+function renderStudentTemplateAnswers(assignment) {
+  const schema = getAssignmentTemplateSchema(assignment);
+  const type = assignment?.template_type || '';
+
+  if (!schema || !type || !schema.content) return '';
+
+  const content = cloneData(schema.content || {});
+  if (type === 'reading_order') normalizeReadingOrderContent(content);
+
+  const answers = getStoredTemplateAnswers(assignment);
+  const instruction =
+    assignment?.template_instruction ||
+    assignment?.template_default_instructions ||
+    '';
+
+  let itemsHtml = '';
+
+  if (
+    type === 'grammar_dropdown' ||
+    type === 'vocabulary_dropdown' ||
+    type === 'reading_multiple_choice'
+  ) {
+    const questions = content.questions || [];
+    itemsHtml = questions.map((q, idx) => {
+      const studentOptionId = answers[q.id] || '';
+      const studentAnswer = studentOptionId
+        ? getOptionTextById(q.options, studentOptionId)
+        : '';
+      const correctAnswer = getOptionTextById(q.options, q.correct_option_id || '');
+      const promptText = q.question || q.sentence || '';
+
+      return `
+        <div class="td-template-answer-item">
+          <div class="td-template-answer-qtitle">Question ${idx + 1}</div>
+          <div class="td-template-answer-text">${escapeHtml(promptText)}</div>
+
+          <div class="td-template-answer-grid">
+            <div>
+              <div class="td-label"><span>Student answer</span></div>
+              ${renderAnswerValue(studentAnswer)}
+            </div>
+            <div>
+              <div class="td-label"><span>Correct answer</span></div>
+              ${renderAnswerValue(correctAnswer)}
+            </div>
+          </div>
+
+          ${q.explanation ? `<div class="td-note">Explanation: ${escapeHtml(q.explanation)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (type === 'grammar_typed_gap_fill') {
+    const questions = content.questions || [];
+    itemsHtml = questions.map((q, idx) => {
+      const studentAnswer = answers[q.id] || '';
+      const correctAnswer = (q.accepted_answers || []).filter(Boolean).join(' / ');
+
+      return `
+        <div class="td-template-answer-item">
+          <div class="td-template-answer-qtitle">Question ${idx + 1}</div>
+          <div class="td-template-answer-text">${escapeHtml(q.sentence || '')}</div>
+
+          <div class="td-template-answer-grid">
+            <div>
+              <div class="td-label"><span>Student answer</span></div>
+              ${renderAnswerValue(studentAnswer)}
+            </div>
+            <div>
+              <div class="td-label"><span>Accepted answer(s)</span></div>
+              ${renderAnswerValue(correctAnswer)}
+            </div>
+          </div>
+
+          ${q.hint ? `<div class="td-note">Hint: ${escapeHtml(q.hint)}</div>` : ''}
+          ${q.explanation ? `<div class="td-note">Explanation: ${escapeHtml(q.explanation)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (type === 'reading_order') {
+    const items = content.items || [];
+    const correctOrder = content.correct_order || [];
+
+    itemsHtml = items.map((item, idx) => {
+      const studentPos = answers[item.id] || '';
+      const correctPos =
+        correctOrder.indexOf(item.id) >= 0
+          ? String(correctOrder.indexOf(item.id) + 1)
+          : '';
+
+      return `
+        <div class="td-template-answer-item">
+          <div class="td-template-answer-qtitle">Event ${idx + 1}</div>
+          <div class="td-template-answer-text">${escapeHtml(item.text || '')}</div>
+
+          <div class="td-template-answer-grid">
+            <div>
+              <div class="td-label"><span>Student position</span></div>
+              ${renderAnswerValue(studentPos)}
+            </div>
+            <div>
+              <div class="td-label"><span>Correct position</span></div>
+              ${renderAnswerValue(correctPos)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (content.explanation) {
+      itemsHtml += `<div class="td-note">Explanation: ${escapeHtml(content.explanation)}</div>`;
+    }
+  }
+
+  if (type === 'vocabulary_matching') {
+    const pairs = content.pairs || [];
+
+    itemsHtml = pairs.map((pair, idx) => {
+      const studentSelectedPairId = answers[pair.id] || '';
+      const studentMatch = studentSelectedPairId
+        ? (pairs.find((x) => x.id === studentSelectedPairId)?.right_text || '')
+        : '';
+      const correctMatch = pair.right_text || '';
+
+      return `
+        <div class="td-template-answer-item">
+          <div class="td-template-answer-qtitle">Pair ${idx + 1}</div>
+          <div class="td-template-answer-text"><strong>${escapeHtml(pair.left_text || '')}</strong></div>
+
+          <div class="td-template-answer-grid">
+            <div>
+              <div class="td-label"><span>Student match</span></div>
+              ${renderAnswerValue(studentMatch)}
+            </div>
+            <div>
+              <div class="td-label"><span>Correct meaning</span></div>
+              ${renderAnswerValue(correctMatch)}
+            </div>
+          </div>
+
+          ${pair.example ? `<div class="td-note">Example: ${escapeHtml(pair.example)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (!itemsHtml) return '';
+
+  return `
+    <div class="td-section">
+      <div class="td-template-review-block">
+        <div class="td-template-review-head">
+          <div>
+            <div class="td-template-review-title">Student template answers</div>
+            ${instruction ? `<div class="td-template-review-sub">${escapeHtml(instruction)}</div>` : ''}
+          </div>
+          <div>${renderTemplateTypeBadge(type)}</div>
+        </div>
+
+        <div class="td-grid" style="gap:12px;">
+          ${itemsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
   function renderTemplateEditorHtml() {
     const editor = state.templateEditor || getInitialTemplateEditorState('grammar_dropdown');
     const modeLabel = editor.mode === 'edit' ? 'Edit template' : 'Create template';
@@ -1646,10 +1854,11 @@
           const modeText = assignmentModeLabel(assignment.assignment_mode);
           const assignmentStatusText = assignmentStatusLabel(assignment.status);
 
-          const answerHtml = submission?.answer_text
-            ? `<div class="td-answer">${escapeHtml(submission.answer_text)}</div>`
-            : `<div class="td-empty">No answer text yet.</div>`;
+const answerLabel = assignment.template_title ? 'Additional note from student' : 'Student answer';
 
+const answerHtml = submission?.answer_text
+  ? `<div class="td-answer">${escapeHtml(submission.answer_text)}</div>`
+  : `<div class="td-empty">${assignment.template_title ? 'No additional note yet.' : 'No answer text yet.'}</div>`;
           const fileHtml = submission?.file_name
             ? `<div class="td-grid" style="gap:8px;"><div class="td-note">${escapeHtml(submission.file_name)} ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}</div>${submission.signed_url ? `<a class="td-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}</div>`
             : `<div class="td-empty">No file uploaded yet.</div>`;
@@ -1773,24 +1982,26 @@
 
               ${actionsForDraft}
 
-              <div class="td-section">
-                <div class="td-label"><span>Reference files</span></div>
-                <div class="td-resource-list">${resourcesHtml}</div>
-                <div class="td-grid-2">
-                  <label class="td-label">
-                    <span>Upload new file</span>
-                    <input class="td-input" data-role="resource-file" type="file" />
-                  </label>
-                  <div class="td-actions" style="align-items:end;">
-                    <button class="td-btn td-btn-secondary" type="button" data-action="upload-resource">Upload file</button>
-                  </div>
-                </div>
-              </div>
+<div class="td-section">
+  <div class="td-label"><span>Reference files</span></div>
+  <div class="td-resource-list">${resourcesHtml}</div>
+  <div class="td-grid-2">
+    <label class="td-label">
+      <span>Upload new file</span>
+      <input class="td-input" data-role="resource-file" type="file" />
+    </label>
+    <div class="td-actions" style="align-items:end;">
+      <button class="td-btn td-btn-secondary" type="button" data-action="upload-resource">Upload file</button>
+    </div>
+  </div>
+</div>
 
-              <div class="td-section">
-                <div class="td-label"><span>Student answer</span></div>
-                ${answerHtml}
-              </div>
+${renderStudentTemplateAnswers(assignment)}
+
+<div class="td-section">
+  <div class="td-label"><span>${escapeHtml(answerLabel)}</span></div>
+  ${answerHtml}
+</div>
 
               <div class="td-section">
                 <div class="td-label"><span>Uploaded file</span></div>
@@ -1921,6 +2132,16 @@
       .td-repeat-item{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;gap:12px}
       .td-repeat-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
       .td-repeat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
+      .td-template-review-block{border:1px solid #dbe7f3;border-radius:14px;background:#fbfdff;padding:16px}
+      .td-template-review-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+      .td-template-review-title{font-size:18px;font-weight:700;line-height:1.2}
+      .td-template-review-sub{margin-top:6px;color:#667085;font-size:14px;line-height:1.5}
+      .td-template-answer-item{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;gap:10px}
+      .td-template-answer-qtitle{font-size:14px;font-weight:700;color:#175cd3}
+      .td-template-answer-text{font-size:15px;line-height:1.6;color:#111213;white-space:pre-wrap}
+      .td-template-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .td-template-answer-value{border:1px solid #e6ebf1;border-radius:12px;padding:10px 12px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
+      .td-template-answer-empty{border:1px dashed #cfd8e3;border-radius:12px;padding:10px 12px;background:#fbfdff;color:#667085;font-size:14px}
       @media (max-width:900px){
         .td-template-layout{grid-template-columns:1fr}
       }
@@ -1928,8 +2149,7 @@
         #${ROOT_ID}{padding:0 12px 28px}
         .td-head,.td-body{padding:16px}
         .td-title{font-size:24px}
-        .td-grid-2{grid-template-columns:1fr}
-        .td-student-top,.td-assignment-top,.td-template-item-top,.td-repeat-head{flex-direction:column;align-items:flex-start}
+        .td-grid-2,.td-template-answer-grid{grid-template-columns:1fr}        .td-student-top,.td-assignment-top,.td-template-item-top,.td-repeat-head{flex-direction:column;align-items:flex-start}
         .td-manage-row{grid-template-columns:1fr}
         .td-manage-actions{align-items:flex-start}
         .td-btn-add{min-width:0;width:100%}
@@ -2071,10 +2291,10 @@
         .in('assignment_id', assignmentIds);
       if (recipientsErr) throw recipientsErr;
 
-      const { data: submissionRows, error: submissionsErr } = await supabase
-        .from('assignment_submissions')
-        .select('id, assignment_id, student_id, answer_text, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
-        .in('assignment_id', assignmentIds);
+const { data: submissionRows, error: submissionsErr } = await supabase
+  .from('assignment_submissions')
+  .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
+  .in('assignment_id', assignmentIds);
       if (submissionsErr) throw submissionsErr;
 
       const submissionsWithUrls = await Promise.all(
@@ -2124,29 +2344,36 @@
         }
       });
 
-      assignments = (assignmentsRows || []).map((a) => {
-        const recipient = recipientsByAssignment.get(a.id) || null;
-        const submission = submissionsByAssignment.get(a.id) || null;
-        const tpl = a.template_id ? templatesById.get(a.template_id) : null;
-        const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
+assignments = (assignmentsRows || []).map((a) => {
+  const recipient = recipientsByAssignment.get(a.id) || null;
+  const submission = submissionsByAssignment.get(a.id) || null;
+  const tpl = a.template_id ? templatesById.get(a.template_id) : null;
+  const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
 
-        return {
-          ...a,
-          student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
-          recipient_status: recipient?.status || null,
-          recipient_created_at: recipient?.created_at || null,
-          recipient_submitted_at: recipient?.submitted_at || null,
-          teacher_feedback: recipient?.teacher_feedback || '',
-          reviewed_status: recipient?.reviewed_status || 'not_reviewed',
-          reviewed_at: recipient?.reviewed_at || null,
-          reviewed_by: recipient?.reviewed_by || null,
-          submission,
-          template_title: tpl?.title || '',
-          template_category: tpl?.category || '',
-          module_name: mod?.name || '',
-          is_sent: !!recipient
-        };
-      });
+  return {
+    ...a,
+    student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
+    recipient_status: recipient?.status || null,
+    recipient_created_at: recipient?.created_at || null,
+    recipient_submitted_at: recipient?.submitted_at || null,
+    teacher_feedback: recipient?.teacher_feedback || '',
+    reviewed_status: recipient?.reviewed_status || 'not_reviewed',
+    reviewed_at: recipient?.reviewed_at || null,
+    reviewed_by: recipient?.reviewed_by || null,
+    submission,
+    template_title: tpl?.title || '',
+    template_category: tpl?.category || '',
+    template_answer_mode: tpl?.answer_mode || '',
+    template_type: tpl?.template_type || '',
+    template_topic: tpl?.topic || '',
+    template_instruction: tpl?.instruction || tpl?.default_instructions || '',
+    template_schema_json: tpl?.schema_json || null,
+    template_default_fields_json: tpl?.default_fields_json || null,
+    template_default_instructions: tpl?.default_instructions || '',
+    module_name: mod?.name || '',
+    is_sent: !!recipient
+  };
+});
     }
 
     state.teacher = teacherProfile;
@@ -3194,43 +3421,57 @@
   }
 
   async function handleSaveReview(card, assignmentId, button) {
-    const supabase = window.supabase;
-    if (!supabase) return;
+  const supabase = window.supabase;
+  if (!supabase) return;
 
-    const reviewedEl = card.querySelector('[data-role="reviewed-status"]');
-    const feedbackEl = card.querySelector('[data-role="teacher-feedback"]');
-    const reviewedStatus = reviewedEl?.value || 'not_reviewed';
-    const teacherFeedback = feedbackEl?.value.trim() || '';
-    const original = rememberButton(button);
+  const reviewedEl = card.querySelector('[data-role="reviewed-status"]');
+  const feedbackEl = card.querySelector('[data-role="teacher-feedback"]');
+  const reviewedStatus = reviewedEl?.value || 'not_reviewed';
+  const teacherFeedback = feedbackEl?.value.trim() || '';
+  const original = rememberButton(button);
 
-    const assignment = state.assignments.find((a) => a.id === assignmentId);
-    if (!assignment?.student_id) {
-      buttonError(button, original, 'No student');
-      return;
-    }
-
-    startButtonFeedback(button, 'Saving...');
-
-    try {
-      const { error } = await supabase
-        .from('assignment_recipients')
-        .update({
-          teacher_feedback: teacherFeedback || null,
-          reviewed_status: reviewedStatus
-        })
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', assignment.student_id);
-
-      if (error) throw error;
-
-      await fetchDashboardData();
-      renderDashboard();
-      finishButtonFeedbackBySelector(`[data-assignment-id="${assignmentId}"] [data-action="save-review"]`, original, true, 'Saved');
-    } catch (err) {
-      console.error('[teacher-dashboard] save review error:', err);
-      buttonError(button, original, 'Failed');
-    }
+  const assignment = state.assignments.find((a) => a.id === assignmentId);
+  if (!assignment?.student_id) {
+    buttonError(button, original, 'No student');
+    return;
   }
+
+  if (reviewedStatus === 'reviewed' && assignment.recipient_status !== 'completed') {
+    buttonError(button, original, 'Student not completed');
+    return;
+  }
+
+  startButtonFeedback(button, 'Saving...');
+
+  try {
+    const payload = {
+      teacher_feedback: teacherFeedback || null,
+      reviewed_status: reviewedStatus,
+      reviewed_at: reviewedStatus === 'reviewed' ? new Date().toISOString() : null,
+      reviewed_by: reviewedStatus === 'reviewed' ? state.userId : null
+    };
+
+    const { error } = await supabase
+      .from('assignment_recipients')
+      .update(payload)
+      .eq('assignment_id', assignmentId)
+      .eq('student_id', assignment.student_id);
+
+    if (error) throw error;
+
+    await fetchDashboardData();
+    renderDashboard();
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="save-review"]`,
+      original,
+      true,
+      'Saved'
+    );
+  } catch (err) {
+    console.error('[teacher-dashboard] save review error:', err);
+    buttonError(button, original, 'Failed');
+  }
+}
 
   async function handleUploadResource(card, assignmentId, button) {
     const supabase = window.supabase;
