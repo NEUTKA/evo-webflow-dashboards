@@ -1545,12 +1545,19 @@ if (isSubmit) {
         recipientPayload.reviewed_by = null;
       }
 
-      const { error: statusErr } = await supabase
-        .from('assignment_recipients')
-        .update(recipientPayload)
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', studentId);
-      if (statusErr) throw statusErr;
+   const { data: updatedRecipient, error: statusErr } = await supabase
+  .from('assignment_recipients')
+  .update(recipientPayload)
+  .eq('assignment_id', assignmentId)
+  .eq('student_id', studentId)
+  .select('assignment_id, student_id, status, reviewed_status, submitted_at, last_activity_at')
+  .maybeSingle();
+
+if (statusErr) throw statusErr;
+
+if (!updatedRecipient) {
+  throw new Error('Assignment status was not updated. Check RLS policy for assignment_recipients.');
+}
 
 if (!silent) {
   await fetchDashboardData(studentId);
