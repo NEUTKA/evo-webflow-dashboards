@@ -961,6 +961,92 @@ function getStoredTemplateAnswers(assignment) {
   return {};
 }
 
+
+function countTemplateItems(assignment) {
+  const schema = getAssignmentTemplateSchema(assignment);
+  const type = assignment?.template_type || '';
+  const content = schema?.content || {};
+
+  if (!schema || !type) return 0;
+  if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+    return Array.isArray(content.questions) ? content.questions.length : 0;
+  }
+  if (type === 'reading_order') {
+    return Array.isArray(content.items) ? content.items.length : 0;
+  }
+  if (type === 'vocabulary_matching') {
+    return Array.isArray(content.pairs) ? content.pairs.length : 0;
+  }
+  return 0;
+}
+
+function countAnsweredItems(assignment, answers) {
+  const schema = getAssignmentTemplateSchema(assignment);
+  const type = assignment?.template_type || '';
+  const content = schema?.content || {};
+  if (!schema || !type || !answers || typeof answers !== 'object') return 0;
+
+  const hasValue = (id) => {
+    const value = answers[id];
+    return value !== null && value !== undefined && String(value).trim() !== '';
+  };
+
+  if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+    return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
+  }
+  if (type === 'reading_order') {
+    return (content.items || []).filter((item) => item?.id && hasValue(item.id)).length;
+  }
+  if (type === 'vocabulary_matching') {
+    return (content.pairs || []).filter((pair) => pair?.id && hasValue(pair.id)).length;
+  }
+  return Object.keys(answers).filter((key) => hasValue(key)).length;
+}
+
+function getAssignmentProgress(assignment) {
+  const meta = assignment?.submission?.answers_json?.meta;
+  if (meta && typeof meta === 'object') {
+    return {
+      total: Number(meta.total_items || 0),
+      answered: Number(meta.answered_items || 0),
+      percent: Number(meta.completion_percent || 0),
+      isComplete: !!meta.is_complete,
+      lastSavedAt: meta.last_saved_at || assignment?.submission?.last_saved_at || null
+    };
+  }
+
+  const answers = getStoredTemplateAnswers(assignment);
+  const total = countTemplateItems(assignment);
+  const answered = countAnsweredItems(assignment, answers);
+  const percent = total ? Math.min(100, Math.round((answered / total) * 100)) : 0;
+
+  return {
+    total,
+    answered,
+    percent,
+    isComplete: total > 0 && answered >= total,
+    lastSavedAt: assignment?.submission?.last_saved_at || null
+  };
+}
+
+function renderProgressTag(assignment) {
+  const progress = getAssignmentProgress(assignment);
+  if (!progress.total) return '';
+  return `<div class="td-tag">Progress: ${escapeHtml(progress.answered)} / ${escapeHtml(progress.total)} (${escapeHtml(progress.percent)}%)</div>`;
+}
+
+function hasReviewableSubmission(assignment) {
+  const submission = assignment?.submission || null;
+  if (!submission) return false;
+
+  const hasText = !!String(submission.answer_text || '').trim();
+  const hasFile = !!submission.file_path;
+  const progress = getAssignmentProgress(assignment);
+  const hasTemplateWork = progress.total > 0 && progress.isComplete;
+
+  return hasText || hasFile || hasTemplateWork;
+}
+
 function getOptionTextById(options, id) {
   const opt = (options || []).find((x) => x.id === id);
   return opt?.text || '';
@@ -1912,6 +1998,10 @@ const answerHtml = submission?.answer_text
                     <span>Student status</span>
                     <div class="td-answer">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))}</div>
                   </div>
+                  <div class="td-label">
+                    <span>Saved progress</span>
+                    <div class="td-answer">${(() => { const p = getAssignmentProgress(assignment); return p.total ? `${escapeHtml(p.answered)} / ${escapeHtml(p.total)} (${escapeHtml(p.percent)}%)` : 'No template progress'; })()}</div>
+                  </div>
 
                   <label class="td-label">
                     <span>Review state</span>
@@ -1974,8 +2064,11 @@ const answerHtml = submission?.answer_text
                 ${assignment.template_title ? `<div class="td-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
                 ${assignment.module_name ? `<div class="td-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
                 ${assignment.is_sent ? `<div class="td-tag">Review: ${escapeHtml(effectiveReviewText)}</div>` : ''}
+                ${renderProgressTag(assignment)}
+                ${assignment.recipient_last_activity_at ? `<div class="td-tag">Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
                 ${assignment.reviewed_at ? `<div class="td-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
                 ${submission?.submitted_at ? `<div class="td-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
+                ${submission?.last_saved_at ? `<div class="td-tag">Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
               </div>
 
               ${assignment.miro_link ? `<div style="margin-top:14px;"><a class="td-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
@@ -2287,13 +2380,13 @@ ${renderStudentTemplateAnswers(assignment)}
     if (assignmentIds.length) {
       const { data: recipients, error: recipientsErr } = await supabase
         .from('assignment_recipients')
-        .select('assignment_id, student_id, status, created_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
+        .select('assignment_id, student_id, status, created_at, started_at, last_activity_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
         .in('assignment_id', assignmentIds);
       if (recipientsErr) throw recipientsErr;
 
 const { data: submissionRows, error: submissionsErr } = await supabase
   .from('assignment_submissions')
-  .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
+  .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, last_saved_at, version, created_at, updated_at')
   .in('assignment_id', assignmentIds);
       if (submissionsErr) throw submissionsErr;
 
@@ -2355,6 +2448,8 @@ assignments = (assignmentsRows || []).map((a) => {
     student_id: recipient?.student_id || (a.content_json?.student_id ?? null),
     recipient_status: recipient?.status || null,
     recipient_created_at: recipient?.created_at || null,
+    recipient_started_at: recipient?.started_at || null,
+    recipient_last_activity_at: recipient?.last_activity_at || null,
     recipient_submitted_at: recipient?.submitted_at || null,
     teacher_feedback: recipient?.teacher_feedback || '',
     reviewed_status: recipient?.reviewed_status || 'not_reviewed',
@@ -3437,7 +3532,12 @@ assignments = (assignmentsRows || []).map((a) => {
   }
 
   if (reviewedStatus === 'reviewed' && assignment.recipient_status !== 'completed') {
-    buttonError(button, original, 'Student not completed');
+    buttonError(button, original, 'Student not submitted');
+    return;
+  }
+
+  if (reviewedStatus === 'reviewed' && !hasReviewableSubmission(assignment)) {
+    buttonError(button, original, 'No work to review');
     return;
   }
 

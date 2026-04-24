@@ -60,6 +60,7 @@
   let sdRealtimeChannel = null;
   let sdRealtimeTimer = null;
   let sdRealtimeBusy = false;
+  const sdAutosaveTimers = new Map();
 
   function clearStudentRealtime() {
     if (sdRealtimeTimer) {
@@ -387,6 +388,136 @@
       if (value && typeof value === 'object') return Object.values(value).some(Boolean);
       return value !== null && value !== undefined && String(value).trim() !== '';
     });
+  }
+
+
+  function countTemplateItems(assignment) {
+    const schema = getAssignmentTemplateSchema(assignment);
+    const type = assignment?.template_type || '';
+    const content = schema?.content || {};
+
+    if (!schema || !type) return 0;
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+      return Array.isArray(content.questions) ? content.questions.length : 0;
+    }
+    if (type === 'reading_order') {
+      return Array.isArray(content.items) ? content.items.length : 0;
+    }
+    if (type === 'vocabulary_matching') {
+      return Array.isArray(content.pairs) ? content.pairs.length : 0;
+    }
+    return 0;
+  }
+
+  function countAnsweredItems(assignment, answers) {
+    const schema = getAssignmentTemplateSchema(assignment);
+    const type = assignment?.template_type || '';
+    const content = schema?.content || {};
+    if (!schema || !type || !answers || typeof answers !== 'object') return 0;
+
+    const hasValue = (id) => {
+      const value = answers[id];
+      return value !== null && value !== undefined && String(value).trim() !== '';
+    };
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+      return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
+    }
+    if (type === 'reading_order') {
+      return (content.items || []).filter((item) => item?.id && hasValue(item.id)).length;
+    }
+    if (type === 'vocabulary_matching') {
+      return (content.pairs || []).filter((pair) => pair?.id && hasValue(pair.id)).length;
+    }
+    return Object.keys(answers).filter((key) => hasValue(key)).length;
+  }
+
+  function getTemplateProgress(assignment, answers) {
+    const total = countTemplateItems(assignment);
+    const answered = countAnsweredItems(assignment, answers || {});
+    const percent = total ? Math.min(100, Math.round((answered / total) * 100)) : 0;
+    return {
+      total,
+      answered,
+      percent,
+      isComplete: total > 0 && answered >= total
+    };
+  }
+
+  function getStoredProgressMeta(assignment) {
+    const meta = assignment?.submission?.answers_json?.meta;
+    if (meta && typeof meta === 'object') return meta;
+    return null;
+  }
+
+  function renderProgressTag(assignment) {
+    const storedMeta = getStoredProgressMeta(assignment);
+    const answers = getStoredTemplateAnswers(assignment);
+    const progress = getTemplateProgress(assignment, answers);
+
+    if (!progress.total && !storedMeta) return '';
+
+    const total = Number(storedMeta?.total_items ?? progress.total) || 0;
+    const answered = Number(storedMeta?.answered_items ?? progress.answered) || 0;
+    const percent = Number(storedMeta?.completion_percent ?? progress.percent) || 0;
+
+    if (!total) return '';
+    return `<div class="sd-tag">Progress: ${escapeHtml(answered)} / ${escapeHtml(total)} (${escapeHtml(percent)}%)</div>`;
+  }
+
+  function buildAnswersJson(assignment, templateAnswersPayload, nowIso, isSubmit) {
+    if (!templateAnswersPayload) return null;
+    const answers = templateAnswersPayload.answers || {};
+    const progress = getTemplateProgress(assignment, answers);
+
+    return {
+      template_type: templateAnswersPayload.template_type,
+      answers,
+      meta: {
+        total_items: progress.total,
+        answered_items: progress.answered,
+        completion_percent: progress.percent,
+        is_complete: progress.isComplete,
+        draft_status: isSubmit ? 'submitted' : 'in_progress',
+        last_saved_at: nowIso,
+        submitted_at: isSubmit ? nowIso : null
+      }
+    };
+  }
+
+  function validateBeforeSubmit(assignment, answerText, filePayload, file, templateAnswersPayload) {
+    const mode = assignment?.assignment_mode || 'manual';
+    const hasTemplate = !!getAssignmentTemplateSchema(assignment) && !!assignment?.template_type;
+    const hasFile = !!file || !!filePayload?.file_path;
+    const hasText = !!String(answerText || '').trim();
+
+    if (hasTemplate) {
+      const progress = getTemplateProgress(assignment, templateAnswersPayload?.answers || {});
+      if (!progress.total) {
+        return { ok: false, message: 'This template has no questions to submit.' };
+      }
+      if (!progress.isComplete) {
+        return { ok: false, message: `Complete all template questions before submitting (${progress.answered}/${progress.total}).` };
+      }
+
+      if (assignment?.template_type === 'reading_order') {
+        const values = Object.values(templateAnswersPayload?.answers || {}).map((x) => String(x || '').trim()).filter(Boolean);
+        const unique = new Set(values);
+        if (values.length !== unique.size) {
+          return { ok: false, message: 'Each order item must have a unique position.' };
+        }
+      }
+
+      return { ok: true, message: '' };
+    }
+
+    if (mode === 'manual' || mode === 'cards') {
+      if (!hasText && !hasFile) {
+        return { ok: false, message: 'Add an answer, a note, or a file before submitting.' };
+      }
+    }
+
+    return { ok: true, message: '' };
   }
 
   function normalizeReadingOrderContent(content) {
@@ -767,7 +898,7 @@
 
     const { data: recipientRows, error: recipientsErr } = await supabase
       .from('assignment_recipients')
-      .select('assignment_id, student_id, status, created_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
+      .select('assignment_id, student_id, status, created_at, started_at, last_activity_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
       .eq('student_id', userId)
       .order('created_at', { ascending: false });
     if (recipientsErr) throw recipientsErr;
@@ -816,7 +947,7 @@
 
       const { data: submissionRows, error: submissionsErr } = await supabase
         .from('assignment_submissions')
-        .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, created_at, updated_at')
+        .select('id, assignment_id, student_id, answer_text, answers_json, file_path, file_name, file_size, mime_type, submitted_at, last_saved_at, version, created_at, updated_at')
         .eq('student_id', userId)
         .in('assignment_id', assignmentIds);
       if (submissionsErr) throw submissionsErr;
@@ -979,8 +1110,11 @@
                 ${assignment.template_title ? `<div class="sd-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
                 ${assignment.module_name ? `<div class="sd-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
                 <div class="sd-tag">Review: ${escapeHtml(effectiveReviewText)}</div>
+                ${renderProgressTag(assignment)}
+                ${assignment.recipient_last_activity_at ? `<div class="sd-tag">Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
                 ${assignment.reviewed_at ? `<div class="sd-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
                 ${submission?.submitted_at ? `<div class="sd-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
+                ${submission?.last_saved_at ? `<div class="sd-tag">Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
               </div>
 
               ${assignment.template_title ? `
@@ -1011,14 +1145,10 @@
 
               <div class="sd-form">
                 <div class="sd-grid-2">
-                  <label class="sd-label">
-                    <span>Status</span>
-                    <select class="sd-select" data-role="status">
-                      <option value="not_started" ${assignment.recipient_status === 'not_started' ? 'selected' : ''}>Not started</option>
-                      <option value="in_progress" ${assignment.recipient_status === 'in_progress' ? 'selected' : ''}>In progress</option>
-                      <option value="completed" ${assignment.recipient_status === 'completed' ? 'selected' : ''}>Completed</option>
-                    </select>
-                  </label>
+                  <div class="sd-label">
+                    <span>Current status</span>
+                    <div class="sd-feedback-box">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))} • ${escapeHtml(effectiveReviewText)}</div>
+                  </div>
                   <label class="sd-label">
                     <span>Answer file</span>
                     <input class="sd-input" data-role="file" type="file" />
@@ -1033,8 +1163,9 @@
                 ${fileInfo}
 
                 <div class="sd-actions">
-                  <button class="sd-btn sd-btn-primary" type="button" data-action="save-work">Save progress</button>
-                  <div class="sd-note">Save your status, template answers, text answer, and optional file.</div>
+                  <button class="sd-btn sd-btn-secondary" type="button" data-action="save-draft">Save draft</button>
+                  <button class="sd-btn sd-btn-primary" type="button" data-action="submit-work">Submit for review</button>
+                  <div class="sd-note">Draft saves partial answers. Submit sends the completed work to your teacher for review.</div>
                 </div>
               </div>
 
@@ -1112,49 +1243,83 @@
       const assignmentId = card.getAttribute('data-assignment-id');
       if (!assignmentId) return;
 
-      if (action === 'save-work') await handleSaveWork(card, assignmentId, button);
+      if (action === 'save-draft') await saveAssignmentWork(card, assignmentId, button, { mode: 'draft' });
+      if (action === 'submit-work') await saveAssignmentWork(card, assignmentId, button, { mode: 'submit' });
       if (action === 'send-comment') await handleSendComment(card, assignmentId, button);
+    });
+
+    root.addEventListener('input', function (event) {
+      const target = event.target;
+      if (!target?.matches?.('[data-role="answer"], [data-role="tpl-gap"]')) return;
+      const card = target.closest('[data-assignment-id]');
+      const assignmentId = card?.getAttribute('data-assignment-id');
+      if (card && assignmentId) scheduleDraftAutosave(card, assignmentId);
+    });
+
+    root.addEventListener('change', function (event) {
+      const target = event.target;
+      if (!target?.matches?.('[data-role="tpl-choice"], [data-role="tpl-order"], [data-role="tpl-match"]')) return;
+      const card = target.closest('[data-assignment-id]');
+      const assignmentId = card?.getAttribute('data-assignment-id');
+      if (card && assignmentId) scheduleDraftAutosave(card, assignmentId);
     });
 
     root.__sdBound = true;
   }
 
-  async function handleSaveWork(card, assignmentId, button) {
+  function scheduleDraftAutosave(card, assignmentId) {
+    if (!assignmentId) return;
+    if (sdAutosaveTimers.has(assignmentId)) {
+      window.clearTimeout(sdAutosaveTimers.get(assignmentId));
+    }
+    const timer = window.setTimeout(() => {
+      sdAutosaveTimers.delete(assignmentId);
+      saveAssignmentWork(card, assignmentId, null, { mode: 'draft', silent: true }).catch((err) => {
+        console.warn('[student-dashboard] autosave failed:', err);
+      });
+    }, 1400);
+    sdAutosaveTimers.set(assignmentId, timer);
+  }
+
+  async function saveAssignmentWork(card, assignmentId, button, options = {}) {
     const supabase = window.supabase;
     if (!supabase) return;
 
-    const statusEl = card.querySelector('[data-role="status"]');
+    const mode = options.mode === 'submit' ? 'submit' : 'draft';
+    const isSubmit = mode === 'submit';
+    const silent = !!options.silent;
     const answerEl = card.querySelector('[data-role="answer"]');
     const fileEl = card.querySelector('[data-role="file"]');
-    const nextStatus = statusEl?.value || 'not_started';
     const answerText = answerEl?.value.trim() || '';
-    const file = fileEl?.files?.[0] || null;
+    const file = !silent ? (fileEl?.files?.[0] || null) : null;
     const studentId = state.userId;
     const existingSubmission = state.submissionsByAssignment.get(assignmentId) || null;
     const assignment = state.assignments.find((a) => a.id === assignmentId) || null;
     const templateAnswersPayload = collectTemplateAnswers(card, assignment);
-    const answersJson = templateAnswersPayload && hasNonEmptyStructuredAnswers(templateAnswersPayload.answers)
-      ? templateAnswersPayload
-      : null;
+    const nowIso = new Date().toISOString();
+    const answersJson = buildAnswersJson(assignment, templateAnswersPayload, nowIso, isSubmit);
     const original = rememberButton(button);
 
-    startButtonFeedback(button, 'Saving...');
+    let filePayload = {
+      file_path: existingSubmission?.file_path || null,
+      file_name: existingSubmission?.file_name || null,
+      file_size: existingSubmission?.file_size || null,
+      mime_type: existingSubmission?.mime_type || null
+    };
+
+    if (isSubmit) {
+      const validation = validateBeforeSubmit(assignment, answerText, filePayload, file, templateAnswersPayload);
+      if (!validation.ok) {
+        if (button) buttonError(button, original, validation.message);
+        state.flash = { type: 'error', message: validation.message };
+        if (!silent) renderDashboard();
+        return;
+      }
+    }
+
+    if (button) startButtonFeedback(button, isSubmit ? 'Submitting...' : 'Saving...');
 
     try {
-      const { error: statusErr } = await supabase
-        .from('assignment_recipients')
-        .update({ status: nextStatus })
-        .eq('assignment_id', assignmentId)
-        .eq('student_id', studentId);
-      if (statusErr) throw statusErr;
-
-      let filePayload = {
-        file_path: existingSubmission?.file_path || null,
-        file_name: existingSubmission?.file_name || null,
-        file_size: existingSubmission?.file_size || null,
-        mime_type: existingSubmission?.mime_type || null
-      };
-
       if (file) {
         const safeName = sanitizeFileName(file.name || 'file');
         const path = `${studentId}/${assignmentId}/${Date.now()}-${safeName}`;
@@ -1196,7 +1361,9 @@
           file_name: filePayload.file_name,
           file_size: filePayload.file_size,
           mime_type: filePayload.mime_type,
-          submitted_at: new Date().toISOString()
+          submitted_at: isSubmit ? nowIso : (existingSubmission?.submitted_at || null),
+          last_saved_at: nowIso,
+          version: Number(existingSubmission?.version || 0) + 1
         };
 
         const { error: submissionErr } = await supabase
@@ -1205,25 +1372,56 @@
         if (submissionErr) throw submissionErr;
       }
 
-      state.flash = { type: 'success', message: 'Your progress was saved successfully.' };
-      await fetchDashboardData(studentId);
-      renderDashboard();
-      finishButtonFeedbackBySelector(
-        `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
-        original,
-        true,
-        'Saved'
-      );
+      const recipientPayload = {
+        status: isSubmit ? 'completed' : 'in_progress',
+        last_activity_at: nowIso,
+        submitted_at: isSubmit ? nowIso : null
+      };
+
+      if (!silent && !assignment?.recipient_started_at) {
+        recipientPayload.started_at = nowIso;
+      }
+
+      if (isSubmit || assignment?.reviewed_status === 'reviewed') {
+        recipientPayload.reviewed_status = 'not_reviewed';
+        recipientPayload.reviewed_at = null;
+        recipientPayload.reviewed_by = null;
+      }
+
+      const { error: statusErr } = await supabase
+        .from('assignment_recipients')
+        .update(recipientPayload)
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', studentId);
+      if (statusErr) throw statusErr;
+
+      if (!silent) {
+        state.flash = {
+          type: 'success',
+          message: isSubmit ? 'Your work was submitted for review.' : 'Your draft was saved successfully.'
+        };
+        await fetchDashboardData(studentId);
+        renderDashboard();
+        finishButtonFeedbackBySelector(
+          `[data-assignment-id="${assignmentId}"] [data-action="${isSubmit ? 'submit-work' : 'save-draft'}"]`,
+          original,
+          true,
+          isSubmit ? 'Submitted' : 'Saved'
+        );
+      }
     } catch (err) {
-      console.error('[student-dashboard] save work error:', err);
-      state.flash = { type: 'error', message: err?.message || 'Failed to save your progress.' };
-      renderDashboard();
-      finishButtonFeedbackBySelector(
-        `[data-assignment-id="${assignmentId}"] [data-action="save-work"]`,
-        original,
-        false,
-        'Failed'
-      );
+      console.error('[student-dashboard] save/submit work error:', err);
+      if (!silent) {
+        state.flash = { type: 'error', message: err?.message || 'Failed to save your work.' };
+        renderDashboard();
+        finishButtonFeedbackBySelector(
+          `[data-assignment-id="${assignmentId}"] [data-action="${isSubmit ? 'submit-work' : 'save-draft'}"]`,
+          original,
+          false,
+          'Failed'
+        );
+      }
+      throw err;
     }
   }
 
