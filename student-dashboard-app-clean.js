@@ -331,7 +331,60 @@
   function buttonError(button, original, text) {
     finishButtonFeedback(button, original || rememberButton(button), false, text || 'Failed');
   }
+function setCardActionMessage(card, role, type, message) {
+  const el = card?.querySelector(`[data-role="${role}"]`);
+  if (!el) return;
 
+  el.classList.remove('is-info', 'is-success', 'is-warning', 'is-error');
+  el.classList.add(`is-${type || 'info'}`);
+  el.textContent = message || '';
+}
+
+function getStudentActionUi(assignment) {
+  const status = assignment?.recipient_status || 'not_started';
+  const review = assignment?.reviewed_status || 'not_reviewed';
+
+  const isSubmitted = status === 'completed';
+  const isReviewed = review === 'reviewed';
+
+  if (isReviewed) {
+    return {
+      saveLabel: 'Edit answer',
+      submitLabel: 'Resubmit for review',
+      submitDisabled: false,
+      messageClass: 'is-success',
+      message: 'Reviewed. You can update and resubmit if needed.'
+    };
+  }
+
+  if (isSubmitted) {
+    return {
+      saveLabel: 'Edit answer',
+      submitLabel: 'Submitted',
+      submitDisabled: true,
+      messageClass: 'is-success',
+      message: 'Submitted for review. Waiting for teacher feedback.'
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      saveLabel: 'Save draft',
+      submitLabel: 'Submit for review',
+      submitDisabled: false,
+      messageClass: 'is-info',
+      message: 'Draft in progress. Submit when the task is complete.'
+    };
+  }
+
+  return {
+    saveLabel: 'Save draft',
+    submitLabel: 'Submit for review',
+    submitDisabled: false,
+    messageClass: 'is-info',
+    message: 'Fill in the task and save your progress.'
+  };
+}
   function inferTemplateTypeFromLegacy(row) {
     const cat = row?.category || '';
     const mode = row?.answer_mode || '';
@@ -841,6 +894,68 @@
       .sd-template-qtitle{font-size:14px;font-weight:700;color:#175cd3}
       .sd-template-text{font-size:15px;line-height:1.6;color:#111213;white-space:pre-wrap}
       .sd-template-hint{font-size:13px;color:#667085;line-height:1.5}
+      .sd-action-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+
+.sd-action-message{
+  display:inline-flex;
+  align-items:center;
+  min-height:38px;
+  padding:8px 11px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+  border:1px solid #dbe7f3;
+  background:#f8fbff;
+  color:#475467;
+}
+
+.sd-action-message.is-info{
+  background:#f8fbff;
+  border-color:#dbe7f3;
+  color:#175cd3;
+}
+
+.sd-action-message.is-success{
+  background:#ecfdf3;
+  border-color:#b7ebc6;
+  color:#027a48;
+}
+
+.sd-action-message.is-warning{
+  background:#fff7ed;
+  border-color:#fed7aa;
+  color:#c2410c;
+}
+
+.sd-action-message.is-error{
+  background:#fff2f2;
+  border-color:#fecaca;
+  color:#b42318;
+}
+
+.sd-btn[disabled]{
+  opacity:.55;
+  cursor:not-allowed;
+  filter:grayscale(.15);
+}
+
+@media (max-width:560px){
+  .sd-action-row{
+    align-items:stretch;
+  }
+
+  .sd-action-row .sd-btn,
+  .sd-action-message{
+    width:100%;
+    justify-content:center;
+  }
+}
 
       @media (max-width:760px){
         #${ROOT_ID}{padding:0 12px 28px}
@@ -1005,11 +1120,13 @@
         const tpl = assignment.template_id ? templatesById.get(assignment.template_id) : null;
         const mod = assignment.cards_module_id ? modulesById.get(assignment.cards_module_id) : null;
 
-        return {
-          ...assignment,
-          recipient_status: recipient.status || 'not_started',
-          recipient_created_at: recipient.created_at || null,
-          recipient_submitted_at: recipient.submitted_at || null,
+  return {
+  ...assignment,
+  recipient_status: recipient.status || 'not_started',
+  recipient_created_at: recipient.created_at || null,
+  recipient_started_at: recipient.started_at || null,
+  recipient_last_activity_at: recipient.last_activity_at || null,
+  recipient_submitted_at: recipient.submitted_at || null,
           teacher_feedback: recipient.teacher_feedback || '',
           reviewed_status: recipient.reviewed_status || 'not_reviewed',
           reviewed_at: recipient.reviewed_at || null,
@@ -1073,7 +1190,7 @@
           const effectiveReview = effectiveReviewState(assignment);
           const effectiveReviewText = effectiveReviewLabel(assignment);
           const modeText = assignmentModeLabel(assignment.assignment_mode);
-
+          const actionUi = getStudentActionUi(assignment);
           const fileInfo = submission?.file_name
             ? `<div class="sd-file"><div class="sd-file-meta">Current file: ${escapeHtml(submission.file_name)} ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}</div><div class="sd-file-row">${submission.signed_url ? `<a class="sd-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}</div></div>`
             : '';
@@ -1162,11 +1279,28 @@
 
                 ${fileInfo}
 
-                <div class="sd-actions">
-                  <button class="sd-btn sd-btn-secondary" type="button" data-action="save-draft">Save draft</button>
-                  <button class="sd-btn sd-btn-primary" type="button" data-action="submit-work">Submit for review</button>
-                  <div class="sd-note">Draft saves partial answers. Submit sends the completed work to your teacher for review.</div>
-                </div>
+                <div class="sd-action-row">
+  <button
+    class="sd-btn sd-btn-secondary"
+    type="button"
+    data-action="save-draft"
+  >
+    ${escapeHtml(actionUi.saveLabel)}
+  </button>
+
+  <button
+    class="sd-btn sd-btn-primary"
+    type="button"
+    data-action="submit-work"
+    ${actionUi.submitDisabled ? 'disabled' : ''}
+  >
+    ${escapeHtml(actionUi.submitLabel)}
+  </button>
+
+  <span class="sd-action-message ${escapeHtml(actionUi.messageClass)}" data-role="work-message">
+    ${escapeHtml(actionUi.message)}
+  </span>
+</div>
               </div>
 
               <div class="sd-comments">
@@ -1176,9 +1310,15 @@
                   <span>New comment</span>
                   <textarea class="sd-textarea" data-role="comment" placeholder="Write a message to your teacher."></textarea>
                 </label>
-                <div class="sd-actions">
-                  <button class="sd-btn sd-btn-secondary" type="button" data-action="send-comment">Send comment</button>
-                </div>
+                <div class="sd-action-row">
+  <button class="sd-btn sd-btn-secondary" type="button" data-action="send-comment">
+    Send comment
+  </button>
+
+  <span class="sd-action-message is-info" data-role="comment-message">
+    Write a message to your teacher.
+  </span>
+</div>
               </div>
             </div>`;
         }).join('')
@@ -1288,6 +1428,10 @@
     const mode = options.mode === 'submit' ? 'submit' : 'draft';
     const isSubmit = mode === 'submit';
     const silent = !!options.silent;
+    if (isSubmit && sdAutosaveTimers.has(assignmentId)) {
+  window.clearTimeout(sdAutosaveTimers.get(assignmentId));
+  sdAutosaveTimers.delete(assignmentId);
+}
     const answerEl = card.querySelector('[data-role="answer"]');
     const fileEl = card.querySelector('[data-role="file"]');
     const answerText = answerEl?.value.trim() || '';
@@ -1307,15 +1451,23 @@
       mime_type: existingSubmission?.mime_type || null
     };
 
-    if (isSubmit) {
-      const validation = validateBeforeSubmit(assignment, answerText, filePayload, file, templateAnswersPayload);
-      if (!validation.ok) {
-        if (button) buttonError(button, original, validation.message);
-        state.flash = { type: 'error', message: validation.message };
-        if (!silent) renderDashboard();
-        return;
-      }
+if (isSubmit) {
+  const validation = validateBeforeSubmit(assignment, answerText, filePayload, file, templateAnswersPayload);
+  if (!validation.ok) {
+    if (button) buttonError(button, original, 'Check task');
+
+    if (!silent) {
+      setCardActionMessage(
+        card,
+        'work-message',
+        'error',
+        validation.message || 'Complete the task before submitting.'
+      );
     }
+
+    return;
+  }
+}
 
     if (button) startButtonFeedback(button, isSubmit ? 'Submitting...' : 'Saving...');
 
@@ -1372,11 +1524,16 @@
         if (submissionErr) throw submissionErr;
       }
 
-      const recipientPayload = {
-        status: isSubmit ? 'completed' : 'in_progress',
-        last_activity_at: nowIso,
-        submitted_at: isSubmit ? nowIso : null
-      };
+const recipientPayload = {
+  status: isSubmit ? 'completed' : 'in_progress',
+  last_activity_at: nowIso
+};
+
+if (isSubmit) {
+  recipientPayload.submitted_at = nowIso;
+} else {
+  recipientPayload.submitted_at = null;
+}
 
       if (!silent && !assignment?.recipient_started_at) {
         recipientPayload.started_at = nowIso;
@@ -1395,86 +1552,112 @@
         .eq('student_id', studentId);
       if (statusErr) throw statusErr;
 
-      if (!silent) {
-        state.flash = {
-          type: 'success',
-          message: isSubmit ? 'Your work was submitted for review.' : 'Your draft was saved successfully.'
-        };
-        await fetchDashboardData(studentId);
-        renderDashboard();
-        finishButtonFeedbackBySelector(
-          `[data-assignment-id="${assignmentId}"] [data-action="${isSubmit ? 'submit-work' : 'save-draft'}"]`,
-          original,
-          true,
-          isSubmit ? 'Submitted' : 'Saved'
-        );
-      }
-    } catch (err) {
-      console.error('[student-dashboard] save/submit work error:', err);
-      if (!silent) {
-        state.flash = { type: 'error', message: err?.message || 'Failed to save your work.' };
-        renderDashboard();
-        finishButtonFeedbackBySelector(
-          `[data-assignment-id="${assignmentId}"] [data-action="${isSubmit ? 'submit-work' : 'save-draft'}"]`,
-          original,
-          false,
-          'Failed'
-        );
-      }
-      throw err;
+if (!silent) {
+  await fetchDashboardData(studentId);
+  renderDashboard();
+
+  const newCard = rootEl()?.querySelector(`[data-assignment-id="${assignmentId}"]`);
+
+  setCardActionMessage(
+    newCard,
+    'work-message',
+    'success',
+    isSubmit ? 'Submitted for review.' : 'Draft saved.'
+  );
+}
+} catch (err) {
+  console.error('[student-dashboard] save/submit work error:', err);
+
+  if (!silent) {
+    setCardActionMessage(
+      card,
+      'work-message',
+      'error',
+      err?.message || 'Failed to save your work.'
+    );
+
+    if (button) {
+      finishButtonFeedback(button, original, false, 'Failed');
     }
+
+    return;
+  }
+
+  throw err;
+}
   }
 
   async function handleSendComment(card, assignmentId, button) {
-    const supabase = window.supabase;
-    if (!supabase) return;
+  const supabase = window.supabase;
+  if (!supabase) return;
 
-    const commentEl = card.querySelector('[data-role="comment"]');
-    const body = commentEl?.value.trim() || '';
-    const studentId = state.userId;
-    const original = rememberButton(button);
+  const commentEl = card.querySelector('[data-role="comment"]');
+  const body = commentEl?.value.trim() || '';
+  const studentId = state.userId;
+  const original = rememberButton(button);
 
-    if (!body) {
-      buttonError(button, original, 'Write comment');
-      return;
-    }
-
-    startButtonFeedback(button, 'Sending...');
-
-    try {
-      const { error } = await supabase
-        .from('assignment_comments')
-        .insert({
-          assignment_id: assignmentId,
-          student_id: studentId,
-          author_id: studentId,
-          author_role: 'student',
-          body
-        });
-      if (error) throw error;
-
-      state.flash = { type: 'success', message: 'Your comment was sent.' };
-      await fetchDashboardData(studentId);
-      renderDashboard();
-      finishButtonFeedbackBySelector(
-        `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
-        original,
-        true,
-        'Sent'
-      );
-    } catch (err) {
-      console.error('[student-dashboard] send comment error:', err);
-      state.flash = { type: 'error', message: err?.message || 'Failed to send comment.' };
-      renderDashboard();
-      finishButtonFeedbackBySelector(
-        `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
-        original,
-        false,
-        'Failed'
-      );
-    }
+  if (!body) {
+    buttonError(button, original, 'Write comment');
+    setCardActionMessage(
+      card,
+      'comment-message',
+      'error',
+      'Write a comment before sending.'
+    );
+    return;
   }
 
+  startButtonFeedback(button, 'Sending...');
+
+  try {
+    const { error } = await supabase
+      .from('assignment_comments')
+      .insert({
+        assignment_id: assignmentId,
+        student_id: studentId,
+        author_id: studentId,
+        author_role: 'student',
+        body
+      });
+
+    if (error) throw error;
+
+    await fetchDashboardData(studentId);
+    renderDashboard();
+
+    const newCard = rootEl()?.querySelector(`[data-assignment-id="${assignmentId}"]`);
+
+    setCardActionMessage(
+      newCard,
+      'comment-message',
+      'success',
+      'Comment sent.'
+    );
+
+    finishButtonFeedbackBySelector(
+      `[data-assignment-id="${assignmentId}"] [data-action="send-comment"]`,
+      original,
+      true,
+      'Sent'
+    );
+  } catch (err) {
+    console.error('[student-dashboard] send comment error:', err);
+
+    setCardActionMessage(
+      card,
+      'comment-message',
+      'error',
+      err?.message || 'Failed to send comment.'
+    );
+
+    finishButtonFeedback(
+      button,
+      original,
+      false,
+      'Failed'
+    );
+  }
+}
   async function boot() {
     try {
       const sb = await waitSupabase();
