@@ -620,37 +620,47 @@ root.innerHTML = `
     }
   }
 
-  function attachLocalTracks() {
-    const localWrap = document.getElementById('ell-local-preview');
-    if (!localWrap || !state.room) return;
-
-    localWrap.innerHTML = `<div class="ell-label">You</div>`;
-
-    state.room.localParticipant.videoTrackPublications.forEach((pub) => {
-      if (!pub.track) return;
-      const el = pub.track.attach();
-      el.className = 'ell-video';
-      localWrap.prepend(el);
+  function detachTrackElements(track) {
+  try {
+    if (!track || typeof track.detach !== 'function') return;
+    track.detach().forEach((el) => {
+      try { el.remove(); } catch (_) {}
     });
-  }
+  } catch (_) {}
+}
 
-  function attachRemoteTrack(track, participant) {
-    const remoteWrap = document.getElementById('ell-remote-stage');
-    if (!remoteWrap) return;
+ function attachLocalTracks() {
+  const localWrap = document.getElementById('ell-local-preview');
+  if (!localWrap || !state.room) return;
 
-    state.currentRemoteIdentity = participant?.identity || counterpartLabel();
+  localWrap.innerHTML = `<div class="ell-label">You</div>`;
 
-    remoteWrap.innerHTML = '';
-
-    const el = track.attach();
+  state.room.localParticipant.videoTrackPublications.forEach((pub) => {
+    if (!pub.track) return;
+    const el = pub.track.attach();
     el.className = 'ell-video';
-    remoteWrap.appendChild(el);
+    localWrap.prepend(el);
+  });
+}
 
-    const label = document.createElement('div');
-    label.className = 'ell-label';
-    label.textContent = participant?.identity || counterpartLabel();
-    remoteWrap.appendChild(label);
-  }
+function attachRemoteTrack(track, participant) {
+  const remoteWrap = document.getElementById('ell-remote-stage');
+  if (!remoteWrap || !track) return;
+
+  state.currentRemoteIdentity = participant?.identity || counterpartLabel();
+
+  detachTrackElements(track);
+  remoteWrap.innerHTML = '';
+
+  const el = track.attach();
+  el.className = 'ell-video';
+  remoteWrap.appendChild(el);
+
+  const label = document.createElement('div');
+  label.className = 'ell-label';
+  label.textContent = participant?.identity || counterpartLabel();
+  remoteWrap.appendChild(label);
+}
 
   function clearRemoteTrack() {
     const remoteWrap = document.getElementById('ell-remote-stage');
@@ -724,93 +734,163 @@ root.innerHTML = `
       });
   }
 
-  async function joinRoom() {
-    const supabase = window.supabase;
-    if (!supabase || !state.session) return;
+async function joinRoom() {
+  const supabase = window.supabase;
+  if (!supabase || !state.session) return;
 
-    if (!state.livekit) {
-      state.livekit = await loadLiveKitClient();
-    }
+  if (!state.livekit) {
+    state.livekit = await loadLiveKitClient();
+  }
 
-    if (ROLE === 'teacher' && state.session.status !== 'live') {
-      await markSessionLive();
-    }
+  if (ROLE === 'teacher' && state.session.status !== 'live') {
+    await markSessionLive();
+  }
 
-    const { data, error } = await supabase.functions.invoke(TOKEN_FUNCTION, {
-      body: { session_id: state.session.id },
-    });
+  const { data, error } = await supabase.functions.invoke(TOKEN_FUNCTION, {
+    body: { session_id: state.session.id },
+  });
 
-    if (error) throw error;
+  if (error) throw error;
 
-    const serverUrl = data?.server_url;
-    const token = data?.participant_token;
+  const serverUrl = data?.server_url;
+  const token = data?.participant_token;
 
-    if (!serverUrl || !token) {
-      throw new Error('Token function did not return LiveKit credentials');
-    }
+  if (!serverUrl || !token) {
+    throw new Error('Token function did not return LiveKit credentials');
+  }
 
-    if (state.room) {
-      try { state.room.disconnect(); } catch (_) {}
-    }
+  if (state.room) {
+    try { state.room.disconnect(); } catch (_) {}
+  }
 
-    const LK = state.livekit;
-    state.room = new LK.Room();
-    bindRoomEvents(LK);
+  const LK = state.livekit;
+  state.room = new LK.Room();
+  bindRoomEvents(LK);
 
-    await state.room.connect(serverUrl, token);
-    await state.room.localParticipant.enableCameraAndMicrophone();
+  await state.room.connect(serverUrl, token);
 
-    state.connected = true;
+  // Important: user is already inside the room after connect().
+  // Camera/microphone may fail separately, but the room should stay active.
+  state.connected = true;
+  state.audioEnabled = false;
+  state.videoEnabled = false;
+
+  renderApp();
+  attachExistingRemoteTracks();
+
+  try {
+    await upsertParticipantPresence(true);
+  } catch (_) {}
+
+  try {
+    await refreshPresenceBinding();
+  } catch (_) {}
+
+  try {
+    await state.room.localParticipant.setMicrophoneEnabled(true);
     state.audioEnabled = true;
+  } catch (err) {
+    console.error('[live-lesson] microphone enable error:', err);
+  }
+
+  try {
+    await state.room.localParticipant.setCameraEnabled(true);
     state.videoEnabled = true;
+  } catch (err) {
+    console.error('[live-lesson] camera enable error:', err);
+    window.alert(
+      'Camera could not be started. You are still in the room. Please check camera permission or close other apps using the camera.'
+    );
+  }
+
+  renderApp();
+  attachLocalTracks();
+  attachExistingRemoteTracks();
+  renderMini();
+}
+
+
+  async function leaveRoom() {
+  if (state.room) {
+    try { state.room.disconnect(); } catch (_) {}
+  }
+
+  try {
+    if (state.chatRecorder && state.chatRecording) {
+      state.chatRecorder.stop();
+    }
+  } catch (_) {}
+
+  try {
+    if (state.chatRecordingStream) {
+      state.chatRecordingStream.getTracks().forEach((t) => t.stop());
+    }
+  } catch (_) {}
+
+  state.chatRecorder = null;
+  state.chatRecordingStream = null;
+  state.chatAudioChunks = [];
+  state.chatRecording = false;
+
+  state.connected = false;
+  state.room = null;
+  clearRoomUiTiles();
+
+  try {
+    await upsertParticipantPresence(false);
+  } catch (_) {}
+
+  try {
+    await refreshPresenceBinding();
+  } catch (_) {}
+
+  renderMini();
+  renderApp();
+}
+
+async function toggleAudio() {
+  if (!state.room) return;
+
+  const next = !state.audioEnabled;
+
+  try {
+    await state.room.localParticipant.setMicrophoneEnabled(next);
+    state.audioEnabled = next;
+
+    renderMini();
+    renderApp();
+  } catch (err) {
+    console.error('[live-lesson] toggle audio error:', err);
+    window.alert(
+      next
+        ? 'Microphone could not be started. Check browser permission.'
+        : 'Could not mute microphone.'
+    );
+  }
+}
+
+async function toggleVideo() {
+  if (!state.room) return;
+
+  const next = !state.videoEnabled;
+
+  try {
+    await state.room.localParticipant.setCameraEnabled(next);
+    state.videoEnabled = next;
 
     renderApp();
     attachLocalTracks();
     attachExistingRemoteTracks();
-
-    await upsertParticipantPresence(true);
-    await refreshPresenceBinding();
-
     renderMini();
+  } catch (err) {
+    console.error('[live-lesson] toggle video error:', err);
+    window.alert(
+      next
+        ? 'Camera could not be started. Check browser permission or close other apps using the camera.'
+        : 'Could not turn off camera.'
+    );
   }
-
-  async function leaveRoom() {
-    if (state.room) {
-      try { state.room.disconnect(); } catch (_) {}
-    }
-
-    state.connected = false;
-    state.room = null;
-    clearRoomUiTiles();
-
-    try {
-      await upsertParticipantPresence(false);
-    } catch (_) {}
-
-    try {
-      await refreshPresenceBinding();
-    } catch (_) {}
-
-    renderMini();
-    renderApp();
-  }
-
-  async function toggleAudio() {
-    if (!state.room) return;
-    state.audioEnabled = !state.audioEnabled;
-    await state.room.localParticipant.setMicrophoneEnabled(state.audioEnabled);
-    renderMini();
-    renderApp();
-  }
-
-  async function toggleVideo() {
-    if (!state.room) return;
-    state.videoEnabled = !state.videoEnabled;
-    await state.room.localParticipant.setCameraEnabled(state.videoEnabled);
-    attachLocalTracks();
-    renderMini();
-    renderApp();
-  }
+}
 
   function formatDateTime(value) {
     if (!value) return 'No date';
@@ -1578,7 +1658,26 @@ root.innerHTML = `
       };
     }
 
-    if (joinBtn) joinBtn.onclick = joinRoom;
+if (joinBtn) {
+  joinBtn.onclick = async () => {
+    const originalText = joinBtn.textContent;
+
+    try {
+      joinBtn.disabled = true;
+      joinBtn.textContent = 'Joining...';
+      await joinRoom();
+    } catch (err) {
+      console.error('[live-lesson] join room error:', err);
+      renderAppMessage(
+        err instanceof Error ? err.message : 'Could not join the live room.',
+        'error'
+      );
+    } finally {
+      joinBtn.disabled = false;
+      joinBtn.textContent = originalText;
+    }
+  };
+}
     if (leaveBtn) leaveBtn.onclick = leaveRoom;
 
     if (endBtn) {
