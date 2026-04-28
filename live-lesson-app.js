@@ -286,8 +286,15 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
   background:#020617;
 }      .ell-stage-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#cbd5e1;font-size:16px;background:linear-gradient(180deg,#0f172a 0%,#111827 100%)}
       .ell-stage-local{position:absolute;right:18px;bottom:86px;width:240px;height:148px;background:#000;border:2px solid rgba(255,255,255,.16);border-radius:16px;overflow:hidden;z-index:5;box-shadow:0 14px 34px rgba(0,0,0,.35)}
-      .ell-stage-local video{width:100%;height:100%;object-fit:cover;display:block;background:#000;transform:scaleX(-1)}
-      .ell-stage-controls{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;z-index:6;padding:0 16px}
+.ell-stage-local video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center center;
+  display:block;
+  background:#000;
+  transform:scaleX(-1);
+}      .ell-stage-controls{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;z-index:6;padding:0 16px}
       .ell-stage-controls .ell-btn{backdrop-filter:blur(10px)}
       .ell-chat-toggle-badge{position:absolute;top:18px;right:18px;z-index:7}
       .ell-chat-drawer{position:absolute;top:0;right:0;width:min(25vw,420px);min-width:320px;height:100%;background:#0f172a;border-left:1px solid rgba(255,255,255,.08);transform:translateX(100%);transition:transform .24s ease;z-index:8;display:flex;flex-direction:column}
@@ -320,23 +327,80 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
         .ell-grid{grid-template-columns:1fr}
       }
 
-      @media (max-width: 768px){
-        .ell-stage{min-height:520px}
-        .ell-stage-local{width:156px;height:96px;right:12px;bottom:84px}
-        .ell-chat-drawer{width:min(88vw,420px);min-width:unset}
-      }
+@media (max-width: 768px){
+  .ell-stage{
+    min-height:560px;
+  }
 
-      @media (max-width: 560px){
-        .ell-head{padding:16px}
-        .ell-body{padding:14px}
-        .ell-title{font-size:24px}
-        .ell-stage{min-height:480px}
-        .ell-stage-controls{left:0;right:0;transform:none;bottom:12px;padding:0 12px}
-        .ell-stage-controls .ell-btn{flex:1 1 calc(50% - 8px);padding:11px 12px}
-        .ell-chat-toggle-badge{top:12px;right:12px}
-        .ell-chat-compose-row{flex-direction:column}
-      }
-        @media (max-width: 560px){
+  .ell-stage-local{
+    width:156px;
+    height:96px;
+    right:12px;
+    bottom:156px;
+    z-index:7;
+  }
+
+  .ell-chat-drawer{
+    width:min(88vw,420px);
+    min-width:unset;
+  }
+}
+
+@media (max-width: 560px){
+  .ell-head{
+    padding:16px;
+  }
+
+  .ell-body{
+    padding:14px;
+  }
+
+  .ell-title{
+    font-size:24px;
+  }
+
+  .ell-stage{
+    min-height:580px;
+  }
+
+  .ell-stage-local{
+    width:132px;
+    height:86px;
+    right:14px;
+    bottom:222px;
+    z-index:7;
+  }
+
+  .ell-stage-controls{
+    left:0;
+    right:0;
+    bottom:12px;
+    transform:none;
+    padding:0 12px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .ell-stage-controls .ell-btn{
+    width:100%;
+    flex:unset;
+    padding:11px 12px;
+  }
+
+  .ell-stage-controls #ell-end-session{
+    grid-column:1 / -1;
+  }
+
+  .ell-chat-toggle-badge{
+    top:12px;
+    right:12px;
+  }
+
+  .ell-chat-compose-row{
+    flex-direction:column;
+  }
+
   .ell-shell,
   .ell-shell-live{
     width:calc(100% - 16px);
