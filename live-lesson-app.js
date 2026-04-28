@@ -247,8 +247,13 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
       .ell-sub{margin-top:8px;color:#667085;font-size:15px}
       .ell-body{padding:18px 20px 20px}
       .ell-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
-      .ell-video{width:100%;height:100%;display:block;object-fit:cover;background:#0f172a}
-      .ell-label{position:absolute;left:10px;bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:12px;z-index:4}
+.ell-video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:contain;
+  background:#0f172a;
+}      .ell-label{position:absolute;left:10px;bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;font-size:12px;z-index:4}
       .ell-side{display:grid;gap:12px}
       .ell-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
       .ell-btn{appearance:none;border:none;border-radius:12px;padding:12px 16px;font:700 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer}
@@ -273,8 +278,13 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
 
       .ell-stage{position:relative;min-height:560px;background:#0f172a;border-radius:18px;overflow:hidden}
       .ell-stage-remote{position:absolute;inset:0;background:#020617}
-      .ell-stage-remote video{width:100%;height:100%;object-fit:cover;display:block;background:#020617}
-      .ell-stage-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#cbd5e1;font-size:16px;background:linear-gradient(180deg,#0f172a 0%,#111827 100%)}
+.ell-stage-remote video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  background:#020617;
+}      .ell-stage-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center;color:#cbd5e1;font-size:16px;background:linear-gradient(180deg,#0f172a 0%,#111827 100%)}
       .ell-stage-local{position:absolute;right:18px;bottom:86px;width:240px;height:148px;background:#000;border:2px solid rgba(255,255,255,.16);border-radius:16px;overflow:hidden;z-index:5;box-shadow:0 14px 34px rgba(0,0,0,.35)}
       .ell-stage-local video{width:100%;height:100%;object-fit:cover;display:block;background:#000;transform:scaleX(-1)}
       .ell-stage-controls{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;z-index:6;padding:0 16px}
