@@ -54,6 +54,9 @@
     modules: [],
     flash: null,
     assignmentFilter: 'all',
+    openAssignmentId: null,
+    composerOpen: false,
+    templateEditorOpen: false,
     activeView: 'overview',
     draftAssignmentId: null,
     assignmentDraft: {
@@ -1925,7 +1928,7 @@ function renderStudentTemplateAnswers(assignment) {
         </div>
         <div class="td-body">
           <div class="td-actions td-quick-actions">
-            <button class="td-btn td-btn-primary" type="button" data-action="switch-view" data-view="assignments">Create assignment</button>
+            <button class="td-btn td-btn-primary" type="button" data-action="switch-view" data-view="assignments" data-open-composer="true">Create assignment</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="students">Add student</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="templates">Open templates</button>
           </div>
@@ -2196,6 +2199,9 @@ function renderStudentTemplateAnswers(assignment) {
           const reviewUi = getTeacherReviewUi(assignment);
           const display = getTeacherAssignmentDisplay(assignment);
           const progressText = renderTeacherProgressText(assignment);
+          const reviewSelectValue = effectiveReview === 'awaiting_review'
+            ? 'reviewed'
+            : (assignment.reviewed_status || 'not_reviewed');
 
           const answerLabel = assignment.template_title ? 'Additional note from student' : 'Student answer';
           const answerHtml = submission?.answer_text
@@ -2253,8 +2259,8 @@ function renderStudentTemplateAnswers(assignment) {
                   <label class="td-label">
                     <span>Review state</span>
                     <select class="td-select" data-role="reviewed-status">
-                      <option value="not_reviewed" ${assignment.reviewed_status === 'not_reviewed' ? 'selected' : ''}>Not reviewed</option>
-                      <option value="reviewed" ${assignment.reviewed_status === 'reviewed' ? 'selected' : ''}>Reviewed</option>
+                      <option value="not_reviewed" ${reviewSelectValue === 'not_reviewed' ? 'selected' : ''}>Not reviewed</option>
+                      <option value="reviewed" ${reviewSelectValue === 'reviewed' ? 'selected' : ''}>Reviewed</option>
                     </select>
                   </label>
                 </div>
@@ -2342,7 +2348,7 @@ function renderStudentTemplateAnswers(assignment) {
                 </div>
               </div>
 
-              <details class="td-details">
+              <details class="td-details" ${state.openAssignmentId === assignment.id ? 'open' : ''}>
                 <summary>Details</summary>
                 <div class="td-details-body">
                   ${technicalDetailsHtml}
@@ -2852,7 +2858,7 @@ assignments = (assignmentsRows || []).map((a) => {
                 </div>
               </div>
               <div class="td-body">
-                <details class="td-details td-composer-details" ${state.draftAssignmentId ? 'open' : ''}>
+                <details class="td-details td-composer-details" ${(state.composerOpen || state.draftAssignmentId) ? 'open' : ''}>
                   <summary>Create assignment</summary>
                   <div class="td-details-body">
                     ${renderAssignmentComposerHtml()}
@@ -2927,6 +2933,7 @@ assignments = (assignmentsRows || []).map((a) => {
         const assignmentId = button.getAttribute('data-assignment-id');
         state.activeView = 'assignments';
         state.assignmentFilter = 'all';
+        state.openAssignmentId = assignmentId || null;
         renderDashboard();
 
         window.setTimeout(() => {
@@ -2944,6 +2951,7 @@ assignments = (assignmentsRows || []).map((a) => {
         resetDraftState();
         state.assignmentDraft.studentId = studentId;
         state.activeView = 'assignments';
+        state.composerOpen = true;
         renderDashboard();
 
         window.setTimeout(() => {
@@ -3073,8 +3081,24 @@ assignments = (assignmentsRows || []).map((a) => {
 
     root.addEventListener('toggle', function (event) {
       const details = event.target;
-      if (details?.matches?.('.td-template-editor-details')) {
+      if (!details?.matches?.('.td-details')) return;
+
+      if (details.matches('.td-template-editor-details')) {
         state.templateEditorOpen = details.open;
+        return;
+      }
+
+      if (details.matches('.td-composer-details')) {
+        state.composerOpen = details.open;
+        return;
+      }
+
+      const assignmentCard = details.closest('[data-assignment-id]');
+      const assignmentId = assignmentCard?.getAttribute('data-assignment-id') || '';
+      if (assignmentId) {
+        state.openAssignmentId = details.open
+          ? assignmentId
+          : (state.openAssignmentId === assignmentId ? null : state.openAssignmentId);
       }
     }, true);
 
@@ -3138,7 +3162,17 @@ assignments = (assignmentsRows || []).map((a) => {
     const view = button.getAttribute('data-view');
     const allowedViews = ['overview', 'students', 'assignments', 'templates'];
     if (!view || !allowedViews.includes(view)) return;
+
     state.activeView = view;
+
+    if (view !== 'assignments') {
+      state.openAssignmentId = null;
+    }
+
+    if (view === 'assignments' && button.getAttribute('data-open-composer') === 'true') {
+      state.composerOpen = true;
+    }
+
     renderDashboard();
   }
 
@@ -3717,6 +3751,7 @@ assignments = (assignmentsRows || []).map((a) => {
     if (!supabase) return;
 
     persistDraftFormState(form);
+    state.composerOpen = true;
 
     const saveBtn = button || form.querySelector('#td-save-draft-btn');
     const original = rememberButton(saveBtn);
@@ -3870,6 +3905,8 @@ assignments = (assignmentsRows || []).map((a) => {
       }
 
       resetDraftState();
+      state.composerOpen = false;
+      state.openAssignmentId = assignmentId || null;
 
       finishButtonFeedback(sendBtn, original, true, 'Sent');
       await fetchDashboardData();
@@ -3889,6 +3926,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
     setDraftStateFromAssignment(assignment);
     state.activeView = 'assignments';
+    state.composerOpen = true;
     renderDashboard();
 
     const composer = rootEl()?.querySelector('.td-composer-details');
@@ -3934,6 +3972,8 @@ assignments = (assignmentsRows || []).map((a) => {
 
       if (error) throw error;
 
+      state.activeView = 'assignments';
+      state.openAssignmentId = assignmentId;
       await fetchDashboardData();
       renderDashboard();
 
@@ -3967,7 +4007,9 @@ assignments = (assignmentsRows || []).map((a) => {
     const reviewEl = card.querySelector('[data-role="reviewed-status"]');
     const feedbackEl = card.querySelector('[data-role="teacher-feedback"]');
 
-    const reviewedStatus = reviewEl?.value || 'not_reviewed';
+    const reviewedStatus = reviewEl?.value || (
+      effectiveReviewState(assignment) === 'awaiting_review' ? 'reviewed' : 'not_reviewed'
+    );
     const teacherFeedback = feedbackEl?.value.trim() || '';
     const original = rememberButton(button);
 
@@ -4015,14 +4057,21 @@ assignments = (assignmentsRows || []).map((a) => {
         reviewed_by: reviewedStatus === 'reviewed' ? state.userId : null
       };
 
-      const { error } = await supabase
+      const { data: updatedRecipient, error } = await supabase
         .from('assignment_recipients')
         .update(payload)
         .eq('assignment_id', assignmentId)
-        .eq('student_id', assignment.student_id);
+        .eq('student_id', assignment.student_id)
+        .select('assignment_id, student_id, reviewed_status, reviewed_at, teacher_feedback')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updatedRecipient) {
+        throw new Error('Review was not saved. Check RLS policy for assignment_recipients.');
+      }
 
+      state.activeView = 'assignments';
+      state.openAssignmentId = assignmentId;
       await fetchDashboardData();
       renderDashboard();
 
@@ -4083,6 +4132,8 @@ assignments = (assignmentsRows || []).map((a) => {
       });
       if (insertErr) throw insertErr;
 
+      state.activeView = 'assignments';
+      state.openAssignmentId = assignmentId;
       await fetchDashboardData();
       renderDashboard();
       finishButtonFeedbackBySelector(`[data-assignment-id="${assignmentId}"] [data-action="upload-resource"]`, original, true, 'Uploaded');
@@ -4098,6 +4149,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
     const resourceId = button.getAttribute('data-resource-id');
     const resourcePath = button.getAttribute('data-resource-path');
+    const assignmentId = button.closest('[data-assignment-id]')?.getAttribute('data-assignment-id') || '';
     const original = rememberButton(button);
 
     if (!resourceId || !resourcePath) return;
@@ -4120,6 +4172,10 @@ assignments = (assignmentsRows || []).map((a) => {
       finishButtonFeedback(button, original, true, 'Removed', 900);
       await wait(900);
 
+      if (assignmentId) {
+        state.activeView = 'assignments';
+        state.openAssignmentId = assignmentId;
+      }
       await fetchDashboardData();
       renderDashboard();
     } catch (err) {
