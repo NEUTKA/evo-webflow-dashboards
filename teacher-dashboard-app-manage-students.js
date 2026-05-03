@@ -53,7 +53,8 @@
     templates: [],
     modules: [],
     flash: null,
-    activeView: 'dashboard',
+    assignmentFilter: 'all',
+    activeView: 'overview',
     draftAssignmentId: null,
     assignmentDraft: {
       id: '',
@@ -1795,6 +1796,148 @@ function renderStudentTemplateAnswers(assignment) {
     `;
   }
 
+
+  function getTeacherAssignmentFilterKey(assignment) {
+    const review = effectiveReviewState(assignment);
+    if (review === 'draft') return 'drafts';
+    if (review === 'awaiting_review') return 'awaiting_review';
+    if (review === 'reviewed') return 'reviewed';
+    if ((assignment?.recipient_status || '') === 'in_progress') return 'in_progress';
+    return 'not_started';
+  }
+
+  function countTeacherAssignmentsByFilter(assignments, key) {
+    if (key === 'all') return assignments.length;
+    return assignments.filter((assignment) => getTeacherAssignmentFilterKey(assignment) === key).length;
+  }
+
+  function renderTeacherProgressText(assignment) {
+    const progress = getAssignmentProgress(assignment);
+    if (!progress.total) return '';
+    return `${progress.answered}/${progress.total}`;
+  }
+
+  function getTeacherAssignmentDisplay(assignment) {
+    const key = getTeacherAssignmentFilterKey(assignment);
+    if (key === 'awaiting_review') return { key, label: 'Awaiting review', badgeClass: 'awaiting_review', actionLabel: 'Review' };
+    if (key === 'reviewed') return { key, label: 'Reviewed', badgeClass: 'reviewed', actionLabel: 'Open' };
+    if (key === 'in_progress') return { key, label: 'In progress', badgeClass: 'in_progress', actionLabel: 'Open' };
+    if (key === 'not_started') return { key, label: 'Not started', badgeClass: 'not_started', actionLabel: 'Open' };
+    return { key, label: 'Draft', badgeClass: 'draft', actionLabel: 'Open draft' };
+  }
+
+  function renderOverviewHtml() {
+    const students = state.students || [];
+    const assignments = state.assignments || [];
+    const awaiting = assignments.filter((assignment) => effectiveReviewState(assignment) === 'awaiting_review');
+    const reviewedCount = assignments.filter((assignment) => effectiveReviewState(assignment) === 'reviewed').length;
+    const inProgressCount = assignments.filter((assignment) => assignment.recipient_status === 'in_progress').length;
+
+    const needsReviewHtml = awaiting.length
+      ? awaiting.slice(0, 6).map((assignment) => {
+          const student = assignment.student_id ? state.studentsById.get(assignment.student_id) : null;
+          const studentLabel = (student?.full_name || '').trim() || student?.email || 'Student';
+          const progressText = renderTeacherProgressText(assignment);
+
+          return `
+            <div class="td-attention-item">
+              <div class="td-attention-main">
+                <div class="td-name" style="font-size:16px;">${escapeHtml(studentLabel)}</div>
+                <div class="td-note">
+                  ${escapeHtml(assignment.title || 'Untitled assignment')} · Awaiting review
+                  ${progressText ? ` · Progress: ${escapeHtml(progressText)}` : ''}
+                  ${assignment.submission?.submitted_at ? ` · Submitted: ${escapeHtml(formatDateTime(assignment.submission.submitted_at))}` : ''}
+                </div>
+              </div>
+              <button class="td-btn td-btn-primary td-btn-compact" type="button" data-action="open-assignment" data-assignment-id="${escapeHtml(assignment.id)}">Review</button>
+            </div>
+          `;
+        }).join('')
+      : `<div class="td-empty">No assignments need review right now.</div>`;
+
+    const recentAssignments = assignments
+      .slice()
+      .sort((a, b) => new Date(b.recipient_last_activity_at || b.created_at || 0) - new Date(a.recipient_last_activity_at || a.created_at || 0))
+      .slice(0, 4);
+
+    const recentHtml = recentAssignments.length
+      ? recentAssignments.map((assignment) => {
+          const student = assignment.student_id ? state.studentsById.get(assignment.student_id) : null;
+          const studentLabel = (student?.full_name || '').trim() || student?.email || 'No student';
+          const display = getTeacherAssignmentDisplay(assignment);
+          return `
+            <div class="td-recent-item">
+              <div>
+                <div class="td-name" style="font-size:15px;">${escapeHtml(assignment.title || 'Untitled assignment')}</div>
+                <div class="td-note">${escapeHtml(studentLabel)} · ${escapeHtml(display.label)}</div>
+              </div>
+              <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="open-assignment" data-assignment-id="${escapeHtml(assignment.id)}">Open</button>
+            </div>
+          `;
+        }).join('')
+      : `<div class="td-empty">No recent assignment activity yet.</div>`;
+
+    return `
+      <div class="td-card td-overview-card">
+        <div class="td-head">
+          <div class="td-kicker">Overview</div>
+          <h2 class="td-title" style="font-size:24px;">Teacher dashboard</h2>
+          <div class="td-sub">Your main teaching workspace: review work, create tasks, and manage students.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-stat-grid">
+            <button class="td-stat-card" type="button" data-action="switch-view" data-view="students">
+              <span>${escapeHtml(students.length)}</span>
+              <strong>Students</strong>
+            </button>
+            <button class="td-stat-card" type="button" data-action="switch-view" data-view="assignments">
+              <span>${escapeHtml(assignments.length)}</span>
+              <strong>Assignments</strong>
+            </button>
+            <button class="td-stat-card is-warning" type="button" data-action="set-assignment-filter" data-filter="awaiting_review">
+              <span>${escapeHtml(awaiting.length)}</span>
+              <strong>Awaiting review</strong>
+            </button>
+            <div class="td-stat-card is-muted">
+              <span>${escapeHtml(reviewedCount)}</span>
+              <strong>Reviewed</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Needs your attention</div>
+          <h2 class="td-title" style="font-size:24px;">Needs review</h2>
+          <div class="td-sub">Submitted work from students that is waiting for your feedback.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-attention-list">${needsReviewHtml}</div>
+        </div>
+      </div>
+
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Quick actions</div>
+          <h2 class="td-title" style="font-size:24px;">Quick actions</h2>
+          <div class="td-sub">Jump directly to the next useful action.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-actions td-quick-actions">
+            <button class="td-btn td-btn-primary" type="button" data-action="switch-view" data-view="assignments">Create assignment</button>
+            <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="students">Add student</button>
+            <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="templates">Open templates</button>
+          </div>
+          <div class="td-section">
+            <div class="td-label"><span>Recent activity</span></div>
+            <div class="td-recent-list">${recentHtml}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function renderWelcomeCardHtml(teacherName, teacherEmail, studentsCount, assignmentsCount, awaitingReviewCount) {
     return `
       <div class="td-card">
@@ -1815,13 +1958,28 @@ function renderStudentTemplateAnswers(assignment) {
   }
 
   function renderTopNavHtml() {
-    const activeView = state.activeView || 'dashboard';
+    const activeView = state.activeView || 'overview';
+    const navItems = [
+      ['overview', 'Overview'],
+      ['students', 'Students'],
+      ['assignments', 'Assignments'],
+      ['templates', 'Templates']
+    ];
+
     return `
-      <div class="td-card">
+      <div class="td-card td-nav-card">
         <div class="td-body">
-          <div class="td-actions td-topnav">
-            <button class="td-btn ${activeView === 'dashboard' ? 'td-btn-primary' : 'td-btn-secondary'}" type="button" data-action="switch-view" data-view="dashboard">Dashboard</button>
-            <button class="td-btn ${activeView === 'templates' ? 'td-btn-primary' : 'td-btn-secondary'}" type="button" data-action="switch-view" data-view="templates">Templates</button>
+          <div class="td-actions td-topnav" role="tablist" aria-label="Teacher dashboard navigation">
+            ${navItems.map(([view, label]) => `
+              <button
+                class="td-btn ${activeView === view ? 'td-btn-primary' : 'td-btn-secondary'}"
+                type="button"
+                data-action="switch-view"
+                data-view="${escapeHtml(view)}"
+              >
+                ${escapeHtml(label)}
+              </button>
+            `).join('')}
           </div>
         </div>
       </div>
@@ -1837,15 +1995,15 @@ function renderStudentTemplateAnswers(assignment) {
           const email = student.email || '';
           const link = state.studentLinksById.get(student.id) || null;
           return `
-            <div class="td-student">
+            <div class="td-student td-student-simple">
               <div class="td-student-top">
                 <div>
                   <div class="td-name">${escapeHtml(fullName)}</div>
                   <div class="td-email">${escapeHtml(email)}</div>
                   <div class="td-note">Linked: ${escapeHtml(formatDateTime(link?.created_at))}</div>
                 </div>
-                <div class="td-actions">
-                  <div class="td-badge active">${escapeHtml(link?.status || 'active')}</div>
+                <div class="td-actions td-student-actions">
+                  <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="quick-assign-student" data-student-id="${escapeHtml(student.id)}">Open</button>
                   <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="detach-student" data-student-id="${escapeHtml(student.id)}" data-student-email="${escapeHtml(email)}">Detach</button>
                 </div>
               </div>
@@ -1858,26 +2016,35 @@ function renderStudentTemplateAnswers(assignment) {
       <div class="td-card">
         <div class="td-head">
           <div class="td-kicker">Students</div>
-          <h2 class="td-title" style="font-size:24px;">Manage students</h2>
-          <div class="td-sub">Add a registered user by email and manage active student links.</div>
+          <h2 class="td-title" style="font-size:24px;">Students</h2>
+          <div class="td-sub">Add students and manage active student links.</div>
         </div>
         <div class="td-body">
-          <form id="td-student-manage-form" class="td-form">
-            <div class="td-manage-row">
-              <label class="td-label">
-                <span>Student email</span>
-                <input class="td-input" id="td-student-email" type="email" placeholder="student@example.com" />
-              </label>
-
-              <div class="td-manage-actions">
-                <button class="td-btn td-btn-primary td-btn-add" id="td-add-student-btn" type="submit">Add student</button>
-                <div class="td-note td-note-inline">Only users who already registered on the site can be added.</div>
-              </div>
+          <div class="td-section td-add-student-panel">
+            <div>
+              <div class="td-name" style="font-size:18px;">Add student by email</div>
+              <div class="td-note">Only users who already registered on the site can be added.</div>
             </div>
-          </form>
+
+            <form id="td-student-manage-form" class="td-form">
+              <div class="td-manage-row">
+                <label class="td-label">
+                  <span>Student email</span>
+                  <input class="td-input" id="td-student-email" type="email" placeholder="student@example.com" />
+                </label>
+
+                <div class="td-manage-actions">
+                  <button class="td-btn td-btn-primary td-btn-add" id="td-add-student-btn" type="submit">Add student</button>
+                </div>
+              </div>
+            </form>
+          </div>
 
           <div class="td-section">
-            <div class="td-label"><span>Linked students</span></div>
+            <div class="td-section-headline">
+              <div class="td-label"><span>Linked students</span></div>
+              <div class="td-note">${escapeHtml(students.length)} active student${students.length === 1 ? '' : 's'}</div>
+            </div>
             <div class="td-grid">${manageStudentsHtml}</div>
           </div>
         </div>
@@ -1983,11 +2150,42 @@ function renderStudentTemplateAnswers(assignment) {
 
   function renderAssignmentsListHtml() {
     const assignments = state.assignments || [];
+    const activeFilter = state.assignmentFilter || 'all';
+    const filterItems = [
+      ['all', 'All'],
+      ['awaiting_review', 'Awaiting review'],
+      ['in_progress', 'In progress'],
+      ['not_started', 'Not started'],
+      ['reviewed', 'Reviewed'],
+      ['drafts', 'Drafts']
+    ];
 
-    const assignmentsHtml = assignments.length
-      ? assignments.map((assignment) => {
+    const filtersHtml = assignments.length
+      ? `
+        <div class="td-tabs" role="tablist" aria-label="Assignment filters">
+          ${filterItems.map(([key, label]) => `
+            <button
+              class="td-tab ${activeFilter === key ? 'is-active' : ''}"
+              type="button"
+              data-action="set-assignment-filter"
+              data-filter="${escapeHtml(key)}"
+            >
+              ${escapeHtml(label)}
+              <span>${escapeHtml(countTeacherAssignmentsByFilter(assignments, key))}</span>
+            </button>
+          `).join('')}
+        </div>
+      `
+      : '';
+
+    const filteredAssignments = activeFilter === 'all'
+      ? assignments
+      : assignments.filter((assignment) => getTeacherAssignmentFilterKey(assignment) === activeFilter);
+
+    const assignmentsHtml = filteredAssignments.length
+      ? filteredAssignments.map((assignment) => {
           const student = assignment.student_id ? state.studentsById.get(assignment.student_id) : null;
-          const studentLabel = student?.email || (assignment.is_sent ? 'Unknown student' : 'Not sent yet');
+          const studentLabel = (student?.full_name || '').trim() || student?.email || (assignment.is_sent ? 'Unknown student' : 'Not sent yet');
           const submission = assignment.submission || null;
           const comments = state.commentsByAssignment.get(assignment.id) || [];
           const resources = state.resourcesByAssignment.get(assignment.id) || [];
@@ -1996,21 +2194,24 @@ function renderStudentTemplateAnswers(assignment) {
           const modeText = assignmentModeLabel(assignment.assignment_mode);
           const assignmentStatusText = assignmentStatusLabel(assignment.status);
           const reviewUi = getTeacherReviewUi(assignment);
+          const display = getTeacherAssignmentDisplay(assignment);
+          const progressText = renderTeacherProgressText(assignment);
 
-const answerLabel = assignment.template_title ? 'Additional note from student' : 'Student answer';
-const answerHtml = submission?.answer_text
-  ? `<div class="td-answer">${escapeHtml(submission.answer_text)}</div>`
-  : `<div class="td-empty">${assignment.template_title ? 'No additional note yet.' : 'No answer text yet.'}</div>`;
+          const answerLabel = assignment.template_title ? 'Additional note from student' : 'Student answer';
+          const answerHtml = submission?.answer_text
+            ? `<div class="td-answer">${escapeHtml(submission.answer_text)}</div>`
+            : `<div class="td-muted-box">${assignment.template_title ? 'No additional note yet.' : 'No answer text yet.'}</div>`;
+
           const fileHtml = submission?.file_name
             ? `<div class="td-grid" style="gap:8px;"><div class="td-note">${escapeHtml(submission.file_name)} ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}</div>${submission.signed_url ? `<a class="td-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}</div>`
-            : `<div class="td-empty">No file uploaded yet.</div>`;
+            : `<div class="td-muted-box">No file uploaded yet.</div>`;
 
           const commentsHtml = comments.length
             ? comments.map((comment) => {
                 const authorLabel = comment.author_role === 'teacher' ? 'You' : 'Student';
                 return `<div class="td-comment ${escapeHtml(comment.author_role)}"><div class="td-comment-meta">${escapeHtml(authorLabel)} • ${escapeHtml(formatDateTime(comment.created_at))}</div><div class="td-comment-body">${escapeHtml(comment.body)}</div></div>`;
               }).join('')
-            : `<div class="td-empty">No comments yet.</div>`;
+            : '';
 
           const resourcesHtml = resources.length
             ? resources.map((resource) => `
@@ -2021,23 +2222,13 @@ const answerHtml = submission?.answer_text
                   </div>
                   <div class="td-actions">
                     ${resource.signed_url ? `<a class="td-link" href="${escapeHtml(resource.signed_url)}" target="_blank" rel="noopener noreferrer">Download</a>` : ''}
-                    <button class="td-btn td-btn-danger" type="button" data-action="delete-resource" data-resource-id="${escapeHtml(resource.id)}" data-resource-path="${escapeHtml(resource.file_path)}">Remove</button>
+                    <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="delete-resource" data-resource-id="${escapeHtml(resource.id)}" data-resource-path="${escapeHtml(resource.file_path)}">Remove</button>
                   </div>
                 </div>
               `).join('')
-            : `<div class="td-empty">No reference files yet.</div>`;
+            : `<div class="td-muted-box">No reference files yet.</div>`;
 
-          const topBadges = assignment.is_sent
-            ? `
-              <div class="td-badge ${escapeHtml(assignment.recipient_status || 'not_started')}">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))}</div>
-              <div class="td-badge ${escapeHtml(effectiveReview)}">${escapeHtml(effectiveReviewText)}</div>
-            `
-            : `
-              <div class="td-badge ${escapeHtml(assignment.status || 'draft')}">${escapeHtml(assignmentStatusText)}</div>
-              <div class="td-badge draft">Draft</div>
-            `;
-
-          const actionsForDraft = !assignment.is_sent
+          const draftActions = !assignment.is_sent
             ? `
               <div class="td-actions" style="margin-top:14px;">
                 <button class="td-btn td-btn-secondary" type="button" data-action="load-draft" data-assignment-id="${escapeHtml(assignment.id)}">Open draft in form</button>
@@ -2094,91 +2285,108 @@ const answerHtml = submission?.answer_text
           const commentsSection = assignment.is_sent
             ? `
               <div class="td-section">
-                <div class="td-label"><span>Comments</span></div>
-                <div class="td-comments">
-                  <div class="td-comments-list">${commentsHtml}</div>
-                  <label class="td-label">
-                    <span>New comment</span>
-                    <textarea class="td-textarea" data-role="comment" placeholder="Write a message to your student."></textarea>
-                  </label>
-                  <div class="td-action-row">
-                    <button class="td-btn td-btn-secondary" type="button" data-action="send-comment">
-                      Send comment
-                    </button>
-
-                    <span class="td-action-message is-info" data-role="comment-message">
-                      Write a message to your student.
-                    </span>
-                  </div>
+                <div class="td-comments-head">
+                  <div class="td-label"><span>Comments</span></div>
+                  <div class="td-note">${comments.length ? `${comments.length} comment${comments.length === 1 ? '' : 's'}` : 'No comments yet'}</div>
+                </div>
+                ${comments.length ? `<div class="td-comments-list">${commentsHtml}</div>` : ''}
+                <label class="td-label">
+                  <span>New comment</span>
+                  <textarea class="td-textarea" data-role="comment" placeholder="Write a message to your student."></textarea>
+                </label>
+                <div class="td-action-row">
+                  <button class="td-btn td-btn-secondary" type="button" data-action="send-comment">Send comment</button>
+                  <span class="td-action-message is-info" data-role="comment-message">Write a message to your student.</span>
                 </div>
               </div>
             `
             : '';
 
-          return `
-            <div class="td-assignment" data-assignment-id="${escapeHtml(assignment.id)}">
-              <div class="td-assignment-top">
-                <div>
-                  <div class="td-assignment-title">${escapeHtml(assignment.title)}</div>
-                  <div class="td-assignment-desc">${escapeHtml(assignment.description || 'No description')}</div>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                  ${topBadges}
-                </div>
-              </div>
-
-              <div class="td-assignment-meta">
-                <div class="td-tag">Student: ${escapeHtml(studentLabel)}</div>
-                <div class="td-tag">Due: ${escapeHtml(formatDateTime(assignment.due_date))}</div>
-                <div class="td-tag">Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
-                <div class="td-tag">Assignment status: ${escapeHtml(assignmentStatusText)}</div>
-                <div class="td-tag">Mode: ${escapeHtml(modeText)}</div>
-                ${assignment.template_title ? `<div class="td-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
-                ${assignment.module_name ? `<div class="td-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
-                ${assignment.is_sent ? `<div class="td-tag">Review: ${escapeHtml(effectiveReviewText)}</div>` : ''}
-                ${renderProgressTag(assignment)}
-                ${assignment.recipient_last_activity_at ? `<div class="td-tag">Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
-                ${assignment.reviewed_at ? `<div class="td-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
-                ${submission?.submitted_at ? `<div class="td-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
-                ${submission?.last_saved_at ? `<div class="td-tag">Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
-              </div>
-
-              ${assignment.miro_link ? `<div style="margin-top:14px;"><a class="td-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
-
-              ${actionsForDraft}
-
-<div class="td-section">
-  <div class="td-label"><span>Reference files</span></div>
-  <div class="td-resource-list">${resourcesHtml}</div>
-  <div class="td-grid-2">
-    <label class="td-label">
-      <span>Upload new file</span>
-      <input class="td-input" data-role="resource-file" type="file" />
-    </label>
-    <div class="td-actions" style="align-items:end;">
-      <button class="td-btn td-btn-secondary" type="button" data-action="upload-resource">Upload file</button>
-    </div>
-  </div>
-</div>
-
-${renderStudentTemplateAnswers(assignment)}
-
-<div class="td-section">
-  <div class="td-label"><span>${escapeHtml(answerLabel)}</span></div>
-  ${answerHtml}
-</div>
-
-              <div class="td-section">
-                <div class="td-label"><span>Uploaded file</span></div>
-                ${fileHtml}
-              </div>
-
-              ${reviewSection}
-              ${commentsSection}
+          const compactMetaHtml = `
+            <div class="td-compact-meta">
+              <span>Student: ${escapeHtml(studentLabel)}</span>
+              ${assignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(assignment.due_date))}</span>` : ''}
+              ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
+              ${assignment.template_title ? `<span>${escapeHtml(assignment.template_title)}</span>` : ''}
             </div>
           `;
+
+          const technicalDetailsHtml = `
+            <div class="td-tech-details">
+              <div>Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
+              <div>Assignment status: ${escapeHtml(assignmentStatusText)}</div>
+              <div>Mode: ${escapeHtml(modeText)}</div>
+              ${assignment.module_name ? `<div>Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
+              ${assignment.is_sent ? `<div>Review: ${escapeHtml(effectiveReviewText)}</div>` : ''}
+              ${assignment.recipient_last_activity_at ? `<div>Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
+              ${assignment.reviewed_at ? `<div>Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
+              ${submission?.submitted_at ? `<div>Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
+              ${submission?.last_saved_at ? `<div>Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
+            </div>
+          `;
+
+          return `
+            <article class="td-assignment td-assignment-compact" data-assignment-id="${escapeHtml(assignment.id)}">
+              <div class="td-assignment-summary">
+                <div class="td-assignment-main">
+                  <div class="td-assignment-title">${escapeHtml(assignment.title)}</div>
+                  <div class="td-assignment-desc">${escapeHtml(assignment.description || 'No description')}</div>
+                  ${compactMetaHtml}
+                </div>
+
+                <div class="td-assignment-side">
+                  <span class="td-badge ${escapeHtml(display.badgeClass)}">${escapeHtml(display.label)}</span>
+                  <button class="td-btn ${display.key === 'awaiting_review' ? 'td-btn-primary' : 'td-btn-secondary'}" type="button" data-action="open-assignment" data-assignment-id="${escapeHtml(assignment.id)}">
+                    ${escapeHtml(display.actionLabel)}
+                  </button>
+                </div>
+              </div>
+
+              <details class="td-details">
+                <summary>Details</summary>
+                <div class="td-details-body">
+                  ${technicalDetailsHtml}
+
+                  ${assignment.miro_link ? `<div style="margin-top:14px;"><a class="td-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
+
+                  ${draftActions}
+
+                  <div class="td-section">
+                    <div class="td-label"><span>Reference files</span></div>
+                    <div class="td-resource-list">${resourcesHtml}</div>
+                    <div class="td-grid-2">
+                      <label class="td-label">
+                        <span>Upload new file</span>
+                        <input class="td-input" data-role="resource-file" type="file" />
+                      </label>
+                      <div class="td-actions" style="align-items:end;">
+                        <button class="td-btn td-btn-secondary" type="button" data-action="upload-resource">Upload file</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  ${renderStudentTemplateAnswers(assignment)}
+
+                  <div class="td-section">
+                    <div class="td-label"><span>${escapeHtml(answerLabel)}</span></div>
+                    ${answerHtml}
+                  </div>
+
+                  <div class="td-section">
+                    <div class="td-label"><span>Uploaded file</span></div>
+                    ${fileHtml}
+                  </div>
+
+                  ${reviewSection}
+                  ${commentsSection}
+                </div>
+              </details>
+            </article>
+          `;
         }).join('')
-      : `<div class="td-empty">You have not created any assignments yet.</div>`;
+      : assignments.length
+        ? `<div class="td-empty">No assignments match this filter.</div>`
+        : `<div class="td-empty">You have not created any assignments yet.</div>`;
 
     return `
       <div class="td-card">
@@ -2188,6 +2396,7 @@ ${renderStudentTemplateAnswers(assignment)}
           <div class="td-sub">Drafts and sent assignments created by this teacher account.</div>
         </div>
         <div class="td-body">
+          ${filtersHtml}
           <div class="td-grid">${assignmentsHtml}</div>
         </div>
       </div>
@@ -2195,21 +2404,26 @@ ${renderStudentTemplateAnswers(assignment)}
   }
 
   function renderTemplatesViewHtml() {
+    const editorOpen = state.templateEditor?.mode === 'edit';
     return `
       <div class="td-card">
         <div class="td-head">
           <div class="td-kicker">Templates</div>
-          <h2 class="td-title" style="font-size:24px;">Manage templates</h2>
-          <div class="td-sub">Create typed templates with JSON schema and attach them later in Dashboard.</div>
+          <h2 class="td-title" style="font-size:24px;">Templates</h2>
+          <div class="td-sub">Use the library first. Open the editor only when you need to create or edit a template.</div>
         </div>
         <div class="td-body">
-          <div class="td-grid-2 td-template-layout">
-            <div class="td-section">
-              ${renderTemplateEditorHtml()}
-            </div>
-            <div class="td-section">
+          <div class="td-grid">
+            <div class="td-section td-template-library-box">
               ${renderTemplatesListHtml()}
             </div>
+
+            <details class="td-details td-template-editor-details" ${editorOpen ? 'open' : ''}>
+              <summary>${editorOpen ? 'Edit template' : 'Create / Edit template'}</summary>
+              <div class="td-details-body">
+                ${renderTemplateEditorHtml()}
+              </div>
+            </details>
           </div>
         </div>
       </div>
@@ -2314,10 +2528,57 @@ ${renderStudentTemplateAnswers(assignment)}
       .td-template-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .td-template-answer-value{border:1px solid #e6ebf1;border-radius:12px;padding:10px 12px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
       .td-template-answer-empty{border:1px dashed #cfd8e3;border-radius:12px;padding:10px 12px;background:#fbfdff;color:#667085;font-size:14px}
+
+      .td-nav-card .td-body{padding:12px 14px}
+      .td-topnav{gap:8px;flex-wrap:wrap}
+      .td-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+      .td-stat-card{appearance:none;text-align:left;border:1px solid #dbe7f3;background:#f8fbff;border-radius:14px;padding:14px 16px;cursor:pointer;color:#111213;display:grid;gap:6px}
+      .td-stat-card span{font-size:26px;font-weight:800;line-height:1}
+      .td-stat-card strong{font-size:13px;color:#475467}
+      .td-stat-card.is-warning{background:#fff7ed;border-color:#fed7aa}
+      .td-stat-card.is-muted{cursor:default;background:#fbfdff}
+      .td-attention-list,.td-recent-list{display:grid;gap:10px}
+      .td-attention-item,.td-recent-item{border:1px solid #e6ebf1;border-radius:14px;padding:12px 14px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .td-attention-main{min-width:0}
+      .td-quick-actions{gap:10px;flex-wrap:wrap}
+      .td-section-headline,.td-comments-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .td-student-simple .td-student-top{align-items:center}
+      .td-student-actions{justify-content:flex-end}
+      .td-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+      .td-tab{appearance:none;border:1px solid #dbe7f3;background:#f8fbff;color:#175cd3;border-radius:999px;padding:9px 12px;font:700 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+      .td-tab span{min-width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid #dbe7f3;color:#475467;font-size:12px}
+      .td-tab.is-active{background:#111213;border-color:#111213;color:#fff}
+      .td-tab.is-active span{background:#fff;color:#111213;border-color:#fff}
+      .td-assignment-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+      .td-assignment-main{min-width:0;flex:1}
+      .td-assignment-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:150px}
+      .td-compact-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;color:#475467;font-size:13px}
+      .td-compact-meta span{display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3}
+      .td-details{margin-top:14px;border-top:1px solid #eef2f6;padding-top:12px}
+      .td-details summary{cursor:pointer;color:#175cd3;font-weight:800;font-size:14px;list-style:none;display:inline-flex;align-items:center;gap:8px}
+      .td-details summary::-webkit-details-marker{display:none}
+      .td-details summary::after{content:"↓";font-size:13px}
+      .td-details[open] summary::after{content:"↑"}
+      .td-details-body{margin-top:14px}
+      .td-tech-details{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;color:#667085;font-size:12px}
+      .td-tech-details div{padding:6px 9px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3}
+      .td-muted-box{border:1px dashed #cfd8e3;border-radius:12px;padding:12px 14px;background:#fbfdff;color:#667085;font-size:14px;line-height:1.6;white-space:pre-wrap}
+      .td-composer-details{margin-top:0;border-top:none;padding-top:0}
+      .td-composer-details > summary{background:#111213;color:#fff;border-radius:12px;padding:12px 16px;width:max-content}
+      .td-template-editor-details{border:1px solid #dbe7f3;border-radius:14px;padding:14px;background:#fbfdff}
+      [hidden]{display:none!important}
+
       @media (max-width:900px){
         .td-template-layout{grid-template-columns:1fr}
       }
       @media (max-width:760px){
+
+        .td-stat-grid{grid-template-columns:1fr 1fr}
+        .td-attention-item,.td-recent-item,.td-assignment-summary{flex-direction:column;align-items:flex-start}
+        .td-assignment-side{width:100%;align-items:stretch}
+        .td-assignment-side .td-btn{width:100%}
+        .td-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+        .td-tab{white-space:nowrap}
         #${ROOT_ID}{padding:0 12px 28px}
         .td-head,.td-body{padding:16px}
         .td-title{font-size:24px}
@@ -2571,25 +2832,46 @@ assignments = (assignmentsRows || []).map((a) => {
     const awaitingReviewCount = assignments.filter((a) => effectiveReviewState(a) === 'awaiting_review').length;
     const teacherName = (teacher.full_name || '').trim() || teacher.email || 'Teacher';
     const teacherEmail = teacher.email || '';
+    const activeView = state.activeView || 'overview';
 
     const flashHtml = state.flash
       ? `<div class="${state.flash.type === 'error' ? 'td-error' : 'td-success'}">${escapeHtml(state.flash.message)}</div>`
       : '';
 
-    const dashboardViewHtml = `
-      ${renderStudentsSectionHtml()}
-      ${renderAssignmentComposerHtml()}
-      ${renderAssignmentsListHtml()}
-    `;
-
-    const templatesViewHtml = renderTemplatesViewHtml();
+    const viewHtml =
+      activeView === 'students'
+        ? renderStudentsSectionHtml()
+        : activeView === 'assignments'
+          ? `
+            <div class="td-card">
+              <div class="td-head td-assignment-create-head">
+                <div>
+                  <div class="td-kicker">Assignments</div>
+                  <h2 class="td-title" style="font-size:24px;">Assignments</h2>
+                  <div class="td-sub">Create assignments and review student submissions in one place.</div>
+                </div>
+              </div>
+              <div class="td-body">
+                <details class="td-details td-composer-details" ${state.draftAssignmentId ? 'open' : ''}>
+                  <summary>Create assignment</summary>
+                  <div class="td-details-body">
+                    ${renderAssignmentComposerHtml()}
+                  </div>
+                </details>
+              </div>
+            </div>
+            ${renderAssignmentsListHtml()}
+          `
+          : activeView === 'templates'
+            ? renderTemplatesViewHtml()
+            : renderOverviewHtml();
 
     root.innerHTML = `
       <div class="td-wrap">
         ${flashHtml}
         ${renderWelcomeCardHtml(teacherName, teacherEmail, students.length, assignments.length, awaitingReviewCount)}
         ${renderTopNavHtml()}
-        ${state.activeView === 'templates' ? templatesViewHtml : dashboardViewHtml}
+        ${viewHtml}
       </div>
     `;
 
@@ -2629,6 +2911,45 @@ assignments = (assignmentsRows || []).map((a) => {
       }
 
       const action = button.getAttribute('data-action');
+
+      if (action === 'set-assignment-filter') {
+        state.assignmentFilter = button.getAttribute('data-filter') || 'all';
+        state.activeView = 'assignments';
+        renderDashboard();
+        return;
+      }
+
+      if (action === 'open-assignment') {
+        const assignmentId = button.getAttribute('data-assignment-id');
+        state.activeView = 'assignments';
+        state.assignmentFilter = 'all';
+        renderDashboard();
+
+        window.setTimeout(() => {
+          const safeId = window.CSS?.escape ? CSS.escape(assignmentId) : assignmentId;
+          const card = rootEl()?.querySelector(`[data-assignment-id="${safeId}"]`);
+          const details = card?.querySelector('.td-details');
+          if (details) details.open = true;
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 0);
+        return;
+      }
+
+      if (action === 'quick-assign-student') {
+        const studentId = button.getAttribute('data-student-id') || '';
+        resetDraftState();
+        state.assignmentDraft.studentId = studentId;
+        state.activeView = 'assignments';
+        renderDashboard();
+
+        window.setTimeout(() => {
+          const composer = rootEl()?.querySelector('.td-composer-details');
+          if (composer) composer.open = true;
+          const form = rootEl()?.querySelector('#td-assignment-form');
+          if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 0);
+        return;
+      }
 
       if (action === 'switch-view') {
         handleSwitchView(button);
@@ -2804,7 +3125,8 @@ assignments = (assignmentsRows || []).map((a) => {
 
   function handleSwitchView(button) {
     const view = button.getAttribute('data-view');
-    if (!view || (view !== 'dashboard' && view !== 'templates')) return;
+    const allowedViews = ['overview', 'students', 'assignments', 'templates'];
+    if (!view || !allowedViews.includes(view)) return;
     state.activeView = view;
     renderDashboard();
   }
@@ -3548,8 +3870,11 @@ assignments = (assignmentsRows || []).map((a) => {
     if (!assignment) return;
 
     setDraftStateFromAssignment(assignment);
-    state.activeView = 'dashboard';
+    state.activeView = 'assignments';
     renderDashboard();
+
+    const composer = rootEl()?.querySelector('.td-composer-details');
+    if (composer) composer.open = true;
 
     const form = rootEl()?.querySelector('#td-assignment-form');
     if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
