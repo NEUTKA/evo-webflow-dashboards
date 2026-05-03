@@ -29,6 +29,7 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     connected: false,
     audioEnabled: true,
     videoEnabled: true,
+    screenShareEnabled: false,
     livekit: null,
     realtimeChannel: null,
 
@@ -261,6 +262,8 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
       .ell-btn-secondary{background:#f8fbff;color:#175cd3;border:1px solid #dbe7f3}
       .ell-btn-danger{background:#fff2f2;color:#b42318;border:1px solid #fecaca}
       .ell-btn-recording{background:#b42318;color:#fff;border:1px solid #b42318}
+      .ell-btn-sharing{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+      .ell-pill-screen{background:#fff7ed;border-color:#fed7aa;color:#c2410c}
       .ell-btn:disabled{opacity:.65;cursor:not-allowed}
       .ell-note{color:#667085;font-size:14px}
       .ell-pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#f8fbff;border:1px solid #dbe7f3;color:#0f172a;font-size:13px}
@@ -629,23 +632,81 @@ root.innerHTML = `
   } catch (_) {}
 }
 
+ function getPublicationSource(publication, track) {
+  return publication?.source || publication?.track?.source || track?.source || publication?.trackName || publication?.name || '';
+}
+
+function publicationIsScreenShare(publication, track) {
+  const source = String(getPublicationSource(publication, track) || '').toLowerCase();
+  const livekitScreenSource = String(state.livekit?.Track?.Source?.ScreenShare || '').toLowerCase();
+
+  return (
+    (!!livekitScreenSource && source === livekitScreenSource) ||
+    source.includes('screen') ||
+    source.includes('display')
+  );
+}
+
+function publicationIsCamera(publication, track) {
+  const source = String(getPublicationSource(publication, track) || '').toLowerCase();
+  const livekitCameraSource = String(state.livekit?.Track?.Source?.Camera || '').toLowerCase();
+
+  if (publicationIsScreenShare(publication, track)) return false;
+  if (!source) return true;
+  return (!!livekitCameraSource && source === livekitCameraSource) || source.includes('camera');
+}
+
+function syncLocalScreenShareState() {
+  if (!state.room) {
+    state.screenShareEnabled = false;
+    return;
+  }
+
+  let active = false;
+
+  state.room.localParticipant.videoTrackPublications.forEach((pub) => {
+    if (pub.track && publicationIsScreenShare(pub, pub.track)) {
+      active = true;
+    }
+  });
+
+  state.screenShareEnabled = active;
+}
+
  function attachLocalTracks() {
   const localWrap = document.getElementById('ell-local-preview');
   if (!localWrap || !state.room) return;
 
   localWrap.innerHTML = `<div class="ell-label">You</div>`;
 
+  let attachedCamera = false;
+
   state.room.localParticipant.videoTrackPublications.forEach((pub) => {
     if (!pub.track) return;
+    if (!publicationIsCamera(pub, pub.track)) return;
+
     const el = pub.track.attach();
     el.className = 'ell-video';
     localWrap.prepend(el);
+    attachedCamera = true;
   });
+
+  if (!attachedCamera && state.screenShareEnabled) {
+    const note = document.createElement('div');
+    note.className = 'ell-stage-placeholder';
+    note.textContent = 'You are sharing your screen';
+    localWrap.prepend(note);
+  }
 }
 
-function attachRemoteTrack(track, participant) {
+function attachRemoteTrack(track, participant, publication) {
   const remoteWrap = document.getElementById('ell-remote-stage');
   if (!remoteWrap || !track) return;
+
+  const isScreen = publicationIsScreenShare(publication, track);
+  const labelText = isScreen
+    ? `${participant?.identity || counterpartLabel()} is sharing screen`
+    : (participant?.identity || counterpartLabel());
 
   state.currentRemoteIdentity = participant?.identity || counterpartLabel();
 
@@ -658,7 +719,7 @@ function attachRemoteTrack(track, participant) {
 
   const label = document.createElement('div');
   label.className = 'ell-label';
-  label.textContent = participant?.identity || counterpartLabel();
+  label.textContent = labelText;
   remoteWrap.appendChild(label);
 }
 
@@ -673,20 +734,25 @@ function attachRemoteTrack(track, participant) {
   function attachExistingRemoteTracks() {
     if (!state.room) return;
 
-    let attached = false;
+    const candidates = [];
 
     state.room.remoteParticipants.forEach((participant) => {
       participant.videoTrackPublications.forEach((pub) => {
-        if (attached) return;
         if (!pub.track) return;
-        attachRemoteTrack(pub.track, participant);
-        attached = true;
+        candidates.push({ participant, pub });
       });
     });
 
-    if (!attached) {
-      clearRemoteTrack();
+    const screenShare = candidates.find(({ pub }) => publicationIsScreenShare(pub, pub.track));
+    const camera = candidates.find(({ pub }) => !publicationIsScreenShare(pub, pub.track));
+    const chosen = screenShare || camera;
+
+    if (chosen) {
+      attachRemoteTrack(chosen.pub.track, chosen.participant, chosen.pub);
+      return;
     }
+
+    clearRemoteTrack();
   }
 
   function bindRoomEvents(LK) {
@@ -695,7 +761,7 @@ function attachRemoteTrack(track, participant) {
     state.room
       .on(LK.RoomEvent.TrackSubscribed, function (track, publication, participant) {
         if (track.kind === 'video') {
-          attachRemoteTrack(track, participant);
+          attachRemoteTrack(track, participant, publication);
         }
 
         if (track.kind === 'audio') {
@@ -719,6 +785,7 @@ function attachRemoteTrack(track, participant) {
       })
       .on(LK.RoomEvent.Disconnected, async function () {
         state.connected = false;
+        state.screenShareEnabled = false;
         clearRoomUiTiles();
 
         try {
@@ -732,6 +799,30 @@ function attachRemoteTrack(track, participant) {
         renderMini();
         renderApp();
       });
+
+    if (LK.RoomEvent.LocalTrackPublished) {
+      state.room.on(LK.RoomEvent.LocalTrackPublished, function (publication) {
+        if (publicationIsScreenShare(publication, publication?.track)) {
+          state.screenShareEnabled = true;
+          renderApp();
+          attachLocalTracks();
+          attachExistingRemoteTracks();
+          renderMini();
+        }
+      });
+    }
+
+    if (LK.RoomEvent.LocalTrackUnpublished) {
+      state.room.on(LK.RoomEvent.LocalTrackUnpublished, function (publication) {
+        if (publicationIsScreenShare(publication, publication?.track)) {
+          state.screenShareEnabled = false;
+          renderApp();
+          attachLocalTracks();
+          attachExistingRemoteTracks();
+          renderMini();
+        }
+      });
+    }
   }
 
 async function joinRoom() {
@@ -774,6 +865,7 @@ async function joinRoom() {
   state.connected = true;
   state.audioEnabled = false;
   state.videoEnabled = false;
+  state.screenShareEnabled = false;
 
   renderApp();
   attachExistingRemoteTracks();
@@ -831,6 +923,7 @@ async function joinRoom() {
   state.chatRecordingStream = null;
   state.chatAudioChunks = [];
   state.chatRecording = false;
+  state.screenShareEnabled = false;
 
   state.connected = false;
   state.room = null;
@@ -888,6 +981,31 @@ async function toggleVideo() {
       next
         ? 'Camera could not be started. Check browser permission or close other apps using the camera.'
         : 'Could not turn off camera.'
+    );
+  }
+}
+
+
+async function toggleScreenShare() {
+  if (!state.room) return;
+
+  const next = !state.screenShareEnabled;
+
+  try {
+    await state.room.localParticipant.setScreenShareEnabled(next);
+    state.screenShareEnabled = next;
+
+    syncLocalScreenShareState();
+    renderApp();
+    attachLocalTracks();
+    attachExistingRemoteTracks();
+    renderMini();
+  } catch (err) {
+    console.error('[live-lesson] toggle screen share error:', err);
+    window.alert(
+      next
+        ? 'Screen sharing could not be started. Please allow screen sharing in your browser.'
+        : 'Could not stop screen sharing.'
     );
   }
 }
@@ -974,6 +1092,7 @@ async function toggleVideo() {
       <div class="ell-stage-controls">
         <button class="ell-btn ell-btn-secondary" type="button" id="ell-toggle-audio">${state.audioEnabled ? 'Mute audio' : 'Unmute audio'}</button>
         <button class="ell-btn ell-btn-secondary" type="button" id="ell-toggle-video">${state.videoEnabled ? 'Turn off camera' : 'Turn on camera'}</button>
+        <button class="ell-btn ${state.screenShareEnabled ? 'ell-btn-sharing' : 'ell-btn-secondary'}" type="button" id="ell-toggle-screen">${state.screenShareEnabled ? 'Stop sharing' : 'Share screen'}</button>
         <button class="ell-btn ell-btn-secondary" type="button" id="ell-toggle-chat">${state.chatOpen ? 'Close chat' : 'Chat'}</button>
         <button class="ell-btn ell-btn-danger" type="button" id="ell-leave-room">Leave room</button>
         ${canEnd ? `<button class="ell-btn ell-btn-danger" type="button" id="ell-end-session">End lesson</button>` : ''}
@@ -1033,6 +1152,7 @@ function videoSection() {
           ${state.session ? presenceBadgeHtml(counterpartRole()) : ''}
           ${state.session?.starts_at ? `<span class="ell-pill">${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
           <span class="ell-pill">${state.connected ? 'You are in room' : 'Not in room yet'}</span>
+          ${state.screenShareEnabled ? `<span class="ell-pill ell-pill-screen">You are sharing screen</span>` : ''}
         </div>
       </div>
 
@@ -1094,6 +1214,7 @@ root.innerHTML = `
             ${presenceBadgeHtml(counterpartRole())}
             ${state.session.starts_at ? `<span class="ell-pill">${escapeHtml(formatDateTime(state.session.starts_at))}</span>` : ''}
             <span class="ell-pill">${state.connected ? 'You are in room' : 'Not in room yet'}</span>
+          ${state.screenShareEnabled ? `<span class="ell-pill ell-pill-screen">You are sharing screen</span>` : ''}
           </div>
         </div>
       </div>
@@ -1624,6 +1745,7 @@ root.innerHTML = `
     const endBtn = root.querySelector('#ell-end-session');
     const toggleAudioBtn = root.querySelector('#ell-toggle-audio');
     const toggleVideoBtn = root.querySelector('#ell-toggle-video');
+    const toggleScreenBtn = root.querySelector('#ell-toggle-screen');
     const toggleChatBtn = root.querySelector('#ell-toggle-chat');
     const toggleChatTopBtn = root.querySelector('#ell-toggle-chat-top');
     const closeChatBtn = root.querySelector('#ell-close-chat');
@@ -1698,6 +1820,7 @@ if (joinBtn) {
 
     if (toggleAudioBtn) toggleAudioBtn.onclick = toggleAudio;
     if (toggleVideoBtn) toggleVideoBtn.onclick = toggleVideo;
+    if (toggleScreenBtn) toggleScreenBtn.onclick = toggleScreenShare;
     if (toggleChatBtn) toggleChatBtn.onclick = () => state.chatOpen ? closeChat() : openChat();
     if (toggleChatTopBtn) toggleChatTopBtn.onclick = openChat;
     if (closeChatBtn) closeChatBtn.onclick = closeChat;
