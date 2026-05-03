@@ -2404,7 +2404,7 @@ function renderStudentTemplateAnswers(assignment) {
   }
 
   function renderTemplatesViewHtml() {
-    const editorOpen = state.templateEditor?.mode === 'edit';
+    const editorOpen = !!state.templateEditorOpen || state.templateEditor?.mode === 'edit';
     return `
       <div class="td-card">
         <div class="td-head">
@@ -2912,6 +2912,10 @@ assignments = (assignmentsRows || []).map((a) => {
 
       const action = button.getAttribute('data-action');
 
+      if (action && action.startsWith('template-') && action !== 'template-archive') {
+        state.templateEditorOpen = true;
+      }
+
       if (action === 'set-assignment-filter') {
         state.assignmentFilter = button.getAttribute('data-filter') || 'all';
         state.activeView = 'assignments';
@@ -3067,6 +3071,13 @@ assignments = (assignmentsRows || []).map((a) => {
       if (action === 'delete-resource') await handleDeleteResource(button);
     });
 
+    root.addEventListener('toggle', function (event) {
+      const details = event.target;
+      if (details?.matches?.('.td-template-editor-details')) {
+        state.templateEditorOpen = details.open;
+      }
+    }, true);
+
     root.addEventListener('change', function (event) {
       const templateEl = event.target.closest('#td-template-id');
       if (templateEl) {
@@ -3134,6 +3145,7 @@ assignments = (assignmentsRows || []).map((a) => {
   function handleTemplateNew() {
     resetTemplateEditor('grammar_dropdown');
     state.activeView = 'templates';
+    state.templateEditorOpen = true;
     renderDashboard();
   }
 
@@ -3141,6 +3153,7 @@ assignments = (assignmentsRows || []).map((a) => {
     const currentType = state.templateEditor?.templateType || 'grammar_dropdown';
     resetTemplateEditor(currentType);
     state.activeView = 'templates';
+    state.templateEditorOpen = true;
     renderDashboard();
   }
 
@@ -3151,6 +3164,7 @@ assignments = (assignmentsRows || []).map((a) => {
     if (!row) return;
     fillTemplateEditorFromTemplateRow(row, 'edit');
     state.activeView = 'templates';
+    state.templateEditorOpen = true;
     renderDashboard();
   }
 
@@ -3161,6 +3175,7 @@ assignments = (assignmentsRows || []).map((a) => {
     if (!row) return;
     fillTemplateEditorFromTemplateRow(row, 'create');
     state.activeView = 'templates';
+    state.templateEditorOpen = true;
     setFlash('success', 'Template duplicated into the editor. Save it to create a new template.');
     renderDashboard();
   }
@@ -3213,6 +3228,7 @@ assignments = (assignmentsRows || []).map((a) => {
     const validation = validateTemplateEditor(editor);
     if (!validation.ok) {
       setFlash('error', validation.errors[0] || 'Please complete the template form.');
+      state.templateEditorOpen = true;
       renderDashboard();
       const newBtn = rootEl()?.querySelector('#td-template-save-btn');
       if (newBtn) buttonError(newBtn, original, 'Check form');
@@ -3243,12 +3259,14 @@ assignments = (assignmentsRows || []).map((a) => {
 
       resetTemplateEditor(editor.templateType || 'grammar_dropdown');
       state.activeView = 'templates';
+      state.templateEditorOpen = false;
       await fetchDashboardData();
       renderDashboard();
       finishButtonFeedbackBySelector('#td-template-save-btn', original, true, editor.mode === 'edit' ? 'Updated' : 'Created');
     } catch (err) {
       console.error('[teacher-dashboard] save template error:', err);
       setFlash('error', err?.message || 'Failed to save template.');
+      state.templateEditorOpen = true;
       renderDashboard();
       const newBtn = rootEl()?.querySelector('#td-template-save-btn');
       if (newBtn) buttonError(newBtn, original, 'Failed');
