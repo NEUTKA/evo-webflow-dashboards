@@ -43,19 +43,20 @@
     }
   };
 
-  const state = {
-    userId: null,
-    student: null,
-    teachers: [],
-    teachersById: new Map(),
-    assignments: [],
-    submissionsByAssignment: new Map(),
-    commentsByAssignment: new Map(),
-    resourcesByAssignment: new Map(),
-    templates: [],
-    modules: [],
-    flash: null
-  };
+const state = {
+  userId: null,
+  student: null,
+  teachers: [],
+  teachersById: new Map(),
+  assignments: [],
+  submissionsByAssignment: new Map(),
+  commentsByAssignment: new Map(),
+  resourcesByAssignment: new Map(),
+  templates: [],
+  modules: [],
+  flash: null,
+  assignmentFilter: 'all'
+};
 
   let sdRealtimeChannel = null;
   let sdRealtimeTimer = null;
@@ -385,6 +386,81 @@ function getStudentActionUi(assignment) {
     message: 'Fill in the task and save your progress.'
   };
 }
+
+function getStudentDisplayStatus(assignment) {
+  const status = assignment?.recipient_status || 'not_started';
+  const review = effectiveReviewState(assignment);
+
+  if (status === 'completed' && review === 'reviewed') {
+    return {
+      key: 'reviewed',
+      label: 'Reviewed',
+      badgeClass: 'reviewed',
+      message: 'Your teacher has checked this task.',
+      actionLabel: 'View feedback'
+    };
+  }
+
+  if (status === 'completed' && review === 'awaiting_review') {
+    return {
+      key: 'waiting_review',
+      label: 'Waiting for review',
+      badgeClass: 'awaiting_review',
+      message: 'Your work was sent to your teacher.',
+      actionLabel: 'View task'
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      key: 'in_progress',
+      label: 'In progress',
+      badgeClass: 'in_progress',
+      message: 'Continue your task and submit it when ready.',
+      actionLabel: 'Continue'
+    };
+  }
+
+  return {
+    key: 'to_do',
+    label: 'To do',
+    badgeClass: 'not_started',
+    message: 'Start this task when you are ready.',
+    actionLabel: 'Start'
+  };
+}
+
+function getAssignmentFilterKey(assignment) {
+  return getStudentDisplayStatus(assignment).key;
+}
+
+function getNextAssignment(assignments) {
+  return (
+    assignments.find((a) => getAssignmentFilterKey(a) === 'in_progress') ||
+    assignments.find((a) => getAssignmentFilterKey(a) === 'to_do') ||
+    assignments.find((a) => getAssignmentFilterKey(a) === 'waiting_review') ||
+    assignments.find((a) => getAssignmentFilterKey(a) === 'reviewed') ||
+    null
+  );
+}
+
+function countAssignmentsByFilter(assignments, key) {
+  if (key === 'all') return assignments.length;
+  return assignments.filter((a) => getAssignmentFilterKey(a) === key).length;
+}
+
+function renderSimpleProgressText(assignment) {
+  const storedMeta = getStoredProgressMeta(assignment);
+  const answers = getStoredTemplateAnswers(assignment);
+  const progress = getTemplateProgress(assignment, answers);
+
+  const total = Number(storedMeta?.total_items ?? progress.total) || 0;
+  const answered = Number(storedMeta?.answered_items ?? progress.answered) || 0;
+
+  if (!total) return '';
+  return `${answered}/${total}`;
+}
+
   function inferTemplateTypeFromLegacy(row) {
     const cat = row?.category || '';
     const mode = row?.answer_mode || '';
@@ -957,7 +1033,248 @@ function getStudentActionUi(assignment) {
   }
 }
 
+.sd-next-card{
+  border-color:#c7e2ff;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+}
+
+.sd-next-layout{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.sd-next-title{
+  margin:0;
+  font-size:24px;
+  line-height:1.2;
+}
+
+.sd-next-sub{
+  margin-top:8px;
+  color:#475467;
+  font-size:15px;
+  line-height:1.5;
+}
+
+.sd-next-side{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:10px;
+  min-width:150px;
+}
+
+.sd-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:16px;
+}
+
+.sd-tab{
+  appearance:none;
+  border:1px solid #dbe7f3;
+  background:#f8fbff;
+  color:#175cd3;
+  border-radius:999px;
+  padding:9px 12px;
+  font:700 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+.sd-tab span{
+  min-width:22px;
+  height:22px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  border:1px solid #dbe7f3;
+  color:#475467;
+  font-size:12px;
+}
+
+.sd-tab.is-active{
+  background:#111213;
+  border-color:#111213;
+  color:#fff;
+}
+
+.sd-tab.is-active span{
+  background:#fff;
+  color:#111213;
+  border-color:#fff;
+}
+
+.sd-assignment-summary{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.sd-assignment-main{
+  min-width:0;
+  flex:1;
+}
+
+.sd-assignment-side{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:10px;
+  min-width:140px;
+}
+
+.sd-compact-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+  color:#475467;
+  font-size:13px;
+}
+
+.sd-compact-meta span{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#f8fbff;
+  border:1px solid #dbe7f3;
+}
+
+.sd-feedback-preview{
+  margin-top:14px;
+  border:1px solid #b7ebc6;
+  background:#ecfdf3;
+  color:#027a48;
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.sd-feedback-preview-title{
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:5px;
+}
+
+.sd-feedback-preview-text{
+  color:#111213;
+  font-size:14px;
+  line-height:1.55;
+  white-space:pre-wrap;
+}
+
+.sd-details{
+  margin-top:14px;
+  border-top:1px solid #eef2f6;
+  padding-top:12px;
+}
+
+.sd-details summary{
+  cursor:pointer;
+  color:#175cd3;
+  font-weight:800;
+  font-size:14px;
+  list-style:none;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+.sd-details summary::-webkit-details-marker{
+  display:none;
+}
+
+.sd-details summary::after{
+  content:"↓";
+  font-size:13px;
+}
+
+.sd-details[open] summary::after{
+  content:"↑";
+}
+
+.sd-details-body{
+  margin-top:14px;
+}
+
+.sd-tech-details{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:14px;
+  color:#667085;
+  font-size:12px;
+}
+
+.sd-tech-details div{
+  padding:6px 9px;
+  border-radius:999px;
+  background:#f8fbff;
+  border:1px solid #dbe7f3;
+}
+
+.sd-soft-box,
+.sd-muted-box{
+  border:1px solid #dbe7f3;
+  border-radius:12px;
+  padding:12px 14px;
+  background:#f8fbff;
+  color:#475467;
+  font-size:14px;
+  line-height:1.6;
+  white-space:pre-wrap;
+}
+
+.sd-muted-box{
+  border-style:dashed;
+  color:#667085;
+}
+
+.sd-comments-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+
+[hidden]{
+  display:none !important;
+}
       @media (max-width:760px){
+      .sd-next-layout,
+.sd-assignment-summary{
+  flex-direction:column;
+}
+
+.sd-next-side,
+.sd-assignment-side{
+  width:100%;
+  align-items:stretch;
+}
+
+.sd-next-side .sd-btn,
+.sd-assignment-side .sd-btn{
+  width:100%;
+}
+
+.sd-tabs{
+  overflow-x:auto;
+  flex-wrap:nowrap;
+  padding-bottom:4px;
+}
+
+.sd-tab{
+  white-space:nowrap;
+}
         #${ROOT_ID}{padding:0 12px 28px}
         .sd-head,.sd-body{padding:16px}
         .sd-title{font-size:24px}
@@ -1170,6 +1487,42 @@ function getStudentActionUi(assignment) {
     const studentEmail = student.email || '';
     const flashHtml = state.flash ? `<div class="${state.flash.type === 'error' ? 'sd-error' : 'sd-success'}">${escapeHtml(state.flash.message)}</div>` : '';
 
+const nextAssignment = getNextAssignment(assignments);
+
+const nextActionHtml = nextAssignment ? (() => {
+  const display = getStudentDisplayStatus(nextAssignment);
+  const teacher = teachers.find(t => t.id === nextAssignment.teacher_id);
+  const teacherLabel = teacher?.email || 'Your teacher';
+  const progressText = renderSimpleProgressText(nextAssignment);
+
+  return `
+    <div class="sd-card sd-next-card">
+      <div class="sd-body">
+        <div class="sd-next-layout">
+          <div>
+            <div class="sd-kicker">Next action</div>
+            <h2 class="sd-next-title">${escapeHtml(nextAssignment.title)}</h2>
+            <div class="sd-next-sub">${escapeHtml(display.message)}</div>
+
+            <div class="sd-compact-meta">
+              <span>Teacher: ${escapeHtml(teacherLabel)}</span>
+              ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
+              ${nextAssignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(nextAssignment.due_date))}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="sd-next-side">
+            <span class="sd-badge ${escapeHtml(display.badgeClass)}">${escapeHtml(display.label)}</span>
+            <button class="sd-btn sd-btn-primary" type="button" data-open-assignment="${escapeHtml(nextAssignment.id)}">
+              ${escapeHtml(display.actionLabel)}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+})() : '';
+
     const teachersHtml = teachers.length
       ? teachers.map(teacher => {
           const teacherName = (teacher.full_name || '').trim() || teacher.email || 'Teacher';
@@ -1178,94 +1531,174 @@ function getStudentActionUi(assignment) {
         }).join('')
       : `<div class="sd-empty">No active teacher is linked to this account yet.</div>`;
 
-    const assignmentsHtml = assignments.length
-      ? assignments.map(assignment => {
-          const teacher = teachers.find(t => t.id === assignment.teacher_id);
-          const teacherLabel = teacher?.email || 'Unknown teacher';
-          const hasMiro = !!assignment.miro_link;
-          const submission = assignment.submission || null;
-          const comments = state.commentsByAssignment.get(assignment.id) || [];
-          const resources = state.resourcesByAssignment.get(assignment.id) || [];
-          const hasFeedback = !!(assignment.teacher_feedback || '').trim();
-          const effectiveReview = effectiveReviewState(assignment);
-          const effectiveReviewText = effectiveReviewLabel(assignment);
-          const modeText = assignmentModeLabel(assignment.assignment_mode);
-          const actionUi = getStudentActionUi(assignment);
-          const fileInfo = submission?.file_name
-            ? `<div class="sd-file"><div class="sd-file-meta">Current file: ${escapeHtml(submission.file_name)} ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}</div><div class="sd-file-row">${submission.signed_url ? `<a class="sd-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}</div></div>`
-            : '';
+const assignmentTabsHtml = `
+  <div class="sd-tabs" role="tablist" aria-label="Assignment filters">
+    ${[
+      ['all', 'All'],
+      ['to_do', 'To do'],
+      ['in_progress', 'In progress'],
+      ['waiting_review', 'Waiting review'],
+      ['reviewed', 'Reviewed']
+    ].map(([key, label]) => `
+      <button
+        class="sd-tab ${state.assignmentFilter === key ? 'is-active' : ''}"
+        type="button"
+        data-sd-filter="${escapeHtml(key)}"
+      >
+        ${escapeHtml(label)}
+        <span>${escapeHtml(countAssignmentsByFilter(assignments, key))}</span>
+      </button>
+    `).join('')}
+  </div>
+`;
 
-          const commentsHtml = comments.length
-            ? comments.map(comment => {
-                const authorLabel = comment.author_role === 'teacher' ? 'Teacher' : 'You';
-                return `<div class="sd-comment ${escapeHtml(comment.author_role)}"><div class="sd-comment-meta">${escapeHtml(authorLabel)} • ${escapeHtml(formatDateTime(comment.created_at))}</div><div class="sd-comment-body">${escapeHtml(comment.body)}</div></div>`;
-              }).join('')
-            : `<div class="sd-empty">No comments yet.</div>`;
+const assignmentsHtml = assignments.length
+  ? assignments.map(assignment => {
+      const teacher = teachers.find(t => t.id === assignment.teacher_id);
+      const teacherLabel = teacher?.email || 'Unknown teacher';
+      const hasMiro = !!assignment.miro_link;
+      const submission = assignment.submission || null;
+      const comments = state.commentsByAssignment.get(assignment.id) || [];
+      const resources = state.resourcesByAssignment.get(assignment.id) || [];
+      const hasFeedback = !!(assignment.teacher_feedback || '').trim();
+      const display = getStudentDisplayStatus(assignment);
+      const filterKey = getAssignmentFilterKey(assignment);
+      const actionUi = getStudentActionUi(assignment);
+      const progressText = renderSimpleProgressText(assignment);
 
-          const materialsHtml = resources.length
-            ? resources.map(resource => `<div class="sd-material"><div class="sd-material-meta">${escapeHtml(resource.file_name)} • ${escapeHtml(formatDateTime(resource.created_at))}${resource.file_size ? ` • ${escapeHtml(Math.round(resource.file_size / 1024) + ' KB')}` : ''}</div>${resource.signed_url ? `<a class="sd-link" href="${escapeHtml(resource.signed_url)}" target="_blank" rel="noopener noreferrer">Download material</a>` : ''}</div>`).join('')
-            : `<div class="sd-empty">No teacher materials yet.</div>`;
+      const fileInfo = submission?.file_name
+        ? `<div class="sd-file">
+            <div class="sd-file-meta">
+              Current file: ${escapeHtml(submission.file_name)}
+              ${submission.file_size ? `(${escapeHtml(Math.round(submission.file_size / 1024) + ' KB')})` : ''}
+            </div>
+            <div class="sd-file-row">
+              ${submission.signed_url ? `<a class="sd-link" href="${escapeHtml(submission.signed_url)}" target="_blank" rel="noopener noreferrer">Download file</a>` : ''}
+            </div>
+          </div>`
+        : '';
 
-          return `
-            <div class="sd-assignment" data-assignment-id="${escapeHtml(assignment.id)}">
-              <div class="sd-assignment-top">
-                <div>
-                  <div class="sd-assignment-title">${escapeHtml(assignment.title)}</div>
-                  <div class="sd-assignment-desc">${escapeHtml(assignment.description || 'No description')}</div>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                  <div class="sd-badge ${escapeHtml(assignment.recipient_status || 'not_started')}">${escapeHtml(statusLabel(assignment.recipient_status))}</div>
-                  <div class="sd-badge ${escapeHtml(effectiveReview)}">${escapeHtml(effectiveReviewText)}</div>
-                </div>
+      const commentsHtml = comments.length
+        ? comments.map(comment => {
+            const authorLabel = comment.author_role === 'teacher' ? 'Teacher' : 'You';
+            return `
+              <div class="sd-comment ${escapeHtml(comment.author_role)}">
+                <div class="sd-comment-meta">${escapeHtml(authorLabel)} • ${escapeHtml(formatDateTime(comment.created_at))}</div>
+                <div class="sd-comment-body">${escapeHtml(comment.body)}</div>
               </div>
+            `;
+          }).join('')
+        : '';
 
-              <div class="sd-assignment-meta">
-                <div class="sd-tag">Teacher: ${escapeHtml(teacherLabel)}</div>
-                <div class="sd-tag">Due: ${escapeHtml(formatDateTime(assignment.due_date))}</div>
-                <div class="sd-tag">Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
-                <div class="sd-tag">Mode: ${escapeHtml(modeText)}</div>
-                ${assignment.template_title ? `<div class="sd-tag">Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
-                ${assignment.module_name ? `<div class="sd-tag">Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
-                <div class="sd-tag">Review: ${escapeHtml(effectiveReviewText)}</div>
-                ${renderProgressTag(assignment)}
-                ${assignment.recipient_last_activity_at ? `<div class="sd-tag">Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
-                ${assignment.reviewed_at ? `<div class="sd-tag">Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
-                ${submission?.submitted_at ? `<div class="sd-tag">Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
-                ${submission?.last_saved_at ? `<div class="sd-tag">Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
+      const materialsHtml = resources.length
+        ? resources.map(resource => `
+            <div class="sd-material">
+              <div class="sd-material-meta">
+                ${escapeHtml(resource.file_name)} • ${escapeHtml(formatDateTime(resource.created_at))}
+                ${resource.file_size ? ` • ${escapeHtml(Math.round(resource.file_size / 1024) + ' KB')}` : ''}
               </div>
+              ${resource.signed_url ? `<a class="sd-link" href="${escapeHtml(resource.signed_url)}" target="_blank" rel="noopener noreferrer">Download material</a>` : ''}
+            </div>
+          `).join('')
+        : '';
+
+      const feedbackPreviewHtml = hasFeedback
+        ? `
+          <div class="sd-feedback-preview">
+            <div class="sd-feedback-preview-title">Teacher feedback</div>
+            <div class="sd-feedback-preview-text">${escapeHtml(assignment.teacher_feedback)}</div>
+          </div>
+        `
+        : '';
+
+      const compactMetaHtml = `
+        <div class="sd-compact-meta">
+          <span>Teacher: ${escapeHtml(teacherLabel)}</span>
+          ${assignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(assignment.due_date))}</span>` : ''}
+          ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
+        </div>
+      `;
+
+      const technicalDetailsHtml = `
+        <div class="sd-tech-details">
+          <div>Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
+          <div>Mode: ${escapeHtml(assignmentModeLabel(assignment.assignment_mode))}</div>
+          ${assignment.template_title ? `<div>Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
+          ${assignment.module_name ? `<div>Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
+          ${assignment.recipient_last_activity_at ? `<div>Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
+          ${assignment.reviewed_at ? `<div>Reviewed at: ${escapeHtml(formatDateTime(assignment.reviewed_at))}</div>` : ''}
+          ${submission?.submitted_at ? `<div>Submitted: ${escapeHtml(formatDateTime(submission.submitted_at))}</div>` : ''}
+          ${submission?.last_saved_at ? `<div>Last saved: ${escapeHtml(formatDateTime(submission.last_saved_at))}</div>` : ''}
+        </div>
+      `;
+
+      return `
+        <article
+          class="sd-assignment"
+          data-assignment-id="${escapeHtml(assignment.id)}"
+          data-assignment-filter="${escapeHtml(filterKey)}"
+          ${state.assignmentFilter !== 'all' && state.assignmentFilter !== filterKey ? 'hidden' : ''}
+        >
+          <div class="sd-assignment-summary">
+            <div class="sd-assignment-main">
+              <div class="sd-assignment-title">${escapeHtml(assignment.title)}</div>
+              <div class="sd-assignment-desc">${escapeHtml(assignment.description || 'No description')}</div>
+              ${compactMetaHtml}
+              ${feedbackPreviewHtml}
+            </div>
+
+            <div class="sd-assignment-side">
+              <span class="sd-badge ${escapeHtml(display.badgeClass)}">${escapeHtml(display.label)}</span>
+              <button class="sd-btn sd-btn-secondary" type="button" data-open-assignment="${escapeHtml(assignment.id)}">
+                ${escapeHtml(display.actionLabel)}
+              </button>
+            </div>
+          </div>
+
+          <details class="sd-details">
+            <summary>Details</summary>
+
+            <div class="sd-details-body">
+              ${technicalDetailsHtml}
 
               ${assignment.template_title ? `
-                <div style="margin-top:14px;">
-                  <div class="sd-feedback-box">Assignment template: ${escapeHtml(assignment.template_title)}</div>
-                </div>
+                <div class="sd-soft-box">Assignment template: ${escapeHtml(assignment.template_title)}</div>
               ` : ''}
 
               ${assignment.module_name ? `
-                <div style="margin-top:14px;">
-                  <div class="sd-feedback-box">Attached cards module: ${escapeHtml(assignment.module_name)}</div>
-                </div>
+                <div class="sd-soft-box">Attached cards module: ${escapeHtml(assignment.module_name)}</div>
               ` : ''}
 
               ${renderAssignmentTemplate(assignment)}
 
-              ${hasMiro ? `<div style="margin-top:14px;"><a class="sd-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a></div>` : ''}
+              ${hasMiro ? `
+                <div style="margin-top:14px;">
+                  <a class="sd-link" href="${escapeHtml(assignment.miro_link)}" target="_blank" rel="noopener noreferrer">Open Miro board</a>
+                </div>
+              ` : ''}
 
-              <div class="sd-materials">
-                <div class="sd-label"><span>Teacher materials</span></div>
-                <div class="sd-material-list">${materialsHtml}</div>
-              </div>
+              ${resources.length ? `
+                <div class="sd-materials">
+                  <div class="sd-label"><span>Teacher materials</span></div>
+                  <div class="sd-material-list">${materialsHtml}</div>
+                </div>
+              ` : ''}
 
               <div class="sd-feedback">
                 <div class="sd-label"><span>Teacher feedback</span></div>
-                ${hasFeedback ? `<div class="sd-feedback-box">${escapeHtml(assignment.teacher_feedback)}</div>` : `<div class="sd-empty">No feedback from teacher yet.</div>`}
+                ${hasFeedback
+                  ? `<div class="sd-feedback-box">${escapeHtml(assignment.teacher_feedback)}</div>`
+                  : `<div class="sd-muted-box">No feedback from teacher yet.</div>`
+                }
               </div>
 
               <div class="sd-form">
                 <div class="sd-grid-2">
                   <div class="sd-label">
                     <span>Current status</span>
-                    <div class="sd-feedback-box">${escapeHtml(statusLabel(assignment.recipient_status || 'not_started'))} • ${escapeHtml(effectiveReviewText)}</div>
+                    <div class="sd-feedback-box">${escapeHtml(display.label)}</div>
                   </div>
+
                   <label class="sd-label">
                     <span>Answer file</span>
                     <input class="sd-input" data-role="file" type="file" />
@@ -1280,49 +1713,59 @@ function getStudentActionUi(assignment) {
                 ${fileInfo}
 
                 <div class="sd-action-row">
-  <button
-    class="sd-btn sd-btn-secondary"
-    type="button"
-    data-action="save-draft"
-  >
-    ${escapeHtml(actionUi.saveLabel)}
-  </button>
+                  <button
+                    class="sd-btn sd-btn-secondary"
+                    type="button"
+                    data-action="save-draft"
+                  >
+                    ${escapeHtml(actionUi.saveLabel)}
+                  </button>
 
-  <button
-    class="sd-btn sd-btn-primary"
-    type="button"
-    data-action="submit-work"
-    ${actionUi.submitDisabled ? 'disabled' : ''}
-  >
-    ${escapeHtml(actionUi.submitLabel)}
-  </button>
+                  <button
+                    class="sd-btn sd-btn-primary"
+                    type="button"
+                    data-action="submit-work"
+                    ${actionUi.submitDisabled ? 'disabled' : ''}
+                  >
+                    ${escapeHtml(actionUi.submitLabel)}
+                  </button>
 
-  <span class="sd-action-message ${escapeHtml(actionUi.messageClass)}" data-role="work-message">
-    ${escapeHtml(actionUi.message)}
-  </span>
-</div>
+                  <span class="sd-action-message ${escapeHtml(actionUi.messageClass)}" data-role="work-message">
+                    ${escapeHtml(actionUi.message)}
+                  </span>
+                </div>
               </div>
 
               <div class="sd-comments">
-                <div class="sd-label"><span>Comments</span></div>
-                <div class="sd-comments-list">${commentsHtml}</div>
+                <div class="sd-comments-head">
+                  <div class="sd-label"><span>Comments</span></div>
+                  <div class="sd-note">${comments.length ? `${comments.length} comment${comments.length === 1 ? '' : 's'}` : 'No comments yet'}</div>
+                </div>
+
+                ${comments.length ? `<div class="sd-comments-list">${commentsHtml}</div>` : ''}
+
                 <label class="sd-label">
                   <span>New comment</span>
                   <textarea class="sd-textarea" data-role="comment" placeholder="Write a message to your teacher."></textarea>
                 </label>
-                <div class="sd-action-row">
-  <button class="sd-btn sd-btn-secondary" type="button" data-action="send-comment">
-    Send comment
-  </button>
 
-  <span class="sd-action-message is-info" data-role="comment-message">
-    Write a message to your teacher.
-  </span>
-</div>
+                <div class="sd-action-row">
+                  <button class="sd-btn sd-btn-secondary" type="button" data-action="send-comment">
+                    Send comment
+                  </button>
+
+                  <span class="sd-action-message is-info" data-role="comment-message">
+                    Write a message to your teacher.
+                  </span>
+                </div>
               </div>
-            </div>`;
-        }).join('')
-      : `<div class="sd-empty">You do not have any assignments yet.</div>`;
+            </div>
+          </details>
+        </article>
+      `;
+    }).join('')
+  : `<div class="sd-empty">You do not have any assignments yet.</div>`;
+
 
     root.innerHTML = `
       <div class="sd-wrap">
@@ -1340,7 +1783,7 @@ function getStudentActionUi(assignment) {
             </div>
           </div>
         </div>
-
+${nextActionHtml}
         <div class="sd-card">
           <div class="sd-head">
             <div class="sd-kicker">Teachers</div>
@@ -1358,9 +1801,10 @@ function getStudentActionUi(assignment) {
             <h2 class="sd-title" style="font-size:24px;">My assignments</h2>
             <div class="sd-sub">Assignments that teachers have already assigned to you.</div>
           </div>
-          <div class="sd-body">
-            <div class="sd-grid">${assignmentsHtml}</div>
-          </div>
+        <div class="sd-body">
+  ${assignments.length ? assignmentTabsHtml : ''}
+  <div class="sd-grid">${assignmentsHtml}</div>
+</div>
         </div>
       </div>`;
 
@@ -1368,45 +1812,104 @@ function getStudentActionUi(assignment) {
     state.flash = null;
   }
 
-  function bindEvents() {
-    const root = rootEl();
-    if (!root || root.__sdBound) return;
+function bindEvents() {
+  const root = rootEl();
+  if (!root || root.__sdBound) return;
 
-    root.addEventListener('click', async function (event) {
-      const button = event.target.closest('[data-action]');
-      if (!button) return;
+  root.addEventListener('click', async function (event) {
+    const filterButton = event.target.closest('[data-sd-filter]');
+    if (filterButton) {
+      const filter = filterButton.getAttribute('data-sd-filter') || 'all';
+      state.assignmentFilter = filter;
 
-      const action = button.getAttribute('data-action');
-      const card = button.closest('[data-assignment-id]');
-      if (!card) return;
+      root.querySelectorAll('[data-sd-filter]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-sd-filter') === filter);
+      });
 
-      const assignmentId = card.getAttribute('data-assignment-id');
-      if (!assignmentId) return;
+      root.querySelectorAll('[data-assignment-filter]').forEach((card) => {
+        const key = card.getAttribute('data-assignment-filter');
+        card.hidden = filter !== 'all' && key !== filter;
+      });
 
-      if (action === 'save-draft') await saveAssignmentWork(card, assignmentId, button, { mode: 'draft' });
-      if (action === 'submit-work') await saveAssignmentWork(card, assignmentId, button, { mode: 'submit' });
-      if (action === 'send-comment') await handleSendComment(card, assignmentId, button);
-    });
+      return;
+    }
 
-    root.addEventListener('input', function (event) {
-      const target = event.target;
-      if (!target?.matches?.('[data-role="answer"], [data-role="tpl-gap"]')) return;
-      const card = target.closest('[data-assignment-id]');
-      const assignmentId = card?.getAttribute('data-assignment-id');
-      if (card && assignmentId) scheduleDraftAutosave(card, assignmentId);
-    });
+    const openButton = event.target.closest('[data-open-assignment]');
+    if (openButton) {
+      const assignmentId = openButton.getAttribute('data-open-assignment');
+      const safeId = window.CSS?.escape ? CSS.escape(assignmentId) : assignmentId;
+      const card = root.querySelector(`[data-assignment-id="${safeId}"]`);
+      const details = card?.querySelector('.sd-details');
 
-    root.addEventListener('change', function (event) {
-      const target = event.target;
-      if (!target?.matches?.('[data-role="tpl-choice"], [data-role="tpl-order"], [data-role="tpl-match"]')) return;
-      const card = target.closest('[data-assignment-id]');
-      const assignmentId = card?.getAttribute('data-assignment-id');
-      if (card && assignmentId) scheduleDraftAutosave(card, assignmentId);
-    });
+      if (card?.hidden) {
+        state.assignmentFilter = 'all';
 
-    root.__sdBound = true;
-  }
+        root.querySelectorAll('[data-sd-filter]').forEach((btn) => {
+          btn.classList.toggle('is-active', btn.getAttribute('data-sd-filter') === 'all');
+        });
 
+        root.querySelectorAll('[data-assignment-filter]').forEach((item) => {
+          item.hidden = false;
+        });
+      }
+
+      if (details) {
+        details.open = true;
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      return;
+    }
+
+    const button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    const action = button.getAttribute('data-action');
+    const card = button.closest('[data-assignment-id]');
+    if (!card) return;
+
+    const assignmentId = card.getAttribute('data-assignment-id');
+    if (!assignmentId) return;
+
+    if (action === 'save-draft') {
+      await saveAssignmentWork(card, assignmentId, button, { mode: 'draft' });
+    }
+
+    if (action === 'submit-work') {
+      await saveAssignmentWork(card, assignmentId, button, { mode: 'submit' });
+    }
+
+    if (action === 'send-comment') {
+      await handleSendComment(card, assignmentId, button);
+    }
+  });
+
+  root.addEventListener('input', function (event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-role="answer"], [data-role="tpl-gap"]')) return;
+
+    const card = target.closest('[data-assignment-id]');
+    const assignmentId = card?.getAttribute('data-assignment-id');
+
+    if (card && assignmentId) {
+      scheduleDraftAutosave(card, assignmentId);
+    }
+  });
+
+  root.addEventListener('change', function (event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-role="tpl-choice"], [data-role="tpl-order"], [data-role="tpl-match"]')) return;
+
+    const card = target.closest('[data-assignment-id]');
+    const assignmentId = card?.getAttribute('data-assignment-id');
+
+    if (card && assignmentId) {
+      scheduleDraftAutosave(card, assignmentId);
+    }
+  });
+
+  root.__sdBound = true;
+}
   function scheduleDraftAutosave(card, assignmentId) {
     if (!assignmentId) return;
     if (sdAutosaveTimers.has(assignmentId)) {
