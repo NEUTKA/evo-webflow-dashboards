@@ -2193,22 +2193,26 @@ if (!silent) {
         return;
       }
 
-      const role = profile?.role || 'self_study';
+ const role = profile?.role || 'self_study';
 
-      if (role === 'teacher') {
-        go(TEACHER_URL);
-        return;
-      }
+if (role === 'teacher') {
+  go(TEACHER_URL);
+  return;
+}
 
-      if (role !== 'student') {
-        go(PERSONAL_URL);
-        return;
-      }
+const hasStudentModeAccess =
+  role === 'student' ||
+  role === 'self_study';
 
-      if (window.location.pathname !== STUDENT_URL) {
-        go(STUDENT_URL);
-        return;
-      }
+if (!hasStudentModeAccess) {
+  go(PERSONAL_URL);
+  return;
+}
+
+if (window.location.pathname !== STUDENT_URL) {
+  go(STUDENT_URL);
+  return;
+}
 
       injectStyles();
       showPage();
