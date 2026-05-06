@@ -909,6 +909,29 @@ function renderSimpleProgressText(assignment) {
       .sd-body{padding:18px 20px 20px}
       .sd-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
       .sd-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid #dbe7f3;background:#f8fbff;color:#0f172a;font-size:14px}
+      .sd-mode-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  border-radius:999px;
+  padding:8px 13px;
+  background:#111213;
+  color:#fff;
+  font-size:14px;
+  font-weight:800;
+  border:1px solid #111213;
+}
+
+.sd-mode-link:hover{
+  filter:brightness(1.05);
+}
+
+@media (max-width:560px){
+  .sd-mode-link{
+    width:100%;
+  }
+}
       .sd-grid{display:grid;gap:12px}
       .sd-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .sd-teacher{border:1px solid #e6ebf1;border-radius:14px;padding:14px 16px;background:#fff}
@@ -1771,18 +1794,19 @@ const assignmentsHtml = assignments.length
       <div class="sd-wrap">
         ${flashHtml}
         <div class="sd-card">
-          <div class="sd-head">
-            <div class="sd-kicker">Student dashboard</div>
-            <h1 class="sd-title">Welcome, ${escapeHtml(studentName)}</h1>
-            <div class="sd-sub">Here you can see your teachers and all assignments sent to you.</div>
-            <div class="sd-meta">
-              <div class="sd-pill">Role: student</div>
-              <div class="sd-pill">${teachers.length} teacher${teachers.length === 1 ? '' : 's'}</div>
-              <div class="sd-pill">${assignments.length} assignment${assignments.length === 1 ? '' : 's'}</div>
-              <div class="sd-pill">${escapeHtml(studentEmail)}</div>
-            </div>
-          </div>
-        </div>
+  <div class="sd-head">
+    <div class="sd-kicker">Student dashboard</div>
+    <h1 class="sd-title">Welcome, ${escapeHtml(studentName)}</h1>
+    <div class="sd-sub">Here you can see your teachers and all assignments sent to you.</div>
+    <div class="sd-meta">
+      <div class="sd-pill">Mode: student</div>
+      <div class="sd-pill">${teachers.length} teacher${teachers.length === 1 ? '' : 's'}</div>
+      <div class="sd-pill">${assignments.length} assignment${assignments.length === 1 ? '' : 's'}</div>
+      <div class="sd-pill">${escapeHtml(studentEmail)}</div>
+      <a class="sd-mode-link" href="/personal-account">Self-study mode</a>
+    </div>
+  </div>
+</div>
 ${nextActionHtml}
         <div class="sd-card">
           <div class="sd-head">
