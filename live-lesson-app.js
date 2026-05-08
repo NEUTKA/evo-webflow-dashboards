@@ -23,7 +23,7 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     user: null,
     session: null,
     students: [],
-    selectedStudentId: '',
+    selectedStudentIds: [],
     title: '',
     room: null,
     connected: false,
@@ -37,7 +37,7 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     presenceTopic: null,
     presenceState: {
       teacher: null,
-      student: null,
+      students: [],
     },
 
     chatChannel: null,
@@ -70,6 +70,25 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     return ROLE === 'teacher' ? 'Student' : 'Teacher';
   }
 
+  function getSelectedStudentIds() {
+    return Array.isArray(state.selectedStudentIds)
+      ? state.selectedStudentIds.filter(Boolean)
+      : [];
+  }
+
+  function getStudentDisplayName(student) {
+    return ((student?.full_name || '').trim() || student?.email || 'Student');
+  }
+
+  function getParticipantLabel(identity) {
+    if (!identity) return counterpartLabel();
+    if (identity === state.user?.id) return 'You';
+    const student = (state.students || []).find((x) => x.id === identity);
+    if (student) return getStudentDisplayName(student);
+    if (state.session && identity === state.session.teacher_id) return 'Teacher';
+    return String(identity).slice(0, 8);
+  }
+
   function presenceTopic() {
     return state.session ? `live:session:${state.session.id}` : null;
   }
@@ -93,13 +112,13 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
   function applyPresenceState(raw) {
     const next = {
       teacher: null,
-      student: null,
+      students: [],
     };
 
     flattenPresenceState(raw).forEach((entry) => {
       if (!entry || !entry.role) return;
       if (entry.role === 'teacher') next.teacher = entry;
-      if (entry.role === 'student') next.student = entry;
+      if (entry.role === 'student') next.students.push(entry);
     });
 
     state.presenceState = next;
@@ -108,18 +127,26 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
   }
 
   function presenceBadgeHtml(role) {
-    const who = role === 'teacher' ? 'Teacher' : 'Student';
-    const presence = state.presenceState[role];
-
-    if (!presence) {
-      return `<span class="ell-pill ell-pill-offline">${who}: Offline</span>`;
+    if (role === 'teacher') {
+      const presence = state.presenceState.teacher;
+      if (!presence) return `<span class="ell-pill ell-pill-offline">Teacher: Offline</span>`;
+      if (presence.in_room) return `<span class="ell-pill ell-pill-live">Teacher: In room</span>`;
+      return `<span class="ell-pill ell-pill-online">Teacher: Online</span>`;
     }
 
-    if (presence.in_room) {
-      return `<span class="ell-pill ell-pill-live">${who}: In room</span>`;
+    const students = state.presenceState.students || [];
+    const onlineCount = students.length;
+    const inRoomCount = students.filter((x) => x.in_room).length;
+
+    if (!onlineCount) {
+      return `<span class="ell-pill ell-pill-offline">Students: Offline</span>`;
     }
 
-    return `<span class="ell-pill ell-pill-online">${who}: Online</span>`;
+    if (inRoomCount > 0) {
+      return `<span class="ell-pill ell-pill-live">Students in room: ${inRoomCount}</span>`;
+    }
+
+    return `<span class="ell-pill ell-pill-online">Students online: ${onlineCount}</span>`;
   }
 
   async function syncPresenceTrack() {
@@ -147,7 +174,7 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
 
     state.presenceChannel = null;
     state.presenceTopic = null;
-    state.presenceState = { teacher: null, student: null };
+    state.presenceState = { teacher: null, students: [] };
   }
 
   function initPresenceChannel() {
@@ -321,6 +348,17 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
       .ell-chat-compose-row{display:flex;gap:8px}
       .ell-chat-status{font-size:12px;color:#94a3b8}
       .ell-hidden{display:none !important}
+
+      .ell-student-checklist{display:grid;gap:10px;padding:10px;border:1px solid #d0d5dd;border-radius:12px;background:#fff;max-height:260px;overflow:auto}
+      .ell-student-check{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid #eef2f6;border-radius:12px;background:#fbfdff;cursor:pointer}
+      .ell-student-check input{margin-top:3px;accent-color:#4EA9E7}
+      .ell-student-name{display:block;font-weight:700;color:#111213;font-size:14px;line-height:1.25}
+      .ell-student-email{display:block;color:#667085;font-size:12px;line-height:1.35;margin-top:2px}
+      .ell-remote-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:10px;background:#020617;overflow:auto}
+      .ell-remote-tile{position:relative;min-height:180px;background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+      .ell-remote-tile video{width:100%;height:100%;object-fit:contain;display:block;background:#020617}
+      .ell-remote-tile-screen{grid-column:1 / -1;min-height:320px}
+      .ell-remote-grid .ell-stage-placeholder{position:relative;inset:auto;min-height:100%;border-radius:14px}
 
       @media (max-width: 1100px){
         .ell-chat-drawer{width:min(36vw,420px)}
@@ -508,21 +546,58 @@ root.innerHTML = `
     const supabase = window.supabase;
     if (!supabase || !state.user) return null;
 
-    const query = supabase
+    const baseSelect = 'id, teacher_id, student_id, room_name, title, status, starts_at, ended_at, created_at, updated_at';
+
+    if (ROLE === 'teacher') {
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .select(baseSelect)
+        .eq('teacher_id', state.user.id)
+        .in('status', ['scheduled', 'live'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      return data?.[0] || null;
+    }
+
+    // New group mode: a student sees live sessions through live_session_participants.
+    const { data: participantRows, error: participantErr } = await supabase
+      .from('live_session_participants')
+      .select('session_id, status, created_at')
+      .eq('user_id', state.user.id)
+      .neq('status', 'removed')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (participantErr) throw participantErr;
+
+    const sessionIds = [...new Set((participantRows || []).map((x) => x.session_id).filter(Boolean))];
+
+    if (sessionIds.length) {
+      const { data, error } = await supabase
+        .from('live_sessions')
+        .select(baseSelect)
+        .in('id', sessionIds)
+        .in('status', ['scheduled', 'live'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      if (data?.[0]) return data[0];
+    }
+
+    // Backward compatibility with old 1:1 sessions.
+    const { data: legacyData, error: legacyError } = await supabase
       .from('live_sessions')
-      .select('id, teacher_id, student_id, room_name, title, status, starts_at, ended_at, created_at, updated_at')
+      .select(baseSelect)
+      .eq('student_id', state.user.id)
       .in('status', ['scheduled', 'live'])
       .order('created_at', { ascending: false })
       .limit(1);
 
-    const scoped =
-      ROLE === 'teacher'
-        ? query.eq('teacher_id', state.user.id)
-        : query.eq('student_id', state.user.id);
-
-    const { data, error } = await scoped;
-    if (error) throw error;
-    return data?.[0] || null;
+    if (legacyError) throw legacyError;
+    return legacyData?.[0] || null;
   }
 
   async function upsertParticipantPresence(isPresent) {
@@ -533,6 +608,7 @@ root.innerHTML = `
       session_id: state.session.id,
       user_id: state.user.id,
       role: ROLE,
+      status: isPresent ? 'joined' : 'left',
       is_present: !!isPresent,
       joined_at: isPresent ? new Date().toISOString() : null,
       left_at: isPresent ? null : new Date().toISOString(),
@@ -547,8 +623,10 @@ root.innerHTML = `
     const supabase = window.supabase;
     if (!supabase || !state.user) return;
 
-    if (!state.selectedStudentId) {
-      throw new Error('Choose a student first');
+    const selectedIds = getSelectedStudentIds();
+
+    if (!selectedIds.length) {
+      throw new Error('Choose at least one student first');
     }
 
     const roomName = `evo-live-${crypto.randomUUID()}`;
@@ -558,7 +636,8 @@ root.innerHTML = `
       .from('live_sessions')
       .insert({
         teacher_id: state.user.id,
-        student_id: state.selectedStudentId,
+        // Keep the first student for backward compatibility with older 1:1 logic.
+        student_id: selectedIds[0] || null,
         room_name: roomName,
         title,
         status: 'scheduled',
@@ -568,6 +647,29 @@ root.innerHTML = `
       .single();
 
     if (error) throw error;
+
+    const participantRows = [
+      {
+        session_id: data.id,
+        user_id: state.user.id,
+        role: 'teacher',
+        status: 'invited',
+        is_present: false,
+      },
+      ...selectedIds.map((studentId) => ({
+        session_id: data.id,
+        user_id: studentId,
+        role: 'student',
+        status: 'invited',
+        is_present: false,
+      })),
+    ];
+
+    const { error: participantError } = await supabase
+      .from('live_session_participants')
+      .upsert(participantRows, { onConflict: 'session_id,user_id' });
+
+    if (participantError) throw participantError;
 
     state.session = data;
     state.chatMessages = loadChatHistory();
@@ -699,60 +801,94 @@ function syncLocalScreenShareState() {
   }
 }
 
-function attachRemoteTrack(track, participant, publication) {
+function remoteTileId(participant, publication, track) {
+  const identity = String(participant?.identity || 'remote').replace(/[^a-zA-Z0-9_-]+/g, '-');
+  const source = publicationIsScreenShare(publication, track) ? 'screen' : 'camera';
+  return `ell-remote-tile-${identity}-${source}`;
+}
+
+function ensureRemoteGrid() {
   const remoteWrap = document.getElementById('ell-remote-stage');
-  if (!remoteWrap || !track) return;
+  if (!remoteWrap) return null;
+
+  let grid = remoteWrap.querySelector('.ell-remote-grid');
+  if (!grid) {
+    remoteWrap.innerHTML = '<div class="ell-remote-grid"></div>';
+    grid = remoteWrap.querySelector('.ell-remote-grid');
+  }
+
+  return grid;
+}
+
+function renderRemotePlaceholder() {
+  const remoteWrap = document.getElementById('ell-remote-stage');
+  if (!remoteWrap) return;
+  remoteWrap.innerHTML = `<div class="ell-stage-placeholder">Waiting for participants...</div>`;
+}
+
+function attachRemoteTrack(track, participant, publication) {
+  const grid = ensureRemoteGrid();
+  if (!grid || !track) return;
 
   const isScreen = publicationIsScreenShare(publication, track);
+  const tileId = remoteTileId(participant, publication, track);
   const labelText = isScreen
-    ? `${participant?.identity || counterpartLabel()} is sharing screen`
-    : (participant?.identity || counterpartLabel());
-
-  state.currentRemoteIdentity = participant?.identity || counterpartLabel();
+    ? `${getParticipantLabel(participant?.identity)} is sharing screen`
+    : getParticipantLabel(participant?.identity);
 
   detachTrackElements(track);
-  remoteWrap.innerHTML = '';
+
+  const oldTile = document.getElementById(tileId);
+  if (oldTile) oldTile.remove();
+
+  const tile = document.createElement('div');
+  tile.id = tileId;
+  tile.className = `ell-remote-tile ${isScreen ? 'ell-remote-tile-screen' : ''}`;
 
   const el = track.attach();
   el.className = 'ell-video';
-  remoteWrap.appendChild(el);
+  tile.appendChild(el);
 
   const label = document.createElement('div');
   label.className = 'ell-label';
   label.textContent = labelText;
-  remoteWrap.appendChild(label);
+  tile.appendChild(label);
+
+  if (isScreen) grid.prepend(tile);
+  else grid.appendChild(tile);
 }
 
   function clearRemoteTrack() {
-    const remoteWrap = document.getElementById('ell-remote-stage');
-    if (!remoteWrap) return;
-
     state.currentRemoteIdentity = null;
-    remoteWrap.innerHTML = `<div class="ell-stage-placeholder">Waiting for the other person...</div>`;
+    renderRemotePlaceholder();
+  }
+
+  function removeRemoteParticipantTiles(participant) {
+    const identity = String(participant?.identity || '').replace(/[^a-zA-Z0-9_-]+/g, '-');
+    if (!identity) return;
+    document.querySelectorAll(`[id^="ell-remote-tile-${identity}-"]`).forEach((el) => el.remove());
+
+    const grid = document.querySelector('#ell-remote-stage .ell-remote-grid');
+    if (grid && !grid.children.length) renderRemotePlaceholder();
   }
 
   function attachExistingRemoteTracks() {
     if (!state.room) return;
 
-    const candidates = [];
+    const remoteWrap = document.getElementById('ell-remote-stage');
+    if (remoteWrap) remoteWrap.innerHTML = '<div class="ell-remote-grid"></div>';
+
+    let attached = false;
 
     state.room.remoteParticipants.forEach((participant) => {
       participant.videoTrackPublications.forEach((pub) => {
         if (!pub.track) return;
-        candidates.push({ participant, pub });
+        attachRemoteTrack(pub.track, participant, pub);
+        attached = true;
       });
     });
 
-    const screenShare = candidates.find(({ pub }) => publicationIsScreenShare(pub, pub.track));
-    const camera = candidates.find(({ pub }) => !publicationIsScreenShare(pub, pub.track));
-    const chosen = screenShare || camera;
-
-    if (chosen) {
-      attachRemoteTrack(chosen.pub.track, chosen.participant, chosen.pub);
-      return;
-    }
-
-    clearRemoteTrack();
+    if (!attached) clearRemoteTrack();
   }
 
   function bindRoomEvents(LK) {
@@ -771,17 +907,14 @@ function attachRemoteTrack(track, participant, publication) {
       .on(LK.RoomEvent.TrackUnsubscribed, function (track, publication, participant) {
         try { track.detach(); } catch (_) {}
         if (track.kind === 'video') {
-          if (!state.currentRemoteIdentity || state.currentRemoteIdentity === participant.identity) {
-            clearRemoteTrack();
-            attachExistingRemoteTracks();
-          }
+          const tile = document.getElementById(remoteTileId(participant, publication, track));
+          if (tile) tile.remove();
+          const grid = document.querySelector('#ell-remote-stage .ell-remote-grid');
+          if (grid && !grid.children.length) clearRemoteTrack();
         }
       })
       .on(LK.RoomEvent.ParticipantDisconnected, function (participant) {
-        if (!state.currentRemoteIdentity || state.currentRemoteIdentity === participant.identity) {
-          clearRemoteTrack();
-          attachExistingRemoteTracks();
-        }
+        removeRemoteParticipantTiles(participant);
       })
       .on(LK.RoomEvent.Disconnected, async function () {
         state.connected = false;
@@ -1049,20 +1182,33 @@ async function toggleScreenShare() {
   }
 
   function teacherCreateForm() {
-    const options = state.students.length
+    const selected = new Set(getSelectedStudentIds());
+
+    const studentChecks = state.students.length
       ? state.students.map((student) => {
-          const label = ((student.full_name || '').trim() || student.email || 'Student') + ' — ' + (student.email || '');
-          return `<option value="${escapeHtml(student.id)}" ${state.selectedStudentId === student.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+          const name = getStudentDisplayName(student);
+          const email = student.email || '';
+          const checked = selected.has(student.id) ? 'checked' : '';
+
+          return `
+            <label class="ell-student-check">
+              <input type="checkbox" data-student-check value="${escapeHtml(student.id)}" ${checked} />
+              <span>
+                <span class="ell-student-name">${escapeHtml(name)}</span>
+                <span class="ell-student-email">${escapeHtml(email)}</span>
+              </span>
+            </label>
+          `;
         }).join('')
-      : '<option value="">No linked students</option>';
+      : '<div class="ell-empty">No linked students. Add students in Teacher Dashboard first.</div>';
 
     return `
       <div class="ell-label-stack">
-        <span>Student</span>
-        <select class="ell-select" id="ell-student-select" ${state.students.length ? '' : 'disabled'}>
-          <option value="">Choose a student</option>
-          ${options}
-        </select>
+        <span>Students</span>
+        <div class="ell-student-checklist">
+          ${studentChecks}
+        </div>
+        <div class="ell-note">Selected: ${escapeHtml(String(selected.size))}. You can create a 1:1 lesson or a group lesson.</div>
       </div>
       <div class="ell-label-stack">
         <span>Lesson title</span>
@@ -1716,7 +1862,7 @@ if (!state.session) {
           <div class="ell-head">
             <div class="ell-kicker">Session</div>
             <h2 class="ell-title" style="font-size:24px;">${ROLE === 'teacher' ? 'Create a new lesson' : 'Waiting for teacher'}</h2>
-            <div class="ell-sub">${ROLE === 'teacher' ? 'Choose a student and create a live lesson room.' : 'As soon as your teacher starts or schedules a live lesson, it will appear here.'}</div>
+            <div class="ell-sub">${ROLE === 'teacher' ? 'Choose one or more students and create a live lesson room.' : 'As soon as your teacher starts or schedules a live lesson, it will appear here.'}</div>
           </div>
           <div class="ell-body">
             ${ROLE === 'teacher' ? teacherCreateForm() : '<div class="ell-empty">No active or scheduled live lesson yet.</div>'}
@@ -1736,7 +1882,7 @@ root.innerHTML = `
 `;
     }
 
-    const studentSelect = root.querySelector('#ell-student-select');
+    const studentChecks = Array.from(root.querySelectorAll('[data-student-check]'));
     const titleInput = root.querySelector('#ell-title-input');
     const createBtn = root.querySelector('#ell-create-session');
 
@@ -1754,10 +1900,16 @@ root.innerHTML = `
     const chatFile = root.querySelector('#ell-chat-file');
     const chatRecordBtn = root.querySelector('#ell-chat-record');
 
-    if (studentSelect) {
-      studentSelect.onchange = (e) => {
-        state.selectedStudentId = e.target.value || '';
-      };
+    if (studentChecks.length) {
+      studentChecks.forEach((check) => {
+        check.onchange = () => {
+          state.selectedStudentIds = studentChecks
+            .filter((x) => x.checked)
+            .map((x) => x.value)
+            .filter(Boolean);
+          renderApp();
+        };
+      });
     }
 
     if (titleInput) {
@@ -1911,23 +2063,52 @@ if (joinBtn) {
       supabase.removeChannel(state.realtimeChannel);
     }
 
-    state.realtimeChannel = supabase
-      .channel(`live-sessions-${ROLE}-${state.user.id}`)
-      .on(
+    let channel = supabase.channel(`live-sessions-${ROLE}-${state.user.id}`);
+
+    if (ROLE === 'teacher') {
+      channel = channel.on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'live_sessions',
-          filter: `${ROLE === 'teacher' ? 'teacher_id' : 'student_id'}=eq.${state.user.id}`,
+          filter: `teacher_id=eq.${state.user.id}`,
         },
         () => {
           refreshSessionAndRender();
         }
-      )
-      .subscribe((status) => {
-        console.log('[live-lesson] realtime status:', status);
-      });
+      );
+    } else {
+      // Group mode: student sessions are discovered through live_session_participants.
+      channel = channel
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'live_session_participants',
+            filter: `user_id=eq.${state.user.id}`,
+          },
+          () => {
+            refreshSessionAndRender();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'live_sessions',
+          },
+          () => {
+            refreshSessionAndRender();
+          }
+        );
+    }
+
+    state.realtimeChannel = channel.subscribe((status) => {
+      console.log('[live-lesson] realtime status:', status);
+    });
   }
 
   async function boot() {
@@ -1952,7 +2133,7 @@ if (joinBtn) {
       if (ROLE === 'teacher') {
         state.students = await fetchTeacherStudents();
         if (state.students.length === 1) {
-          state.selectedStudentId = state.students[0].id;
+          state.selectedStudentIds = [state.students[0].id];
         }
       }
 
