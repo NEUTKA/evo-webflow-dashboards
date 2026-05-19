@@ -190,6 +190,11 @@ const state = {
     if (window.location.pathname !== url) window.location.replace(url);
   }
 
+  function isStudentDashboardPage() {
+    const path = String(window.location.pathname || '/').replace(/\/+$/, '') || '/';
+    return path === STUDENT_URL;
+  }
+
   function showPage() {
     document.getElementById('student-auth-hide')?.remove();
   }
@@ -2208,6 +2213,10 @@ if (!silent) {
   }
 }
   async function boot() {
+    if (!isStudentDashboardPage() || !rootEl()) {
+      return;
+    }
+
     try {
       const sb = await waitSupabase();
 
@@ -2245,11 +2254,6 @@ const hasStudentModeAccess =
 
 if (!hasStudentModeAccess) {
   go(PERSONAL_URL);
-  return;
-}
-
-if (window.location.pathname !== STUDENT_URL) {
-  go(STUDENT_URL);
   return;
 }
 
