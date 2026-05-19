@@ -7,6 +7,22 @@
   const ROOT_ID = 'teacher-dashboard-app';
   const SUBMISSIONS_BUCKET = 'assignment-submissions';
   const RESOURCES_BUCKET = 'assignment-resources';
+  const RESOURCE_MAX_BYTES = 10 * 1024 * 1024;
+  const VIDEO_FILE_EXTENSIONS = new Set([
+    '3g2',
+    '3gp',
+    'avi',
+    'flv',
+    'm4v',
+    'mkv',
+    'mov',
+    'mp4',
+    'mpeg',
+    'mpg',
+    'ogv',
+    'webm',
+    'wmv'
+  ]);
 
   const TEMPLATE_TYPE_REGISTRY = {
     grammar_dropdown: {
@@ -298,6 +314,90 @@
       .replace(/^_+|_+$/g, '');
   }
 
+  function getFileExtension(name) {
+    const clean = String(name || '').toLowerCase().split('?')[0].split('#')[0];
+    const parts = clean.split('.');
+    return parts.length > 1 ? parts.pop() : '';
+  }
+
+  function isVideoResourceFile(file) {
+    if (!file) return false;
+    const mime = String(file.type || '').toLowerCase();
+    if (mime.startsWith('video/')) return true;
+    return VIDEO_FILE_EXTENSIONS.has(getFileExtension(file.name));
+  }
+
+  function formatFileSize(bytes) {
+    const value = Number(bytes || 0);
+    if (value >= 1024 * 1024) return `${Math.round(value / 1024 / 1024)} MB`;
+    if (value >= 1024) return `${Math.round(value / 1024)} KB`;
+    return `${value} B`;
+  }
+
+  function validateResourceFile(file) {
+    if (!file) return { ok: false, message: 'Choose a file first.' };
+
+    if (isVideoResourceFile(file)) {
+      return { ok: false, message: 'Video files are not allowed. Please attach a document, image, audio, PDF, or another non-video file.' };
+    }
+
+    if (Number(file.size || 0) > RESOURCE_MAX_BYTES) {
+      return { ok: false, message: `File is too large. Maximum size is ${formatFileSize(RESOURCE_MAX_BYTES)} per file.` };
+    }
+
+    return { ok: true, message: '' };
+  }
+
+  function validateResourceFiles(files) {
+    const list = Array.from(files || []);
+
+    for (const file of list) {
+      const validation = validateResourceFile(file);
+      if (!validation.ok) {
+        return {
+          ok: false,
+          message: `${file?.name || 'File'}: ${validation.message}`
+        };
+      }
+    }
+
+    return { ok: true, message: '' };
+  }
+
+  async function uploadAssignmentResourceFile(supabase, assignmentId, teacherId, file) {
+    const validation = validateResourceFile(file);
+    if (!validation.ok) throw new Error(validation.message);
+
+    const safeName = sanitizeFileName(file.name || 'file');
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${teacherId}/${assignmentId}/${unique}-${safeName}`;
+
+    const { error: uploadErr } = await supabase.storage.from(RESOURCES_BUCKET).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
+    });
+    if (uploadErr) throw uploadErr;
+
+    const { error: insertErr } = await supabase.from('assignment_resources').insert({
+      assignment_id: assignmentId,
+      teacher_id: teacherId,
+      file_path: path,
+      file_name: file.name || safeName,
+      file_size: file.size || null,
+      mime_type: file.type || null
+    });
+    if (insertErr) throw insertErr;
+  }
+
+  async function uploadAssignmentResourceFiles(supabase, assignmentId, teacherId, files) {
+    const list = Array.from(files || []);
+    for (const file of list) {
+      await uploadAssignmentResourceFile(supabase, assignmentId, teacherId, file);
+    }
+    return list.length;
+  }
+
   async function createSignedUrl(bucket, filePath) {
     if (!filePath) return '';
     try {
@@ -354,6 +454,15 @@
   }
   function setCardActionMessage(card, role, type, message) {
     const el = card?.querySelector(`[data-role="${role}"]`);
+    if (!el) return;
+
+    el.classList.remove('is-info', 'is-success', 'is-warning', 'is-error');
+    el.classList.add(`is-${type || 'info'}`);
+    el.textContent = message || '';
+  }
+
+  function setFormActionMessage(form, role, type, message) {
+    const el = form?.querySelector(`[data-role="${role}"]`);
     if (!el) return;
 
     el.classList.remove('is-info', 'is-success', 'is-warning', 'is-error');
@@ -437,6 +546,7 @@
     const miroLink = form.querySelector('#td-miro-link')?.value.trim() || '';
     const templateId = form.querySelector('#td-template-id')?.value || '';
     const cardsModuleId = form.querySelector('#td-cards-module-id')?.value || '';
+    const resourceFiles = Array.from(form.querySelector('#td-resource-files')?.files || []);
 
     return {
       draftId,
@@ -447,6 +557,7 @@
       miroLink,
       templateId,
       cardsModuleId,
+      resourceFiles,
       assignmentMode: resolveAssignmentMode(templateId, cardsModuleId)
     };
   }
@@ -1307,7 +1418,6 @@ function renderStudentTemplateAnswers(assignment) {
           <div class="td-actions" style="justify-content:space-between;align-items:center;">
             <div>
               <div class="td-name" style="font-size:20px;">${escapeHtml(modeLabel)}</div>
-              <div class="td-note">Build a typed JSON template and store it in assignment_templates.</div>
             </div>
             <div class="td-actions">
               <button class="td-btn td-btn-secondary" type="button" data-action="template-new">New</button>
@@ -2140,6 +2250,15 @@ function renderStudentTemplateAnswers(assignment) {
               <input class="td-input" id="td-miro-link" type="url" placeholder="https://miro.com/..." value="${escapeHtml(draftMiro)}" />
             </label>
 
+            <label class="td-label">
+              <span>Attach files for student (optional)</span>
+              <input class="td-input" id="td-resource-files" type="file" multiple />
+            </label>
+
+            <span class="td-action-message is-info" data-role="composer-resource-message">
+              You can attach files up to 10 MB each. Video files are not allowed.
+            </span>
+
             <div class="td-actions">
               <button class="td-btn td-btn-secondary" id="td-save-draft-btn" type="button" ${students.length ? '' : 'disabled'}>Save draft</button>
               <button class="td-btn td-btn-primary" id="td-send-btn" type="submit" ${students.length ? '' : 'disabled'}>Send to student</button>
@@ -2367,6 +2486,7 @@ function renderStudentTemplateAnswers(assignment) {
                       </label>
                       <div class="td-actions" style="align-items:end;">
                         <button class="td-btn td-btn-secondary" type="button" data-action="upload-resource">Upload file</button>
+                        <span class="td-action-message is-info" data-role="resource-message">Max 10 MB. Video files are not allowed.</span>
                       </div>
                     </div>
                   </div>
@@ -3768,6 +3888,13 @@ assignments = (assignmentsRows || []).map((a) => {
       return;
     }
 
+    const resourceValidation = validateResourceFiles(data.resourceFiles);
+    if (!resourceValidation.ok) {
+      buttonError(saveBtn, original, 'Check files');
+      setFormActionMessage(form, 'composer-resource-message', 'error', resourceValidation.message);
+      return;
+    }
+
     startButtonFeedback(saveBtn, 'Saving...');
 
     try {
@@ -3811,6 +3938,8 @@ assignments = (assignmentsRows || []).map((a) => {
       state.draftAssignmentId = saved.id;
       state.assignmentDraft.id = saved.id;
 
+      await uploadAssignmentResourceFiles(supabase, saved.id, teacherId, data.resourceFiles);
+
       finishButtonFeedback(saveBtn, original, true, 'Saved');
       await fetchDashboardData();
       renderDashboard();
@@ -3843,6 +3972,13 @@ assignments = (assignmentsRows || []).map((a) => {
 
     if (!data.title) {
       buttonError(sendBtn, original, 'Enter title');
+      return;
+    }
+
+    const resourceValidation = validateResourceFiles(data.resourceFiles);
+    if (!resourceValidation.ok) {
+      buttonError(sendBtn, original, 'Check files');
+      setFormActionMessage(form, 'composer-resource-message', 'error', resourceValidation.message);
       return;
     }
 
@@ -3884,6 +4020,8 @@ assignments = (assignmentsRows || []).map((a) => {
         if (error) throw error;
         assignmentId = created.id;
       }
+
+      await uploadAssignmentResourceFiles(supabase, assignmentId, teacherId, data.resourceFiles);
 
       const { data: existingRecipient } = await supabase
         .from('assignment_recipients')
@@ -4106,39 +4244,31 @@ assignments = (assignmentsRows || []).map((a) => {
 
     if (!file) {
       buttonError(button, original, 'Choose file');
+      setCardActionMessage(card, 'resource-message', 'error', 'Choose a file first.');
+      return;
+    }
+
+    const validation = validateResourceFile(file);
+    if (!validation.ok) {
+      buttonError(button, original, 'Check file');
+      setCardActionMessage(card, 'resource-message', 'error', validation.message);
       return;
     }
 
     startButtonFeedback(button, 'Uploading...');
 
     try {
-      const safeName = sanitizeFileName(file.name || 'file');
-      const path = `${state.userId}/${assignmentId}/${Date.now()}-${safeName}`;
-
-      const { error: uploadErr } = await supabase.storage.from(RESOURCES_BUCKET).upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type || 'application/octet-stream'
-      });
-      if (uploadErr) throw uploadErr;
-
-      const { error: insertErr } = await supabase.from('assignment_resources').insert({
-        assignment_id: assignmentId,
-        teacher_id: state.userId,
-        file_path: path,
-        file_name: file.name || safeName,
-        file_size: file.size || null,
-        mime_type: file.type || null
-      });
-      if (insertErr) throw insertErr;
+      await uploadAssignmentResourceFile(supabase, assignmentId, state.userId, file);
 
       state.activeView = 'assignments';
       state.openAssignmentId = assignmentId;
       await fetchDashboardData();
       renderDashboard();
       finishButtonFeedbackBySelector(`[data-assignment-id="${assignmentId}"] [data-action="upload-resource"]`, original, true, 'Uploaded');
+      setCardActionMessage(rootEl()?.querySelector(`[data-assignment-id="${assignmentId}"]`), 'resource-message', 'success', 'File uploaded.');
     } catch (err) {
       console.error('[teacher-dashboard] upload resource error:', err);
+      setCardActionMessage(card, 'resource-message', 'error', err?.message || 'Failed to upload file.');
       buttonError(button, original, 'Failed');
     }
   }
