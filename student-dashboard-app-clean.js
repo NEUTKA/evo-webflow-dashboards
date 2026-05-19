@@ -55,7 +55,9 @@ const state = {
   templates: [],
   modules: [],
   flash: null,
-  assignmentFilter: 'all'
+  assignmentFilter: 'all',
+  openAssignmentId: null,
+  accountBusy: false
 };
 
   let sdRealtimeChannel = null;
@@ -1269,6 +1271,72 @@ function renderSimpleProgressText(assignment) {
   align-items:center;
 }
 
+.sd-account-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.sd-account-panel{
+  border:1px solid #e6ebf1;
+  border-radius:14px;
+  padding:16px;
+  background:#fff;
+  display:grid;
+  gap:12px;
+}
+
+.sd-account-panel.is-danger{
+  border-color:#fecaca;
+  background:#fffafa;
+}
+
+.sd-account-panel h3{
+  margin:0;
+  font-size:19px;
+  line-height:1.2;
+}
+
+.sd-account-panel p{
+  margin:0;
+  color:#667085;
+  font-size:14px;
+  line-height:1.55;
+}
+
+.sd-account-message{
+  min-height:40px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid #dbe7f3;
+  background:#f8fbff;
+  color:#475467;
+  font-size:14px;
+  line-height:1.45;
+  font-weight:650;
+}
+
+.sd-account-message.is-success{
+  background:#ecfdf3;
+  border-color:#b7ebc6;
+  color:#027a48;
+}
+
+.sd-account-message.is-error{
+  background:#fff2f2;
+  border-color:#fecaca;
+  color:#b42318;
+}
+
+.sd-btn-danger{
+  background:#b42318;
+  color:#fff;
+}
+
+.sd-btn-danger:hover{
+  filter:brightness(.98);
+}
+
 [hidden]{
   display:none !important;
 }
@@ -1302,6 +1370,7 @@ function renderSimpleProgressText(assignment) {
         .sd-head,.sd-body{padding:16px}
         .sd-title{font-size:24px}
         .sd-grid-2{grid-template-columns:1fr}
+        .sd-account-grid{grid-template-columns:1fr}
         .sd-assignment-top,.sd-template-head{flex-direction:column;align-items:flex-start}
       }
     `;
@@ -1678,7 +1747,7 @@ const assignmentsHtml = assignments.length
             </div>
           </div>
 
-          <details class="sd-details">
+          <details class="sd-details" ${state.openAssignmentId === assignment.id ? 'open' : ''}>
             <summary>Details</summary>
 
             <div class="sd-details-body">
@@ -1789,6 +1858,60 @@ const assignmentsHtml = assignments.length
     }).join('')
   : `<div class="sd-empty">You do not have any assignments yet.</div>`;
 
+const accountSettingsHtml = `
+  <div class="sd-card" id="student-account-settings">
+    <div class="sd-head">
+      <div class="sd-kicker">Account settings</div>
+      <h2 class="sd-title" style="font-size:24px;">Password and account</h2>
+      <div class="sd-sub">Manage the login for this student account.</div>
+    </div>
+
+    <div class="sd-body">
+      <div class="sd-account-grid">
+        <div class="sd-account-panel">
+          <h3>Change password</h3>
+          <p>Create a new password for this account. You will stay logged in after changing it.</p>
+
+          <label class="sd-label">
+            <span>New password</span>
+            <input class="sd-input" data-account-role="new-password" type="password" autocomplete="new-password" placeholder="New password" />
+          </label>
+
+          <label class="sd-label">
+            <span>Confirm password</span>
+            <input class="sd-input" data-account-role="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password" />
+          </label>
+
+          <div class="sd-actions">
+            <button class="sd-btn sd-btn-primary" type="button" data-account-action="save-password">Save password</button>
+            <button class="sd-btn sd-btn-secondary" type="button" data-account-action="clear-password">Clear</button>
+          </div>
+
+          <div class="sd-account-message" data-account-role="password-message" hidden></div>
+        </div>
+
+        <div class="sd-account-panel is-danger">
+          <h3>Delete account</h3>
+          <p>
+            Permanently delete this account and its Evo-English data. This action cannot be undone.
+          </p>
+
+          <div class="sd-muted-box">
+            This deletes the current logged-in user from Evo-English, including student dashboard data connected to this account.
+          </div>
+
+          <div class="sd-actions">
+            <button class="sd-btn sd-btn-danger" type="button" data-account-action="delete-account">Delete my account</button>
+            <button class="sd-btn sd-btn-secondary" type="button" data-account-action="clear-session">Clear local session</button>
+          </div>
+
+          <div class="sd-account-message" data-account-role="delete-message" hidden></div>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+
 
     root.innerHTML = `
       <div class="sd-wrap">
@@ -1830,6 +1953,7 @@ ${nextActionHtml}
   <div class="sd-grid">${assignmentsHtml}</div>
 </div>
         </div>
+        ${accountSettingsHtml}
       </div>`;
 
     bindEvents();
@@ -1841,6 +1965,29 @@ function bindEvents() {
   if (!root || root.__sdBound) return;
 
   root.addEventListener('click', async function (event) {
+    const accountButton = event.target.closest('[data-account-action]');
+    if (accountButton) {
+      const action = accountButton.getAttribute('data-account-action');
+
+      if (action === 'save-password') {
+        await handleAccountPasswordSave(root);
+      }
+
+      if (action === 'clear-password') {
+        clearAccountPasswordFields(root);
+      }
+
+      if (action === 'delete-account') {
+        await handleAccountDelete(root);
+      }
+
+      if (action === 'clear-session') {
+        await handleAccountClearSession(root);
+      }
+
+      return;
+    }
+
     const filterButton = event.target.closest('[data-sd-filter]');
     if (filterButton) {
       const filter = filterButton.getAttribute('data-sd-filter') || 'all';
@@ -1878,6 +2025,7 @@ function bindEvents() {
       }
 
       if (details) {
+        state.openAssignmentId = assignmentId;
         details.open = true;
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -1932,8 +2080,147 @@ function bindEvents() {
     }
   });
 
+  root.addEventListener('toggle', function (event) {
+    const details = event.target;
+    if (!details?.matches?.('.sd-details')) return;
+
+    const card = details.closest('[data-assignment-id]');
+    const assignmentId = card?.getAttribute('data-assignment-id') || '';
+    if (!assignmentId) return;
+
+    state.openAssignmentId = details.open
+      ? assignmentId
+      : (state.openAssignmentId === assignmentId ? null : state.openAssignmentId);
+  }, true);
+
   root.__sdBound = true;
 }
+
+function setAccountBusy(root, busy) {
+  state.accountBusy = !!busy;
+
+  root.querySelectorAll('[data-account-action], [data-account-role="new-password"], [data-account-role="confirm-password"]').forEach((el) => {
+    el.disabled = !!busy;
+  });
+}
+
+function showAccountMessage(root, role, type, message) {
+  const el = root.querySelector(`[data-account-role="${role}"]`);
+  if (!el) return;
+
+  el.hidden = !message;
+  el.className = `sd-account-message ${type ? `is-${type}` : ''}`.trim();
+  el.textContent = message || '';
+}
+
+function clearAccountPasswordFields(root) {
+  const newEl = root.querySelector('[data-account-role="new-password"]');
+  const confirmEl = root.querySelector('[data-account-role="confirm-password"]');
+
+  if (newEl) newEl.value = '';
+  if (confirmEl) confirmEl.value = '';
+
+  showAccountMessage(root, 'password-message', '', '');
+}
+
+async function handleAccountPasswordSave(root) {
+  if (state.accountBusy) return;
+
+  const newEl = root.querySelector('[data-account-role="new-password"]');
+  const confirmEl = root.querySelector('[data-account-role="confirm-password"]');
+  const password = (newEl?.value || '').trim();
+  const confirm = (confirmEl?.value || '').trim();
+
+  if (!password || password.length < 6) {
+    showAccountMessage(root, 'password-message', 'error', 'Password must be at least 6 characters.');
+    return;
+  }
+
+  if (password !== confirm) {
+    showAccountMessage(root, 'password-message', 'error', 'Passwords do not match.');
+    return;
+  }
+
+  try {
+    setAccountBusy(root, true);
+    showAccountMessage(root, 'password-message', '', 'Saving password...');
+
+    const supabase = await waitSupabase();
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+
+    if (userErr) throw userErr;
+    if (!user) throw new Error('You must be logged in to change your password.');
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+
+    clearAccountPasswordFields(root);
+    showAccountMessage(root, 'password-message', 'success', 'Password updated successfully.');
+  } catch (err) {
+    showAccountMessage(root, 'password-message', 'error', err?.message || 'Failed to update password.');
+  } finally {
+    setAccountBusy(root, false);
+  }
+}
+
+async function handleAccountClearSession(root) {
+  if (state.accountBusy) return;
+
+  try {
+    setAccountBusy(root, true);
+    showAccountMessage(root, 'delete-message', '', 'Clearing local session...');
+
+    const supabase = await waitSupabase();
+    await supabase.auth.signOut({ scope: 'local' });
+
+    showAccountMessage(root, 'delete-message', 'success', 'Local session cleared. Redirecting...');
+    window.setTimeout(() => {
+      window.location.replace(LOGIN_URL);
+    }, 700);
+  } catch (err) {
+    showAccountMessage(root, 'delete-message', 'error', err?.message || 'Failed to clear local session.');
+    setAccountBusy(root, false);
+  }
+}
+
+async function handleAccountDelete(root) {
+  if (state.accountBusy) return;
+
+  const confirmed = window.confirm(
+    'Delete this Evo-English account permanently? This cannot be undone.'
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setAccountBusy(root, true);
+    showAccountMessage(root, 'delete-message', '', 'Deleting account...');
+
+    const supabase = await waitSupabase();
+    const { data: { user }, error: userErr } = await supabase.auth.getUser();
+
+    if (userErr) throw userErr;
+    if (!user) throw new Error('You must be logged in to delete your account.');
+
+    const { data, error } = await supabase.functions.invoke('delete-account', { body: {} });
+    if (error) throw error;
+    if (!data?.ok) throw new Error(data?.error || 'Delete failed.');
+
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (_) {}
+
+    showAccountMessage(root, 'delete-message', 'success', 'Account deleted. Redirecting...');
+
+    window.setTimeout(() => {
+      window.location.replace('/');
+    }, 900);
+  } catch (err) {
+    showAccountMessage(root, 'delete-message', 'error', err?.message || 'Failed to delete account.');
+    setAccountBusy(root, false);
+  }
+}
+
   function scheduleDraftAutosave(card, assignmentId) {
     if (!assignmentId) return;
     if (sdAutosaveTimers.has(assignmentId)) {
