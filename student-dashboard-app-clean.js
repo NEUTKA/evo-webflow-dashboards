@@ -1394,9 +1394,9 @@ function renderSimpleProgressText(assignment) {
     const templatesNormalized = (templatesRows || []).map(normalizeTemplateRow);
 
     const { data: moduleRows, error: modulesErr } = await supabase
-      .from('modules')
-      .select('id, user_id, name, is_active, created_at')
-      .eq('is_active', true);
+      .from('classroom_vocab_modules')
+      .select('id, teacher_id, title, description, is_archived, created_at, updated_at')
+      .eq('is_archived', false);
     if (modulesErr) throw modulesErr;
 
     if (assignmentIds.length) {
@@ -1456,7 +1456,11 @@ function renderSimpleProgressText(assignment) {
 
       const assignmentsById = new Map((assignmentRows || []).map(a => [a.id, a]));
       const templatesById = new Map(templatesNormalized.map(t => [t.id, t]));
-      const modulesById = new Map((moduleRows || []).map(m => [m.id, m]));
+      const teacherCardModules = (moduleRows || []).map(m => ({
+        ...m,
+        name: m.title || m.name || 'Cards module'
+      }));
+      const modulesById = new Map(teacherCardModules.map(m => [m.id, m]));
 
       assignments = (recipientRows || []).map(recipient => {
         const assignment = assignmentsById.get(recipient.assignment_id);

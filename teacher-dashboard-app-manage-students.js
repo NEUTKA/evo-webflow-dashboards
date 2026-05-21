@@ -2196,10 +2196,11 @@ function renderStudentTemplateAnswers(assignment) {
       : '<option value="">No templates available</option>';
 
     const moduleOptions = modules.length
-      ? `<option value="">No cards module</option>` + modules.map((mod) => {
-          return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(mod.name)}</option>`;
+      ? `<option value="">No teacher cards module</option>` + modules.map((mod) => {
+          const moduleName = mod.title || mod.name || 'Cards module';
+          return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(moduleName)}</option>`;
         }).join('')
-      : '<option value="">No modules available</option>';
+      : '<option value="">No teacher cards modules available</option>';
 
     return `
       <div class="td-card">
@@ -2820,10 +2821,10 @@ function renderStudentTemplateAnswers(assignment) {
     if (templatesErr) throw templatesErr;
 
     const { data: moduleRows, error: modulesErr } = await supabase
-      .from('modules')
-      .select('id, user_id, name, is_active, created_at')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
+      .from('classroom_vocab_modules')
+      .select('id, teacher_id, title, description, is_archived, created_at, updated_at')
+      .eq('teacher_id', user.id)
+      .eq('is_archived', false)
       .order('created_at', { ascending: false });
     if (modulesErr) throw modulesErr;
 
@@ -2841,7 +2842,11 @@ function renderStudentTemplateAnswers(assignment) {
 
     const templatesNormalized = (templatesRows || []).map((tpl) => normalizeTemplateRow(tpl, user.id));
     const templatesById = new Map(templatesNormalized.map((t) => [t.id, t]));
-    const modulesById = new Map((moduleRows || []).map((m) => [m.id, m]));
+    const teacherCardModules = (moduleRows || []).map((m) => ({
+      ...m,
+      name: m.title || m.name || 'Cards module'
+    }));
+    const modulesById = new Map(teacherCardModules.map((m) => [m.id, m]));
 
     if (assignmentIds.length) {
       const { data: recipients, error: recipientsErr } = await supabase
@@ -2945,7 +2950,7 @@ assignments = (assignmentsRows || []).map((a) => {
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
     state.templates = templatesNormalized;
-    state.modules = moduleRows || [];
+    state.modules = teacherCardModules;
   }
 
   function renderDashboard() {
@@ -4040,6 +4045,14 @@ assignments = (assignmentsRows || []).map((a) => {
             reviewed_status: 'not_reviewed'
           });
         if (recipientErr) throw recipientErr;
+      }
+
+      if (data.cardsModuleId) {
+        const { error: cardsAssignErr } = await supabase.rpc('classroom_vocab_assign_module', {
+          _module_id: data.cardsModuleId,
+          _student_id: data.studentId
+        });
+        if (cardsAssignErr) throw cardsAssignErr;
       }
 
       resetDraftState();
