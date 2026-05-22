@@ -24,6 +24,15 @@
     'wmv'
   ]);
 
+  function trackEvent(eventName, params = {}) {
+    try {
+      window.EvoAnalytics?.track?.(eventName, {
+        app: 'teacher_dashboard',
+        ...params
+      });
+    } catch (_) {}
+  }
+
   const TEMPLATE_TYPE_REGISTRY = {
     grammar_dropdown: {
       label: 'Grammar Dropdown',
@@ -3835,6 +3844,10 @@ assignments = (assignmentsRows || []).map((a) => {
       await fetchDashboardData();
       renderDashboard();
       finishButtonFeedbackBySelector('#td-add-student-btn', original, true, 'Added');
+      trackEvent('add_student', {
+        source: 'teacher_dashboard',
+        student_count: state.students.length
+      });
     } catch (err) {
       console.error('[teacher-dashboard] add student error:', err);
       buttonError(addBtn, original, 'Failed');
@@ -4062,6 +4075,21 @@ assignments = (assignmentsRows || []).map((a) => {
       finishButtonFeedback(sendBtn, original, true, 'Sent');
       await fetchDashboardData();
       renderDashboard();
+      trackEvent('send_assignment', {
+        assignment_id: assignmentId,
+        assignment_mode: data.assignmentMode,
+        has_template: !!data.templateId,
+        has_cards_module: !!data.cardsModuleId,
+        has_due_date: !!data.dueDateRaw,
+        has_resources: !!(data.resourceFiles && data.resourceFiles.length)
+      });
+      if (data.cardsModuleId) {
+        trackEvent('assign_card_module', {
+          source: 'assignment_composer',
+          module_id: data.cardsModuleId,
+          assignment_id: assignmentId
+        });
+      }
     } catch (err) {
       console.error('[teacher-dashboard] send assignment error:', err);
       buttonError(sendBtn, original, 'Failed');
@@ -4234,6 +4262,11 @@ assignments = (assignmentsRows || []).map((a) => {
         'success',
         reviewedStatus === 'reviewed' ? 'Review saved.' : 'Review updated.'
       );
+      trackEvent('review_submission', {
+        assignment_id: assignmentId,
+        reviewed_status: reviewedStatus,
+        has_feedback: !!teacherFeedback
+      });
     } catch (err) {
       console.error('[teacher-dashboard] save review error:', err);
 

@@ -19,6 +19,16 @@ const TOKEN_FUNCTION = config.tokenFunction || 'livekit-token';
 const CHAT_BUCKET = config.attachmentsBucket || 'live-chat-files';
 const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
 
+  function trackEvent(eventName, params = {}) {
+    try {
+      window.EvoAnalytics?.track?.(eventName, {
+        app: 'live_lesson',
+        role: ROLE,
+        ...params
+      });
+    } catch (_) {}
+  }
+
   const state = {
     user: null,
     session: null,
@@ -675,6 +685,10 @@ root.innerHTML = `
     state.chatMessages = loadChatHistory();
     await refreshPresenceBinding();
     await refreshChatBinding();
+    trackEvent('create_live_lesson', {
+      session_id: data.id,
+      participant_count: participantRows.length
+    });
   }
 
   async function markSessionLive() {
@@ -708,6 +722,9 @@ root.innerHTML = `
       .eq('id', state.session.id);
 
     if (error) throw error;
+    trackEvent('end_live_lesson', {
+      session_id: state.session.id
+    });
   }
 
   function clearRoomUiTiles() {
@@ -999,6 +1016,9 @@ async function joinRoom() {
   state.audioEnabled = false;
   state.videoEnabled = false;
   state.screenShareEnabled = false;
+  trackEvent(ROLE === 'teacher' ? 'start_live_lesson' : 'join_live_lesson', {
+    session_id: state.session.id
+  });
 
   renderApp();
   attachExistingRemoteTracks();

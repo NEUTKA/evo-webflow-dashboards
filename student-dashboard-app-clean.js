@@ -10,6 +10,15 @@
   const SUBMISSIONS_BUCKET = 'assignment-submissions';
   const RESOURCES_BUCKET = 'assignment-resources';
 
+  function trackEvent(eventName, params = {}) {
+    try {
+      window.EvoAnalytics?.track?.(eventName, {
+        app: 'student_dashboard',
+        ...params
+      });
+    } catch (_) {}
+  }
+
   const TEMPLATE_TYPE_REGISTRY = {
     grammar_dropdown: {
       label: 'Grammar Dropdown',
@@ -2122,6 +2131,14 @@ if (!silent) {
     'success',
     isSubmit ? 'Submitted for review.' : 'Draft saved.'
   );
+
+  trackEvent(isSubmit ? 'submit_assignment' : 'save_assignment_draft', {
+    assignment_id: assignmentId,
+    assignment_mode: assignment?.assignment_mode || 'manual',
+    template_type: assignment?.template_type || '',
+    has_answer_text: !!answerText,
+    has_file: !!filePayload.file_path
+  });
 }
 } catch (err) {
   console.error('[student-dashboard] save/submit work error:', err);
