@@ -66,6 +66,30 @@
     }
   };
 
+  const WEEKLY_ASSIGNMENT_TYPES = {
+    grammar_practice: 'Grammar practice',
+    vocabulary_recap: 'Vocabulary recap',
+    writing_task: 'Writing task',
+    reading_listening: 'Reading / listening',
+    extra_practice: 'Extra practice',
+    other: 'Other'
+  };
+
+  const WEEKLY_DAY_LABELS = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+  ];
+
+  const WEEKLY_PRIORITY_LABELS = {
+    required: 'Required',
+    optional: 'Optional'
+  };
+
   const state = {
     userId: null,
     teacher: null,
@@ -92,7 +116,12 @@
       description: '',
       miroLink: '',
       templateId: '',
-      cardsModuleId: ''
+      cardsModuleId: '',
+      weekLabel: '',
+      dayLabel: '',
+      lessonTopic: '',
+      assignmentType: '',
+      assignmentPriority: 'required'
     },
     templateFilters: {
       query: '',
@@ -290,6 +319,73 @@
     if (mode === 'cards') return 'Cards';
     if (mode === 'template_cards') return 'Template + cards';
     return 'Manual';
+  }
+
+  function weeklyAssignmentTypeLabel(value) {
+    return WEEKLY_ASSIGNMENT_TYPES[value] || value || '';
+  }
+
+  function weeklyPriorityLabel(value) {
+    return value === 'optional' ? WEEKLY_PRIORITY_LABELS.optional : WEEKLY_PRIORITY_LABELS.required;
+  }
+
+  function getAssignmentWeeklyMeta(value) {
+    const source = value?.content_json || value || {};
+    const priority = source.assignment_priority || source.assignmentPriority || (source.is_optional || source.isOptional ? 'optional' : 'required');
+
+    return {
+      weekLabel: source.week_label || source.weekLabel || '',
+      dayLabel: source.day_label || source.dayLabel || '',
+      lessonTopic: source.lesson_topic || source.lessonTopic || '',
+      assignmentType: source.assignment_type || source.assignmentType || '',
+      assignmentPriority: priority === 'optional' ? 'optional' : 'required'
+    };
+  }
+
+  function buildAssignmentContentJson(data) {
+    return {
+      student_id: data.studentId || null,
+      week_label: data.weekLabel || null,
+      day_label: data.dayLabel || null,
+      lesson_topic: data.lessonTopic || null,
+      assignment_type: data.assignmentType || null,
+      assignment_priority: data.assignmentPriority || 'required',
+      is_optional: data.assignmentPriority === 'optional'
+    };
+  }
+
+  function renderWeeklyMetaSpans(value) {
+    const meta = getAssignmentWeeklyMeta(value);
+    const items = [];
+
+    if (meta.weekLabel) items.push(`Week: ${meta.weekLabel}`);
+    if (meta.dayLabel) items.push(`Day: ${meta.dayLabel}`);
+    if (meta.lessonTopic) items.push(`Topic: ${meta.lessonTopic}`);
+    if (meta.assignmentType) items.push(`Type: ${weeklyAssignmentTypeLabel(meta.assignmentType)}`);
+    if (meta.assignmentPriority === 'optional') {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    } else if (items.length) {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    }
+
+    return items.map((item) => `<span>${escapeHtml(item)}</span>`).join('');
+  }
+
+  function renderWeeklyMetaDetailDivs(value) {
+    const meta = getAssignmentWeeklyMeta(value);
+    const items = [];
+
+    if (meta.weekLabel) items.push(`Week: ${meta.weekLabel}`);
+    if (meta.dayLabel) items.push(`Day: ${meta.dayLabel}`);
+    if (meta.lessonTopic) items.push(`Topic: ${meta.lessonTopic}`);
+    if (meta.assignmentType) items.push(`Type: ${weeklyAssignmentTypeLabel(meta.assignmentType)}`);
+    if (meta.assignmentPriority === 'optional') {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    } else if (items.length) {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    }
+
+    return items.map((item) => `<div>${escapeHtml(item)}</div>`).join('');
   }
 
   function effectiveReviewState(item) {
@@ -555,6 +651,11 @@
     const miroLink = form.querySelector('#td-miro-link')?.value.trim() || '';
     const templateId = form.querySelector('#td-template-id')?.value || '';
     const cardsModuleId = form.querySelector('#td-cards-module-id')?.value || '';
+    const weekLabel = form.querySelector('#td-week-label')?.value.trim() || '';
+    const dayLabel = form.querySelector('#td-day-label')?.value || '';
+    const lessonTopic = form.querySelector('#td-lesson-topic')?.value.trim() || '';
+    const assignmentType = form.querySelector('#td-assignment-type')?.value || '';
+    const assignmentPriority = form.querySelector('#td-assignment-priority')?.value || 'required';
     const resourceFiles = Array.from(form.querySelector('#td-resource-files')?.files || []);
 
     return {
@@ -566,6 +667,11 @@
       miroLink,
       templateId,
       cardsModuleId,
+      weekLabel,
+      dayLabel,
+      lessonTopic,
+      assignmentType,
+      assignmentPriority: assignmentPriority === 'optional' ? 'optional' : 'required',
       resourceFiles,
       assignmentMode: resolveAssignmentMode(templateId, cardsModuleId)
     };
@@ -581,13 +687,19 @@
       description: data.description || '',
       miroLink: data.miroLink || '',
       templateId: data.templateId || '',
-      cardsModuleId: data.cardsModuleId || ''
+      cardsModuleId: data.cardsModuleId || '',
+      weekLabel: data.weekLabel || '',
+      dayLabel: data.dayLabel || '',
+      lessonTopic: data.lessonTopic || '',
+      assignmentType: data.assignmentType || '',
+      assignmentPriority: data.assignmentPriority || 'required'
     };
     state.draftAssignmentId = data.draftId || '';
   }
 
   function setDraftStateFromAssignment(assignment) {
     const content = assignment?.content_json || {};
+    const weeklyMeta = getAssignmentWeeklyMeta(assignment);
     state.assignmentDraft = {
       id: assignment?.id || '',
       studentId: content?.student_id || '',
@@ -596,7 +708,12 @@
       description: assignment?.description || '',
       miroLink: assignment?.miro_link || '',
       templateId: assignment?.template_id || '',
-      cardsModuleId: assignment?.cards_module_id || ''
+      cardsModuleId: assignment?.cards_module_id || '',
+      weekLabel: weeklyMeta.weekLabel,
+      dayLabel: weeklyMeta.dayLabel,
+      lessonTopic: weeklyMeta.lessonTopic,
+      assignmentType: weeklyMeta.assignmentType,
+      assignmentPriority: weeklyMeta.assignmentPriority
     };
     state.draftAssignmentId = assignment?.id || '';
   }
@@ -610,7 +727,12 @@
       description: '',
       miroLink: '',
       templateId: '',
-      cardsModuleId: ''
+      cardsModuleId: '',
+      weekLabel: '',
+      dayLabel: '',
+      lessonTopic: '',
+      assignmentType: '',
+      assignmentPriority: 'required'
     };
     state.draftAssignmentId = null;
   }
@@ -2188,6 +2310,12 @@ function renderStudentTemplateAnswers(assignment) {
     const draftDescription = draft.description || '';
     const draftMiro = draft.miroLink || '';
     const draftId = draft.id || '';
+    const weeklyMeta = getAssignmentWeeklyMeta(draft);
+    const selectedWeekLabel = weeklyMeta.weekLabel;
+    const selectedDayLabel = weeklyMeta.dayLabel;
+    const selectedLessonTopic = weeklyMeta.lessonTopic;
+    const selectedAssignmentType = weeklyMeta.assignmentType;
+    const selectedAssignmentPriority = weeklyMeta.assignmentPriority;
 
     const studentOptions = students.length
       ? students.map((student) => {
@@ -2210,6 +2338,18 @@ function renderStudentTemplateAnswers(assignment) {
           return `<option value="${escapeHtml(mod.id)}" ${selectedModuleId === mod.id ? 'selected' : ''}>${escapeHtml(moduleName)}</option>`;
         }).join('')
       : '<option value="">No teacher cards modules available</option>';
+
+    const dayOptions = `<option value="">No day</option>` + WEEKLY_DAY_LABELS.map((day) => (
+      `<option value="${escapeHtml(day)}" ${selectedDayLabel === day ? 'selected' : ''}>${escapeHtml(day)}</option>`
+    )).join('');
+
+    const assignmentTypeOptions = `<option value="">No type</option>` + Object.entries(WEEKLY_ASSIGNMENT_TYPES).map(([value, label]) => (
+      `<option value="${escapeHtml(value)}" ${selectedAssignmentType === value ? 'selected' : ''}>${escapeHtml(label)}</option>`
+    )).join('');
+
+    const priorityOptions = Object.entries(WEEKLY_PRIORITY_LABELS).map(([value, label]) => (
+      `<option value="${escapeHtml(value)}" ${selectedAssignmentPriority === value ? 'selected' : ''}>${escapeHtml(label)}</option>`
+    )).join('');
 
     return `
       <div class="td-card">
@@ -2243,6 +2383,39 @@ function renderStudentTemplateAnswers(assignment) {
                 <span>Attach cards module</span>
                 <select class="td-select" id="td-cards-module-id">${moduleOptions}</select>
               </label>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Weekly plan</span>
+                <input class="td-input" id="td-week-label" type="text" placeholder="For example: Week 3 or Week of May 25" value="${escapeHtml(selectedWeekLabel)}" />
+              </label>
+
+              <label class="td-label">
+                <span>Day</span>
+                <select class="td-select" id="td-day-label">${dayOptions}</select>
+              </label>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Lesson topic</span>
+                <input class="td-input" id="td-lesson-topic" type="text" placeholder="For example: Present Simple review" value="${escapeHtml(selectedLessonTopic)}" />
+              </label>
+
+              <label class="td-label">
+                <span>Assignment type</span>
+                <select class="td-select" id="td-assignment-type">${assignmentTypeOptions}</select>
+              </label>
+            </div>
+
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Required or optional</span>
+                <select class="td-select" id="td-assignment-priority">${priorityOptions}</select>
+              </label>
+
+              <div class="td-note" style="align-self:end;">Use optional for extra practice or recap tasks that are not mandatory.</div>
             </div>
 
             <label class="td-label">
@@ -2328,6 +2501,8 @@ function renderStudentTemplateAnswers(assignment) {
           const reviewUi = getTeacherReviewUi(assignment);
           const display = getTeacherAssignmentDisplay(assignment);
           const progressText = renderTeacherProgressText(assignment);
+          const weeklyMetaSpans = renderWeeklyMetaSpans(assignment);
+          const weeklyMetaDetails = renderWeeklyMetaDetailDivs(assignment);
           const reviewSelectValue = effectiveReview === 'awaiting_review'
             ? 'reviewed'
             : (assignment.reviewed_status || 'not_reviewed');
@@ -2442,6 +2617,7 @@ function renderStudentTemplateAnswers(assignment) {
               <span>Student: ${escapeHtml(studentLabel)}</span>
               ${assignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(assignment.due_date))}</span>` : ''}
               ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
+              ${weeklyMetaSpans}
               ${assignment.template_title ? `<span>${escapeHtml(assignment.template_title)}</span>` : ''}
             </div>
           `;
@@ -2451,6 +2627,7 @@ function renderStudentTemplateAnswers(assignment) {
               <div>Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
               <div>Assignment status: ${escapeHtml(assignmentStatusText)}</div>
               <div>Mode: ${escapeHtml(modeText)}</div>
+              ${weeklyMetaDetails}
               ${assignment.module_name ? `<div>Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
               ${assignment.is_sent ? `<div>Review: ${escapeHtml(effectiveReviewText)}</div>` : ''}
               ${assignment.recipient_last_activity_at ? `<div>Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
@@ -3926,9 +4103,7 @@ assignments = (assignmentsRows || []).map((a) => {
         template_id: data.templateId || null,
         cards_module_id: data.cardsModuleId || null,
         assignment_mode: data.assignmentMode,
-        content_json: {
-          student_id: data.studentId || null
-        }
+        content_json: buildAssignmentContentJson(data)
       };
 
       let saved;
@@ -4015,9 +4190,7 @@ assignments = (assignmentsRows || []).map((a) => {
         template_id: data.templateId || null,
         cards_module_id: data.cardsModuleId || null,
         assignment_mode: data.assignmentMode,
-        content_json: {
-          student_id: data.studentId || null
-        }
+        content_json: buildAssignmentContentJson(data)
       };
 
       if (assignmentId) {

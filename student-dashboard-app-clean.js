@@ -52,6 +52,20 @@
     }
   };
 
+  const WEEKLY_ASSIGNMENT_TYPES = {
+    grammar_practice: 'Grammar practice',
+    vocabulary_recap: 'Vocabulary recap',
+    writing_task: 'Writing task',
+    reading_listening: 'Reading / listening',
+    extra_practice: 'Extra practice',
+    other: 'Other'
+  };
+
+  const WEEKLY_PRIORITY_LABELS = {
+    required: 'Required',
+    optional: 'Optional'
+  };
+
 const state = {
   userId: null,
   student: null,
@@ -283,6 +297,61 @@ const state = {
     if (mode === 'cards') return 'Cards';
     if (mode === 'template_cards') return 'Template + cards';
     return 'Manual';
+  }
+
+  function weeklyAssignmentTypeLabel(value) {
+    return WEEKLY_ASSIGNMENT_TYPES[value] || value || '';
+  }
+
+  function weeklyPriorityLabel(value) {
+    return value === 'optional' ? WEEKLY_PRIORITY_LABELS.optional : WEEKLY_PRIORITY_LABELS.required;
+  }
+
+  function getAssignmentWeeklyMeta(value) {
+    const source = value?.content_json || value || {};
+    const priority = source.assignment_priority || source.assignmentPriority || (source.is_optional || source.isOptional ? 'optional' : 'required');
+
+    return {
+      weekLabel: source.week_label || source.weekLabel || '',
+      dayLabel: source.day_label || source.dayLabel || '',
+      lessonTopic: source.lesson_topic || source.lessonTopic || '',
+      assignmentType: source.assignment_type || source.assignmentType || '',
+      assignmentPriority: priority === 'optional' ? 'optional' : 'required'
+    };
+  }
+
+  function renderWeeklyMetaSpans(value) {
+    const meta = getAssignmentWeeklyMeta(value);
+    const items = [];
+
+    if (meta.weekLabel) items.push(`Week: ${meta.weekLabel}`);
+    if (meta.dayLabel) items.push(`Day: ${meta.dayLabel}`);
+    if (meta.lessonTopic) items.push(`Topic: ${meta.lessonTopic}`);
+    if (meta.assignmentType) items.push(`Type: ${weeklyAssignmentTypeLabel(meta.assignmentType)}`);
+    if (meta.assignmentPriority === 'optional') {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    } else if (items.length) {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    }
+
+    return items.map((item) => `<span>${escapeHtml(item)}</span>`).join('');
+  }
+
+  function renderWeeklyMetaDetailDivs(value) {
+    const meta = getAssignmentWeeklyMeta(value);
+    const items = [];
+
+    if (meta.weekLabel) items.push(`Week: ${meta.weekLabel}`);
+    if (meta.dayLabel) items.push(`Day: ${meta.dayLabel}`);
+    if (meta.lessonTopic) items.push(`Topic: ${meta.lessonTopic}`);
+    if (meta.assignmentType) items.push(`Type: ${weeklyAssignmentTypeLabel(meta.assignmentType)}`);
+    if (meta.assignmentPriority === 'optional') {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    } else if (items.length) {
+      items.push(weeklyPriorityLabel(meta.assignmentPriority));
+    }
+
+    return items.map((item) => `<div>${escapeHtml(item)}</div>`).join('');
   }
 
   function sanitizeFileName(name) {
@@ -1536,6 +1605,7 @@ const nextActionHtml = nextAssignment ? (() => {
   const teacher = teachers.find(t => t.id === nextAssignment.teacher_id);
   const teacherLabel = teacher?.email || 'Your teacher';
   const progressText = renderSimpleProgressText(nextAssignment);
+  const weeklyMetaSpans = renderWeeklyMetaSpans(nextAssignment);
 
   return `
     <div class="sd-card sd-next-card">
@@ -1550,6 +1620,7 @@ const nextActionHtml = nextAssignment ? (() => {
               <span>Teacher: ${escapeHtml(teacherLabel)}</span>
               ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
               ${nextAssignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(nextAssignment.due_date))}</span>` : ''}
+              ${weeklyMetaSpans}
             </div>
           </div>
 
@@ -1607,6 +1678,8 @@ const assignmentsHtml = assignments.length
       const filterKey = getAssignmentFilterKey(assignment);
       const actionUi = getStudentActionUi(assignment);
       const progressText = renderSimpleProgressText(assignment);
+      const weeklyMetaSpans = renderWeeklyMetaSpans(assignment);
+      const weeklyMetaDetails = renderWeeklyMetaDetailDivs(assignment);
 
       const fileInfo = submission?.file_name
         ? `<div class="sd-file">
@@ -1658,6 +1731,7 @@ const assignmentsHtml = assignments.length
           <span>Teacher: ${escapeHtml(teacherLabel)}</span>
           ${assignment.due_date ? `<span>Due: ${escapeHtml(formatDateTime(assignment.due_date))}</span>` : ''}
           ${progressText ? `<span>Progress: ${escapeHtml(progressText)}</span>` : ''}
+          ${weeklyMetaSpans}
         </div>
       `;
 
@@ -1665,6 +1739,7 @@ const assignmentsHtml = assignments.length
         <div class="sd-tech-details">
           <div>Created: ${escapeHtml(formatDateTime(assignment.created_at))}</div>
           <div>Mode: ${escapeHtml(assignmentModeLabel(assignment.assignment_mode))}</div>
+          ${weeklyMetaDetails}
           ${assignment.template_title ? `<div>Template: ${escapeHtml(assignment.template_title)}</div>` : ''}
           ${assignment.module_name ? `<div>Cards: ${escapeHtml(assignment.module_name)}</div>` : ''}
           ${assignment.recipient_last_activity_at ? `<div>Last activity: ${escapeHtml(formatDateTime(assignment.recipient_last_activity_at))}</div>` : ''}
