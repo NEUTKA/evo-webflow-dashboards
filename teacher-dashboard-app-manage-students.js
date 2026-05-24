@@ -90,6 +90,22 @@
     optional: 'Optional'
   };
 
+  const STUDENT_NOTE_TAGS = {
+    late: 'Late',
+    reteach: 'Reteach',
+    low_after_reteach: 'Low after reteach',
+    extra_practice_needed: 'Extra practice needed',
+    absent: 'Absent',
+    good_work: 'Good work'
+  };
+
+  const RETEACHING_STATUS_LABELS = {
+    none: 'No reteaching needed',
+    needs_reteaching: 'Needs reteaching',
+    retaught: 'Retaught',
+    extra_practice_needed: 'Extra practice needed'
+  };
+
   const state = {
     userId: null,
     teacher: null,
@@ -99,6 +115,11 @@
     assignments: [],
     commentsByAssignment: new Map(),
     resourcesByAssignment: new Map(),
+    weeklyPlans: [],
+    weeklyPlanItemsByPlan: new Map(),
+    weeklyPlanFilesByItem: new Map(),
+    studentNotes: [],
+    studentNotesByStudent: new Map(),
     templates: [],
     modules: [],
     flash: null,
@@ -329,6 +350,43 @@
     return value === 'optional' ? WEEKLY_PRIORITY_LABELS.optional : WEEKLY_PRIORITY_LABELS.required;
   }
 
+  function studentNoteTagLabel(value) {
+    return STUDENT_NOTE_TAGS[value] || value || 'Note';
+  }
+
+  function reteachingStatusLabel(value) {
+    return RETEACHING_STATUS_LABELS[value] || RETEACHING_STATUS_LABELS.none;
+  }
+
+  function formatDateOnly(value) {
+    if (!value) return '';
+    try {
+      const d = new Date(`${value}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return '';
+    }
+  }
+
+  function todayDateValue() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function renderOptions(options, selectedValue = '') {
+    return options.map((option) => {
+      const value = Array.isArray(option) ? option[0] : option.value;
+      const label = Array.isArray(option) ? option[1] : option.label;
+      return `<option value="${escapeHtml(value)}" ${selectedValue === value ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+    }).join('');
+  }
+
   function getAssignmentWeeklyMeta(value) {
     const source = value?.content_json || value || {};
     const priority = source.assignment_priority || source.assignmentPriority || (source.is_optional || source.isOptional ? 'optional' : 'required');
@@ -501,6 +559,55 @@
       await uploadAssignmentResourceFile(supabase, assignmentId, teacherId, file);
     }
     return list.length;
+  }
+
+  async function uploadWeeklyPlanItemFiles(supabase, planId, itemId, teacherId, files) {
+    const list = Array.from(files || []);
+
+    for (const file of list) {
+      const validation = validateResourceFile(file);
+      if (!validation.ok) throw new Error(validation.message);
+
+      const safeName = sanitizeFileName(file.name || 'file');
+      const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const path = `${teacherId}/weekly-plans/${planId}/${itemId}/${unique}-${safeName}`;
+
+      const { error: uploadErr } = await supabase.storage.from(RESOURCES_BUCKET).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || 'application/octet-stream'
+      });
+      if (uploadErr) throw uploadErr;
+
+      const { error: insertErr } = await supabase.from('teacher_weekly_plan_files').insert({
+        weekly_plan_id: planId,
+        weekly_plan_item_id: itemId,
+        teacher_id: teacherId,
+        file_path: path,
+        file_name: file.name || safeName,
+        file_size: file.size || null,
+        mime_type: file.type || null
+      });
+      if (insertErr) throw insertErr;
+    }
+
+    return list.length;
+  }
+
+  async function copyWeeklyPlanFilesToAssignment(supabase, assignmentId, teacherId, files) {
+    const rows = Array.from(files || []).map((file) => ({
+      assignment_id: assignmentId,
+      teacher_id: teacherId,
+      file_path: file.file_path,
+      file_name: file.file_name,
+      file_size: file.file_size || null,
+      mime_type: file.mime_type || null
+    }));
+
+    if (!rows.length) return 0;
+    const { error } = await supabase.from('assignment_resources').insert(rows);
+    if (error) throw error;
+    return rows.length;
   }
 
   async function createSignedUrl(bucket, filePath) {
@@ -2170,8 +2277,10 @@ function renderStudentTemplateAnswers(assignment) {
         <div class="td-body">
           <div class="td-actions td-quick-actions">
             <button class="td-btn td-btn-primary" type="button" data-action="switch-view" data-view="assignments" data-open-composer="true">Create assignment</button>
+            <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="weekly_plans">Plan week</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="students">Add student</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="templates">Open templates</button>
+            <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="student_notes">Student notes</button>
           </div>
           <div class="td-section">
             <div class="td-label"><span>Recent activity</span></div>
@@ -2207,7 +2316,9 @@ function renderStudentTemplateAnswers(assignment) {
       ['overview', 'Overview'],
       ['students', 'Students'],
       ['assignments', 'Assignments'],
-      ['templates', 'Templates']
+      ['weekly_plans', 'Weekly plans'],
+      ['templates', 'Templates'],
+      ['student_notes', 'Student notes']
     ];
 
     return `
@@ -2567,11 +2678,26 @@ function renderStudentTemplateAnswers(assignment) {
                       <option value="reviewed" ${reviewSelectValue === 'reviewed' ? 'selected' : ''}>Reviewed</option>
                     </select>
                   </label>
+
+                  <label class="td-label">
+                    <span>Reteaching workflow</span>
+                    <select class="td-select" data-role="reteaching-status">
+                      <option value="none" ${(assignment.reteaching_status || 'none') === 'none' ? 'selected' : ''}>No reteaching needed</option>
+                      <option value="needs_reteaching" ${(assignment.reteaching_status || 'none') === 'needs_reteaching' ? 'selected' : ''}>Needs reteaching</option>
+                      <option value="retaught" ${(assignment.reteaching_status || 'none') === 'retaught' ? 'selected' : ''}>Retaught</option>
+                      <option value="extra_practice_needed" ${(assignment.reteaching_status || 'none') === 'extra_practice_needed' ? 'selected' : ''}>Extra practice needed</option>
+                    </select>
+                  </label>
                 </div>
 
                 <label class="td-label">
                   <span>Teacher feedback</span>
                   <textarea class="td-textarea" data-role="teacher-feedback" placeholder="Write feedback for the student.">${escapeHtml(assignment.teacher_feedback || '')}</textarea>
+                </label>
+
+                <label class="td-label">
+                  <span>Reteaching note</span>
+                  <textarea class="td-textarea td-textarea-sm" data-role="reteaching-note" placeholder="For example: Needs another Past Simple review next lesson.">${escapeHtml(assignment.reteaching_note || '')}</textarea>
                 </label>
 
                 <div class="td-action-row">
@@ -2711,6 +2837,357 @@ function renderStudentTemplateAnswers(assignment) {
         <div class="td-body">
           ${filtersHtml}
           <div class="td-grid">${assignmentsHtml}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWeeklyPlansViewHtml() {
+    const students = state.students || [];
+    const plans = state.weeklyPlans || [];
+    const templates = state.templates || [];
+    const modules = state.modules || [];
+
+    const studentOptions = students.length
+      ? students.map((student) => {
+          const label = ((student.full_name || '').trim() || student.email || 'Student') + ' - ' + (student.email || '');
+          return `<option value="${escapeHtml(student.id)}">${escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No students available</option>';
+
+    const dayOptions = `<option value="">No day</option>` + renderOptions(WEEKLY_DAY_LABELS.map((day) => [day, day]));
+    const priorityOptions = renderOptions(Object.entries(WEEKLY_PRIORITY_LABELS));
+    const assignmentTypeOptions = `<option value="">No type</option>` + renderOptions(Object.entries(WEEKLY_ASSIGNMENT_TYPES));
+    const templateOptions = `<option value="">No template</option>` + templates.map((tpl) => {
+      const label = `${tpl.title} - ${TEMPLATE_TYPE_REGISTRY[tpl.template_type]?.label || tpl.category || 'Template'}`;
+      return `<option value="${escapeHtml(tpl.id)}">${escapeHtml(label)}</option>`;
+    }).join('');
+    const moduleOptions = `<option value="">No teacher cards module</option>` + modules.map((mod) => {
+      const moduleName = mod.title || mod.name || 'Cards module';
+      return `<option value="${escapeHtml(mod.id)}">${escapeHtml(moduleName)}</option>`;
+    }).join('');
+
+    const plansHtml = plans.length
+      ? plans.map((plan) => {
+          const student = state.studentsById.get(plan.student_id) || null;
+          const studentLabel = (student?.full_name || '').trim() || student?.email || 'Student';
+          const items = state.weeklyPlanItemsByPlan.get(plan.id) || [];
+          const sentText = plan.status === 'sent' ? `Sent: ${formatDateTime(plan.sent_at)}` : 'Draft';
+
+          const itemsHtml = items.length
+            ? items.map((item, index) => {
+                const files = state.weeklyPlanFilesByItem.get(item.id) || [];
+                const template = item.template_id ? templates.find((tpl) => tpl.id === item.template_id) : null;
+                const module = item.cards_module_id ? modules.find((mod) => mod.id === item.cards_module_id) : null;
+                const filesHtml = files.length
+                  ? files.map((file) => `
+                      <div class="td-resource">
+                        <div class="td-resource-meta">
+                          ${escapeHtml(file.file_name)} • ${escapeHtml(formatDateTime(file.created_at))}
+                          ${file.file_size ? ` • ${escapeHtml(formatFileSize(file.file_size))}` : ''}
+                        </div>
+                        ${file.signed_url ? `<a class="td-link" href="${escapeHtml(file.signed_url)}" target="_blank" rel="noopener noreferrer">Download</a>` : ''}
+                      </div>
+                    `).join('')
+                  : '<div class="td-muted-box">No files attached to this weekly task.</div>';
+
+                return `
+                  <div class="td-section" data-weekly-plan-item-id="${escapeHtml(item.id)}">
+                    <div class="td-repeat-head">
+                      <div>
+                        <div class="td-name" style="font-size:17px;">${escapeHtml(item.title)}</div>
+                        <div class="td-note">
+                          ${item.day_label ? `${escapeHtml(item.day_label)} • ` : ''}
+                          ${item.due_date ? `Due: ${escapeHtml(formatDateTime(item.due_date))} • ` : ''}
+                          ${escapeHtml(weeklyPriorityLabel(item.assignment_priority))}
+                        </div>
+                      </div>
+                      <div class="td-actions">
+                        ${item.created_assignment_id ? `<span class="td-action-message is-success">Sent as assignment</span>` : ''}
+                        ${plan.status !== 'sent' ? `<button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="delete-weekly-plan-item" data-weekly-plan-item-id="${escapeHtml(item.id)}">Remove</button>` : ''}
+                      </div>
+                    </div>
+                    <div class="td-compact-meta">
+                      ${item.lesson_topic ? `<span>Topic: ${escapeHtml(item.lesson_topic)}</span>` : ''}
+                      ${item.assignment_type ? `<span>Type: ${escapeHtml(weeklyAssignmentTypeLabel(item.assignment_type))}</span>` : ''}
+                      ${template ? `<span>Template: ${escapeHtml(template.title)}</span>` : ''}
+                      ${module ? `<span>Cards: ${escapeHtml(module.title || module.name || 'Cards module')}</span>` : ''}
+                      <span>Order: ${escapeHtml(index + 1)}</span>
+                    </div>
+                    ${item.description ? `<div class="td-muted-box" style="margin-top:10px;">${escapeHtml(item.description)}</div>` : ''}
+                    <div class="td-resource-list" style="margin-top:10px;">${filesHtml}</div>
+                  </div>
+                `;
+              }).join('')
+            : '<div class="td-empty">No tasks in this weekly plan yet.</div>';
+
+          return `
+            <article class="td-assignment" data-weekly-plan-id="${escapeHtml(plan.id)}">
+              <div class="td-assignment-summary">
+                <div class="td-assignment-main">
+                  <div class="td-assignment-title">${escapeHtml(plan.title)}</div>
+                  <div class="td-assignment-desc">${escapeHtml(plan.notes || 'No plan notes')}</div>
+                  <div class="td-compact-meta">
+                    <span>Student: ${escapeHtml(studentLabel)}</span>
+                    ${plan.week_label ? `<span>${escapeHtml(plan.week_label)}</span>` : ''}
+                    ${plan.week_start ? `<span>Start: ${escapeHtml(formatDateOnly(plan.week_start))}</span>` : ''}
+                    ${plan.week_end ? `<span>End: ${escapeHtml(formatDateOnly(plan.week_end))}</span>` : ''}
+                    <span>${escapeHtml(sentText)}</span>
+                    <span>${escapeHtml(items.length)} task${items.length === 1 ? '' : 's'}</span>
+                  </div>
+                </div>
+                <div class="td-assignment-side">
+                  <span class="td-badge ${plan.status === 'sent' ? 'reviewed' : 'draft'}">${escapeHtml(plan.status === 'sent' ? 'Sent' : 'Draft')}</span>
+                  <button class="td-btn td-btn-primary" type="button" data-action="send-weekly-plan" data-weekly-plan-id="${escapeHtml(plan.id)}" ${plan.status === 'sent' || !items.length ? 'disabled' : ''}>Send weekly plan</button>
+                </div>
+              </div>
+
+              <details class="td-details">
+                <summary>Plan details</summary>
+                <div class="td-details-body">
+                  ${plan.status !== 'sent' ? `
+                    <form class="td-form td-section" data-weekly-plan-item-form data-weekly-plan-id="${escapeHtml(plan.id)}">
+                      <div class="td-label"><span>Add task to this week</span></div>
+                      <div class="td-grid-2">
+                        <label class="td-label">
+                          <span>Day</span>
+                          <select class="td-select" data-role="weekly-item-day">${dayOptions}</select>
+                        </label>
+                        <label class="td-label">
+                          <span>Due date</span>
+                          <input class="td-input" data-role="weekly-item-due-date" type="datetime-local" />
+                        </label>
+                      </div>
+                      <div class="td-grid-2">
+                        <label class="td-label">
+                          <span>Title</span>
+                          <input class="td-input" data-role="weekly-item-title" type="text" placeholder="For example: Present Simple homework" />
+                        </label>
+                        <label class="td-label">
+                          <span>Lesson topic</span>
+                          <input class="td-input" data-role="weekly-item-topic" type="text" placeholder="For example: Present Simple review" />
+                        </label>
+                      </div>
+                      <div class="td-grid-2">
+                        <label class="td-label">
+                          <span>Assignment type</span>
+                          <select class="td-select" data-role="weekly-item-type">${assignmentTypeOptions}</select>
+                        </label>
+                        <label class="td-label">
+                          <span>Required or optional</span>
+                          <select class="td-select" data-role="weekly-item-priority">${priorityOptions}</select>
+                        </label>
+                      </div>
+                      <div class="td-grid-2">
+                        <label class="td-label">
+                          <span>Use template</span>
+                          <select class="td-select" data-role="weekly-item-template-id">${templateOptions}</select>
+                        </label>
+                        <label class="td-label">
+                          <span>Attach cards module</span>
+                          <select class="td-select" data-role="weekly-item-cards-module-id">${moduleOptions}</select>
+                        </label>
+                      </div>
+                      <label class="td-label">
+                        <span>Description</span>
+                        <textarea class="td-textarea td-textarea-sm" data-role="weekly-item-description" placeholder="Task instructions for the student."></textarea>
+                      </label>
+                      <div class="td-grid-2">
+                        <label class="td-label">
+                          <span>Miro link (optional)</span>
+                          <input class="td-input" data-role="weekly-item-miro-link" type="url" placeholder="https://miro.com/..." />
+                        </label>
+                        <label class="td-label">
+                          <span>Attach files (optional)</span>
+                          <input class="td-input" data-role="weekly-item-files" type="file" multiple />
+                        </label>
+                      </div>
+                      <span class="td-action-message is-info" data-role="weekly-item-message">Files are saved with this weekly task and copied to the assignment when you send the plan.</span>
+                      <div class="td-actions">
+                        <button class="td-btn td-btn-secondary" type="submit">Add task</button>
+                      </div>
+                    </form>
+                  ` : ''}
+
+                  <div class="td-grid">${itemsHtml}</div>
+                </div>
+              </details>
+            </article>
+          `;
+        }).join('')
+      : '<div class="td-empty">No weekly plans yet. Create a weekly plan, then add tasks for each day.</div>';
+
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Weekly plans</div>
+          <h2 class="td-title" style="font-size:24px;">Plan a week, then send it as assignments</h2>
+          <div class="td-sub">Create a weekly plan for one student, add tasks by day, attach templates, card modules and files, then send the plan when it is ready.</div>
+        </div>
+        <div class="td-body">
+          <form id="td-weekly-plan-form" class="td-form">
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Student</span>
+                <select class="td-select" id="td-weekly-plan-student-id" ${students.length ? '' : 'disabled'}>${studentOptions}</select>
+              </label>
+              <label class="td-label">
+                <span>Plan title</span>
+                <input class="td-input" id="td-weekly-plan-title" type="text" placeholder="For example: Week 3 homework plan" />
+              </label>
+            </div>
+            <div class="td-grid-2">
+              <label class="td-label">
+                <span>Weekly plan label</span>
+                <input class="td-input" id="td-weekly-plan-label" type="text" placeholder="For example: Week of May 25" />
+              </label>
+              <div class="td-grid-2">
+                <label class="td-label">
+                  <span>Start</span>
+                  <input class="td-input" id="td-weekly-plan-start" type="date" />
+                </label>
+                <label class="td-label">
+                  <span>End</span>
+                  <input class="td-input" id="td-weekly-plan-end" type="date" />
+                </label>
+              </div>
+            </div>
+            <label class="td-label">
+              <span>Teacher notes for this plan</span>
+              <textarea class="td-textarea td-textarea-sm" id="td-weekly-plan-notes" placeholder="Private planning notes for this weekly plan."></textarea>
+            </label>
+            <div class="td-actions">
+              <button class="td-btn td-btn-primary" type="submit" ${students.length ? '' : 'disabled'}>Create weekly plan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Plans</div>
+          <h2 class="td-title" style="font-size:24px;">Weekly plan drafts</h2>
+          <div class="td-sub">Draft plans stay editable. Sending a plan creates normal assignments for the selected student.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-grid">${plansHtml}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderStudentNotesViewHtml() {
+    const students = state.students || [];
+    const assignments = state.assignments || [];
+    const noteTagOptions = renderOptions(Object.entries(STUDENT_NOTE_TAGS), 'reteach');
+    const reteachingItems = assignments.filter((assignment) => (assignment.reteaching_status || 'none') !== 'none');
+
+    const reteachingHtml = reteachingItems.length
+      ? reteachingItems.map((assignment) => {
+          const student = assignment.student_id ? state.studentsById.get(assignment.student_id) : null;
+          const studentLabel = (student?.full_name || '').trim() || student?.email || 'Student';
+          const status = assignment.reteaching_status || 'none';
+          return `
+            <div class="td-attention-item" data-assignment-id="${escapeHtml(assignment.id)}">
+              <div class="td-attention-main">
+                <div class="td-name" style="font-size:16px;">${escapeHtml(studentLabel)} - ${escapeHtml(assignment.title)}</div>
+                <div class="td-note">
+                  ${escapeHtml(reteachingStatusLabel(status))}
+                  ${assignment.reteaching_note ? ` • ${escapeHtml(assignment.reteaching_note)}` : ''}
+                  ${assignment.reteaching_updated_at ? ` • Updated: ${escapeHtml(formatDateTime(assignment.reteaching_updated_at))}` : ''}
+                </div>
+              </div>
+              <div class="td-actions">
+                <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="update-reteaching-status" data-assignment-id="${escapeHtml(assignment.id)}" data-student-id="${escapeHtml(assignment.student_id)}" data-reteaching-status="retaught">Retaught</button>
+                <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="update-reteaching-status" data-assignment-id="${escapeHtml(assignment.id)}" data-student-id="${escapeHtml(assignment.student_id)}" data-reteaching-status="extra_practice_needed">Extra practice</button>
+                <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="update-reteaching-status" data-assignment-id="${escapeHtml(assignment.id)}" data-student-id="${escapeHtml(assignment.student_id)}" data-reteaching-status="none">Clear</button>
+              </div>
+            </div>
+          `;
+        }).join('')
+      : '<div class="td-empty">No students are in the reteaching workflow right now.</div>';
+
+    const studentsHtml = students.length
+      ? students.map((student) => {
+          const fullName = (student.full_name || '').trim() || 'Student';
+          const email = student.email || '';
+          const notes = state.studentNotesByStudent.get(student.id) || [];
+          const studentAssignments = assignments.filter((assignment) => assignment.student_id === student.id);
+          const assignmentOptions = '<option value="">No assignment link</option>' + studentAssignments.map((assignment) => (
+            `<option value="${escapeHtml(assignment.id)}">${escapeHtml(assignment.title)}</option>`
+          )).join('');
+
+          const notesHtml = notes.length
+            ? notes.map((note) => `
+                <div class="td-comment teacher" data-student-note-id="${escapeHtml(note.id)}">
+                  <div class="td-comment-meta">
+                    ${escapeHtml(studentNoteTagLabel(note.tag))} • ${escapeHtml(formatDateOnly(note.note_date) || formatDateTime(note.created_at))}
+                  </div>
+                  <div class="td-comment-body">${escapeHtml(note.note || '')}</div>
+                  <div class="td-actions" style="margin-top:8px;">
+                    <button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="delete-student-note" data-student-note-id="${escapeHtml(note.id)}">Delete note</button>
+                  </div>
+                </div>
+              `).join('')
+            : '<div class="td-muted-box">No notes for this student yet.</div>';
+
+          return `
+            <div class="td-section">
+              <div class="td-repeat-head">
+                <div>
+                  <div class="td-name">${escapeHtml(fullName)}</div>
+                  <div class="td-email">${escapeHtml(email)}</div>
+                </div>
+              </div>
+              <form class="td-form" data-student-note-form data-student-id="${escapeHtml(student.id)}">
+                <div class="td-grid-2">
+                  <label class="td-label">
+                    <span>Tag</span>
+                    <select class="td-select" data-role="student-note-tag">${noteTagOptions}</select>
+                  </label>
+                  <label class="td-label">
+                    <span>Date</span>
+                    <input class="td-input" data-role="student-note-date" type="date" value="${escapeHtml(todayDateValue())}" />
+                  </label>
+                </div>
+                <label class="td-label">
+                  <span>Related assignment (optional)</span>
+                  <select class="td-select" data-role="student-note-assignment-id">${assignmentOptions}</select>
+                </label>
+                <label class="td-label">
+                  <span>Teacher note</span>
+                  <textarea class="td-textarea td-textarea-sm" data-role="student-note-text" placeholder="Write what happened and what to do next."></textarea>
+                </label>
+                <div class="td-actions">
+                  <button class="td-btn td-btn-secondary" type="submit">Add note</button>
+                </div>
+              </form>
+              <div class="td-comments-list">${notesHtml}</div>
+            </div>
+          `;
+        }).join('')
+      : '<div class="td-empty">Add students before creating notes.</div>';
+
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Reteaching workflow</div>
+          <h2 class="td-title" style="font-size:24px;">Students who need follow-up</h2>
+          <div class="td-sub">Assignments marked as Needs reteaching, Retaught, or Extra practice needed stay here until you clear them.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-attention-list">${reteachingHtml}</div>
+        </div>
+      </div>
+
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Student notes</div>
+          <h2 class="td-title" style="font-size:24px;">Notes by student</h2>
+          <div class="td-sub">Track late work, reteaching, extra practice, absence and good work without leaving the teacher dashboard.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-grid">${studentsHtml}</div>
         </div>
       </div>
     `;
@@ -3037,7 +3514,7 @@ function renderStudentTemplateAnswers(assignment) {
     if (assignmentIds.length) {
       const { data: recipients, error: recipientsErr } = await supabase
         .from('assignment_recipients')
-        .select('assignment_id, student_id, status, created_at, started_at, last_activity_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by')
+        .select('assignment_id, student_id, status, created_at, started_at, last_activity_at, submitted_at, teacher_feedback, reviewed_status, reviewed_at, reviewed_by, reteaching_status, reteaching_note, reteaching_updated_at')
         .in('assignment_id', assignmentIds);
       if (recipientsErr) throw recipientsErr;
 
@@ -3112,6 +3589,9 @@ assignments = (assignmentsRows || []).map((a) => {
     reviewed_status: recipient?.reviewed_status || 'not_reviewed',
     reviewed_at: recipient?.reviewed_at || null,
     reviewed_by: recipient?.reviewed_by || null,
+    reteaching_status: recipient?.reteaching_status || 'none',
+    reteaching_note: recipient?.reteaching_note || '',
+    reteaching_updated_at: recipient?.reteaching_updated_at || null,
     submission,
     template_title: tpl?.title || '',
     template_category: tpl?.category || '',
@@ -3128,6 +3608,78 @@ assignments = (assignmentsRows || []).map((a) => {
 });
     }
 
+    let weeklyPlans = [];
+    let weeklyPlanItemsByPlan = new Map();
+    let weeklyPlanFilesByItem = new Map();
+    let studentNotes = [];
+    let studentNotesByStudent = new Map();
+
+    try {
+      const { data: weeklyRows, error: weeklyErr } = await supabase
+        .from('teacher_weekly_plans')
+        .select('id, teacher_id, student_id, title, week_label, week_start, week_end, notes, status, sent_at, created_at, updated_at')
+        .eq('teacher_id', user.id)
+        .order('created_at', { ascending: false });
+      if (weeklyErr) throw weeklyErr;
+      weeklyPlans = weeklyRows || [];
+
+      const weeklyPlanIds = weeklyPlans.map((plan) => plan.id);
+      if (weeklyPlanIds.length) {
+        const { data: itemRows, error: itemErr } = await supabase
+          .from('teacher_weekly_plan_items')
+          .select('id, weekly_plan_id, teacher_id, student_id, day_label, item_order, title, lesson_topic, description, due_date, template_id, cards_module_id, assignment_type, assignment_priority, miro_link, content_json, created_assignment_id, created_at, updated_at')
+          .in('weekly_plan_id', weeklyPlanIds)
+          .order('item_order', { ascending: true });
+        if (itemErr) throw itemErr;
+
+        weeklyPlanItemsByPlan = new Map();
+        (itemRows || []).forEach((item) => {
+          if (!weeklyPlanItemsByPlan.has(item.weekly_plan_id)) weeklyPlanItemsByPlan.set(item.weekly_plan_id, []);
+          weeklyPlanItemsByPlan.get(item.weekly_plan_id).push(item);
+        });
+
+        const itemIds = (itemRows || []).map((item) => item.id);
+        if (itemIds.length) {
+          const { data: fileRows, error: fileErr } = await supabase
+            .from('teacher_weekly_plan_files')
+            .select('id, weekly_plan_id, weekly_plan_item_id, teacher_id, file_path, file_name, file_size, mime_type, created_at')
+            .in('weekly_plan_item_id', itemIds)
+            .order('created_at', { ascending: true });
+          if (fileErr) throw fileErr;
+
+          const filesWithUrls = await Promise.all(
+            (fileRows || []).map(async (file) => ({
+              ...file,
+              signed_url: file.file_path ? await createSignedUrl(RESOURCES_BUCKET, file.file_path) : ''
+            }))
+          );
+
+          weeklyPlanFilesByItem = new Map();
+          filesWithUrls.forEach((file) => {
+            if (!weeklyPlanFilesByItem.has(file.weekly_plan_item_id)) weeklyPlanFilesByItem.set(file.weekly_plan_item_id, []);
+            weeklyPlanFilesByItem.get(file.weekly_plan_item_id).push(file);
+          });
+        }
+      }
+
+      const { data: noteRows, error: noteErr } = await supabase
+        .from('teacher_student_notes')
+        .select('id, teacher_id, student_id, assignment_id, tag, note, note_date, created_at, updated_at')
+        .eq('teacher_id', user.id)
+        .order('note_date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (noteErr) throw noteErr;
+
+      studentNotes = noteRows || [];
+      studentNotesByStudent = new Map();
+      studentNotes.forEach((note) => {
+        if (!studentNotesByStudent.has(note.student_id)) studentNotesByStudent.set(note.student_id, []);
+        studentNotesByStudent.get(note.student_id).push(note);
+      });
+    } catch (err) {
+      console.warn('[teacher-dashboard] weekly plans / notes are not ready:', err?.message || err);
+    }
+
     state.teacher = teacherProfile;
     state.students = students;
     state.studentsById = new Map(students.map((s) => [s.id, s]));
@@ -3135,6 +3687,11 @@ assignments = (assignmentsRows || []).map((a) => {
     state.assignments = assignments;
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
+    state.weeklyPlans = weeklyPlans;
+    state.weeklyPlanItemsByPlan = weeklyPlanItemsByPlan;
+    state.weeklyPlanFilesByItem = weeklyPlanFilesByItem;
+    state.studentNotes = studentNotes;
+    state.studentNotesByStudent = studentNotesByStudent;
     state.templates = templatesNormalized;
     state.modules = teacherCardModules;
   }
@@ -3179,9 +3736,13 @@ assignments = (assignmentsRows || []).map((a) => {
             </div>
             ${renderAssignmentsListHtml()}
           `
+          : activeView === 'weekly_plans'
+            ? renderWeeklyPlansViewHtml()
           : activeView === 'templates'
             ? renderTemplatesViewHtml()
-            : renderOverviewHtml();
+            : activeView === 'student_notes'
+              ? renderStudentNotesViewHtml()
+              : renderOverviewHtml();
 
     root.innerHTML = `
       <div class="td-wrap">
@@ -3205,6 +3766,27 @@ assignments = (assignmentsRows || []).map((a) => {
       if (assignmentForm) {
         event.preventDefault();
         await handleSendAssignment(assignmentForm);
+        return;
+      }
+
+      const weeklyPlanForm = event.target.closest('#td-weekly-plan-form');
+      if (weeklyPlanForm) {
+        event.preventDefault();
+        await handleCreateWeeklyPlan(weeklyPlanForm);
+        return;
+      }
+
+      const weeklyPlanItemForm = event.target.closest('[data-weekly-plan-item-form]');
+      if (weeklyPlanItemForm) {
+        event.preventDefault();
+        await handleAddWeeklyPlanItem(weeklyPlanItemForm);
+        return;
+      }
+
+      const studentNoteForm = event.target.closest('[data-student-note-form]');
+      if (studentNoteForm) {
+        event.preventDefault();
+        await handleAddStudentNote(studentNoteForm);
         return;
       }
 
@@ -3379,6 +3961,26 @@ assignments = (assignmentsRows || []).map((a) => {
         return;
       }
 
+      if (action === 'send-weekly-plan') {
+        await handleSendWeeklyPlan(button);
+        return;
+      }
+
+      if (action === 'delete-weekly-plan-item') {
+        await handleDeleteWeeklyPlanItem(button);
+        return;
+      }
+
+      if (action === 'delete-student-note') {
+        await handleDeleteStudentNote(button);
+        return;
+      }
+
+      if (action === 'update-reteaching-status') {
+        await handleUpdateReteachingStatus(button);
+        return;
+      }
+
       const card = button.closest('[data-assignment-id]');
       if (!card) return;
       const assignmentId = card.getAttribute('data-assignment-id');
@@ -3471,7 +4073,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
   function handleSwitchView(button) {
     const view = button.getAttribute('data-view');
-    const allowedViews = ['overview', 'students', 'assignments', 'templates'];
+    const allowedViews = ['overview', 'students', 'assignments', 'weekly_plans', 'templates', 'student_notes'];
     if (!view || !allowedViews.includes(view)) return;
 
     state.activeView = view;
@@ -3485,6 +4087,402 @@ assignments = (assignmentsRows || []).map((a) => {
     }
 
     renderDashboard();
+  }
+
+  async function handleCreateWeeklyPlan(form) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const original = rememberButton(submitBtn);
+    const studentId = form.querySelector('#td-weekly-plan-student-id')?.value || '';
+    const title = form.querySelector('#td-weekly-plan-title')?.value.trim() || '';
+    const weekLabel = form.querySelector('#td-weekly-plan-label')?.value.trim() || '';
+    const weekStart = form.querySelector('#td-weekly-plan-start')?.value || null;
+    const weekEnd = form.querySelector('#td-weekly-plan-end')?.value || null;
+    const notes = form.querySelector('#td-weekly-plan-notes')?.value.trim() || '';
+
+    if (!studentId) {
+      buttonError(submitBtn, original, 'Choose student');
+      return;
+    }
+
+    if (!title) {
+      buttonError(submitBtn, original, 'Enter title');
+      return;
+    }
+
+    startButtonFeedback(submitBtn, 'Creating...');
+
+    try {
+      const { error } = await supabase.from('teacher_weekly_plans').insert({
+        teacher_id: state.userId,
+        student_id: studentId,
+        title,
+        week_label: weekLabel || null,
+        week_start: weekStart || null,
+        week_end: weekEnd || null,
+        notes: notes || null,
+        status: 'draft'
+      });
+      if (error) throw error;
+
+      setFlash('success', 'Weekly plan created. Add tasks by day, then send it when ready.');
+      state.activeView = 'weekly_plans';
+      await fetchDashboardData();
+      renderDashboard();
+      finishButtonFeedbackBySelector('#td-weekly-plan-form button[type="submit"]', original, true, 'Created');
+    } catch (err) {
+      console.error('[teacher-dashboard] create weekly plan error:', err);
+      buttonError(submitBtn, original, 'Failed');
+      setFlash('error', err?.message || 'Could not create weekly plan.');
+      renderDashboard();
+    }
+  }
+
+  async function handleAddWeeklyPlanItem(form) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const planId = form.getAttribute('data-weekly-plan-id') || '';
+    const plan = (state.weeklyPlans || []).find((item) => item.id === planId);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const original = rememberButton(submitBtn);
+    if (!plan) return;
+
+    const title = form.querySelector('[data-role="weekly-item-title"]')?.value.trim() || '';
+    const lessonTopic = form.querySelector('[data-role="weekly-item-topic"]')?.value.trim() || '';
+    const description = form.querySelector('[data-role="weekly-item-description"]')?.value.trim() || '';
+    const dayLabel = form.querySelector('[data-role="weekly-item-day"]')?.value || '';
+    const dueDateRaw = form.querySelector('[data-role="weekly-item-due-date"]')?.value || '';
+    const templateId = form.querySelector('[data-role="weekly-item-template-id"]')?.value || '';
+    const cardsModuleId = form.querySelector('[data-role="weekly-item-cards-module-id"]')?.value || '';
+    const assignmentType = form.querySelector('[data-role="weekly-item-type"]')?.value || '';
+    const assignmentPriorityRaw = form.querySelector('[data-role="weekly-item-priority"]')?.value || 'required';
+    const assignmentPriority = assignmentPriorityRaw === 'optional' ? 'optional' : 'required';
+    const miroLink = form.querySelector('[data-role="weekly-item-miro-link"]')?.value.trim() || '';
+    const files = Array.from(form.querySelector('[data-role="weekly-item-files"]')?.files || []);
+
+    if (!title) {
+      buttonError(submitBtn, original, 'Enter title');
+      return;
+    }
+
+    const validation = validateResourceFiles(files);
+    if (!validation.ok) {
+      buttonError(submitBtn, original, 'Check files');
+      setFormActionMessage(form, 'weekly-item-message', 'error', validation.message);
+      return;
+    }
+
+    startButtonFeedback(submitBtn, 'Adding...');
+
+    try {
+      const existingItems = state.weeklyPlanItemsByPlan.get(planId) || [];
+      const { data: item, error } = await supabase
+        .from('teacher_weekly_plan_items')
+        .insert({
+          weekly_plan_id: planId,
+          teacher_id: state.userId,
+          student_id: plan.student_id,
+          day_label: dayLabel || null,
+          item_order: existingItems.length + 1,
+          title,
+          lesson_topic: lessonTopic || null,
+          description: description || null,
+          due_date: toIsoFromDatetimeLocal(dueDateRaw),
+          template_id: templateId || null,
+          cards_module_id: cardsModuleId || null,
+          assignment_type: assignmentType || null,
+          assignment_priority: assignmentPriority,
+          miro_link: miroLink || null,
+          content_json: {
+            week_label: plan.week_label || plan.title,
+            lesson_topic: lessonTopic || null
+          }
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      await uploadWeeklyPlanItemFiles(supabase, planId, item.id, state.userId, files);
+
+      setFlash('success', 'Task added to weekly plan.');
+      state.activeView = 'weekly_plans';
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] add weekly plan item error:', err);
+      buttonError(submitBtn, original, 'Failed');
+      setFormActionMessage(form, 'weekly-item-message', 'error', err?.message || 'Could not add task.');
+    }
+  }
+
+  async function handleDeleteWeeklyPlanItem(button) {
+    const supabase = window.supabase;
+    if (!supabase) return;
+
+    const itemId = button.getAttribute('data-weekly-plan-item-id') || '';
+    if (!itemId) return;
+    if (!confirm('Remove this task from the weekly plan?')) return;
+
+    const original = rememberButton(button);
+    startButtonFeedback(button, 'Removing...');
+
+    try {
+      const files = state.weeklyPlanFilesByItem.get(itemId) || [];
+      const filePaths = files.map((file) => file.file_path).filter(Boolean);
+      if (filePaths.length) {
+        await supabase.storage.from(RESOURCES_BUCKET).remove(filePaths);
+      }
+
+      const { error } = await supabase
+        .from('teacher_weekly_plan_items')
+        .delete()
+        .eq('id', itemId)
+        .eq('teacher_id', state.userId);
+      if (error) throw error;
+
+      setFlash('success', 'Weekly task removed.');
+      state.activeView = 'weekly_plans';
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] delete weekly plan item error:', err);
+      buttonError(button, original, 'Failed');
+    }
+  }
+
+  async function handleSendWeeklyPlan(button) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const planId = button.getAttribute('data-weekly-plan-id') || '';
+    const plan = (state.weeklyPlans || []).find((item) => item.id === planId);
+    const items = state.weeklyPlanItemsByPlan.get(planId) || [];
+    const original = rememberButton(button);
+
+    if (!plan || !items.length) {
+      buttonError(button, original, 'No tasks');
+      return;
+    }
+
+    if (!confirm(`Send weekly plan "${plan.title}" as ${items.length} assignment${items.length === 1 ? '' : 's'}?`)) {
+      return;
+    }
+
+    startButtonFeedback(button, 'Sending...');
+
+    try {
+      for (const item of items) {
+        if (item.created_assignment_id) continue;
+
+        const contentJson = {
+          student_id: plan.student_id,
+          week_label: plan.week_label || plan.title,
+          day_label: item.day_label || null,
+          lesson_topic: item.lesson_topic || null,
+          assignment_type: item.assignment_type || null,
+          assignment_priority: item.assignment_priority || 'required',
+          is_optional: item.assignment_priority === 'optional',
+          weekly_plan_id: plan.id,
+          weekly_plan_item_id: item.id
+        };
+
+        const { data: created, error: assignmentErr } = await supabase
+          .from('assignments')
+          .insert({
+            teacher_id: state.userId,
+            title: item.title,
+            description: item.description || null,
+            miro_link: item.miro_link || null,
+            due_date: item.due_date || null,
+            status: 'ready',
+            template_id: item.template_id || null,
+            cards_module_id: item.cards_module_id || null,
+            assignment_mode: resolveAssignmentMode(item.template_id, item.cards_module_id),
+            content_json: contentJson
+          })
+          .select('id')
+          .single();
+        if (assignmentErr) throw assignmentErr;
+
+        const assignmentId = created.id;
+
+        const { error: recipientErr } = await supabase
+          .from('assignment_recipients')
+          .insert({
+            assignment_id: assignmentId,
+            student_id: plan.student_id,
+            status: 'not_started',
+            reviewed_status: 'not_reviewed'
+          });
+        if (recipientErr) throw recipientErr;
+
+        if (item.cards_module_id) {
+          const { error: cardsAssignErr } = await supabase.rpc('classroom_vocab_assign_module', {
+            _module_id: item.cards_module_id,
+            _student_id: plan.student_id
+          });
+          if (cardsAssignErr) throw cardsAssignErr;
+        }
+
+        const files = state.weeklyPlanFilesByItem.get(item.id) || [];
+        await copyWeeklyPlanFilesToAssignment(supabase, assignmentId, state.userId, files);
+
+        const { error: itemUpdateErr } = await supabase
+          .from('teacher_weekly_plan_items')
+          .update({ created_assignment_id: assignmentId })
+          .eq('id', item.id)
+          .eq('teacher_id', state.userId);
+        if (itemUpdateErr) throw itemUpdateErr;
+      }
+
+      const { error: planErr } = await supabase
+        .from('teacher_weekly_plans')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString()
+        })
+        .eq('id', plan.id)
+        .eq('teacher_id', state.userId);
+      if (planErr) throw planErr;
+
+      setFlash('success', 'Weekly plan sent. Assignments were created for the student.');
+      state.activeView = 'assignments';
+      await fetchDashboardData();
+      renderDashboard();
+      trackEvent('send_weekly_plan', {
+        weekly_plan_id: plan.id,
+        task_count: items.length
+      });
+    } catch (err) {
+      console.error('[teacher-dashboard] send weekly plan error:', err);
+      buttonError(button, original, 'Failed');
+      setFlash('error', err?.message || 'Could not send weekly plan.');
+      state.activeView = 'weekly_plans';
+      renderDashboard();
+    }
+  }
+
+  async function handleAddStudentNote(form) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const original = rememberButton(submitBtn);
+    const studentId = form.getAttribute('data-student-id') || '';
+    const tag = form.querySelector('[data-role="student-note-tag"]')?.value || 'reteach';
+    const noteDate = form.querySelector('[data-role="student-note-date"]')?.value || todayDateValue();
+    const assignmentId = form.querySelector('[data-role="student-note-assignment-id"]')?.value || '';
+    const note = form.querySelector('[data-role="student-note-text"]')?.value.trim() || '';
+
+    if (!studentId) return;
+
+    startButtonFeedback(submitBtn, 'Adding...');
+
+    try {
+      const { error } = await supabase.from('teacher_student_notes').insert({
+        teacher_id: state.userId,
+        student_id: studentId,
+        assignment_id: assignmentId || null,
+        tag,
+        note: note || null,
+        note_date: noteDate
+      });
+      if (error) throw error;
+
+      setFlash('success', 'Student note added.');
+      state.activeView = 'student_notes';
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] add student note error:', err);
+      buttonError(submitBtn, original, 'Failed');
+    }
+  }
+
+  async function handleDeleteStudentNote(button) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const noteId = button.getAttribute('data-student-note-id') || '';
+    if (!noteId) return;
+    if (!confirm('Delete this student note?')) return;
+
+    const original = rememberButton(button);
+    startButtonFeedback(button, 'Deleting...');
+
+    try {
+      const { error } = await supabase
+        .from('teacher_student_notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('teacher_id', state.userId);
+      if (error) throw error;
+
+      setFlash('success', 'Student note deleted.');
+      state.activeView = 'student_notes';
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] delete student note error:', err);
+      buttonError(button, original, 'Failed');
+    }
+  }
+
+  async function handleUpdateReteachingStatus(button) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const assignmentId = button.getAttribute('data-assignment-id') || '';
+    const studentId = button.getAttribute('data-student-id') || '';
+    const status = button.getAttribute('data-reteaching-status') || 'none';
+    if (!assignmentId || !studentId) return;
+
+    const original = rememberButton(button);
+    startButtonFeedback(button, 'Saving...');
+
+    try {
+      const payload = {
+        reteaching_status: status,
+        reteaching_updated_at: new Date().toISOString()
+      };
+
+      if (status === 'none') {
+        payload.reteaching_note = null;
+      }
+
+      const { error } = await supabase
+        .from('assignment_recipients')
+        .update(payload)
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', studentId);
+      if (error) throw error;
+
+      if (status !== 'none') {
+        const tag = status === 'needs_reteaching'
+          ? 'reteach'
+          : (status === 'extra_practice_needed' ? 'extra_practice_needed' : 'good_work');
+
+        await supabase.from('teacher_student_notes').insert({
+          teacher_id: state.userId,
+          student_id: studentId,
+          assignment_id: assignmentId,
+          tag,
+          note: reteachingStatusLabel(status),
+          note_date: todayDateValue()
+        });
+      }
+
+      setFlash('success', `Reteaching status updated: ${reteachingStatusLabel(status)}.`);
+      state.activeView = 'student_notes';
+      await fetchDashboardData();
+      renderDashboard();
+    } catch (err) {
+      console.error('[teacher-dashboard] update reteaching status error:', err);
+      buttonError(button, original, 'Failed');
+    }
   }
 
   function handleTemplateNew() {
@@ -4358,11 +5356,15 @@ assignments = (assignmentsRows || []).map((a) => {
     const assignment = (state.assignments || []).find((a) => a.id === assignmentId);
     const reviewEl = card.querySelector('[data-role="reviewed-status"]');
     const feedbackEl = card.querySelector('[data-role="teacher-feedback"]');
+    const reteachingEl = card.querySelector('[data-role="reteaching-status"]');
+    const reteachingNoteEl = card.querySelector('[data-role="reteaching-note"]');
 
     const reviewedStatus = reviewEl?.value || (
       effectiveReviewState(assignment) === 'awaiting_review' ? 'reviewed' : 'not_reviewed'
     );
     const teacherFeedback = feedbackEl?.value.trim() || '';
+    const reteachingStatus = reteachingEl?.value || assignment?.reteaching_status || 'none';
+    const reteachingNote = reteachingNoteEl?.value.trim() || '';
     const original = rememberButton(button);
 
     if (!assignment) {
@@ -4406,7 +5408,12 @@ assignments = (assignmentsRows || []).map((a) => {
         teacher_feedback: teacherFeedback || null,
         reviewed_status: reviewedStatus,
         reviewed_at: reviewedStatus === 'reviewed' ? new Date().toISOString() : null,
-        reviewed_by: reviewedStatus === 'reviewed' ? state.userId : null
+        reviewed_by: reviewedStatus === 'reviewed' ? state.userId : null,
+        reteaching_status: reteachingStatus,
+        reteaching_note: reteachingNote || null,
+        reteaching_updated_at: reteachingStatus !== (assignment.reteaching_status || 'none')
+          ? new Date().toISOString()
+          : (assignment.reteaching_updated_at || null)
       };
 
       const { data: updatedRecipient, error } = await supabase
@@ -4414,12 +5421,27 @@ assignments = (assignmentsRows || []).map((a) => {
         .update(payload)
         .eq('assignment_id', assignmentId)
         .eq('student_id', assignment.student_id)
-        .select('assignment_id, student_id, reviewed_status, reviewed_at, teacher_feedback')
+        .select('assignment_id, student_id, reviewed_status, reviewed_at, teacher_feedback, reteaching_status, reteaching_note, reteaching_updated_at')
         .maybeSingle();
 
       if (error) throw error;
       if (!updatedRecipient) {
         throw new Error('Review was not saved. Check RLS policy for assignment_recipients.');
+      }
+
+      if (reteachingStatus !== 'none') {
+        const tag = reteachingStatus === 'needs_reteaching'
+          ? 'reteach'
+          : (reteachingStatus === 'extra_practice_needed' ? 'extra_practice_needed' : 'good_work');
+
+        await supabase.from('teacher_student_notes').insert({
+          teacher_id: state.userId,
+          student_id: assignment.student_id,
+          assignment_id: assignmentId,
+          tag,
+          note: reteachingNote || reteachingStatusLabel(reteachingStatus),
+          note_date: todayDateValue()
+        });
       }
 
       state.activeView = 'assignments';
@@ -4438,6 +5460,7 @@ assignments = (assignmentsRows || []).map((a) => {
       trackEvent('review_submission', {
         assignment_id: assignmentId,
         reviewed_status: reviewedStatus,
+        reteaching_status: reteachingStatus,
         has_feedback: !!teacherFeedback
       });
     } catch (err) {
