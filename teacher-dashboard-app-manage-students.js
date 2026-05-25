@@ -115,6 +115,7 @@
     assignments: [],
     commentsByAssignment: new Map(),
     resourcesByAssignment: new Map(),
+    billing: null,
     weeklyPlans: [],
     weeklyPlanItemsByPlan: new Map(),
     weeklyPlanFilesByItem: new Map(),
@@ -2341,6 +2342,29 @@ function renderStudentTemplateAnswers(assignment) {
     `;
   }
 
+  function currentTeacherPlanKey() {
+    return state.billing?.plan_key || 'teacher_starter';
+  }
+
+  function canAddAnotherActiveStudent() {
+    const planKey = currentTeacherPlanKey();
+    const students = state.students || [];
+    return planKey === 'teacher_pro' || students.length < 5;
+  }
+
+  function renderStudentLimitNoticeHtml() {
+    if (canAddAnotherActiveStudent()) return '';
+
+    return `
+      <div class="td-error" style="margin-top:12px;">
+        Teacher Starter includes up to 5 active students. To add another active student, upgrade to Teacher Pro in Billing.
+        <div style="margin-top:10px;">
+          <a class="td-btn td-btn-secondary td-btn-compact" href="/billing">Open billing</a>
+        </div>
+      </div>
+    `;
+  }
+
   function renderStudentsSectionHtml() {
     const students = state.students || [];
 
@@ -2379,6 +2403,7 @@ function renderStudentTemplateAnswers(assignment) {
             <div>
               <div class="td-name" style="font-size:18px;">Add student by email</div>
               <div class="td-note">Only users who already registered on the site can be added.</div>
+              ${renderStudentLimitNoticeHtml()}
             </div>
 
             <form id="td-student-manage-form" class="td-form">
@@ -3445,6 +3470,7 @@ function renderStudentTemplateAnswers(assignment) {
     const studentIds = [...new Set((links || []).map((r) => r.student_id).filter(Boolean))];
     const linkMap = new Map((links || []).map((r) => [r.student_id, r]));
     let students = [];
+    let billing = null;
 
     if (studentIds.length) {
       const { data: studentProfiles, error: studentsErr } = await supabase
@@ -3455,6 +3481,18 @@ function renderStudentTemplateAnswers(assignment) {
 
       const byId = new Map((studentProfiles || []).map((p) => [p.id, p]));
       students = studentIds.map((id) => byId.get(id)).filter(Boolean);
+    }
+
+    try {
+      const { data: billingRow, error: billingErr } = await supabase
+        .from('teacher_subscriptions')
+        .select('id, plan_key, status, trial_ends_at, current_period_end, auto_renews, cancel_at_period_end')
+        .eq('teacher_id', user.id)
+        .maybeSingle();
+      if (billingErr) throw billingErr;
+      billing = billingRow || null;
+    } catch (err) {
+      console.warn('[teacher-dashboard] billing status is not ready:', err?.message || err);
     }
 
     const { data: templatesRows, error: templatesErr } = await supabase
@@ -3687,6 +3725,7 @@ assignments = (assignmentsRows || []).map((a) => {
     state.assignments = assignments;
     state.commentsByAssignment = commentsByAssignment;
     state.resourcesByAssignment = resourcesByAssignment;
+    state.billing = billing;
     state.weeklyPlans = weeklyPlans;
     state.weeklyPlanItemsByPlan = weeklyPlanItemsByPlan;
     state.weeklyPlanFilesByItem = weeklyPlanFilesByItem;
@@ -5007,6 +5046,13 @@ assignments = (assignmentsRows || []).map((a) => {
 
     if (!email) {
       buttonError(addBtn, original, 'Enter email');
+      return;
+    }
+
+    if (!canAddAnotherActiveStudent()) {
+      buttonError(addBtn, original, 'Upgrade needed');
+      const openBilling = confirm('Teacher Starter includes up to 5 active students. Open Billing to upgrade to Teacher Pro before adding another student?');
+      if (openBilling) window.location.href = '/billing';
       return;
     }
 
