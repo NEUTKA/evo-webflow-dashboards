@@ -2343,6 +2343,7 @@ function renderStudentTemplateAnswers(assignment) {
   }
 
   function currentTeacherPlanKey() {
+    if (window.__evoBillingEnforcementEnabled === false) return 'teacher_pro';
     return state.billing?.plan_key || 'teacher_starter';
   }
 
