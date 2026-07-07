@@ -912,6 +912,303 @@
     }
   ];
 
+  const READY_LESSON_TASK_EXTENSIONS = {
+    'be-profile-choice': {
+      items: [
+        { id: 'be-profile-choice-4', sentence: 'You ___ in lesson 1.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'c', explanation: 'Use are with you.' },
+        { id: 'be-profile-choice-5', sentence: 'My parents ___ at home.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'c', explanation: 'Use are with plural nouns.' }
+      ]
+    },
+    'be-profile-gap': {
+      items: [
+        { id: 'be-profile-gap-4', sentence: 'They ___ not from Italy.', accepted_answers: ['are'], hint: 'they + are', explanation: 'Use are with they.' },
+        { id: 'be-profile-gap-5', sentence: 'It ___ a small school.', accepted_answers: ['is'], hint: 'it + is', explanation: 'Use is with it.' }
+      ]
+    },
+    'be-profile-order': {
+      items: [
+        { id: 'be-profile-order-3', words: ['are', 'They', 'not', 'online'], answer: 'They are not online.' },
+        { id: 'be-profile-order-4', words: ['a', 'teacher', 'am', 'I'], answer: 'I am a teacher.' },
+        { id: 'be-profile-order-5', words: ['at', 'home', 'is', 'He'], answer: 'He is at home.' }
+      ]
+    },
+    'be-profile-error-extra': {
+      items: [
+        { id: 'be-profile-error-extra-3', sentence: 'You is happy.', accepted_answers: ['You are happy.'], explanation: 'Use are with you.' },
+        { id: 'be-profile-error-extra-4', sentence: 'They is teachers.', accepted_answers: ['They are teachers.'], explanation: 'Use are with they.' },
+        { id: 'be-profile-error-extra-5', sentence: 'We am ready.', accepted_answers: ['We are ready.'], explanation: 'Use are with we.' }
+      ]
+    },
+    'be-questions-choice': {
+      items: [
+        { id: 'be-questions-choice-4', sentence: '___ your phone new?', options: [{ id: 'a', text: 'Am' }, { id: 'b', text: 'Is' }, { id: 'c', text: 'Are' }], answer: 'b', explanation: 'Use Is with it / one thing.' },
+        { id: 'be-questions-choice-5', sentence: '___ we in the right room?', options: [{ id: 'a', text: 'Am' }, { id: 'b', text: 'Is' }, { id: 'c', text: 'Are' }], answer: 'c', explanation: 'Use Are with we.' }
+      ]
+    },
+    'be-questions-gap': {
+      items: [
+        { id: 'be-questions-gap-4', sentence: 'Is Anna your friend? Yes, she ___.', accepted_answers: ['is'], hint: 'Yes, she ...' },
+        { id: 'be-questions-gap-5', sentence: 'Are we late? No, we ___.', accepted_answers: ['are not', "aren't"], hint: 'negative short answer' }
+      ]
+    },
+    'be-questions-order': {
+      items: [
+        { id: 'be-questions-order-3', words: ['they', 'Are', 'students'], answer: 'Are they students?' },
+        { id: 'be-questions-order-4', words: ['your', 'Is', 'name', 'Alex'], answer: 'Is your name Alex?' },
+        { id: 'be-questions-order-5', words: ['we', 'Are', 'late'], answer: 'Are we late?' }
+      ]
+    },
+    'be-questions-match-extra': {
+      pairs: [
+        { id: 'be-questions-match-extra-4', left_text: 'Are you ready?', right_text: 'Yes, I am.' },
+        { id: 'be-questions-match-extra-5', left_text: 'Is it cold?', right_text: 'No, it is not.' }
+      ]
+    },
+    'possessives-choice': {
+      items: [
+        { id: 'possessives-choice-4', sentence: 'You have a sister. ___ sister is nice.', options: [{ id: 'a', text: 'My' }, { id: 'b', text: 'Your' }, { id: 'c', text: 'His' }], answer: 'b', explanation: 'You + your.' },
+        { id: 'possessives-choice-5', sentence: 'They are brothers. ___ mother is a doctor.', options: [{ id: 'a', text: 'Our' }, { id: 'b', text: 'Their' }, { id: 'c', text: 'Her' }], answer: 'b', explanation: 'They + their.' }
+      ]
+    },
+    'possessives-gap': {
+      items: [
+        { id: 'possessives-gap-4', sentence: 'This is ___ phone. (Anna)', accepted_answers: ["Anna's"], hint: "Anna + 's" },
+        { id: 'possessives-gap-5', sentence: 'That is ___ classroom. (the students)', accepted_answers: ["the students'", "students'"], hint: "plural noun + '" }
+      ]
+    },
+    'possessives-error': {
+      items: [
+        { id: 'possessives-error-3', sentence: 'He is my father. Her name is Arman.', accepted_answers: ['He is my father. His name is Arman.', 'His name is Arman.'], explanation: 'Use his for a man or boy.' },
+        { id: 'possessives-error-4', sentence: 'This is my brother bag.', accepted_answers: ["This is my brother's bag."], explanation: "Use 's for possession." },
+        { id: 'possessives-error-5', sentence: 'They are students. His teacher is Ben.', accepted_answers: ['They are students. Their teacher is Ben.', 'Their teacher is Ben.'], explanation: 'Use their with they.' }
+      ]
+    },
+    'possessives-order-extra': {
+      items: [
+        { id: 'possessives-order-extra-3', words: ['Her', 'is', 'bag', 'red'], answer: 'Her bag is red.' },
+        { id: 'possessives-order-extra-4', words: ['This', 'my', "friend's", 'phone', 'is'], answer: "This is my friend's phone." },
+        { id: 'possessives-order-extra-5', words: ['Their', 'is', 'teacher', 'here'], answer: 'Their teacher is here.' }
+      ]
+    },
+    'articles-choice': {
+      items: [
+        { id: 'articles-choice-4', sentence: 'It is ___ old car.', options: [{ id: 'a', text: 'a' }, { id: 'b', text: 'an' }, { id: 'c', text: 'the' }], answer: 'b', explanation: 'Use an before a vowel sound.' },
+        { id: 'articles-choice-5', sentence: 'Open ___ door, please.', options: [{ id: 'a', text: 'a' }, { id: 'b', text: 'an' }, { id: 'c', text: 'the' }], answer: 'c', explanation: 'Use the when both people know which door.' }
+      ]
+    },
+    'articles-gap': {
+      items: [
+        { id: 'articles-gap-4', sentence: '___ yellow bag', accepted_answers: ['a'], hint: 'yellow starts with a consonant sound' },
+        { id: 'articles-gap-5', sentence: '___ umbrella', accepted_answers: ['an'], hint: 'umbrella starts with a vowel sound' }
+      ]
+    },
+    'articles-error': {
+      items: [
+        { id: 'articles-error-3', sentence: 'She has an cat.', accepted_answers: ['She has a cat.'], explanation: 'Use a before cat.' },
+        { id: 'articles-error-4', sentence: 'This is a orange.', accepted_answers: ['This is an orange.'], explanation: 'Use an before orange.' },
+        { id: 'articles-error-5', sentence: 'She is an doctor.', accepted_answers: ['She is a doctor.'], explanation: 'Use a before doctor.' }
+      ]
+    },
+    'articles-choice-extra': {
+      items: [
+        { id: 'articles-choice-extra-3', sentence: 'Choose the correct phrase.', options: [{ id: 'a', text: 'a new email' }, { id: 'b', text: 'an new email' }, { id: 'c', text: 'the new email' }], answer: 'a', explanation: 'New starts with a consonant sound.' },
+        { id: 'articles-choice-extra-4', sentence: 'Choose the correct phrase.', options: [{ id: 'a', text: 'a easy exercise' }, { id: 'b', text: 'an easy exercise' }, { id: 'c', text: 'the easy exercise' }], answer: 'b', explanation: 'Easy starts with a vowel sound.' },
+        { id: 'articles-choice-extra-5', sentence: 'I can see ___ chair. ___ chair is black.', options: [{ id: 'a', text: 'a / The' }, { id: 'b', text: 'an / The' }, { id: 'c', text: 'the / A' }], answer: 'a', explanation: 'First mention: a chair. Second mention: the chair.' }
+      ]
+    },
+    'there-place-choice': {
+      items: [
+        { id: 'there-place-choice-4', sentence: 'There ___ three pictures on the wall.', options: [{ id: 'a', text: 'is' }, { id: 'b', text: 'are' }], answer: 'b', explanation: 'Three pictures is plural.' },
+        { id: 'there-place-choice-5', sentence: 'There ___ a computer on the desk.', options: [{ id: 'a', text: 'is' }, { id: 'b', text: 'are' }], answer: 'a', explanation: 'A computer is singular.' }
+      ]
+    },
+    'there-place-gap': {
+      items: [
+        { id: 'there-place-gap-4', sentence: 'The chair is ___ the desk.', accepted_answers: ['next to'], hint: 'beside the desk' },
+        { id: 'there-place-gap-5', sentence: 'The clothes are ___ the wardrobe.', accepted_answers: ['in'], hint: 'inside the wardrobe' }
+      ]
+    },
+    'there-place-order': {
+      items: [
+        { id: 'there-place-order-3', words: ['a', 'window', 'There', 'is'], answer: 'There is a window.' },
+        { id: 'there-place-order-4', words: ['are', 'There', 'two', 'lamps'], answer: 'There are two lamps.' },
+        { id: 'there-place-order-5', words: ['under', 'is', 'The', 'bag', 'the', 'table'], answer: 'The bag is under the table.' }
+      ]
+    },
+    'there-place-error-extra': {
+      items: [
+        { id: 'there-place-error-extra-3', sentence: 'There is three books.', accepted_answers: ['There are three books.'] },
+        { id: 'there-place-error-extra-4', sentence: 'The phone is in the table.', accepted_answers: ['The phone is on the table.'] },
+        { id: 'there-place-error-extra-5', sentence: 'There are a kitchen.', accepted_answers: ['There is a kitchen.'] }
+      ]
+    },
+    'routine-choice': {
+      items: [
+        { id: 'routine-choice-4', sentence: 'I ___ English every day.', options: [{ id: 'a', text: 'study' }, { id: 'b', text: 'studies' }, { id: 'c', text: 'studying' }], answer: 'a', explanation: 'Use the base verb with I.' },
+        { id: 'routine-choice-5', sentence: 'My brother ___ football after school.', options: [{ id: 'a', text: 'play' }, { id: 'b', text: 'plays' }, { id: 'c', text: 'playing' }], answer: 'b', explanation: 'My brother = he, so add -s.' }
+      ]
+    },
+    'routine-gap': {
+      items: [
+        { id: 'routine-gap-4', sentence: 'She ___ lunch at home. (have)', accepted_answers: ['has'], hint: 'she = has' },
+        { id: 'routine-gap-5', sentence: 'We ___ work at 6. (finish)', accepted_answers: ['finish'], hint: 'we + base verb' }
+      ]
+    },
+    'routine-error': {
+      items: [
+        { id: 'routine-error-3', sentence: 'They watches TV at night.', accepted_answers: ['They watch TV at night.'] },
+        { id: 'routine-error-4', sentence: 'My father work in an office.', accepted_answers: ['My father works in an office.'] },
+        { id: 'routine-error-5', sentence: "I doesn't like milk.", accepted_answers: ['I do not like milk.', "I don't like milk."] }
+      ]
+    },
+    'psq-choice': {
+      items: [
+        { id: 'psq-choice-4', sentence: '___ your brother play tennis?', options: [{ id: 'a', text: 'Do' }, { id: 'b', text: 'Does' }, { id: 'c', text: 'Is' }], answer: 'b', explanation: 'Use Does with he/she/it.' },
+        { id: 'psq-choice-5', sentence: 'When ___ you start work?', options: [{ id: 'a', text: 'do' }, { id: 'b', text: 'does' }, { id: 'c', text: 'are' }], answer: 'a', explanation: 'Use do with you.' }
+      ]
+    },
+    'psq-order': {
+      items: [
+        { id: 'psq-order-4', words: ['she', 'Does', 'coffee', 'drink'], answer: 'Does she drink coffee?' },
+        { id: 'psq-order-5', words: ['do', 'What', 'they', 'eat'], answer: 'What do they eat?' }
+      ]
+    },
+    'psq-gap': {
+      items: [
+        { id: 'psq-gap-4', sentence: 'I go to the gym three times a week. I ___ go to the gym.', accepted_answers: ['often', 'usually'], hint: 'many times' },
+        { id: 'psq-gap-5', sentence: 'I watch TV one day a week. I ___ watch TV.', accepted_answers: ['sometimes'], hint: 'not often, but not never' }
+      ]
+    },
+    'psq-error-extra': {
+      items: [
+        { id: 'psq-error-extra-3', sentence: 'Do he work here?', accepted_answers: ['Does he work here?'] },
+        { id: 'psq-error-extra-4', sentence: 'What does they eat?', accepted_answers: ['What do they eat?'] },
+        { id: 'psq-error-extra-5', sentence: 'How often does you study?', accepted_answers: ['How often do you study?'] }
+      ]
+    },
+    'havegot-choice': {
+      items: [
+        { id: 'havegot-choice-4', sentence: 'We ___ a small house.', options: [{ id: 'a', text: 'have got' }, { id: 'b', text: 'has got' }, { id: 'c', text: 'are got' }], answer: 'a', explanation: 'Use have got with we.' },
+        { id: 'havegot-choice-5', sentence: 'He ___ a blue bag.', options: [{ id: 'a', text: 'have got' }, { id: 'b', text: 'has got' }, { id: 'c', text: 'is got' }], answer: 'b', explanation: 'Use has got with he.' }
+      ]
+    },
+    'havegot-gap': {
+      items: [
+        { id: 'havegot-gap-4', sentence: 'She ___ got a sister.', accepted_answers: ['has'], hint: 'she + has got' },
+        { id: 'havegot-gap-5', sentence: 'They have got ___ car.', accepted_answers: ['a'], hint: 'article before singular noun' }
+      ]
+    },
+    'havegot-order': {
+      items: [
+        { id: 'havegot-order-3', words: ['not', 'got', 'They', 'have', 'a', 'car'], answer: 'They have not got a car.' },
+        { id: 'havegot-order-4', words: ['got', 'Has', 'she', 'a', 'tablet'], answer: 'Has she got a tablet?' },
+        { id: 'havegot-order-5', words: ['have', 'We', 'got', 'two', 'books'], answer: 'We have got two books.' }
+      ]
+    },
+    'havegot-error-extra': {
+      items: [
+        { id: 'havegot-error-extra-3', sentence: 'They has got a car.', accepted_answers: ['They have got a car.'] },
+        { id: 'havegot-error-extra-4', sentence: 'Has you got a pen?', accepted_answers: ['Have you got a pen?'] },
+        { id: 'havegot-error-extra-5', sentence: 'I got have a sister.', accepted_answers: ['I have got a sister.'] }
+      ]
+    },
+    'can-choice': {
+      items: [
+        { id: 'can-choice-4', sentence: 'They ___ play the piano.', options: [{ id: 'a', text: 'can' }, { id: 'b', text: 'cans' }, { id: 'c', text: 'to can' }], answer: 'a', explanation: 'Can does not change with they.' },
+        { id: 'can-choice-5', sentence: 'She ___ ride a bike.', options: [{ id: 'a', text: 'can' }, { id: 'b', text: 'cans' }, { id: 'c', text: 'is can' }], answer: 'a', explanation: 'Can does not change with she.' }
+      ]
+    },
+    'can-gap': {
+      items: [
+        { id: 'can-gap-4', sentence: 'We can ___ English. (speak)', accepted_answers: ['speak'], hint: 'can + base verb' },
+        { id: 'can-gap-5', sentence: 'Can you ___ the window? (open)', accepted_answers: ['open'], hint: 'can + base verb' }
+      ]
+    },
+    'can-error': {
+      items: [
+        { id: 'can-error-3', sentence: 'He can to swim.', accepted_answers: ['He can swim.'] },
+        { id: 'can-error-4', sentence: 'They cans cook.', accepted_answers: ['They can cook.'] },
+        { id: 'can-error-5', sentence: 'Can she plays tennis?', accepted_answers: ['Can she play tennis?'] }
+      ]
+    },
+    'food-choice': {
+      items: [
+        { id: 'food-choice-4', sentence: 'Would you like ___ tea?', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'many' }], answer: 'a', explanation: 'Use some in offers.' },
+        { id: 'food-choice-5', sentence: 'We do not have ___ bread.', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'many' }], answer: 'b', explanation: 'Use any in negatives.' }
+      ]
+    },
+    'food-gap': {
+      items: [
+        { id: 'food-gap-4', sentence: 'How ___ eggs are there?', accepted_answers: ['many'], hint: 'eggs are countable' },
+        { id: 'food-gap-5', sentence: 'How ___ bread do you eat?', accepted_answers: ['much'], hint: 'bread is uncountable' }
+      ]
+    },
+    'food-matching': {
+      pairs: [
+        { id: 'food-matching-5', left_text: 'cheese', right_text: 'uncountable' }
+      ]
+    },
+    'food-error-extra': {
+      items: [
+        { id: 'food-error-extra-3', sentence: 'Do you have some milk?', accepted_answers: ['Do you have any milk?'] },
+        { id: 'food-error-extra-4', sentence: 'How many rice do you need?', accepted_answers: ['How much rice do you need?'] },
+        { id: 'food-error-extra-5', sentence: 'There is many apples.', accepted_answers: ['There are many apples.'] }
+      ]
+    },
+    'prep-choice': {
+      items: [
+        { id: 'prep-choice-4', sentence: 'I live ___ Yerevan.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'a', explanation: 'Use in with cities.' },
+        { id: 'prep-choice-5', sentence: 'The keys are ___ the table.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'b', explanation: 'Use on for a surface.' }
+      ]
+    },
+    'prep-gap': {
+      items: [
+        { id: 'prep-gap-4', sentence: 'We meet ___ Friday.', accepted_answers: ['on'], hint: 'on + day' },
+        { id: 'prep-gap-5', sentence: 'The class is ___ the morning.', accepted_answers: ['in'], hint: 'in the morning' }
+      ]
+    },
+    'prep-error': {
+      items: [
+        { id: 'prep-error-3', sentence: 'She is in home.', accepted_answers: ['She is at home.'] },
+        { id: 'prep-error-4', sentence: 'We meet in Friday.', accepted_answers: ['We meet on Friday.'] },
+        { id: 'prep-error-5', sentence: 'The lesson is at Monday.', accepted_answers: ['The lesson is on Monday.'] }
+      ]
+    },
+    'prep-order-extra': {
+      items: [
+        { id: 'prep-order-extra-3', words: ['in', 'I', 'live', 'Armenia'], answer: 'I live in Armenia.' },
+        { id: 'prep-order-extra-4', words: ['at', 'The', 'lesson', 'starts', 'six'], answer: 'The lesson starts at six.' },
+        { id: 'prep-order-extra-5', words: ['on', 'The', 'book', 'is', 'desk', 'the'], answer: 'The book is on the desk.' }
+      ]
+    },
+    'pc-choice': {
+      items: [
+        { id: 'pc-choice-4', sentence: 'We ___ TV now.', options: [{ id: 'a', text: 'watch' }, { id: 'b', text: 'are watching' }, { id: 'c', text: 'watches' }], answer: 'b', explanation: 'We + are + -ing.' },
+        { id: 'pc-choice-5', sentence: '___ he working today?', options: [{ id: 'a', text: 'Is' }, { id: 'b', text: 'Are' }, { id: 'c', text: 'Does' }], answer: 'a', explanation: 'Use Is he ...?' }
+      ]
+    },
+    'pc-gap': {
+      items: [
+        { id: 'pc-gap-4', sentence: 'She is ___ dinner. (make)', accepted_answers: ['making'], hint: 'make changes to making' },
+        { id: 'pc-gap-5', sentence: 'They are ___ football. (play)', accepted_answers: ['playing'], hint: 'play + ing' }
+      ]
+    },
+    'pc-order': {
+      items: [
+        { id: 'pc-order-3', words: ['am', 'I', 'not', 'sleeping'], answer: 'I am not sleeping.' },
+        { id: 'pc-order-4', words: ['are', 'They', 'working', 'now'], answer: 'They are working now.' },
+        { id: 'pc-order-5', words: ['is', 'What', 'doing', 'she'], answer: 'What is she doing?' }
+      ]
+    },
+    'pc-error-extra': {
+      items: [
+        { id: 'pc-error-extra-3', sentence: 'I studying English now.', accepted_answers: ['I am studying English now.'] },
+        { id: 'pc-error-extra-4', sentence: 'We is cooking.', accepted_answers: ['We are cooking.'] },
+        { id: 'pc-error-extra-5', sentence: 'Are she listening?', accepted_answers: ['Is she listening?'] }
+      ]
+    }
+  };
+
   const state = {
     userId: null,
     teacher: null,
@@ -1277,6 +1574,97 @@
     return 0;
   }
 
+  function expandReadyLessonTask(task) {
+    const expanded = cloneData(task || {});
+    if (!expanded || typeof expanded !== 'object') return expanded;
+
+    const extension = READY_LESSON_TASK_EXTENSIONS[expanded.id] || {};
+    if (Array.isArray(expanded.items)) {
+      expanded.items = [...expanded.items, ...(Array.isArray(extension.items) ? extension.items : [])].slice(0, 5);
+    }
+
+    if (Array.isArray(expanded.pairs)) {
+      expanded.pairs = [...expanded.pairs, ...(Array.isArray(extension.pairs) ? extension.pairs : [])].slice(0, 5);
+    }
+
+    return expanded;
+  }
+
+  function getReadyLessonItemQuestionText(item) {
+    if (!item) return '';
+    if (item.sentence) return item.sentence;
+    if (item.question) return item.question;
+    if (Array.isArray(item.words)) return item.words.join(' / ');
+    return item.left_text || item.title || 'Question';
+  }
+
+  function getReadyLessonItemOptionsText(item) {
+    if (!Array.isArray(item?.options) || !item.options.length) return '';
+    return item.options.map((option) => {
+      const prefix = option?.id ? `${String(option.id).toUpperCase()}. ` : '';
+      return `${prefix}${option?.text || ''}`.trim();
+    }).filter(Boolean).join(' / ');
+  }
+
+  function getReadyLessonItemAnswerText(item) {
+    if (!item) return '';
+
+    if (item.answer) {
+      if (Array.isArray(item.options)) {
+        const answerOption = item.options.find((option) => option?.id === item.answer);
+        return answerOption?.text || item.answer;
+      }
+      return item.answer;
+    }
+
+    if (Array.isArray(item.accepted_answers) && item.accepted_answers.length) {
+      return item.accepted_answers.join(' / ');
+    }
+
+    return item.sample_answer || '';
+  }
+
+  function renderReadyLessonQuestionPreview(task) {
+    if (!task) return '';
+
+    if (Array.isArray(task.pairs) && task.pairs.length) {
+      return `
+        <div class="td-ready-question-preview">
+          <div class="td-ready-question-title">Questions preview</div>
+          <ol class="td-ready-question-list">
+            ${task.pairs.map((pair) => `
+              <li>
+                <span>${escapeHtml(pair.left_text || 'Match item')}</span>
+                <span class="td-ready-answer-key">Match: ${escapeHtml(pair.right_text || '')}</span>
+              </li>
+            `).join('')}
+          </ol>
+        </div>
+      `;
+    }
+
+    if (!Array.isArray(task.items) || !task.items.length) return '';
+
+    return `
+      <div class="td-ready-question-preview">
+        <div class="td-ready-question-title">Questions preview</div>
+        <ol class="td-ready-question-list">
+          ${task.items.map((item) => {
+            const optionsText = getReadyLessonItemOptionsText(item);
+            const answerText = getReadyLessonItemAnswerText(item);
+            return `
+              <li>
+                <span>${escapeHtml(getReadyLessonItemQuestionText(item))}</span>
+                ${optionsText ? `<span class="td-ready-options">Options: ${escapeHtml(optionsText)}</span>` : ''}
+                ${answerText ? `<span class="td-ready-answer-key">Answer: ${escapeHtml(answerText)}</span>` : ''}
+              </li>
+            `;
+          }).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
   function countReadyLessonContentItems(content) {
     return (content?.tasks || []).reduce((sum, task) => sum + countReadyLessonTaskItems(task), 0);
   }
@@ -1310,7 +1698,7 @@
     const extraIds = new Set(Array.isArray(draft.extraTaskIds) ? draft.extraTaskIds : []);
     const selected = baseTasks.filter((task) => selectedIds.has(task.id));
     const extras = extraTasks.filter((task) => extraIds.has(task.id));
-    return [...selected, ...extras];
+    return [...selected, ...extras].map(expandReadyLessonTask);
   }
 
   function buildReadyLessonSchemaJson(lesson, tasks) {
@@ -1390,6 +1778,7 @@
           data-task-id="${escapeHtml(task.id)}"
           data-extra="${isExtra ? 'true' : 'false'}"
         >Remove</button>
+        ${renderReadyLessonQuestionPreview(task)}
       </div>
     `;
   }
@@ -4601,9 +4990,15 @@ function renderStudentTemplateAnswers(assignment) {
       .td-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
       .td-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
       .td-ready-task-list,.td-ready-review-list{display:grid;gap:10px}
-      .td-ready-task{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+      .td-ready-task{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}
       .td-ready-task-main{display:flex;align-items:flex-start;gap:12px;min-width:0}
+      .td-ready-task > .td-btn{justify-self:end}
       .td-ready-task-num{width:30px;height:30px;border-radius:999px;background:#eef6ff;border:1px solid #c7e2ff;color:#175cd3;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:0 0 auto}
+      .td-ready-question-preview{grid-column:1 / -1;border-top:1px solid #eef2f6;padding-top:10px;display:grid;gap:8px}
+      .td-ready-question-title{color:#344054;font-size:12px;font-weight:800;letter-spacing:0}
+      .td-ready-question-list{margin:0;padding-left:19px;display:grid;gap:7px;color:#111213;font-size:13px;line-height:1.45}
+      .td-ready-question-list li{padding-left:2px}
+      .td-ready-options,.td-ready-answer-key{display:block;color:#667085;margin-top:2px}
       .td-ready-extra-select{min-width:220px;width:auto}
       .td-ready-review-task{background:#fbfdff}
 
@@ -4667,6 +5062,8 @@ function renderStudentTemplateAnswers(assignment) {
         .td-btn-add{min-width:0;width:100%}
         .td-note-inline{max-width:none}
         .td-repeat-row{grid-template-columns:1fr}
+        .td-ready-task{grid-template-columns:1fr}
+        .td-ready-task > .td-btn{justify-self:start;width:100%}
         .td-ready-extra-select{width:100%;min-width:0}
       }
     `;
