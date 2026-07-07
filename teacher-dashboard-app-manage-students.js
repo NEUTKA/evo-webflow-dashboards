@@ -63,6 +63,11 @@
       label: 'Vocabulary Dropdown',
       category: 'vocabulary',
       answerMode: 'dropdown'
+    },
+    grammar_lesson_pack: {
+      label: 'Ready Grammar Lesson',
+      category: 'grammar',
+      answerMode: 'lesson_pack'
     }
   };
 
@@ -105,6 +110,807 @@
     retaught: 'Retaught',
     extra_practice_needed: 'Extra practice needed'
   };
+
+  const READY_GRAMMAR_LESSONS_A1 = [
+    {
+      id: 'a1-grammar-01-be-profile',
+      order: 1,
+      stage: 'A1.1',
+      title: 'Verb to be: profiles',
+      topic: 'am / is / are',
+      minutes: 25,
+      description: 'Students practise basic profile sentences and questions with the verb to be.',
+      focus: ['to be', 'personal information', 'short answers'],
+      teacherNotes: 'Use this lesson early. It gives the student controlled grammar practice before a short personal response.',
+      tasks: [
+        {
+          id: 'be-profile-choice',
+          type: 'choice',
+          title: 'Choose am, is or are',
+          prompt: 'Complete each profile sentence.',
+          items: [
+            { id: 'be-profile-choice-1', sentence: 'I ___ from Armenia.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'a', explanation: 'Use am with I.' },
+            { id: 'be-profile-choice-2', sentence: 'Mila ___ a student.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'b', explanation: 'Use is with he, she and it.' },
+            { id: 'be-profile-choice-3', sentence: 'We ___ in class today.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'c', explanation: 'Use are with we, you and they.' }
+          ]
+        },
+        {
+          id: 'be-profile-gap',
+          type: 'gap_fill',
+          title: 'Type the missing verb',
+          prompt: 'Type am, is or are.',
+          items: [
+            { id: 'be-profile-gap-1', sentence: 'My name ___ Anna.', accepted_answers: ['is'], hint: 'My name = it', explanation: 'My name is Anna.' },
+            { id: 'be-profile-gap-2', sentence: 'You ___ my teacher.', accepted_answers: ['are'], hint: 'you + are', explanation: 'Use are with you.' },
+            { id: 'be-profile-gap-3', sentence: 'He ___ not late.', accepted_answers: ['is'], hint: 'he + is', explanation: 'The negative is is not.' }
+          ]
+        },
+        {
+          id: 'be-profile-order',
+          type: 'word_order',
+          title: 'Put the words in order',
+          prompt: 'Write the full sentence in the correct order.',
+          items: [
+            { id: 'be-profile-order-1', words: ['am', 'I', 'not', 'new'], answer: 'I am not new.' },
+            { id: 'be-profile-order-2', words: ['is', 'She', 'from', 'London'], answer: 'She is from London.' }
+          ]
+        },
+        {
+          id: 'be-profile-speaking',
+          type: 'speaking_prompt',
+          title: 'Personal answer',
+          prompt: 'Answer in 3 short sentences.',
+          items: [
+            { id: 'be-profile-speaking-1', question: 'Who are you? Where are you from? Are you a student?', sample_answer: 'I am Aram. I am from Yerevan. I am a student.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'be-profile-error-extra',
+          type: 'error_correction',
+          title: 'Fix the mistakes',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'be-profile-error-extra-1', sentence: 'She are my friend.', accepted_answers: ['She is my friend.'], explanation: 'Use is with she.' },
+            { id: 'be-profile-error-extra-2', sentence: 'I is from Gyumri.', accepted_answers: ['I am from Gyumri.'], explanation: 'Use am with I.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-02-questions',
+      order: 2,
+      stage: 'A1.1',
+      title: 'Questions with be',
+      topic: 'be questions and short answers',
+      minutes: 25,
+      description: 'Students build simple questions and give short answers about people and places.',
+      focus: ['question forms', 'short answers', 'personal details'],
+      teacherNotes: 'Good after the first to be lesson. Ask the student to read questions aloud before answering.',
+      tasks: [
+        {
+          id: 'be-questions-choice',
+          type: 'choice',
+          title: 'Choose the correct question',
+          prompt: 'Choose the best form.',
+          items: [
+            { id: 'be-questions-choice-1', sentence: '___ you ready?', options: [{ id: 'a', text: 'Am' }, { id: 'b', text: 'Is' }, { id: 'c', text: 'Are' }], answer: 'c', explanation: 'Use Are you ...?' },
+            { id: 'be-questions-choice-2', sentence: '___ she your sister?', options: [{ id: 'a', text: 'Am' }, { id: 'b', text: 'Is' }, { id: 'c', text: 'Are' }], answer: 'b', explanation: 'Use Is she ...?' },
+            { id: 'be-questions-choice-3', sentence: '___ they at home?', options: [{ id: 'a', text: 'Are' }, { id: 'b', text: 'Is' }, { id: 'c', text: 'Am' }], answer: 'a', explanation: 'Use Are they ...?' }
+          ]
+        },
+        {
+          id: 'be-questions-gap',
+          type: 'gap_fill',
+          title: 'Short answers',
+          prompt: 'Type the missing word.',
+          items: [
+            { id: 'be-questions-gap-1', sentence: 'Are you tired? Yes, I ___.', accepted_answers: ['am'], hint: 'Yes, I ...' },
+            { id: 'be-questions-gap-2', sentence: 'Is he here? No, he ___.', accepted_answers: ['is not', "isn't"], hint: 'negative short answer' },
+            { id: 'be-questions-gap-3', sentence: 'Are they teachers? Yes, they ___.', accepted_answers: ['are'], hint: 'Yes, they ...' }
+          ]
+        },
+        {
+          id: 'be-questions-order',
+          type: 'word_order',
+          title: 'Make questions',
+          prompt: 'Write the question in the correct order.',
+          items: [
+            { id: 'be-questions-order-1', words: ['you', 'Are', 'from', 'Spain'], answer: 'Are you from Spain?' },
+            { id: 'be-questions-order-2', words: ['your', 'Is', 'teacher', 'online'], answer: 'Is your teacher online?' }
+          ]
+        },
+        {
+          id: 'be-questions-short',
+          type: 'short_answer',
+          title: 'Answer about you',
+          prompt: 'Write short answers.',
+          items: [
+            { id: 'be-questions-short-1', question: 'Are you at home now?', sample_answer: 'Yes, I am. / No, I am not.' },
+            { id: 'be-questions-short-2', question: 'Are you ready for class?', sample_answer: 'Yes, I am.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'be-questions-match-extra',
+          type: 'matching',
+          title: 'Match questions and answers',
+          prompt: 'Match each question with the best answer.',
+          pairs: [
+            { id: 'be-questions-match-extra-1', left_text: 'Are you a student?', right_text: 'Yes, I am.' },
+            { id: 'be-questions-match-extra-2', left_text: 'Is he your brother?', right_text: 'No, he is not.' },
+            { id: 'be-questions-match-extra-3', left_text: 'Are they late?', right_text: 'Yes, they are.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-03-possessives',
+      order: 3,
+      stage: 'A1.1',
+      title: 'Possessives: my, your, his, her',
+      topic: 'possessive adjectives and possessive s',
+      minutes: 25,
+      description: 'Students describe family and belongings with possessive adjectives and possessive s.',
+      focus: ['possessive adjectives', "possessive 's", 'family'],
+      teacherNotes: 'Keep vocabulary familiar: family, bag, phone, book, teacher, friend.',
+      tasks: [
+        {
+          id: 'possessives-choice',
+          type: 'choice',
+          title: 'Choose the possessive',
+          prompt: 'Choose the correct word.',
+          items: [
+            { id: 'possessives-choice-1', sentence: 'I have a brother. ___ name is David.', options: [{ id: 'a', text: 'My' }, { id: 'b', text: 'His' }, { id: 'c', text: 'Her' }], answer: 'b', explanation: 'A brother is he, so use his.' },
+            { id: 'possessives-choice-2', sentence: 'This is Anna. ___ phone is new.', options: [{ id: 'a', text: 'Her' }, { id: 'b', text: 'His' }, { id: 'c', text: 'Their' }], answer: 'a', explanation: 'Anna is she, so use her.' },
+            { id: 'possessives-choice-3', sentence: 'We are students. ___ teacher is kind.', options: [{ id: 'a', text: 'Our' }, { id: 'b', text: 'Your' }, { id: 'c', text: 'Their' }], answer: 'a', explanation: 'We + our.' }
+          ]
+        },
+        {
+          id: 'possessives-gap',
+          type: 'gap_fill',
+          title: "Use possessive 's",
+          prompt: 'Type one word or phrase.',
+          items: [
+            { id: 'possessives-gap-1', sentence: 'This is ___ book. (Tom)', accepted_answers: ["Tom's"], hint: "Tom + 's" },
+            { id: 'possessives-gap-2', sentence: 'That is ___ bag. (my sister)', accepted_answers: ["my sister's"], hint: "my sister + 's" },
+            { id: 'possessives-gap-3', sentence: '___ name is Ben. (the teacher)', accepted_answers: ["The teacher's", "teacher's"], hint: "the teacher + 's" }
+          ]
+        },
+        {
+          id: 'possessives-error',
+          type: 'error_correction',
+          title: 'Correct the sentence',
+          prompt: 'Rewrite the sentence correctly.',
+          items: [
+            { id: 'possessives-error-1', sentence: 'She is my friend. His name is Maria.', accepted_answers: ['She is my friend. Her name is Maria.', 'Her name is Maria.'], explanation: 'Use her for Maria.' },
+            { id: 'possessives-error-2', sentence: 'This is Anna book.', accepted_answers: ["This is Anna's book."], explanation: "Use 's for possession." }
+          ]
+        },
+        {
+          id: 'possessives-writing',
+          type: 'writing_prompt',
+          title: 'Write about your family',
+          prompt: 'Write 4 short sentences. Use my, his, her or our.',
+          items: [
+            { id: 'possessives-writing-1', question: 'Write about two people in your family.', sample_answer: 'My sister is Ani. Her phone is black. My father is a doctor. His car is old.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'possessives-order-extra',
+          type: 'word_order',
+          title: 'Build sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'possessives-order-extra-1', words: ['is', 'This', "Nina's", 'desk'], answer: "This is Nina's desk." },
+            { id: 'possessives-order-extra-2', words: ['Our', 'is', 'teacher', 'friendly'], answer: 'Our teacher is friendly.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-04-articles',
+      order: 4,
+      stage: 'A1.1',
+      title: 'Articles: a, an, the',
+      topic: 'basic articles',
+      minutes: 25,
+      description: 'Students choose a, an or the in simple object and classroom sentences.',
+      focus: ['a / an', 'the', 'classroom objects'],
+      teacherNotes: 'Use real classroom objects or pictures if you teach live after assigning this lesson.',
+      tasks: [
+        {
+          id: 'articles-choice',
+          type: 'choice',
+          title: 'Choose the article',
+          prompt: 'Choose a, an or the.',
+          items: [
+            { id: 'articles-choice-1', sentence: 'I have ___ apple.', options: [{ id: 'a', text: 'a' }, { id: 'b', text: 'an' }, { id: 'c', text: 'the' }], answer: 'b', explanation: 'Use an before a vowel sound.' },
+            { id: 'articles-choice-2', sentence: 'This is ___ book. ___ book is blue.', options: [{ id: 'a', text: 'a / The' }, { id: 'b', text: 'an / The' }, { id: 'c', text: 'the / A' }], answer: 'a', explanation: 'First mention: a book. Second mention: the book.' },
+            { id: 'articles-choice-3', sentence: 'She is ___ teacher.', options: [{ id: 'a', text: 'a' }, { id: 'b', text: 'an' }, { id: 'c', text: 'the' }], answer: 'a', explanation: 'Use a before a consonant sound.' }
+          ]
+        },
+        {
+          id: 'articles-gap',
+          type: 'gap_fill',
+          title: 'Type a or an',
+          prompt: 'Type a or an.',
+          items: [
+            { id: 'articles-gap-1', sentence: '___ orange bag', accepted_answers: ['an'], hint: 'orange starts with a vowel sound' },
+            { id: 'articles-gap-2', sentence: '___ small desk', accepted_answers: ['a'], hint: 'small starts with a consonant sound' },
+            { id: 'articles-gap-3', sentence: '___ English lesson', accepted_answers: ['an'], hint: 'English starts with a vowel sound' }
+          ]
+        },
+        {
+          id: 'articles-error',
+          type: 'error_correction',
+          title: 'Fix the article',
+          prompt: 'Rewrite the sentence correctly.',
+          items: [
+            { id: 'articles-error-1', sentence: 'I have a umbrella.', accepted_answers: ['I have an umbrella.'], explanation: 'Use an before umbrella.' },
+            { id: 'articles-error-2', sentence: 'This is an pen.', accepted_answers: ['This is a pen.'], explanation: 'Use a before pen.' }
+          ]
+        },
+        {
+          id: 'articles-short',
+          type: 'short_answer',
+          title: 'Describe your desk',
+          prompt: 'Write 3 sentences with a, an or the.',
+          items: [
+            { id: 'articles-short-1', question: 'What is on your desk?', sample_answer: 'I have a notebook. I have an eraser. The notebook is blue.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'articles-choice-extra',
+          type: 'choice',
+          title: 'More article practice',
+          prompt: 'Choose the correct phrase.',
+          items: [
+            { id: 'articles-choice-extra-1', sentence: 'Choose the correct phrase.', options: [{ id: 'a', text: 'an old phone' }, { id: 'b', text: 'a old phone' }, { id: 'c', text: 'the old phone' }], answer: 'a', explanation: 'Old starts with a vowel sound.' },
+            { id: 'articles-choice-extra-2', sentence: 'Choose the correct phrase.', options: [{ id: 'a', text: 'a interesting story' }, { id: 'b', text: 'an interesting story' }, { id: 'c', text: 'the interesting story' }], answer: 'b', explanation: 'Interesting starts with a vowel sound.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-05-there-is-place',
+      order: 5,
+      stage: 'A1.2',
+      title: 'There is / There are',
+      topic: 'rooms and places',
+      minutes: 30,
+      description: 'Students describe a room with there is, there are and basic place prepositions.',
+      focus: ['there is / there are', 'in / on / under / next to', 'room vocabulary'],
+      teacherNotes: 'Ask the student to describe their real room at the end for transfer to speaking.',
+      tasks: [
+        {
+          id: 'there-place-choice',
+          type: 'choice',
+          title: 'Choose is or are',
+          prompt: 'Choose the correct form.',
+          items: [
+            { id: 'there-place-choice-1', sentence: 'There ___ a sofa in the room.', options: [{ id: 'a', text: 'is' }, { id: 'b', text: 'are' }], answer: 'a', explanation: 'A sofa is singular.' },
+            { id: 'there-place-choice-2', sentence: 'There ___ two chairs near the table.', options: [{ id: 'a', text: 'is' }, { id: 'b', text: 'are' }], answer: 'b', explanation: 'Two chairs is plural.' },
+            { id: 'there-place-choice-3', sentence: 'There ___ not a window here.', options: [{ id: 'a', text: 'is' }, { id: 'b', text: 'are' }], answer: 'a', explanation: 'A window is singular.' }
+          ]
+        },
+        {
+          id: 'there-place-gap',
+          type: 'gap_fill',
+          title: 'Prepositions of place',
+          prompt: 'Type in, on, under or next to.',
+          items: [
+            { id: 'there-place-gap-1', sentence: 'The book is ___ the table.', accepted_answers: ['on'], hint: 'on top of the table' },
+            { id: 'there-place-gap-2', sentence: 'The bag is ___ the chair.', accepted_answers: ['under'], hint: 'below the chair' },
+            { id: 'there-place-gap-3', sentence: 'The lamp is ___ the bed.', accepted_answers: ['next to'], hint: 'beside the bed' }
+          ]
+        },
+        {
+          id: 'there-place-order',
+          type: 'word_order',
+          title: 'Make room sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'there-place-order-1', words: ['is', 'There', 'a', 'desk'], answer: 'There is a desk.' },
+            { id: 'there-place-order-2', words: ['are', 'There', 'three', 'books'], answer: 'There are three books.' }
+          ]
+        },
+        {
+          id: 'there-place-writing',
+          type: 'writing_prompt',
+          title: 'Describe a room',
+          prompt: 'Write 5 short sentences about a room.',
+          items: [
+            { id: 'there-place-writing-1', question: 'Use there is, there are and at least two prepositions.', sample_answer: 'There is a bed. There are two chairs. The bag is on the chair. The desk is next to the window.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'there-place-error-extra',
+          type: 'error_correction',
+          title: 'Correct room sentences',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'there-place-error-extra-1', sentence: 'There are a bed.', accepted_answers: ['There is a bed.'] },
+            { id: 'there-place-error-extra-2', sentence: 'There is two windows.', accepted_answers: ['There are two windows.'] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-06-present-simple-routines',
+      order: 6,
+      stage: 'A1.2',
+      title: 'Present Simple: routines',
+      topic: 'positive and negative forms',
+      minutes: 30,
+      description: 'Students practise present simple routines with I, we, they and he/she.',
+      focus: ['present simple', 'daily routines', 'does not'],
+      teacherNotes: 'The lesson moves from controlled forms to a short routine paragraph.',
+      tasks: [
+        {
+          id: 'routine-choice',
+          type: 'choice',
+          title: 'Choose the verb form',
+          prompt: 'Choose the correct present simple form.',
+          items: [
+            { id: 'routine-choice-1', sentence: 'She ___ English on Mondays.', options: [{ id: 'a', text: 'study' }, { id: 'b', text: 'studies' }, { id: 'c', text: 'studying' }], answer: 'b', explanation: 'With she, add -s or -es.' },
+            { id: 'routine-choice-2', sentence: 'They ___ breakfast at 8.', options: [{ id: 'a', text: 'have' }, { id: 'b', text: 'has' }, { id: 'c', text: 'having' }], answer: 'a', explanation: 'Use the base verb with they.' },
+            { id: 'routine-choice-3', sentence: 'He ___ work on Sundays.', options: [{ id: 'a', text: 'do not' }, { id: 'b', text: 'does not' }, { id: 'c', text: 'is not' }], answer: 'b', explanation: 'Use does not with he/she/it.' }
+          ]
+        },
+        {
+          id: 'routine-gap',
+          type: 'gap_fill',
+          title: 'Type the correct verb',
+          prompt: 'Use the verb in brackets.',
+          items: [
+            { id: 'routine-gap-1', sentence: 'My sister ___ coffee. (like)', accepted_answers: ['likes'], hint: 'she = likes' },
+            { id: 'routine-gap-2', sentence: 'I ___ TV in the evening. (watch)', accepted_answers: ['watch'], hint: 'I + base verb' },
+            { id: 'routine-gap-3', sentence: 'Tom ___ at 7. (get up)', accepted_answers: ['gets up'], hint: 'he = gets up' }
+          ]
+        },
+        {
+          id: 'routine-error',
+          type: 'error_correction',
+          title: 'Find and fix the mistake',
+          prompt: 'Rewrite the sentence correctly.',
+          items: [
+            { id: 'routine-error-1', sentence: 'She go to work by bus.', accepted_answers: ['She goes to work by bus.'] },
+            { id: 'routine-error-2', sentence: 'He do not like tea.', accepted_answers: ['He does not like tea.', "He doesn't like tea."] }
+          ]
+        },
+        {
+          id: 'routine-writing',
+          type: 'writing_prompt',
+          title: 'Your routine',
+          prompt: 'Write 5 sentences about your day.',
+          items: [
+            { id: 'routine-writing-1', question: 'Use at least one negative sentence.', sample_answer: 'I get up at 8. I drink coffee. I study English. I do not work on Sunday. I sleep at 11.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'routine-speaking-extra',
+          type: 'speaking_prompt',
+          title: 'Tell your teacher',
+          prompt: 'Prepare 4 sentences to say in class.',
+          items: [
+            { id: 'routine-speaking-extra-1', question: 'What do you do every morning?', sample_answer: 'I get up. I wash my face. I have breakfast. I go to work.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-07-present-simple-questions',
+      order: 7,
+      stage: 'A1.2',
+      title: 'Present Simple questions',
+      topic: 'do / does and frequency',
+      minutes: 30,
+      description: 'Students ask and answer questions about habits and frequency.',
+      focus: ['do / does', 'adverbs of frequency', 'habits'],
+      teacherNotes: 'Useful before conversation lessons about routines, work and free time.',
+      tasks: [
+        {
+          id: 'psq-choice',
+          type: 'choice',
+          title: 'Do or does',
+          prompt: 'Choose the correct auxiliary.',
+          items: [
+            { id: 'psq-choice-1', sentence: '___ you like music?', options: [{ id: 'a', text: 'Do' }, { id: 'b', text: 'Does' }, { id: 'c', text: 'Are' }], answer: 'a', explanation: 'Use Do with you.' },
+            { id: 'psq-choice-2', sentence: '___ she work from home?', options: [{ id: 'a', text: 'Do' }, { id: 'b', text: 'Does' }, { id: 'c', text: 'Is' }], answer: 'b', explanation: 'Use Does with she.' },
+            { id: 'psq-choice-3', sentence: 'How often ___ they study?', options: [{ id: 'a', text: 'do' }, { id: 'b', text: 'does' }, { id: 'c', text: 'are' }], answer: 'a', explanation: 'Use do with they.' }
+          ]
+        },
+        {
+          id: 'psq-order',
+          type: 'word_order',
+          title: 'Build questions',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'psq-order-1', words: ['you', 'Do', 'coffee', 'drink'], answer: 'Do you drink coffee?' },
+            { id: 'psq-order-2', words: ['does', 'Where', 'live', 'he'], answer: 'Where does he live?' },
+            { id: 'psq-order-3', words: ['study', 'often', 'How', 'do', 'you'], answer: 'How often do you study?' }
+          ]
+        },
+        {
+          id: 'psq-gap',
+          type: 'gap_fill',
+          title: 'Frequency words',
+          prompt: 'Type always, usually, sometimes or never.',
+          items: [
+            { id: 'psq-gap-1', sentence: 'I study English every day. I ___ study English.', accepted_answers: ['always'], hint: 'every day' },
+            { id: 'psq-gap-2', sentence: 'I do not drink coffee. I ___ drink coffee.', accepted_answers: ['never'], hint: 'not at any time' },
+            { id: 'psq-gap-3', sentence: 'I watch films on Friday or Saturday. I ___ watch films at the weekend.', accepted_answers: ['usually', 'sometimes'], hint: 'more than once, but not every day' }
+          ]
+        },
+        {
+          id: 'psq-short',
+          type: 'short_answer',
+          title: 'Answer habit questions',
+          prompt: 'Answer with full short sentences.',
+          items: [
+            { id: 'psq-short-1', question: 'How often do you study English?', sample_answer: 'I usually study English three times a week.' },
+            { id: 'psq-short-2', question: 'Do you watch videos in English?', sample_answer: 'Yes, I do. / No, I do not.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'psq-error-extra',
+          type: 'error_correction',
+          title: 'Correct the question',
+          prompt: 'Rewrite the question correctly.',
+          items: [
+            { id: 'psq-error-extra-1', sentence: 'Does you like tea?', accepted_answers: ['Do you like tea?'] },
+            { id: 'psq-error-extra-2', sentence: 'Where do she live?', accepted_answers: ['Where does she live?'] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-08-have-got',
+      order: 8,
+      stage: 'A1.2',
+      title: 'Have got',
+      topic: 'family and belongings',
+      minutes: 25,
+      description: 'Students talk about family and things they have with have got and has got.',
+      focus: ['have got / has got', 'family', 'belongings'],
+      teacherNotes: 'This is especially useful for learners who meet British English coursebooks.',
+      tasks: [
+        {
+          id: 'havegot-choice',
+          type: 'choice',
+          title: 'Choose have got or has got',
+          prompt: 'Choose the correct form.',
+          items: [
+            { id: 'havegot-choice-1', sentence: 'I ___ a new laptop.', options: [{ id: 'a', text: 'have got' }, { id: 'b', text: 'has got' }, { id: 'c', text: 'am got' }], answer: 'a', explanation: 'Use have got with I.' },
+            { id: 'havegot-choice-2', sentence: 'She ___ two brothers.', options: [{ id: 'a', text: 'have got' }, { id: 'b', text: 'has got' }, { id: 'c', text: 'is got' }], answer: 'b', explanation: 'Use has got with she.' },
+            { id: 'havegot-choice-3', sentence: 'They ___ a big family.', options: [{ id: 'a', text: 'have got' }, { id: 'b', text: 'has got' }, { id: 'c', text: 'are got' }], answer: 'a', explanation: 'Use have got with they.' }
+          ]
+        },
+        {
+          id: 'havegot-gap',
+          type: 'gap_fill',
+          title: 'Questions and negatives',
+          prompt: 'Type the missing word.',
+          items: [
+            { id: 'havegot-gap-1', sentence: '___ you got a car?', accepted_answers: ['Have'], hint: 'Question with you' },
+            { id: 'havegot-gap-2', sentence: 'He has ___ a bike.', accepted_answers: ['got'], hint: 'has got' },
+            { id: 'havegot-gap-3', sentence: 'I have ___ got a pet.', accepted_answers: ['not'], hint: 'negative form' }
+          ]
+        },
+        {
+          id: 'havegot-order',
+          type: 'word_order',
+          title: 'Build sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'havegot-order-1', words: ['got', 'I', 'a', 'sister', 'have'], answer: 'I have got a sister.' },
+            { id: 'havegot-order-2', words: ['Has', 'got', 'he', 'a', 'phone'], answer: 'Has he got a phone?' }
+          ]
+        },
+        {
+          id: 'havegot-speaking',
+          type: 'speaking_prompt',
+          title: 'Talk about things you have',
+          prompt: 'Prepare 4 sentences.',
+          items: [
+            { id: 'havegot-speaking-1', question: 'What have you got in your bag or room?', sample_answer: 'I have got a phone. I have got two books. I have not got a tablet.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'havegot-error-extra',
+          type: 'error_correction',
+          title: 'Fix have got',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'havegot-error-extra-1', sentence: 'She have got a dog.', accepted_answers: ['She has got a dog.'] },
+            { id: 'havegot-error-extra-2', sentence: 'Have he got a brother?', accepted_answers: ['Has he got a brother?'] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-09-can-ability',
+      order: 9,
+      stage: 'A1.2',
+      title: 'Can / can not',
+      topic: 'abilities and simple requests',
+      minutes: 25,
+      description: 'Students say what they can do and ask simple can questions.',
+      focus: ['can / cannot', 'abilities', 'requests'],
+      teacherNotes: 'Good bridge into speaking: ask the student follow-up questions with Can you ...?',
+      tasks: [
+        {
+          id: 'can-choice',
+          type: 'choice',
+          title: 'Choose the correct form',
+          prompt: 'Choose can or cannot.',
+          items: [
+            { id: 'can-choice-1', sentence: 'I ___ swim, but I am learning.', options: [{ id: 'a', text: 'can' }, { id: 'b', text: 'cannot' }, { id: 'c', text: 'am' }], answer: 'b', explanation: 'But I am learning shows the ability is not there now.' },
+            { id: 'can-choice-2', sentence: 'She ___ speak English very well.', options: [{ id: 'a', text: 'can' }, { id: 'b', text: 'cans' }, { id: 'c', text: 'is can' }], answer: 'a', explanation: 'Can does not change with she.' },
+            { id: 'can-choice-3', sentence: '___ you help me?', options: [{ id: 'a', text: 'Can' }, { id: 'b', text: 'Do can' }, { id: 'c', text: 'Are can' }], answer: 'a', explanation: 'Use Can you ...? for a simple request.' }
+          ]
+        },
+        {
+          id: 'can-gap',
+          type: 'gap_fill',
+          title: 'Type the verb after can',
+          prompt: 'Use the base verb.',
+          items: [
+            { id: 'can-gap-1', sentence: 'He can ___ fast. (run)', accepted_answers: ['run'], hint: 'can + base verb' },
+            { id: 'can-gap-2', sentence: 'They can ___ dinner. (cook)', accepted_answers: ['cook'], hint: 'can + base verb' },
+            { id: 'can-gap-3', sentence: 'Can she ___ a car? (drive)', accepted_answers: ['drive'], hint: 'can + base verb' }
+          ]
+        },
+        {
+          id: 'can-error',
+          type: 'error_correction',
+          title: 'Correct can mistakes',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'can-error-1', sentence: 'She cans dance.', accepted_answers: ['She can dance.'] },
+            { id: 'can-error-2', sentence: 'Can you to help me?', accepted_answers: ['Can you help me?'] }
+          ]
+        },
+        {
+          id: 'can-short',
+          type: 'short_answer',
+          title: 'Answer about you',
+          prompt: 'Answer the questions.',
+          items: [
+            { id: 'can-short-1', question: 'What can you do well?', sample_answer: 'I can cook well.' },
+            { id: 'can-short-2', question: 'What can you not do?', sample_answer: 'I cannot drive.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'can-speaking-extra',
+          type: 'speaking_prompt',
+          title: 'Mini interview',
+          prompt: 'Prepare 3 questions for your teacher.',
+          items: [
+            { id: 'can-speaking-extra-1', question: 'Write 3 Can you ...? questions.', sample_answer: 'Can you swim? Can you cook? Can you speak French?' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-10-some-any-food',
+      order: 10,
+      stage: 'A1.3',
+      title: 'Some / any with food',
+      topic: 'countable and uncountable nouns',
+      minutes: 30,
+      description: 'Students practise some, any, much and many in simple food and shopping sentences.',
+      focus: ['some / any', 'much / many', 'food'],
+      teacherNotes: 'Keep the focus grammatical. Vocabulary can stay basic: water, milk, apples, eggs, bread.',
+      tasks: [
+        {
+          id: 'food-choice',
+          type: 'choice',
+          title: 'Choose some or any',
+          prompt: 'Choose the correct word.',
+          items: [
+            { id: 'food-choice-1', sentence: 'There is ___ milk in the fridge.', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'many' }], answer: 'a', explanation: 'Use some in positive sentences.' },
+            { id: 'food-choice-2', sentence: 'There are not ___ eggs.', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'much' }], answer: 'b', explanation: 'Use any in negatives.' },
+            { id: 'food-choice-3', sentence: 'Do we have ___ apples?', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'much' }], answer: 'b', explanation: 'Use any in many questions.' }
+          ]
+        },
+        {
+          id: 'food-gap',
+          type: 'gap_fill',
+          title: 'Much or many',
+          prompt: 'Type much or many.',
+          items: [
+            { id: 'food-gap-1', sentence: 'How ___ water do you drink?', accepted_answers: ['much'], hint: 'water is uncountable' },
+            { id: 'food-gap-2', sentence: 'How ___ bananas do we need?', accepted_answers: ['many'], hint: 'bananas are countable' },
+            { id: 'food-gap-3', sentence: 'There are not ___ chairs.', accepted_answers: ['many'], hint: 'chairs are countable' }
+          ]
+        },
+        {
+          id: 'food-matching',
+          type: 'matching',
+          title: 'Countable or uncountable',
+          prompt: 'Match each noun with the group.',
+          pairs: [
+            { id: 'food-matching-1', left_text: 'apple', right_text: 'countable' },
+            { id: 'food-matching-2', left_text: 'water', right_text: 'uncountable' },
+            { id: 'food-matching-3', left_text: 'egg', right_text: 'countable' },
+            { id: 'food-matching-4', left_text: 'bread', right_text: 'uncountable' }
+          ]
+        },
+        {
+          id: 'food-writing',
+          type: 'writing_prompt',
+          title: 'Shopping list',
+          prompt: 'Write 5 sentences about food at home.',
+          items: [
+            { id: 'food-writing-1', question: 'Use some, any, much or many.', sample_answer: 'We have some bread. We do not have any eggs. We have many apples. We do not have much milk.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'food-error-extra',
+          type: 'error_correction',
+          title: 'Fix quantity mistakes',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'food-error-extra-1', sentence: 'There are some water.', accepted_answers: ['There is some water.'] },
+            { id: 'food-error-extra-2', sentence: 'How much apples do you want?', accepted_answers: ['How many apples do you want?'] }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-11-time-place',
+      order: 11,
+      stage: 'A1.3',
+      title: 'Prepositions: time and place',
+      topic: 'in / on / at',
+      minutes: 25,
+      description: 'Students distinguish in, on and at for simple time and place phrases.',
+      focus: ['prepositions of time', 'prepositions of place', 'schedules'],
+      teacherNotes: 'Useful before weekly plans and lessons about routines.',
+      tasks: [
+        {
+          id: 'prep-choice',
+          type: 'choice',
+          title: 'Choose in, on or at',
+          prompt: 'Choose the correct preposition.',
+          items: [
+            { id: 'prep-choice-1', sentence: 'I study English ___ Monday.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'b', explanation: 'Use on with days.' },
+            { id: 'prep-choice-2', sentence: 'The lesson starts ___ 6 o clock.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'c', explanation: 'Use at with clock time.' },
+            { id: 'prep-choice-3', sentence: 'My birthday is ___ July.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'a', explanation: 'Use in with months.' }
+          ]
+        },
+        {
+          id: 'prep-gap',
+          type: 'gap_fill',
+          title: 'Type the preposition',
+          prompt: 'Type in, on or at.',
+          items: [
+            { id: 'prep-gap-1', sentence: 'I am ___ home.', accepted_answers: ['at'], hint: 'at home' },
+            { id: 'prep-gap-2', sentence: 'The book is ___ the bag.', accepted_answers: ['in'], hint: 'inside' },
+            { id: 'prep-gap-3', sentence: 'The picture is ___ the wall.', accepted_answers: ['on'], hint: 'on a surface' }
+          ]
+        },
+        {
+          id: 'prep-error',
+          type: 'error_correction',
+          title: 'Correct the preposition',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'prep-error-1', sentence: 'I work at Monday.', accepted_answers: ['I work on Monday.'] },
+            { id: 'prep-error-2', sentence: 'The meeting is on 5 o clock.', accepted_answers: ['The meeting is at 5 o clock.'] }
+          ]
+        },
+        {
+          id: 'prep-short',
+          type: 'short_answer',
+          title: 'Your schedule',
+          prompt: 'Answer with short sentences.',
+          items: [
+            { id: 'prep-short-1', question: 'When do you study English?', sample_answer: 'I study English on Tuesday at 7.' },
+            { id: 'prep-short-2', question: 'Where is your phone now?', sample_answer: 'My phone is on the table.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'prep-order-extra',
+          type: 'word_order',
+          title: 'Build schedule sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'prep-order-extra-1', words: ['at', 'I', 'study', 'night'], answer: 'I study at night.' },
+            { id: 'prep-order-extra-2', words: ['on', 'We', 'meet', 'Friday'], answer: 'We meet on Friday.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-12-present-continuous',
+      order: 12,
+      stage: 'A1.3',
+      title: 'Present Continuous',
+      topic: 'actions happening now',
+      minutes: 30,
+      description: 'Students describe actions happening now with am/is/are + -ing.',
+      focus: ['present continuous', 'actions now', 'questions'],
+      teacherNotes: 'Use after students are comfortable with to be. Contrast with simple routine sentences orally.',
+      tasks: [
+        {
+          id: 'pc-choice',
+          type: 'choice',
+          title: 'Choose the correct form',
+          prompt: 'Choose the present continuous form.',
+          items: [
+            { id: 'pc-choice-1', sentence: 'She ___ a book now.', options: [{ id: 'a', text: 'reads' }, { id: 'b', text: 'is reading' }, { id: 'c', text: 'read' }], answer: 'b', explanation: 'Now often signals present continuous.' },
+            { id: 'pc-choice-2', sentence: 'They ___ lunch at the moment.', options: [{ id: 'a', text: 'are having' }, { id: 'b', text: 'have' }, { id: 'c', text: 'is having' }], answer: 'a', explanation: 'They + are + -ing.' },
+            { id: 'pc-choice-3', sentence: 'I ___ to music now.', options: [{ id: 'a', text: 'am listening' }, { id: 'b', text: 'listen' }, { id: 'c', text: 'is listening' }], answer: 'a', explanation: 'I + am + -ing.' }
+          ]
+        },
+        {
+          id: 'pc-gap',
+          type: 'gap_fill',
+          title: 'Type the -ing form',
+          prompt: 'Use the verb in brackets.',
+          items: [
+            { id: 'pc-gap-1', sentence: 'He is ___ TV. (watch)', accepted_answers: ['watching'], hint: 'watch + ing' },
+            { id: 'pc-gap-2', sentence: 'We are ___ English. (study)', accepted_answers: ['studying'], hint: 'study changes to studying' },
+            { id: 'pc-gap-3', sentence: 'I am ___ coffee. (drink)', accepted_answers: ['drinking'], hint: 'drink + ing' }
+          ]
+        },
+        {
+          id: 'pc-order',
+          type: 'word_order',
+          title: 'Build now sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'pc-order-1', words: ['is', 'She', 'working', 'now'], answer: 'She is working now.' },
+            { id: 'pc-order-2', words: ['Are', 'you', 'studying', 'English'], answer: 'Are you studying English?' }
+          ]
+        },
+        {
+          id: 'pc-writing',
+          type: 'writing_prompt',
+          title: 'What is happening now?',
+          prompt: 'Write 5 sentences about now.',
+          items: [
+            { id: 'pc-writing-1', question: 'Describe what you and people near you are doing now.', sample_answer: 'I am studying English. My teacher is reading. My family is watching TV.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'pc-error-extra',
+          type: 'error_correction',
+          title: 'Correct present continuous',
+          prompt: 'Rewrite correctly.',
+          items: [
+            { id: 'pc-error-extra-1', sentence: 'She reading now.', accepted_answers: ['She is reading now.'] },
+            { id: 'pc-error-extra-2', sentence: 'They is playing football.', accepted_answers: ['They are playing football.'] }
+          ]
+        }
+      ]
+    }
+  ];
 
   const state = {
     userId: null,
@@ -149,6 +955,13 @@
       query: '',
       ownership: 'mine',
       type: ''
+    },
+    readyLessonDraft: {
+      lessonId: '',
+      studentId: '',
+      dueDate: '',
+      selectedTaskIds: [],
+      extraTaskIds: []
     },
     templateEditor: getInitialTemplateEditorState('grammar_dropdown')
   };
@@ -411,6 +1224,295 @@
       assignment_priority: data.assignmentPriority || 'required',
       is_optional: data.assignmentPriority === 'optional'
     };
+  }
+
+  function getReadyLessonById(lessonId) {
+    return READY_GRAMMAR_LESSONS_A1.find((lesson) => lesson.id === lessonId) || READY_GRAMMAR_LESSONS_A1[0] || null;
+  }
+
+  function getReadyLessonDefaultTaskIds(lesson) {
+    return (lesson?.tasks || []).map((task) => task.id).filter(Boolean);
+  }
+
+  function ensureReadyLessonDraft() {
+    const current = state.readyLessonDraft || {};
+    const lesson = getReadyLessonById(current.lessonId);
+    if (!lesson) return null;
+
+    if (current.lessonId !== lesson.id || !Array.isArray(current.selectedTaskIds) || !current.selectedTaskIds.length) {
+      state.readyLessonDraft = {
+        lessonId: lesson.id,
+        studentId: current.studentId || '',
+        dueDate: current.dueDate || '',
+        selectedTaskIds: getReadyLessonDefaultTaskIds(lesson),
+        extraTaskIds: Array.isArray(current.extraTaskIds) ? current.extraTaskIds : []
+      };
+    }
+
+    if (!Array.isArray(state.readyLessonDraft.extraTaskIds)) {
+      state.readyLessonDraft.extraTaskIds = [];
+    }
+
+    return lesson;
+  }
+
+  function readyLessonTaskTypeLabel(type) {
+    const labels = {
+      choice: 'Multiple choice',
+      gap_fill: 'Gap fill',
+      word_order: 'Word order',
+      error_correction: 'Error correction',
+      short_answer: 'Short answer',
+      speaking_prompt: 'Speaking',
+      writing_prompt: 'Writing',
+      matching: 'Matching'
+    };
+    return labels[type] || type || 'Task';
+  }
+
+  function countReadyLessonTaskItems(task) {
+    if (!task) return 0;
+    if (Array.isArray(task.items)) return task.items.length;
+    if (Array.isArray(task.pairs)) return task.pairs.length;
+    return 0;
+  }
+
+  function countReadyLessonContentItems(content) {
+    return (content?.tasks || []).reduce((sum, task) => sum + countReadyLessonTaskItems(task), 0);
+  }
+
+  function hasReadyLessonAnswerValue(value) {
+    if (Array.isArray(value)) return value.some(hasReadyLessonAnswerValue);
+    if (value && typeof value === 'object') return Object.values(value).some(hasReadyLessonAnswerValue);
+    return value !== null && value !== undefined && String(value).trim() !== '';
+  }
+
+  function countReadyLessonAnsweredItems(content, answers) {
+    const answerMap = answers && typeof answers === 'object' ? answers : {};
+    return (content?.tasks || []).reduce((sum, task) => {
+      if (Array.isArray(task.items)) {
+        return sum + task.items.filter((item) => item?.id && hasReadyLessonAnswerValue(answerMap[item.id])).length;
+      }
+
+      if (Array.isArray(task.pairs)) {
+        return sum + task.pairs.filter((pair) => pair?.id && hasReadyLessonAnswerValue(answerMap[pair.id])).length;
+      }
+
+      return sum;
+    }, 0);
+  }
+
+  function getReadyLessonSelectedTasks(lesson) {
+    const draft = state.readyLessonDraft || {};
+    const baseTasks = lesson?.tasks || [];
+    const extraTasks = lesson?.extraTasks || [];
+    const selectedIds = new Set(Array.isArray(draft.selectedTaskIds) ? draft.selectedTaskIds : getReadyLessonDefaultTaskIds(lesson));
+    const extraIds = new Set(Array.isArray(draft.extraTaskIds) ? draft.extraTaskIds : []);
+    const selected = baseTasks.filter((task) => selectedIds.has(task.id));
+    const extras = extraTasks.filter((task) => extraIds.has(task.id));
+    return [...selected, ...extras];
+  }
+
+  function buildReadyLessonSchemaJson(lesson, tasks) {
+    return {
+      version: 1,
+      type: 'grammar_lesson_pack',
+      settings: {
+        show_explanations: true,
+        teacher_review_required: true
+      },
+      content: {
+        lesson_id: lesson.id,
+        stage: lesson.stage,
+        title: lesson.title,
+        topic: lesson.topic,
+        description: lesson.description,
+        teacher_notes: lesson.teacherNotes || '',
+        minutes: lesson.minutes,
+        focus: lesson.focus || [],
+        tasks: cloneData(tasks || [])
+      }
+    };
+  }
+
+  function buildReadyLessonTemplatePayload(lesson, tasks) {
+    const schemaJson = buildReadyLessonSchemaJson(lesson, tasks);
+    const title = `Ready lesson: ${lesson.title}`;
+    const instruction = 'Complete all sections of this grammar lesson, then submit your work for teacher review.';
+
+    return {
+      teacher_id: state.userId,
+      template_key: `${slugify(lesson.id)}-${Date.now()}`,
+      title,
+      description: lesson.topic || lesson.description || null,
+      category: 'grammar',
+      level_range: lesson.stage || 'A1',
+      estimated_time: lesson.minutes || null,
+      answer_mode: 'lesson_pack',
+      default_instructions: instruction,
+      default_fields_json: schemaJson,
+      is_active: true,
+      template_type: 'grammar_lesson_pack',
+      topic: lesson.topic || null,
+      instruction,
+      schema_json: schemaJson
+    };
+  }
+
+  function getReadyLessonTaskPool(lesson) {
+    const activeIds = new Set([
+      ...((state.readyLessonDraft?.selectedTaskIds || [])),
+      ...((state.readyLessonDraft?.extraTaskIds || []))
+    ]);
+    return (lesson?.extraTasks || []).filter((task) => !activeIds.has(task.id));
+  }
+
+  function renderReadyLessonTaskPreview(task, index, isExtra = false) {
+    const itemCount = countReadyLessonTaskItems(task);
+    return `
+      <div class="td-ready-task">
+        <div class="td-ready-task-main">
+          <div class="td-ready-task-num">${escapeHtml(index + 1)}</div>
+          <div>
+            <div class="td-name" style="font-size:16px;">${escapeHtml(task.title || 'Task')}</div>
+            <div class="td-note">${escapeHtml(task.prompt || '')}</div>
+            <div class="td-compact-meta">
+              <span>${escapeHtml(readyLessonTaskTypeLabel(task.type))}</span>
+              <span>${escapeHtml(itemCount)} item${itemCount === 1 ? '' : 's'}</span>
+              ${isExtra ? '<span>Extra</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <button
+          class="td-btn td-btn-danger td-btn-compact"
+          type="button"
+          data-action="ready-lesson-remove-task"
+          data-task-id="${escapeHtml(task.id)}"
+          data-extra="${isExtra ? 'true' : 'false'}"
+        >Remove</button>
+      </div>
+    `;
+  }
+
+  function renderReadyLessonsViewHtml() {
+    const lesson = ensureReadyLessonDraft();
+    const draft = state.readyLessonDraft || {};
+    const students = state.students || [];
+    const selectedTasks = lesson ? getReadyLessonSelectedTasks(lesson) : [];
+    const selectedIds = new Set(draft.selectedTaskIds || []);
+    const extraIds = new Set(draft.extraTaskIds || []);
+    const extraPool = getReadyLessonTaskPool(lesson);
+    const selectedStudentId = draft.studentId || '';
+    const selectedLessonId = lesson?.id || '';
+    const totalItems = countReadyLessonContentItems({ tasks: selectedTasks });
+
+    const studentOptions = students.length
+      ? `<option value="">Choose student</option>` + students.map((student) => {
+          const label = ((student.full_name || '').trim() || student.email || 'Student') + ' - ' + (student.email || '');
+          return `<option value="${escapeHtml(student.id)}" ${selectedStudentId === student.id ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+        }).join('')
+      : '<option value="">No students available</option>';
+
+    const lessonCards = READY_GRAMMAR_LESSONS_A1.map((item) => {
+      const isActive = item.id === selectedLessonId;
+      return `
+        <button class="td-ready-card ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-select" data-lesson-id="${escapeHtml(item.id)}">
+          <span class="td-ready-order">${escapeHtml(item.order)}</span>
+          <span class="td-ready-card-main">
+            <strong>${escapeHtml(item.title)}</strong>
+            <small>${escapeHtml(item.topic)} · ${escapeHtml(item.stage)} · ${escapeHtml(item.minutes)} min</small>
+          </span>
+        </button>
+      `;
+    }).join('');
+
+    const taskHtml = selectedTasks.length
+      ? selectedTasks.map((task, idx) => renderReadyLessonTaskPreview(task, idx, extraIds.has(task.id) && !selectedIds.has(task.id))).join('')
+      : '<div class="td-empty">Add at least one task before sending this lesson.</div>';
+
+    const extraOptions = extraPool.length
+      ? '<option value="">Choose extra task</option>' + extraPool.map((task) => (
+          `<option value="${escapeHtml(task.id)}">${escapeHtml(task.title)} - ${escapeHtml(readyLessonTaskTypeLabel(task.type))}</option>`
+        )).join('')
+      : '<option value="">No extra tasks available</option>';
+
+    return `
+      <div class="td-card">
+        <div class="td-head">
+          <div class="td-kicker">Ready lessons</div>
+          <h2 class="td-title" style="font-size:24px;">A1 Grammar ready lessons</h2>
+          <div class="td-sub">Send a complete grammar lesson in one click. Remove sections you do not need or add an extra practice section before sending.</div>
+        </div>
+        <div class="td-body">
+          <div class="td-ready-layout">
+            <div class="td-ready-sidebar">
+              <div class="td-section-headline">
+                <div>
+                  <div class="td-name" style="font-size:18px;">Pathway</div>
+                  <div class="td-note">A1 lessons are ordered from basic forms to short production.</div>
+                </div>
+                <span class="td-type-badge">A1</span>
+              </div>
+              <div class="td-ready-list">${lessonCards}</div>
+            </div>
+
+            <div class="td-ready-builder">
+              ${lesson ? `
+                <div class="td-ready-hero">
+                  <div>
+                    <div class="td-kicker">${escapeHtml(lesson.stage)}</div>
+                    <h3>${escapeHtml(lesson.title)}</h3>
+                    <p>${escapeHtml(lesson.description)}</p>
+                    <div class="td-compact-meta">
+                      <span>${escapeHtml(lesson.minutes)} min</span>
+                      <span>${escapeHtml(selectedTasks.length)} sections</span>
+                      <span>${escapeHtml(totalItems)} practice items</span>
+                    </div>
+                  </div>
+                  <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="ready-lesson-reset">Reset lesson</button>
+                </div>
+
+                <div class="td-ready-focus">
+                  ${(lesson.focus || []).map((focus) => `<span>${escapeHtml(focus)}</span>`).join('')}
+                </div>
+
+                <div class="td-grid-2">
+                  <label class="td-label">
+                    <span>Student</span>
+                    <select class="td-select" id="td-ready-lesson-student-id" ${students.length ? '' : 'disabled'}>${studentOptions}</select>
+                  </label>
+                  <label class="td-label">
+                    <span>Due date</span>
+                    <input class="td-input" id="td-ready-lesson-due-date" type="datetime-local" value="${escapeHtml(draft.dueDate || '')}" />
+                  </label>
+                </div>
+
+                <div class="td-section">
+                  <div class="td-section-headline">
+                    <div>
+                      <div class="td-name" style="font-size:18px;">Lesson sections</div>
+                      <div class="td-note">These sections will appear to the student as one complete lesson.</div>
+                    </div>
+                    <div class="td-actions">
+                      <select class="td-select td-ready-extra-select" id="td-ready-lesson-extra-task-id">${extraOptions}</select>
+                      <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="ready-lesson-add-task" ${extraPool.length ? '' : 'disabled'}>Add task</button>
+                    </div>
+                  </div>
+                  <div class="td-ready-task-list">${taskHtml}</div>
+                </div>
+
+                <div class="td-muted-box">${escapeHtml(lesson.teacherNotes || '')}</div>
+
+                <div class="td-actions">
+                  <button class="td-btn td-btn-primary" type="button" data-action="ready-lesson-send" ${students.length && selectedTasks.length ? '' : 'disabled'}>Send lesson</button>
+                  <div class="td-note">The student receives one assignment with all selected grammar sections.</div>
+                </div>
+              ` : '<div class="td-empty">No ready lessons available.</div>'}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function renderWeeklyMetaSpans(value) {
@@ -1103,6 +2205,13 @@
       };
     }
 
+    if (type === 'grammar_lesson_pack') {
+      return {
+        show_explanations: true,
+        teacher_review_required: true
+      };
+    }
+
     return {};
   }
 
@@ -1307,6 +2416,7 @@
     const type = state.templateFilters.type || '';
 
     return (state.templates || []).filter((tpl) => {
+      if (tpl.template_type === 'grammar_lesson_pack') return false;
       if (ownership === 'mine' && !tpl.is_own) return false;
       if (ownership === 'system' && !tpl.is_system) return false;
       if (type && tpl.template_type !== type) return false;
@@ -1378,6 +2488,9 @@ function countTemplateItems(assignment) {
   const content = schema?.content || {};
 
   if (!schema || !type) return 0;
+  if (type === 'grammar_lesson_pack') {
+    return countReadyLessonContentItems(content);
+  }
   if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
     return Array.isArray(content.questions) ? content.questions.length : 0;
   }
@@ -1400,6 +2513,10 @@ function countAnsweredItems(assignment, answers) {
     const value = answers[id];
     return value !== null && value !== undefined && String(value).trim() !== '';
   };
+
+  if (type === 'grammar_lesson_pack') {
+    return countReadyLessonAnsweredItems(content, answers);
+  }
 
   if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
     return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
@@ -1471,6 +2588,115 @@ function renderAnswerValue(value) {
   return `<div class="td-template-answer-value">${escapeHtml(value)}</div>`;
 }
 
+function getReadyLessonChoiceText(options, optionId) {
+  return (options || []).find((opt) => opt.id === optionId)?.text || '';
+}
+
+function getReadyLessonExpectedAnswer(task, item) {
+  if (!task || !item) return '';
+
+  if (task.type === 'choice') {
+    return getReadyLessonChoiceText(item.options, item.answer || '');
+  }
+
+  if (task.type === 'gap_fill' || task.type === 'error_correction') {
+    return (item.accepted_answers || []).filter(Boolean).join(' / ');
+  }
+
+  if (task.type === 'word_order') {
+    return item.answer || '';
+  }
+
+  if (task.type === 'short_answer' || task.type === 'speaking_prompt' || task.type === 'writing_prompt') {
+    return item.sample_answer ? `Sample: ${item.sample_answer}` : 'Teacher reviews this answer.';
+  }
+
+  return '';
+}
+
+function getReadyLessonPromptText(task, item) {
+  if (!item) return '';
+  if (task?.type === 'word_order') {
+    return `${item.words ? item.words.join(' / ') : ''}`;
+  }
+  return item.sentence || item.question || '';
+}
+
+function renderReadyLessonTaskAnswers(task, taskIndex, answers) {
+  if (!task) return '';
+  const answerMap = answers && typeof answers === 'object' ? answers : {};
+  const typeLabel = readyLessonTaskTypeLabel(task.type);
+
+  if (task.type === 'matching') {
+    const pairs = task.pairs || [];
+    const rows = pairs.map((pair, idx) => {
+      const selectedId = answerMap[pair.id] || '';
+      const studentAnswer = pairs.find((candidate) => candidate.id === selectedId)?.right_text || '';
+      const correctAnswer = pair.right_text || '';
+
+      return `
+        <div class="td-template-answer-item">
+          <div class="td-template-answer-qtitle">Pair ${idx + 1}</div>
+          <div class="td-template-answer-text">${escapeHtml(pair.left_text || '')}</div>
+          <div class="td-template-answer-grid">
+            <div>
+              <div class="td-label"><span>Student match</span></div>
+              ${renderAnswerValue(studentAnswer)}
+            </div>
+            <div>
+              <div class="td-label"><span>Correct match</span></div>
+              ${renderAnswerValue(correctAnswer)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="td-template-answer-item td-ready-review-task">
+        <div class="td-template-answer-qtitle">Section ${taskIndex + 1} · ${escapeHtml(typeLabel)}</div>
+        <div class="td-template-answer-text"><strong>${escapeHtml(task.title || 'Task')}</strong><br>${escapeHtml(task.prompt || '')}</div>
+        <div class="td-ready-review-list">${rows}</div>
+      </div>
+    `;
+  }
+
+  const rows = (task.items || []).map((item, idx) => {
+    const rawAnswer = answerMap[item.id] || '';
+    const studentAnswer = task.type === 'choice'
+      ? getReadyLessonChoiceText(item.options, rawAnswer)
+      : rawAnswer;
+    const correctAnswer = getReadyLessonExpectedAnswer(task, item);
+    const promptText = getReadyLessonPromptText(task, item);
+
+    return `
+      <div class="td-template-answer-item">
+        <div class="td-template-answer-qtitle">Item ${idx + 1}</div>
+        <div class="td-template-answer-text">${escapeHtml(promptText)}</div>
+        <div class="td-template-answer-grid">
+          <div>
+            <div class="td-label"><span>Student answer</span></div>
+            ${renderAnswerValue(studentAnswer)}
+          </div>
+          <div>
+            <div class="td-label"><span>${task.type === 'short_answer' || task.type === 'speaking_prompt' || task.type === 'writing_prompt' ? 'Guide' : 'Correct answer'}</span></div>
+            ${renderAnswerValue(correctAnswer)}
+          </div>
+        </div>
+        ${item.explanation ? `<div class="td-note">Explanation: ${escapeHtml(item.explanation)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="td-template-answer-item td-ready-review-task">
+      <div class="td-template-answer-qtitle">Section ${taskIndex + 1} · ${escapeHtml(typeLabel)}</div>
+      <div class="td-template-answer-text"><strong>${escapeHtml(task.title || 'Task')}</strong><br>${escapeHtml(task.prompt || '')}</div>
+      <div class="td-ready-review-list">${rows}</div>
+    </div>
+  `;
+}
+
 function renderStudentTemplateAnswers(assignment) {
   const schema = getAssignmentTemplateSchema(assignment);
   const type = assignment?.template_type || '';
@@ -1487,6 +2713,12 @@ function renderStudentTemplateAnswers(assignment) {
     '';
 
   let itemsHtml = '';
+
+  if (type === 'grammar_lesson_pack') {
+    itemsHtml = (content.tasks || [])
+      .map((task, idx) => renderReadyLessonTaskAnswers(task, idx, answers))
+      .join('');
+  }
 
   if (
     type === 'grammar_dropdown' ||
@@ -1646,10 +2878,12 @@ function renderStudentTemplateAnswers(assignment) {
     const modeLabel = editor.mode === 'edit' ? 'Edit template' : 'Create template';
     const saveLabel = editor.mode === 'edit' ? 'Update template' : 'Create template';
 
-    const typeOptions = Object.entries(TEMPLATE_TYPE_REGISTRY).map(([value, meta]) => ({
-      value,
-      label: meta.label
-    }));
+    const typeOptions = Object.entries(TEMPLATE_TYPE_REGISTRY)
+      .filter(([value]) => value !== 'grammar_lesson_pack')
+      .map(([value, meta]) => ({
+        value,
+        label: meta.label
+      }));
 
     return `
       <div class="td-template-editor">
@@ -2065,10 +3299,12 @@ function renderStudentTemplateAnswers(assignment) {
   function renderTemplatesListHtml() {
     const filteredTemplates = getFilteredTemplates();
     const typeOptions = [{ value: '', label: 'All types' }].concat(
-      Object.entries(TEMPLATE_TYPE_REGISTRY).map(([value, meta]) => ({
-        value,
-        label: meta.label
-      }))
+      Object.entries(TEMPLATE_TYPE_REGISTRY)
+        .filter(([value]) => value !== 'grammar_lesson_pack')
+        .map(([value, meta]) => ({
+          value,
+          label: meta.label
+        }))
     );
 
     const ownershipOptions = [
@@ -2079,7 +3315,8 @@ function renderStudentTemplateAnswers(assignment) {
 
     const itemsHtml = filteredTemplates.length
       ? filteredTemplates.map((tpl) => {
-          const canEdit = tpl.is_own;
+          const isReadyLessonSnapshot = tpl.template_type === 'grammar_lesson_pack';
+          const canEdit = tpl.is_own && !isReadyLessonSnapshot;
           const metaBadges = [
             `<span class="td-tag">${escapeHtml(tpl.category || 'template')}</span>`,
             tpl.answer_mode ? `<span class="td-tag">${escapeHtml(tpl.answer_mode)}</span>` : '',
@@ -2107,7 +3344,7 @@ function renderStudentTemplateAnswers(assignment) {
 
               <div class="td-actions" style="margin-top:14px;">
                 ${canEdit ? `<button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-edit" data-template-id="${escapeHtml(tpl.id)}">Edit</button>` : ''}
-                <button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-duplicate" data-template-id="${escapeHtml(tpl.id)}">Duplicate</button>
+                ${isReadyLessonSnapshot ? '' : `<button class="td-btn td-btn-secondary td-btn-compact" type="button" data-action="template-duplicate" data-template-id="${escapeHtml(tpl.id)}">Duplicate</button>`}
                 ${canEdit ? `<button class="td-btn td-btn-danger td-btn-compact" type="button" data-action="template-archive" data-template-id="${escapeHtml(tpl.id)}">Archive</button>` : ''}
               </div>
             </div>
@@ -2281,6 +3518,7 @@ function renderStudentTemplateAnswers(assignment) {
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="weekly_plans">Plan week</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="students">Add student</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="templates">Open templates</button>
+            <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="ready_lessons">Ready lessons</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="student_notes">Student notes</button>
           </div>
           <div class="td-section">
@@ -2319,6 +3557,7 @@ function renderStudentTemplateAnswers(assignment) {
       ['assignments', 'Assignments'],
       ['weekly_plans', 'Weekly plans'],
       ['templates', 'Templates'],
+      ['ready_lessons', 'Ready lessons'],
       ['student_notes', 'Student notes']
     ];
 
@@ -2435,7 +3674,7 @@ function renderStudentTemplateAnswers(assignment) {
 
   function renderAssignmentComposerHtml() {
     const students = state.students || [];
-    const templates = state.templates || [];
+    const templates = (state.templates || []).filter((tpl) => tpl.template_type !== 'grammar_lesson_pack');
     const modules = state.modules || [];
 
     const draft = state.assignmentDraft || {};
@@ -2871,7 +4110,7 @@ function renderStudentTemplateAnswers(assignment) {
   function renderWeeklyPlansViewHtml() {
     const students = state.students || [];
     const plans = state.weeklyPlans || [];
-    const templates = state.templates || [];
+    const templates = (state.templates || []).filter((tpl) => tpl.template_type !== 'grammar_lesson_pack');
     const modules = state.modules || [];
 
     const studentOptions = students.length
@@ -3344,6 +4583,29 @@ function renderStudentTemplateAnswers(assignment) {
       .td-template-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .td-template-answer-value{border:1px solid #e6ebf1;border-radius:12px;padding:10px 12px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
       .td-template-answer-empty{border:1px dashed #cfd8e3;border-radius:12px;padding:10px 12px;background:#fbfdff;color:#667085;font-size:14px}
+      .td-ready-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+      .td-ready-sidebar,.td-ready-builder{border:1px solid #e6ebf1;border-radius:14px;background:#fff;padding:14px;display:grid;gap:14px}
+      .td-ready-list{display:grid;gap:8px;max-height:720px;overflow:auto;padding-right:2px}
+      .td-ready-card{appearance:none;border:1px solid #e6ebf1;border-radius:12px;background:#fbfdff;color:#111213;padding:12px;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;cursor:pointer}
+      .td-ready-card:hover{border-color:#b9d8f5;background:#f8fbff}
+      .td-ready-card.is-active{border-color:#111213;background:#111213;color:#fff}
+      .td-ready-card.is-active small{color:#e5e7eb}
+      .td-ready-order{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:#eef6ff;border:1px solid #c7e2ff;color:#175cd3;font-weight:800;font-size:13px}
+      .td-ready-card.is-active .td-ready-order{background:#fff;color:#111213;border-color:#fff}
+      .td-ready-card-main{display:grid;gap:4px;min-width:0}
+      .td-ready-card-main strong{font-size:14px;line-height:1.25}
+      .td-ready-card-main small{color:#667085;font-size:12px;line-height:1.35}
+      .td-ready-hero{border:1px solid #dbe7f3;border-radius:14px;background:#f8fbff;padding:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+      .td-ready-hero h3{margin:0;font-size:24px;line-height:1.15}
+      .td-ready-hero p{margin:8px 0 0;color:#475467;font-size:14px;line-height:1.55}
+      .td-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
+      .td-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
+      .td-ready-task-list,.td-ready-review-list{display:grid;gap:10px}
+      .td-ready-task{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+      .td-ready-task-main{display:flex;align-items:flex-start;gap:12px;min-width:0}
+      .td-ready-task-num{width:30px;height:30px;border-radius:999px;background:#eef6ff;border:1px solid #c7e2ff;color:#175cd3;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex:0 0 auto}
+      .td-ready-extra-select{min-width:220px;width:auto}
+      .td-ready-review-task{background:#fbfdff}
 
       .td-nav-card .td-body{padding:12px 14px}
       .td-topnav{gap:8px;flex-wrap:wrap}
@@ -3385,7 +4647,8 @@ function renderStudentTemplateAnswers(assignment) {
       [hidden]{display:none!important}
 
       @media (max-width:900px){
-        .td-template-layout{grid-template-columns:1fr}
+        .td-template-layout,.td-ready-layout{grid-template-columns:1fr}
+        .td-ready-list{max-height:none}
       }
       @media (max-width:760px){
 
@@ -3398,12 +4661,13 @@ function renderStudentTemplateAnswers(assignment) {
         #${ROOT_ID}{padding:0 12px 28px}
         .td-head,.td-body{padding:16px}
         .td-title{font-size:24px}
-        .td-grid-2,.td-template-answer-grid{grid-template-columns:1fr}        .td-student-top,.td-assignment-top,.td-template-item-top,.td-repeat-head{flex-direction:column;align-items:flex-start}
+        .td-grid-2,.td-template-answer-grid{grid-template-columns:1fr}        .td-student-top,.td-assignment-top,.td-template-item-top,.td-repeat-head,.td-ready-hero,.td-ready-task{flex-direction:column;align-items:flex-start}
         .td-manage-row{grid-template-columns:1fr}
         .td-manage-actions{align-items:flex-start}
         .td-btn-add{min-width:0;width:100%}
         .td-note-inline{max-width:none}
         .td-repeat-row{grid-template-columns:1fr}
+        .td-ready-extra-select{width:100%;min-width:0}
       }
     `;
     document.head.appendChild(style);
@@ -3780,9 +5044,11 @@ assignments = (assignmentsRows || []).map((a) => {
             ? renderWeeklyPlansViewHtml()
           : activeView === 'templates'
             ? renderTemplatesViewHtml()
-            : activeView === 'student_notes'
-              ? renderStudentNotesViewHtml()
-              : renderOverviewHtml();
+            : activeView === 'ready_lessons'
+              ? renderReadyLessonsViewHtml()
+              : activeView === 'student_notes'
+                ? renderStudentNotesViewHtml()
+                : renderOverviewHtml();
 
     root.innerHTML = `
       <div class="td-wrap">
@@ -3991,6 +5257,31 @@ assignments = (assignmentsRows || []).map((a) => {
         return;
       }
 
+      if (action === 'ready-lesson-select') {
+        handleReadyLessonSelect(button);
+        return;
+      }
+
+      if (action === 'ready-lesson-reset') {
+        handleReadyLessonReset();
+        return;
+      }
+
+      if (action === 'ready-lesson-remove-task') {
+        handleReadyLessonRemoveTask(button);
+        return;
+      }
+
+      if (action === 'ready-lesson-add-task') {
+        handleReadyLessonAddTask();
+        return;
+      }
+
+      if (action === 'ready-lesson-send') {
+        await handleReadyLessonSend(button);
+        return;
+      }
+
       if (action === 'detach-student') {
         await handleDetachStudent(button);
         return;
@@ -4086,6 +5377,10 @@ assignments = (assignmentsRows || []).map((a) => {
         return;
       }
 
+      if (handleReadyLessonDraftChange(event.target)) {
+        return;
+      }
+
       if (handleTemplateEditorChange(event.target)) {
         return;
       }
@@ -4098,6 +5393,10 @@ assignments = (assignmentsRows || []).map((a) => {
 
     root.addEventListener('input', function (event) {
       const target = event.target;
+
+      if (handleReadyLessonDraftChange(target)) {
+        return;
+      }
 
       if (handleTemplateEditorInput(target)) {
         return;
@@ -4113,7 +5412,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
   function handleSwitchView(button) {
     const view = button.getAttribute('data-view');
-    const allowedViews = ['overview', 'students', 'assignments', 'weekly_plans', 'templates', 'student_notes'];
+    const allowedViews = ['overview', 'students', 'assignments', 'weekly_plans', 'templates', 'ready_lessons', 'student_notes'];
     if (!view || !allowedViews.includes(view)) return;
 
     state.activeView = view;
@@ -4522,6 +5821,195 @@ assignments = (assignmentsRows || []).map((a) => {
     } catch (err) {
       console.error('[teacher-dashboard] update reteaching status error:', err);
       buttonError(button, original, 'Failed');
+    }
+  }
+
+  function handleReadyLessonSelect(button) {
+    const lessonId = button.getAttribute('data-lesson-id') || '';
+    const lesson = getReadyLessonById(lessonId);
+    if (!lesson) return;
+
+    const current = state.readyLessonDraft || {};
+    state.readyLessonDraft = {
+      lessonId: lesson.id,
+      studentId: current.studentId || '',
+      dueDate: current.dueDate || '',
+      selectedTaskIds: getReadyLessonDefaultTaskIds(lesson),
+      extraTaskIds: []
+    };
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
+  function handleReadyLessonReset() {
+    const lesson = ensureReadyLessonDraft();
+    if (!lesson) return;
+
+    state.readyLessonDraft.selectedTaskIds = getReadyLessonDefaultTaskIds(lesson);
+    state.readyLessonDraft.extraTaskIds = [];
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
+  function handleReadyLessonRemoveTask(button) {
+    const taskId = button.getAttribute('data-task-id') || '';
+    const isExtra = button.getAttribute('data-extra') === 'true';
+    if (!taskId) return;
+
+    ensureReadyLessonDraft();
+    const draft = state.readyLessonDraft || {};
+    if (isExtra) {
+      draft.extraTaskIds = (draft.extraTaskIds || []).filter((id) => id !== taskId);
+    } else {
+      draft.selectedTaskIds = (draft.selectedTaskIds || []).filter((id) => id !== taskId);
+    }
+
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
+  function handleReadyLessonAddTask() {
+    const lesson = ensureReadyLessonDraft();
+    if (!lesson) return;
+
+    const select = rootEl()?.querySelector('#td-ready-lesson-extra-task-id');
+    const taskId = select?.value || '';
+    if (!taskId) {
+      setFlash('error', 'Choose an extra task to add.');
+      state.activeView = 'ready_lessons';
+      renderDashboard();
+      return;
+    }
+
+    const exists = (lesson.extraTasks || []).some((task) => task.id === taskId);
+    if (!exists) return;
+
+    const draft = state.readyLessonDraft;
+    if (!Array.isArray(draft.extraTaskIds)) draft.extraTaskIds = [];
+    if (!draft.extraTaskIds.includes(taskId)) draft.extraTaskIds.push(taskId);
+
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
+  function handleReadyLessonDraftChange(target) {
+    if (!target) return false;
+    const id = target.id || '';
+    if (id !== 'td-ready-lesson-student-id' && id !== 'td-ready-lesson-due-date') return false;
+
+    ensureReadyLessonDraft();
+    if (id === 'td-ready-lesson-student-id') {
+      state.readyLessonDraft.studentId = target.value || '';
+      return true;
+    }
+
+    if (id === 'td-ready-lesson-due-date') {
+      state.readyLessonDraft.dueDate = target.value || '';
+      return true;
+    }
+
+    return false;
+  }
+
+  async function handleReadyLessonSend(button) {
+    const supabase = window.supabase;
+    if (!supabase || !state.userId) return;
+
+    const lesson = ensureReadyLessonDraft();
+    const draft = state.readyLessonDraft || {};
+    const studentId = draft.studentId || '';
+    const selectedTasks = lesson ? getReadyLessonSelectedTasks(lesson) : [];
+    const original = rememberButton(button);
+
+    if (!lesson) {
+      buttonError(button, original, 'No lesson');
+      return;
+    }
+
+    if (!studentId) {
+      buttonError(button, original, 'Choose student');
+      setFlash('error', 'Choose a student before sending the lesson.');
+      state.activeView = 'ready_lessons';
+      renderDashboard();
+      return;
+    }
+
+    if (!selectedTasks.length) {
+      buttonError(button, original, 'No tasks');
+      setFlash('error', 'Add at least one section before sending the lesson.');
+      state.activeView = 'ready_lessons';
+      renderDashboard();
+      return;
+    }
+
+    startButtonFeedback(button, 'Sending...');
+
+    try {
+      const templatePayload = buildReadyLessonTemplatePayload(lesson, selectedTasks);
+      const { data: createdTemplate, error: templateErr } = await supabase
+        .from('assignment_templates')
+        .insert(templatePayload)
+        .select('id')
+        .single();
+      if (templateErr) throw templateErr;
+
+      const assignmentPayload = {
+        teacher_id: state.userId,
+        title: lesson.title,
+        description: lesson.description || templatePayload.instruction,
+        due_date: toIsoFromDatetimeLocal(draft.dueDate || ''),
+        status: 'ready',
+        template_id: createdTemplate.id,
+        cards_module_id: null,
+        assignment_mode: 'template',
+        content_json: {
+          student_id: studentId,
+          lesson_topic: lesson.topic || null,
+          assignment_type: 'grammar_practice',
+          assignment_priority: 'required',
+          is_optional: false,
+          ready_lesson_id: lesson.id,
+          ready_lesson_stage: lesson.stage,
+          ready_lesson_task_ids: selectedTasks.map((task) => task.id)
+        }
+      };
+
+      const { data: createdAssignment, error: assignmentErr } = await supabase
+        .from('assignments')
+        .insert(assignmentPayload)
+        .select('id')
+        .single();
+      if (assignmentErr) throw assignmentErr;
+
+      const { error: recipientErr } = await supabase
+        .from('assignment_recipients')
+        .insert({
+          assignment_id: createdAssignment.id,
+          student_id: studentId,
+          status: 'not_started',
+          reviewed_status: 'not_reviewed'
+        });
+      if (recipientErr) throw recipientErr;
+
+      setFlash('success', `Ready lesson sent: ${lesson.title}.`);
+      state.activeView = 'assignments';
+      state.openAssignmentId = createdAssignment.id;
+      await fetchDashboardData();
+      renderDashboard();
+      finishButtonFeedbackBySelector('[data-action="ready-lesson-send"]', original, true, 'Sent');
+
+      trackEvent('send_ready_lesson', {
+        lesson_id: lesson.id,
+        sections_count: selectedTasks.length,
+        practice_items_count: countReadyLessonContentItems({ tasks: selectedTasks })
+      });
+    } catch (err) {
+      console.error('[teacher-dashboard] send ready lesson error:', err);
+      setFlash('error', err?.message || 'Failed to send ready lesson.');
+      state.activeView = 'ready_lessons';
+      renderDashboard();
+      const newBtn = rootEl()?.querySelector('[data-action="ready-lesson-send"]');
+      if (newBtn) buttonError(newBtn, original, 'Failed');
     }
   }
 

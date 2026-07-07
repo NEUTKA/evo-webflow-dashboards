@@ -49,6 +49,11 @@
       label: 'Vocabulary Dropdown',
       category: 'vocabulary',
       answerMode: 'dropdown'
+    },
+    grammar_lesson_pack: {
+      label: 'Ready Grammar Lesson',
+      category: 'grammar',
+      answerMode: 'lesson_pack'
     }
   };
 
@@ -603,6 +608,52 @@ function renderSimpleProgressText(assignment) {
     });
   }
 
+  function readyLessonTaskTypeLabel(type) {
+    const labels = {
+      choice: 'Multiple choice',
+      gap_fill: 'Gap fill',
+      word_order: 'Word order',
+      error_correction: 'Error correction',
+      short_answer: 'Short answer',
+      speaking_prompt: 'Speaking',
+      writing_prompt: 'Writing',
+      matching: 'Matching'
+    };
+    return labels[type] || type || 'Task';
+  }
+
+  function countReadyLessonTaskItems(task) {
+    if (!task) return 0;
+    if (Array.isArray(task.items)) return task.items.length;
+    if (Array.isArray(task.pairs)) return task.pairs.length;
+    return 0;
+  }
+
+  function countReadyLessonContentItems(content) {
+    return (content?.tasks || []).reduce((sum, task) => sum + countReadyLessonTaskItems(task), 0);
+  }
+
+  function hasReadyLessonAnswerValue(value) {
+    if (Array.isArray(value)) return value.some(hasReadyLessonAnswerValue);
+    if (value && typeof value === 'object') return Object.values(value).some(hasReadyLessonAnswerValue);
+    return value !== null && value !== undefined && String(value).trim() !== '';
+  }
+
+  function countReadyLessonAnsweredItems(content, answers) {
+    const answerMap = answers && typeof answers === 'object' ? answers : {};
+    return (content?.tasks || []).reduce((sum, task) => {
+      if (Array.isArray(task.items)) {
+        return sum + task.items.filter((item) => item?.id && hasReadyLessonAnswerValue(answerMap[item.id])).length;
+      }
+
+      if (Array.isArray(task.pairs)) {
+        return sum + task.pairs.filter((pair) => pair?.id && hasReadyLessonAnswerValue(answerMap[pair.id])).length;
+      }
+
+      return sum;
+    }, 0);
+  }
+
 
   function countTemplateItems(assignment) {
     const schema = getAssignmentTemplateSchema(assignment);
@@ -610,6 +661,9 @@ function renderSimpleProgressText(assignment) {
     const content = schema?.content || {};
 
     if (!schema || !type) return 0;
+    if (type === 'grammar_lesson_pack') {
+      return countReadyLessonContentItems(content);
+    }
     if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
       return Array.isArray(content.questions) ? content.questions.length : 0;
     }
@@ -632,6 +686,10 @@ function renderSimpleProgressText(assignment) {
       const value = answers[id];
       return value !== null && value !== undefined && String(value).trim() !== '';
     };
+
+    if (type === 'grammar_lesson_pack') {
+      return countReadyLessonAnsweredItems(content, answers);
+    }
 
     if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
       return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
@@ -721,6 +779,20 @@ function renderSimpleProgressText(assignment) {
         }
       }
 
+      if (assignment?.template_type === 'grammar_lesson_pack') {
+        const schema = getAssignmentTemplateSchema(assignment);
+        const answers = templateAnswersPayload?.answers || {};
+        const duplicateMatchingTask = (schema?.content?.tasks || []).find((task) => {
+          if (task.type !== 'matching') return false;
+          const values = (task.pairs || []).map((pair) => String(answers[pair.id] || '').trim()).filter(Boolean);
+          return values.length !== new Set(values).size;
+        });
+
+        if (duplicateMatchingTask) {
+          return { ok: false, message: `Choose a different match for each item in "${duplicateMatchingTask.title || 'Matching'}".` };
+        }
+      }
+
       return { ok: true, message: '' };
     }
 
@@ -759,6 +831,140 @@ function renderSimpleProgressText(assignment) {
     return `<span class="sd-type-badge">${escapeHtml(label)}</span>`;
   }
 
+  function renderReadyLessonItemInput(task, item, answers) {
+    const value = answers[item.id] || '';
+    const prompt = item.sentence || item.question || '';
+
+    if (task.type === 'choice') {
+      const optionsHtml = (item.options || []).map((opt) => (
+        `<option value="${escapeHtml(opt.id)}" ${value === opt.id ? 'selected' : ''}>${escapeHtml(opt.text || '')}</option>`
+      )).join('');
+
+      return `
+        <div class="sd-template-item">
+          <div class="sd-template-text">${escapeHtml(prompt)}</div>
+          <label class="sd-label">
+            <span>Your answer</span>
+            <select class="sd-select" data-role="tpl-ready-choice" data-item-id="${escapeHtml(item.id)}">
+              <option value="">Choose an option</option>
+              ${optionsHtml}
+            </select>
+          </label>
+        </div>
+      `;
+    }
+
+    if (task.type === 'word_order') {
+      return `
+        <div class="sd-template-item">
+          <div class="sd-template-text">${escapeHtml((item.words || []).join(' / '))}</div>
+          <label class="sd-label">
+            <span>Your sentence</span>
+            <input class="sd-input" type="text" value="${escapeHtml(value)}" data-role="tpl-ready-text" data-item-id="${escapeHtml(item.id)}" placeholder="Write the full sentence" />
+          </label>
+        </div>
+      `;
+    }
+
+    if (task.type === 'short_answer' || task.type === 'speaking_prompt' || task.type === 'writing_prompt') {
+      return `
+        <div class="sd-template-item">
+          <div class="sd-template-text">${escapeHtml(prompt)}</div>
+          <label class="sd-label">
+            <span>Your answer</span>
+            <textarea class="sd-textarea sd-textarea-sm" data-role="tpl-ready-text" data-item-id="${escapeHtml(item.id)}" placeholder="Write your answer">${escapeHtml(value)}</textarea>
+          </label>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="sd-template-item">
+        <div class="sd-template-text">${escapeHtml(prompt)}</div>
+        ${item.hint ? `<div class="sd-template-hint">Hint: ${escapeHtml(item.hint)}</div>` : ''}
+        <label class="sd-label">
+          <span>Your answer</span>
+          <input class="sd-input" type="text" value="${escapeHtml(value)}" data-role="tpl-ready-text" data-item-id="${escapeHtml(item.id)}" placeholder="Type your answer" />
+        </label>
+      </div>
+    `;
+  }
+
+  function renderReadyLessonTask(task, taskIndex, answers) {
+    if (!task) return '';
+    const typeLabel = readyLessonTaskTypeLabel(task.type);
+
+    if (task.type === 'matching') {
+      const pairs = task.pairs || [];
+      const itemsHtml = pairs.map((pair) => {
+        const selected = answers[pair.id] || '';
+        const optionsHtml = pairs.map((opt) => (
+          `<option value="${escapeHtml(opt.id)}" ${selected === opt.id ? 'selected' : ''}>${escapeHtml(opt.right_text || '')}</option>`
+        )).join('');
+
+        return `
+          <div class="sd-template-item">
+            <div class="sd-template-text"><strong>${escapeHtml(pair.left_text || '')}</strong></div>
+            <label class="sd-label">
+              <span>Match with</span>
+              <select class="sd-select" data-role="tpl-ready-match" data-pair-id="${escapeHtml(pair.id)}">
+                <option value="">Choose meaning</option>
+                ${optionsHtml}
+              </select>
+            </label>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="sd-ready-section">
+          <div class="sd-template-qtitle">Section ${escapeHtml(taskIndex + 1)} · ${escapeHtml(typeLabel)}</div>
+          <div class="sd-template-passage-title">${escapeHtml(task.title || 'Task')}</div>
+          ${task.prompt ? `<div class="sd-template-prompt">${escapeHtml(task.prompt)}</div>` : ''}
+          <div class="sd-template-list">${itemsHtml}</div>
+        </div>
+      `;
+    }
+
+    const itemsHtml = (task.items || []).map((item) => renderReadyLessonItemInput(task, item, answers)).join('');
+
+    return `
+      <div class="sd-ready-section">
+        <div class="sd-template-qtitle">Section ${escapeHtml(taskIndex + 1)} · ${escapeHtml(typeLabel)}</div>
+        <div class="sd-template-passage-title">${escapeHtml(task.title || 'Task')}</div>
+        ${task.prompt ? `<div class="sd-template-prompt">${escapeHtml(task.prompt)}</div>` : ''}
+        <div class="sd-template-list">${itemsHtml}</div>
+      </div>
+    `;
+  }
+
+  function renderReadyLessonPack(content, answers) {
+    const focusHtml = (content.focus || []).length
+      ? `<div class="sd-ready-focus">${content.focus.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div>`
+      : '';
+    const metaHtml = `
+      <div class="sd-compact-meta">
+        ${content.stage ? `<span>${escapeHtml(content.stage)}</span>` : ''}
+        ${content.minutes ? `<span>${escapeHtml(content.minutes)} min</span>` : ''}
+        <span>${escapeHtml(countReadyLessonContentItems(content))} practice items</span>
+      </div>
+    `;
+
+    return `
+      <div class="sd-ready-lesson">
+        <div class="sd-template-passages">
+          ${content.title ? `<div class="sd-template-passage-title">${escapeHtml(content.title)}</div>` : ''}
+          ${content.description ? `<p class="sd-template-passage-p">${escapeHtml(content.description)}</p>` : ''}
+          ${metaHtml}
+          ${focusHtml}
+        </div>
+        <div class="sd-template-list">
+          ${(content.tasks || []).map((task, idx) => renderReadyLessonTask(task, idx, answers)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function renderAssignmentTemplate(assignment) {
     const schema = getAssignmentTemplateSchema(assignment);
     const type = assignment?.template_type || '';
@@ -770,6 +976,10 @@ function renderSimpleProgressText(assignment) {
     const instruction = assignment?.template_instruction || assignment?.template_default_instructions || '';
 
     let inner = '';
+
+    if (type === 'grammar_lesson_pack') {
+      inner = renderReadyLessonPack(content, answers);
+    }
 
     if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
       const questions = content.questions || [];
@@ -934,6 +1144,29 @@ function renderSimpleProgressText(assignment) {
 
     const answers = {};
 
+    if (type === 'grammar_lesson_pack') {
+      card.querySelectorAll('[data-role="tpl-ready-choice"]').forEach((el) => {
+        const itemId = el.getAttribute('data-item-id');
+        if (!itemId) return;
+        const value = el.value || '';
+        if (value) answers[itemId] = value;
+      });
+
+      card.querySelectorAll('[data-role="tpl-ready-text"]').forEach((el) => {
+        const itemId = el.getAttribute('data-item-id');
+        if (!itemId) return;
+        const value = (el.value || '').trim();
+        if (value) answers[itemId] = value;
+      });
+
+      card.querySelectorAll('[data-role="tpl-ready-match"]').forEach((el) => {
+        const pairId = el.getAttribute('data-pair-id');
+        if (!pairId) return;
+        const value = el.value || '';
+        if (value) answers[pairId] = value;
+      });
+    }
+
     if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'reading_multiple_choice') {
       card.querySelectorAll('[data-role="tpl-choice"]').forEach((el) => {
         const qid = el.getAttribute('data-qid');
@@ -1077,6 +1310,11 @@ function renderSimpleProgressText(assignment) {
       .sd-template-qtitle{font-size:14px;font-weight:700;color:#175cd3}
       .sd-template-text{font-size:15px;line-height:1.6;color:#111213;white-space:pre-wrap}
       .sd-template-hint{font-size:13px;color:#667085;line-height:1.5}
+      .sd-textarea-sm{min-height:92px}
+      .sd-ready-lesson{display:grid;gap:14px}
+      .sd-ready-section{border:1px solid #dbe7f3;border-radius:14px;background:#fff;padding:14px;display:grid;gap:12px}
+      .sd-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
+      .sd-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
       .sd-action-row{
   display:flex;
   align-items:center;
