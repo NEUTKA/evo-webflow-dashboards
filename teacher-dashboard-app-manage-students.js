@@ -4879,6 +4879,9 @@ assignments = (assignmentsRows || []).map((a) => {
   const submission = submissionsByAssignment.get(a.id) || null;
   const tpl = a.template_id ? templatesById.get(a.template_id) : null;
   const mod = a.cards_module_id ? modulesById.get(a.cards_module_id) : null;
+  const readyLessonSchema = a.content_json?.ready_lesson_schema || null;
+  const readyLessonContent = readyLessonSchema?.content || {};
+  const readyLessonInstruction = a.content_json?.ready_lesson_instruction || '';
 
   return {
     ...a,
@@ -4896,15 +4899,15 @@ assignments = (assignmentsRows || []).map((a) => {
     reteaching_note: recipient?.reteaching_note || '',
     reteaching_updated_at: recipient?.reteaching_updated_at || null,
     submission,
-    template_title: tpl?.title || '',
-    template_category: tpl?.category || '',
-    template_answer_mode: tpl?.answer_mode || '',
-    template_type: tpl?.template_type || '',
-    template_topic: tpl?.topic || '',
-    template_instruction: tpl?.instruction || tpl?.default_instructions || '',
-    template_schema_json: tpl?.schema_json || null,
+    template_title: tpl?.title || readyLessonContent.title || a.content_json?.ready_lesson_title || '',
+    template_category: tpl?.category || (readyLessonSchema ? 'grammar' : ''),
+    template_answer_mode: tpl?.answer_mode || (readyLessonSchema ? 'lesson_pack' : ''),
+    template_type: tpl?.template_type || (readyLessonSchema ? 'grammar_lesson_pack' : ''),
+    template_topic: tpl?.topic || readyLessonContent.topic || a.content_json?.ready_lesson_topic || '',
+    template_instruction: tpl?.instruction || tpl?.default_instructions || readyLessonInstruction || '',
+    template_schema_json: tpl?.schema_json || readyLessonSchema || null,
     template_default_fields_json: tpl?.default_fields_json || null,
-    template_default_instructions: tpl?.default_instructions || '',
+    template_default_instructions: tpl?.default_instructions || readyLessonInstruction || '',
     module_name: mod?.name || '',
     is_sent: !!recipient
   };
@@ -5945,21 +5948,16 @@ assignments = (assignmentsRows || []).map((a) => {
     startButtonFeedback(button, 'Sending...');
 
     try {
-      const templatePayload = buildReadyLessonTemplatePayload(lesson, selectedTasks);
-      const { data: createdTemplate, error: templateErr } = await supabase
-        .from('assignment_templates')
-        .insert(templatePayload)
-        .select('id')
-        .single();
-      if (templateErr) throw templateErr;
+      const readyLessonSchema = buildReadyLessonSchemaJson(lesson, selectedTasks);
+      const readyLessonInstruction = 'Complete all sections of this grammar lesson, then submit your work for teacher review.';
 
       const assignmentPayload = {
         teacher_id: state.userId,
         title: lesson.title,
-        description: lesson.description || templatePayload.instruction,
+        description: lesson.description || readyLessonInstruction,
         due_date: toIsoFromDatetimeLocal(draft.dueDate || ''),
         status: 'ready',
-        template_id: createdTemplate.id,
+        template_id: null,
         cards_module_id: null,
         assignment_mode: 'template',
         content_json: {
@@ -5970,7 +5968,11 @@ assignments = (assignmentsRows || []).map((a) => {
           is_optional: false,
           ready_lesson_id: lesson.id,
           ready_lesson_stage: lesson.stage,
-          ready_lesson_task_ids: selectedTasks.map((task) => task.id)
+          ready_lesson_task_ids: selectedTasks.map((task) => task.id),
+          ready_lesson_title: lesson.title,
+          ready_lesson_topic: lesson.topic || null,
+          ready_lesson_instruction: readyLessonInstruction,
+          ready_lesson_schema: readyLessonSchema
         }
       };
 

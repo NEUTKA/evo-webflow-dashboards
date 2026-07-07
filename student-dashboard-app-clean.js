@@ -1785,6 +1785,9 @@ function renderSimpleProgressText(assignment) {
         const submission = submissionsByAssignment.get(recipient.assignment_id) || null;
         const tpl = assignment.template_id ? templatesById.get(assignment.template_id) : null;
         const mod = assignment.cards_module_id ? modulesById.get(assignment.cards_module_id) : null;
+        const readyLessonSchema = assignment.content_json?.ready_lesson_schema || null;
+        const readyLessonContent = readyLessonSchema?.content || {};
+        const readyLessonInstruction = assignment.content_json?.ready_lesson_instruction || '';
 
   return {
   ...assignment,
@@ -1798,15 +1801,15 @@ function renderSimpleProgressText(assignment) {
           reviewed_at: recipient.reviewed_at || null,
           reviewed_by: recipient.reviewed_by || null,
           submission,
-          template_title: tpl?.title || '',
-          template_category: tpl?.category || '',
-          template_answer_mode: tpl?.answer_mode || '',
-          template_type: tpl?.template_type || '',
-          template_topic: tpl?.topic || '',
-          template_instruction: tpl?.instruction || tpl?.default_instructions || '',
-          template_schema_json: tpl?.schema_json || null,
+          template_title: tpl?.title || readyLessonContent.title || assignment.content_json?.ready_lesson_title || '',
+          template_category: tpl?.category || (readyLessonSchema ? 'grammar' : ''),
+          template_answer_mode: tpl?.answer_mode || (readyLessonSchema ? 'lesson_pack' : ''),
+          template_type: tpl?.template_type || (readyLessonSchema ? 'grammar_lesson_pack' : ''),
+          template_topic: tpl?.topic || readyLessonContent.topic || assignment.content_json?.ready_lesson_topic || '',
+          template_instruction: tpl?.instruction || tpl?.default_instructions || readyLessonInstruction || '',
+          template_schema_json: tpl?.schema_json || readyLessonSchema || null,
           template_default_fields_json: tpl?.default_fields_json || null,
-          template_default_instructions: tpl?.default_instructions || '',
+          template_default_instructions: tpl?.default_instructions || readyLessonInstruction || '',
           module_name: mod?.name || '',
           linked_student_id: assignment.content_json?.student_id || null
         };
