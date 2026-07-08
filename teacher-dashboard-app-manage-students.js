@@ -909,6 +909,475 @@
           ]
         }
       ]
+    },
+    {
+      id: 'a1-grammar-13-pronouns',
+      order: 13,
+      stage: 'A1.4',
+      title: 'Subject and object pronouns',
+      topic: 'I / me, he / him, they / them',
+      minutes: 25,
+      description: 'Students practise choosing subject and object pronouns in simple everyday sentences.',
+      focus: ['subject pronouns', 'object pronouns', 'simple sentences'],
+      teacherNotes: 'Good after learners can make basic sentences with to be and present simple. Keep the contrast clear: before the verb is usually subject, after the verb is usually object.',
+      tasks: [
+        {
+          id: 'pronouns-choice',
+          type: 'choice',
+          title: 'Choose the pronoun',
+          prompt: 'Choose the correct subject or object pronoun.',
+          items: [
+            { id: 'pronouns-choice-1', sentence: '___ am from Armenia.', options: [{ id: 'a', text: 'I' }, { id: 'b', text: 'me' }, { id: 'c', text: 'him' }], answer: 'a', explanation: 'Use I before am.' },
+            { id: 'pronouns-choice-2', sentence: 'Please help ___.', options: [{ id: 'a', text: 'I' }, { id: 'b', text: 'me' }, { id: 'c', text: 'we' }], answer: 'b', explanation: 'Use me after help.' },
+            { id: 'pronouns-choice-3', sentence: '___ is my brother.', options: [{ id: 'a', text: 'Him' }, { id: 'b', text: 'He' }, { id: 'c', text: 'Me' }], answer: 'b', explanation: 'Use he as the subject.' },
+            { id: 'pronouns-choice-4', sentence: 'I like ___.', options: [{ id: 'a', text: 'they' }, { id: 'b', text: 'them' }, { id: 'c', text: 'we' }], answer: 'b', explanation: 'Use them after like.' },
+            { id: 'pronouns-choice-5', sentence: 'Can you call ___?', options: [{ id: 'a', text: 'she' }, { id: 'b', text: 'her' }, { id: 'c', text: 'he' }], answer: 'b', explanation: 'Use her after call.' }
+          ]
+        },
+        {
+          id: 'pronouns-gap',
+          type: 'gap_fill',
+          title: 'Type the pronoun',
+          prompt: 'Type the best pronoun.',
+          items: [
+            { id: 'pronouns-gap-1', sentence: 'Anna is my friend. I see ___ every day.', accepted_answers: ['her'], hint: 'after see' },
+            { id: 'pronouns-gap-2', sentence: 'Tom is here. ___ is ready.', accepted_answers: ['He', 'he'], hint: 'Tom = he' },
+            { id: 'pronouns-gap-3', sentence: 'My parents are kind. I love ___.', accepted_answers: ['them'], hint: 'after love' },
+            { id: 'pronouns-gap-4', sentence: 'Can you help ___? I do not understand.', accepted_answers: ['me'], hint: 'after help' },
+            { id: 'pronouns-gap-5', sentence: 'Maria and I are students. ___ study English.', accepted_answers: ['We', 'we'], hint: 'Maria and I = we' }
+          ]
+        },
+        {
+          id: 'pronouns-matching',
+          type: 'matching',
+          title: 'Match subject and object pronouns',
+          prompt: 'Match each subject pronoun with its object form.',
+          pairs: [
+            { id: 'pronouns-matching-1', left_text: 'I', right_text: 'me' },
+            { id: 'pronouns-matching-2', left_text: 'he', right_text: 'him' },
+            { id: 'pronouns-matching-3', left_text: 'she', right_text: 'her' },
+            { id: 'pronouns-matching-4', left_text: 'we', right_text: 'us' },
+            { id: 'pronouns-matching-5', left_text: 'they', right_text: 'them' }
+          ]
+        },
+        {
+          id: 'pronouns-writing',
+          type: 'writing_prompt',
+          title: 'Write about people',
+          prompt: 'Write 5 short sentences. Use at least three object pronouns.',
+          items: [
+            { id: 'pronouns-writing-1', question: 'Write about people you know and what you do with them.', sample_answer: 'My sister is kind. I call her every day. My friends are funny. I like them. My teacher helps me.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'pronouns-error-extra',
+          type: 'error_correction',
+          title: 'Fix pronoun mistakes',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'pronouns-error-extra-1', sentence: 'Me am ready.', accepted_answers: ['I am ready.'], explanation: 'Use I as the subject.' },
+            { id: 'pronouns-error-extra-2', sentence: 'I like she.', accepted_answers: ['I like her.'], explanation: 'Use her after like.' },
+            { id: 'pronouns-error-extra-3', sentence: 'Him is my friend.', accepted_answers: ['He is my friend.'], explanation: 'Use he as the subject.' },
+            { id: 'pronouns-error-extra-4', sentence: 'Please help I.', accepted_answers: ['Please help me.'], explanation: 'Use me after help.' },
+            { id: 'pronouns-error-extra-5', sentence: 'Them are at school.', accepted_answers: ['They are at school.'], explanation: 'Use they as the subject.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-14-demonstratives',
+      order: 14,
+      stage: 'A1.4',
+      title: 'This, that, these and those',
+      topic: 'demonstratives for near and far things',
+      minutes: 25,
+      description: 'Students practise this, that, these and those with singular and plural classroom objects.',
+      focus: ['this / that', 'these / those', 'singular and plural'],
+      teacherNotes: 'Use real objects or gestures in the live lesson: near the camera for this/these, away from the camera for that/those.',
+      tasks: [
+        {
+          id: 'demonstratives-choice',
+          type: 'choice',
+          title: 'Choose this, that, these or those',
+          prompt: 'Choose the correct demonstrative.',
+          items: [
+            { id: 'demonstratives-choice-1', sentence: '___ is my pen here.', options: [{ id: 'a', text: 'This' }, { id: 'b', text: 'These' }, { id: 'c', text: 'Those' }], answer: 'a', explanation: 'Use this for one thing near you.' },
+            { id: 'demonstratives-choice-2', sentence: '___ are my books here.', options: [{ id: 'a', text: 'That' }, { id: 'b', text: 'These' }, { id: 'c', text: 'This' }], answer: 'b', explanation: 'Use these for plural things near you.' },
+            { id: 'demonstratives-choice-3', sentence: '___ is my house over there.', options: [{ id: 'a', text: 'This' }, { id: 'b', text: 'These' }, { id: 'c', text: 'That' }], answer: 'c', explanation: 'Use that for one thing far from you.' },
+            { id: 'demonstratives-choice-4', sentence: '___ are old photos over there.', options: [{ id: 'a', text: 'Those' }, { id: 'b', text: 'That' }, { id: 'c', text: 'This' }], answer: 'a', explanation: 'Use those for plural things far from you.' },
+            { id: 'demonstratives-choice-5', sentence: 'Are ___ your keys here?', options: [{ id: 'a', text: 'this' }, { id: 'b', text: 'these' }, { id: 'c', text: 'that' }], answer: 'b', explanation: 'Keys are plural and near.' }
+          ]
+        },
+        {
+          id: 'demonstratives-gap',
+          type: 'gap_fill',
+          title: 'Type the demonstrative',
+          prompt: 'Type this, that, these or those.',
+          items: [
+            { id: 'demonstratives-gap-1', sentence: '___ is my bag here.', accepted_answers: ['This', 'this'], hint: 'one thing near you' },
+            { id: 'demonstratives-gap-2', sentence: '___ are my pencils here.', accepted_answers: ['These', 'these'], hint: 'plural things near you' },
+            { id: 'demonstratives-gap-3', sentence: '___ is a cafe over there.', accepted_answers: ['That', 'that'], hint: 'one thing far from you' },
+            { id: 'demonstratives-gap-4', sentence: '___ are my friends over there.', accepted_answers: ['Those', 'those'], hint: 'plural people far from you' },
+            { id: 'demonstratives-gap-5', sentence: 'Is ___ your notebook here?', accepted_answers: ['this'], hint: 'one thing near you' }
+          ]
+        },
+        {
+          id: 'demonstratives-order',
+          type: 'word_order',
+          title: 'Build demonstrative sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'demonstratives-order-1', words: ['is', 'This', 'my', 'bag'], answer: 'This is my bag.' },
+            { id: 'demonstratives-order-2', words: ['is', 'That', 'her', 'phone'], answer: 'That is her phone.' },
+            { id: 'demonstratives-order-3', words: ['are', 'These', 'my', 'books'], answer: 'These are my books.' },
+            { id: 'demonstratives-order-4', words: ['are', 'Those', 'our', 'chairs'], answer: 'Those are our chairs.' },
+            { id: 'demonstratives-order-5', words: ['Are', 'these', 'your', 'keys'], answer: 'Are these your keys?' }
+          ]
+        },
+        {
+          id: 'demonstratives-writing',
+          type: 'writing_prompt',
+          title: 'Describe things around you',
+          prompt: 'Write 5 short sentences with this, that, these and those.',
+          items: [
+            { id: 'demonstratives-writing-1', question: 'Look around your room and describe things near and far from you.', sample_answer: 'This is my notebook. These are my pens. That is my door. Those are my books. This is my phone.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'demonstratives-error-extra',
+          type: 'error_correction',
+          title: 'Correct demonstratives',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'demonstratives-error-extra-1', sentence: 'These is my book.', accepted_answers: ['This is my book.'], explanation: 'Use this with one book.' },
+            { id: 'demonstratives-error-extra-2', sentence: 'This are my shoes.', accepted_answers: ['These are my shoes.'], explanation: 'Use these with plural things near you.' },
+            { id: 'demonstratives-error-extra-3', sentence: 'Those is my school over there.', accepted_answers: ['That is my school over there.'], explanation: 'Use that with one thing far away.' },
+            { id: 'demonstratives-error-extra-4', sentence: 'That are my friends over there.', accepted_answers: ['Those are my friends over there.'], explanation: 'Use those with plural people far away.' },
+            { id: 'demonstratives-error-extra-5', sentence: 'Are this your keys?', accepted_answers: ['Are these your keys?'], explanation: 'Keys are plural.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-15-plural-nouns',
+      order: 15,
+      stage: 'A1.4',
+      title: 'Singular and plural nouns',
+      topic: 'regular plurals and basic irregular plurals',
+      minutes: 30,
+      description: 'Students practise regular plural endings and common irregular plurals in simple noun phrases.',
+      focus: ['regular plurals', 'irregular plurals', 'singular / plural'],
+      teacherNotes: 'Keep examples concrete. This lesson helps students notice -s, -es, -ies and a few high-frequency irregular forms.',
+      tasks: [
+        {
+          id: 'plural-choice',
+          type: 'choice',
+          title: 'Choose the plural',
+          prompt: 'Choose the correct plural form.',
+          items: [
+            { id: 'plural-choice-1', sentence: 'one book, two ___', options: [{ id: 'a', text: 'book' }, { id: 'b', text: 'books' }, { id: 'c', text: 'bookes' }], answer: 'b', explanation: 'Add -s to book.' },
+            { id: 'plural-choice-2', sentence: 'one city, two ___', options: [{ id: 'a', text: 'citys' }, { id: 'b', text: 'cityes' }, { id: 'c', text: 'cities' }], answer: 'c', explanation: 'City changes to cities.' },
+            { id: 'plural-choice-3', sentence: 'one child, two ___', options: [{ id: 'a', text: 'childs' }, { id: 'b', text: 'children' }, { id: 'c', text: 'childes' }], answer: 'b', explanation: 'Child has an irregular plural: children.' },
+            { id: 'plural-choice-4', sentence: 'one person, two ___', options: [{ id: 'a', text: 'persons' }, { id: 'b', text: 'people' }, { id: 'c', text: 'persones' }], answer: 'b', explanation: 'Person often becomes people.' },
+            { id: 'plural-choice-5', sentence: 'one box, two ___', options: [{ id: 'a', text: 'boxs' }, { id: 'b', text: 'boxies' }, { id: 'c', text: 'boxes' }], answer: 'c', explanation: 'Add -es after x.' }
+          ]
+        },
+        {
+          id: 'plural-gap',
+          type: 'gap_fill',
+          title: 'Type the plural noun',
+          prompt: 'Write the plural form of the word in brackets.',
+          items: [
+            { id: 'plural-gap-1', sentence: 'I have two ___. (watch)', accepted_answers: ['watches'], hint: 'watch + es' },
+            { id: 'plural-gap-2', sentence: 'There are three ___ in the room. (woman)', accepted_answers: ['women'], hint: 'irregular plural' },
+            { id: 'plural-gap-3', sentence: 'I see five ___. (bus)', accepted_answers: ['buses'], hint: 'bus + es' },
+            { id: 'plural-gap-4', sentence: 'They have two ___. (baby)', accepted_answers: ['babies'], hint: 'baby changes to babies' },
+            { id: 'plural-gap-5', sentence: 'Four ___ are at the table. (man)', accepted_answers: ['men'], hint: 'irregular plural' }
+          ]
+        },
+        {
+          id: 'plural-matching',
+          type: 'matching',
+          title: 'Match singular and plural',
+          prompt: 'Match each singular noun with its plural form.',
+          pairs: [
+            { id: 'plural-matching-1', left_text: 'child', right_text: 'children' },
+            { id: 'plural-matching-2', left_text: 'person', right_text: 'people' },
+            { id: 'plural-matching-3', left_text: 'woman', right_text: 'women' },
+            { id: 'plural-matching-4', left_text: 'man', right_text: 'men' },
+            { id: 'plural-matching-5', left_text: 'foot', right_text: 'feet' }
+          ]
+        },
+        {
+          id: 'plural-writing',
+          type: 'writing_prompt',
+          title: 'Write singular and plural sentences',
+          prompt: 'Write 5 short sentences. Use at least three plural nouns.',
+          items: [
+            { id: 'plural-writing-1', question: 'Write about objects or people around you.', sample_answer: 'I have one phone. I have two books. There are three chairs. Two people are in the room. I have many photos.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'plural-error-extra',
+          type: 'error_correction',
+          title: 'Fix plural mistakes',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'plural-error-extra-1', sentence: 'I have two childs.', accepted_answers: ['I have two children.'], explanation: 'Child changes to children.' },
+            { id: 'plural-error-extra-2', sentence: 'There are three boxs.', accepted_answers: ['There are three boxes.'], explanation: 'Box takes -es.' },
+            { id: 'plural-error-extra-3', sentence: 'She has two babys.', accepted_answers: ['She has two babies.'], explanation: 'Baby changes to babies.' },
+            { id: 'plural-error-extra-4', sentence: 'Four mans are here.', accepted_answers: ['Four men are here.'], explanation: 'Man changes to men.' },
+            { id: 'plural-error-extra-5', sentence: 'I see two bus.', accepted_answers: ['I see two buses.'], explanation: 'Bus takes -es.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-16-imperatives',
+      order: 16,
+      stage: 'A1.4',
+      title: 'Imperatives and classroom instructions',
+      topic: 'open, listen, repeat, do not',
+      minutes: 25,
+      description: 'Students practise common classroom commands and negative imperatives.',
+      focus: ['imperatives', 'classroom instructions', 'negative commands'],
+      teacherNotes: 'This lesson is useful for onboarding beginners because it helps them understand teacher instructions during lessons.',
+      tasks: [
+        {
+          id: 'imperatives-choice',
+          type: 'choice',
+          title: 'Choose the instruction',
+          prompt: 'Choose the best imperative verb.',
+          items: [
+            { id: 'imperatives-choice-1', sentence: '___ your book.', options: [{ id: 'a', text: 'Open' }, { id: 'b', text: 'Opens' }, { id: 'c', text: 'Opening' }], answer: 'a', explanation: 'Use the base verb for imperatives.' },
+            { id: 'imperatives-choice-2', sentence: '___ after me.', options: [{ id: 'a', text: 'Repeats' }, { id: 'b', text: 'Repeat' }, { id: 'c', text: 'Repeating' }], answer: 'b', explanation: 'Use repeat for an instruction.' },
+            { id: 'imperatives-choice-3', sentence: '___ to the audio.', options: [{ id: 'a', text: 'Listen' }, { id: 'b', text: 'Listens' }, { id: 'c', text: 'Listening' }], answer: 'a', explanation: 'Use listen in instructions.' },
+            { id: 'imperatives-choice-4', sentence: '___ use your phone.', options: [{ id: 'a', text: 'Not' }, { id: 'b', text: 'Do not' }, { id: 'c', text: 'Does not' }], answer: 'b', explanation: 'Use do not for negative imperatives.' },
+            { id: 'imperatives-choice-5', sentence: '___ the question.', options: [{ id: 'a', text: 'Read' }, { id: 'b', text: 'Reads' }, { id: 'c', text: 'Reading' }], answer: 'a', explanation: 'Use the base verb.' }
+          ]
+        },
+        {
+          id: 'imperatives-gap',
+          type: 'gap_fill',
+          title: 'Type the instruction',
+          prompt: 'Type one word or phrase.',
+          items: [
+            { id: 'imperatives-gap-1', sentence: '___ to page 10.', accepted_answers: ['Go', 'go'], hint: 'go to page 10' },
+            { id: 'imperatives-gap-2', sentence: '___ your name here.', accepted_answers: ['Write', 'write'], hint: 'put words on paper' },
+            { id: 'imperatives-gap-3', sentence: '___ in pairs.', accepted_answers: ['Work', 'work'], hint: 'do the activity with another student' },
+            { id: 'imperatives-gap-4', sentence: '___ the sentence.', accepted_answers: ['Complete', 'complete'], hint: 'finish it' },
+            { id: 'imperatives-gap-5', sentence: '___ forget your homework.', accepted_answers: ['Do not', "Don't", 'do not', "don't"], hint: 'negative command' }
+          ]
+        },
+        {
+          id: 'imperatives-matching',
+          type: 'matching',
+          title: 'Match instruction and meaning',
+          prompt: 'Match each classroom instruction with its meaning.',
+          pairs: [
+            { id: 'imperatives-matching-1', left_text: 'Listen', right_text: 'use your ears' },
+            { id: 'imperatives-matching-2', left_text: 'Repeat', right_text: 'say it again' },
+            { id: 'imperatives-matching-3', left_text: 'Read', right_text: 'look at the text' },
+            { id: 'imperatives-matching-4', left_text: 'Write', right_text: 'put words on paper' },
+            { id: 'imperatives-matching-5', left_text: 'Choose', right_text: 'select one answer' }
+          ]
+        },
+        {
+          id: 'imperatives-speaking',
+          type: 'speaking_prompt',
+          title: 'Classroom commands',
+          prompt: 'Prepare 5 classroom instructions to say in class.',
+          items: [
+            { id: 'imperatives-speaking-1', question: 'Write commands a teacher can say in an English lesson.', sample_answer: 'Open your book. Listen to me. Repeat after me. Write your answer. Do not use your phone.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'imperatives-error-extra',
+          type: 'error_correction',
+          title: 'Fix imperative mistakes',
+          prompt: 'Rewrite each instruction correctly.',
+          items: [
+            { id: 'imperatives-error-extra-1', sentence: 'To open your book.', accepted_answers: ['Open your book.'], explanation: 'Use the base verb.' },
+            { id: 'imperatives-error-extra-2', sentence: 'Not talk.', accepted_answers: ['Do not talk.', "Don't talk."], explanation: 'Use do not for a negative command.' },
+            { id: 'imperatives-error-extra-3', sentence: 'Please to listen.', accepted_answers: ['Please listen.'], explanation: 'Use please + base verb.' },
+            { id: 'imperatives-error-extra-4', sentence: 'Reads the question.', accepted_answers: ['Read the question.'], explanation: 'Use the base verb.' },
+            { id: 'imperatives-error-extra-5', sentence: 'Do not to write now.', accepted_answers: ['Do not write now.', "Don't write now."], explanation: 'Use do not + base verb.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-17-like-love-hate',
+      order: 17,
+      stage: 'A1.4',
+      title: 'Like, love and hate',
+      topic: 'like/love/hate + noun or -ing',
+      minutes: 30,
+      description: 'Students practise talking about preferences with nouns and -ing forms.',
+      focus: ['like / love / hate', '-ing forms', 'preferences'],
+      teacherNotes: 'This is a strong bridge into speaking about hobbies, food and free time. Keep vocabulary familiar.',
+      tasks: [
+        {
+          id: 'like-choice',
+          type: 'choice',
+          title: 'Choose the correct form',
+          prompt: 'Choose the best word or phrase.',
+          items: [
+            { id: 'like-choice-1', sentence: 'I like ___.', options: [{ id: 'a', text: 'tea' }, { id: 'b', text: 'to tea' }, { id: 'c', text: 'teas' }], answer: 'a', explanation: 'Use like + noun.' },
+            { id: 'like-choice-2', sentence: 'She loves ___.', options: [{ id: 'a', text: 'cook' }, { id: 'b', text: 'cooking' }, { id: 'c', text: 'cooks' }], answer: 'b', explanation: 'Use love + -ing for activities.' },
+            { id: 'like-choice-3', sentence: 'They do not like ___.', options: [{ id: 'a', text: 'football' }, { id: 'b', text: 'to football' }, { id: 'c', text: 'footballs' }], answer: 'a', explanation: 'Use like + noun.' },
+            { id: 'like-choice-4', sentence: 'He loves ___ books.', options: [{ id: 'a', text: 'read' }, { id: 'b', text: 'reading' }, { id: 'c', text: 'reads' }], answer: 'b', explanation: 'Use love + -ing.' },
+            { id: 'like-choice-5', sentence: 'Do you like ___?', options: [{ id: 'a', text: 'swim' }, { id: 'b', text: 'swimming' }, { id: 'c', text: 'swims' }], answer: 'b', explanation: 'Use like + -ing for activities.' }
+          ]
+        },
+        {
+          id: 'like-gap',
+          type: 'gap_fill',
+          title: 'Type the correct form',
+          prompt: 'Use the word in brackets.',
+          items: [
+            { id: 'like-gap-1', sentence: 'She ___ music. (like)', accepted_answers: ['likes'], hint: 'she + likes' },
+            { id: 'like-gap-2', sentence: 'I love ___ books. (read)', accepted_answers: ['reading'], hint: 'love + -ing' },
+            { id: 'like-gap-3', sentence: 'They hate ___ early. (get up)', accepted_answers: ['getting up'], hint: 'hate + -ing' },
+            { id: 'like-gap-4', sentence: 'Do you like ___? (dance)', accepted_answers: ['dancing'], hint: 'like + -ing' },
+            { id: 'like-gap-5', sentence: 'He does not ___ coffee. (like)', accepted_answers: ['like'], hint: 'does not + base verb' }
+          ]
+        },
+        {
+          id: 'like-order',
+          type: 'word_order',
+          title: 'Build preference sentences',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'like-order-1', words: ['like', 'I', 'playing', 'tennis'], answer: 'I like playing tennis.' },
+            { id: 'like-order-2', words: ['loves', 'She', 'music'], answer: 'She loves music.' },
+            { id: 'like-order-3', words: ['hate', 'They', 'waiting'], answer: 'They hate waiting.' },
+            { id: 'like-order-4', words: ['you', 'Do', 'like', 'cooking'], answer: 'Do you like cooking?' },
+            { id: 'like-order-5', words: ['not', 'He', 'does', 'coffee', 'like'], answer: 'He does not like coffee.' }
+          ]
+        },
+        {
+          id: 'like-writing',
+          type: 'writing_prompt',
+          title: 'Your likes and dislikes',
+          prompt: 'Write 5 sentences about things you like, love or hate.',
+          items: [
+            { id: 'like-writing-1', question: 'Use at least two -ing forms and two nouns.', sample_answer: 'I like coffee. I love reading books. I hate waiting. My sister likes music. I do not like getting up early.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'like-error-extra',
+          type: 'error_correction',
+          title: 'Correct preference sentences',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'like-error-extra-1', sentence: 'She like music.', accepted_answers: ['She likes music.'], explanation: 'Use likes with she.' },
+            { id: 'like-error-extra-2', sentence: 'I like play tennis.', accepted_answers: ['I like playing tennis.'], explanation: 'Use like + -ing for activities.' },
+            { id: 'like-error-extra-3', sentence: 'He does not likes tea.', accepted_answers: ['He does not like tea.'], explanation: 'Use base verb after does not.' },
+            { id: 'like-error-extra-4', sentence: 'Do you like swim?', accepted_answers: ['Do you like swimming?'], explanation: 'Use like + -ing for activities.' },
+            { id: 'like-error-extra-5', sentence: 'They loves pizza.', accepted_answers: ['They love pizza.'], explanation: 'Use love with they.' }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'a1-grammar-18-review',
+      order: 18,
+      stage: 'A1 review',
+      title: 'A1 grammar review',
+      topic: 'mixed A1 grammar test and short writing',
+      minutes: 35,
+      description: 'Students review core A1 grammar in a mixed test before writing a short personal text.',
+      focus: ['A1 review', 'mixed grammar', 'short writing'],
+      teacherNotes: 'Use this after the A1 pathway or before moving the student into A2. It gives a quick picture of weak areas.',
+      tasks: [
+        {
+          id: 'review-choice',
+          type: 'choice',
+          title: 'Mixed grammar choices',
+          prompt: 'Choose the correct answer.',
+          items: [
+            { id: 'review-choice-1', sentence: 'She ___ my teacher.', options: [{ id: 'a', text: 'am' }, { id: 'b', text: 'is' }, { id: 'c', text: 'are' }], answer: 'b', explanation: 'Use is with she.' },
+            { id: 'review-choice-2', sentence: '___ you like coffee?', options: [{ id: 'a', text: 'Do' }, { id: 'b', text: 'Does' }, { id: 'c', text: 'Are' }], answer: 'a', explanation: 'Use Do you ...?' },
+            { id: 'review-choice-3', sentence: 'We do not have ___ eggs.', options: [{ id: 'a', text: 'some' }, { id: 'b', text: 'any' }, { id: 'c', text: 'much' }], answer: 'b', explanation: 'Use any in negatives.' },
+            { id: 'review-choice-4', sentence: 'The lesson is ___ Monday.', options: [{ id: 'a', text: 'in' }, { id: 'b', text: 'on' }, { id: 'c', text: 'at' }], answer: 'b', explanation: 'Use on with days.' },
+            { id: 'review-choice-5', sentence: 'She ___ swim very well.', options: [{ id: 'a', text: 'can' }, { id: 'b', text: 'cans' }, { id: 'c', text: 'is can' }], answer: 'a', explanation: 'Can does not change with she.' }
+          ]
+        },
+        {
+          id: 'review-gap',
+          type: 'gap_fill',
+          title: 'Mixed gap fill',
+          prompt: 'Type the missing word or phrase.',
+          items: [
+            { id: 'review-gap-1', sentence: 'I ___ from Yerevan.', accepted_answers: ['am'], hint: 'I + am' },
+            { id: 'review-gap-2', sentence: 'He ___ English every day. (study)', accepted_answers: ['studies'], hint: 'he + studies' },
+            { id: 'review-gap-3', sentence: 'They have ___ a new car.', accepted_answers: ['got'], hint: 'have got' },
+            { id: 'review-gap-4', sentence: 'She is ___ TV now. (watch)', accepted_answers: ['watching'], hint: 'present continuous' },
+            { id: 'review-gap-5', sentence: 'There are two ___. (child)', accepted_answers: ['children'], hint: 'irregular plural' }
+          ]
+        },
+        {
+          id: 'review-order',
+          type: 'word_order',
+          title: 'Mixed word order',
+          prompt: 'Put the words in order.',
+          items: [
+            { id: 'review-order-1', words: ['you', 'Are', 'ready'], answer: 'Are you ready?' },
+            { id: 'review-order-2', words: ['is', 'There', 'a', 'chair'], answer: 'There is a chair.' },
+            { id: 'review-order-3', words: ['you', 'Do', 'coffee', 'like'], answer: 'Do you like coffee?' },
+            { id: 'review-order-4', words: ['is', 'She', 'reading', 'now'], answer: 'She is reading now.' },
+            { id: 'review-order-5', words: ['got', 'I', 'a', 'phone', 'have'], answer: 'I have got a phone.' }
+          ]
+        },
+        {
+          id: 'review-error',
+          type: 'error_correction',
+          title: 'Mixed error correction',
+          prompt: 'Rewrite each sentence correctly.',
+          items: [
+            { id: 'review-error-1', sentence: 'He are my friend.', accepted_answers: ['He is my friend.'], explanation: 'Use is with he.' },
+            { id: 'review-error-2', sentence: 'She go to school.', accepted_answers: ['She goes to school.'], explanation: 'Add -es with she.' },
+            { id: 'review-error-3', sentence: 'There are a table.', accepted_answers: ['There is a table.'], explanation: 'A table is singular.' },
+            { id: 'review-error-4', sentence: 'I can to swim.', accepted_answers: ['I can swim.'], explanation: 'Use can + base verb.' },
+            { id: 'review-error-5', sentence: 'This are my books.', accepted_answers: ['These are my books.'], explanation: 'Use these with plural things near you.' }
+          ]
+        },
+        {
+          id: 'review-writing',
+          type: 'writing_prompt',
+          title: 'Short A1 writing',
+          prompt: 'Write 8-10 sentences about yourself and your routine.',
+          items: [
+            { id: 'review-writing-1', question: 'Use to be, present simple, have got, can and one sentence about now.', sample_answer: 'My name is Ani. I am from Yerevan. I study English. I have got a phone. I can cook. I like reading. I get up at 8. I am studying now.' }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: 'review-matching-extra',
+          type: 'matching',
+          title: 'Match review questions and answers',
+          prompt: 'Match each question with the best answer.',
+          pairs: [
+            { id: 'review-matching-extra-1', left_text: 'Are you a student?', right_text: 'Yes, I am.' },
+            { id: 'review-matching-extra-2', left_text: 'Do you like tea?', right_text: 'No, I do not.' },
+            { id: 'review-matching-extra-3', left_text: 'Can she swim?', right_text: 'Yes, she can.' },
+            { id: 'review-matching-extra-4', left_text: 'Where is the book?', right_text: 'It is on the table.' },
+            { id: 'review-matching-extra-5', left_text: 'What are you doing?', right_text: 'I am studying.' }
+          ]
+        }
+      ]
     }
   ];
 
