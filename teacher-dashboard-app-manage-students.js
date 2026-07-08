@@ -1848,6 +1848,818 @@
     }
   ].map(buildVocabularyReadyLesson);
 
+  function buildReadingReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      skill: 'reading',
+      stage: config.stage || 'A1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 30,
+      description: config.description,
+      readingTitle: config.readingTitle || config.title,
+      readingText: config.readingText,
+      focus: config.focus || ['reading for gist', 'reading for detail'],
+      teacherNotes: config.teacherNotes || 'Ask the student to read once for general meaning, then again to answer detail questions.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before reading: useful words',
+          prompt: 'Match the words from the text with their meanings.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Reading comprehension',
+          prompt: 'Read the text and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Find details in the text',
+          prompt: 'Type the missing word or number from the text.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Read the text again.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 4-5 short sentences.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_READING_LESSONS_A1 = [
+    {
+      id: 'a1-reading-01-personal-profile',
+      order: 1,
+      stage: 'A1.1',
+      title: 'A personal profile',
+      topic: 'personal information',
+      description: 'Students read a short profile and find basic personal details.',
+      readingText: 'My name is Lina. I am 24 years old and I am from Georgia. I live in Tbilisi with my parents and my brother. I study English online on Tuesday and Thursday evenings. I like music, coffee and small cafes. At the weekend, I meet my friends in the park.',
+      focus: ['personal details', 'known topics', 'short profile'],
+      words: [
+        { word: 'profile', meaning: 'short information about a person' },
+        { word: 'parents', meaning: 'mother and father' },
+        { word: 'evening', meaning: 'the time after afternoon' },
+        { word: 'weekend', meaning: 'Saturday and Sunday' },
+        { word: 'meet', meaning: 'see and spend time with someone' }
+      ],
+      questions: [
+        { question: 'Where is Lina from?', options: ['Georgia', 'Armenia', 'Spain'], answer: 'Georgia' },
+        { question: 'Who does Lina live with?', options: ['Her parents and brother', 'Her friends', 'Her teacher'], answer: 'Her parents and brother' },
+        { question: 'When does Lina study English?', options: ['On Tuesday and Thursday evenings', 'Every morning', 'Only at the weekend'], answer: 'On Tuesday and Thursday evenings' },
+        { question: 'What does Lina like?', options: ['Music and coffee', 'Football and tea', 'Shopping and buses'], answer: 'Music and coffee' },
+        { question: 'Where does she meet friends?', options: ['In the park', 'At school', 'At the airport'], answer: 'In the park' }
+      ],
+      details: [
+        { sentence: 'Lina is ___ years old.', answer: '24' },
+        { sentence: 'She lives in ___.', answer: 'Tbilisi' },
+        { sentence: 'She lives with her parents and her ___.', answer: 'brother' },
+        { sentence: 'She studies English ___.', answer: 'online' },
+        { sentence: 'At the weekend, she meets friends in the ___.', answer: 'park' }
+      ],
+      trueFalse: [
+        { sentence: 'Lina is from Georgia.', answer: true },
+        { sentence: 'Lina studies English in the morning.', answer: false },
+        { sentence: 'Lina likes coffee.', answer: true },
+        { sentence: 'Lina lives alone.', answer: false },
+        { sentence: 'Lina meets friends at the weekend.', answer: true }
+      ],
+      productionQuestion: 'Write a short profile about yourself.',
+      sampleAnswer: 'My name is Ani. I am from Armenia. I live in Yerevan. I study English online. I like music and coffee.'
+    },
+    {
+      id: 'a1-reading-02-contact-cards',
+      order: 2,
+      stage: 'A1.1',
+      title: 'Business cards',
+      topic: 'names, jobs and contact details',
+      description: 'Students read simple business cards and identify contact information.',
+      readingText: 'Card 1: Anna Brown, English teacher. Phone: 555 0182. Email: anna@school.com.\nCard 2: Mark Hill, taxi driver. Phone: 555 7701. Email: mark@citytaxi.com.\nCard 3: Sara Lee, shop assistant. Phone: 555 4430. Email: sara@freshshop.com.\nCard 4: David King, doctor. Phone: 555 9022. Email: david@clinic.com.',
+      focus: ['contact details', 'jobs', 'scanning'],
+      words: [
+        { word: 'card', meaning: 'small paper with contact information' },
+        { word: 'phone', meaning: 'number used to call someone' },
+        { word: 'email', meaning: 'address for online messages' },
+        { word: 'teacher', meaning: 'person who helps students learn' },
+        { word: 'doctor', meaning: 'person who helps sick people' }
+      ],
+      questions: [
+        { question: 'Who is an English teacher?', options: ['Anna Brown', 'Mark Hill', 'David King'], answer: 'Anna Brown' },
+        { question: 'What is Mark Hill’s job?', options: ['Taxi driver', 'Doctor', 'Shop assistant'], answer: 'Taxi driver' },
+        { question: 'Who works in a shop?', options: ['Sara Lee', 'Anna Brown', 'David King'], answer: 'Sara Lee' },
+        { question: 'Which email is for the clinic?', options: ['david@clinic.com', 'anna@school.com', 'mark@citytaxi.com'], answer: 'david@clinic.com' },
+        { question: 'What kind of text is this?', options: ['Business cards', 'A menu', 'A timetable'], answer: 'Business cards' }
+      ],
+      details: [
+        { sentence: 'Anna’s phone number is ___ 0182.', answer: '555' },
+        { sentence: 'Mark’s email is mark@___.com.', answer: 'citytaxi' },
+        { sentence: 'Sara’s phone number is 555 ___.', answer: '4430' },
+        { sentence: 'David King is a ___.', answer: 'doctor' },
+        { sentence: 'Anna works as an English ___.', answer: 'teacher' }
+      ],
+      trueFalse: [
+        { sentence: 'Mark Hill is a taxi driver.', answer: true },
+        { sentence: 'Sara Lee is a doctor.', answer: false },
+        { sentence: 'Anna Brown has an email address.', answer: true },
+        { sentence: 'David King’s phone number is 555 9022.', answer: true },
+        { sentence: 'There are three cards.', answer: false }
+      ],
+      productionQuestion: 'Write your simple contact card.',
+      sampleAnswer: 'Name: Aram. Job: student. Phone: 555 1234. Email: aram@email.com. City: Yerevan.'
+    },
+    {
+      id: 'a1-reading-03-text-messages',
+      order: 3,
+      stage: 'A1.1',
+      title: 'Text messages to a friend',
+      topic: 'short messages and plans',
+      description: 'Students read a short phone conversation and understand simple plans.',
+      readingText: 'Mia: Hi Tom. Are you free today?\nTom: Hi Mia. Yes, I am free after 5.\nMia: Great. Do you want to see a film?\nTom: Yes. What time?\nMia: The film starts at 6:30. Let’s meet at the cinema at 6:15.\nTom: OK. See you there!',
+      focus: ['messages', 'plans', 'times'],
+      words: [
+        { word: 'free', meaning: 'available, not busy' },
+        { word: 'film', meaning: 'a story you watch' },
+        { word: 'starts', meaning: 'begins' },
+        { word: 'meet', meaning: 'come together in one place' },
+        { word: 'cinema', meaning: 'place where people watch films' }
+      ],
+      questions: [
+        { question: 'Who writes to Tom?', options: ['Mia', 'Anna', 'Mark'], answer: 'Mia' },
+        { question: 'When is Tom free?', options: ['After 5', 'At 4', 'In the morning'], answer: 'After 5' },
+        { question: 'What do they want to do?', options: ['See a film', 'Study English', 'Eat lunch'], answer: 'See a film' },
+        { question: 'What time does the film start?', options: ['6:30', '6:15', '5:30'], answer: '6:30' },
+        { question: 'Where do they meet?', options: ['At the cinema', 'At school', 'In the park'], answer: 'At the cinema' }
+      ],
+      details: [
+        { sentence: 'Tom is free after ___.', answer: '5' },
+        { sentence: 'The film starts at ___.', answer: '6:30' },
+        { sentence: 'They meet at ___.', answer: '6:15' },
+        { sentence: 'They meet at the ___.', answer: 'cinema' },
+        { sentence: 'Mia says: Let’s ___ at the cinema.', answer: 'meet' }
+      ],
+      trueFalse: [
+        { sentence: 'Tom is free after 5.', answer: true },
+        { sentence: 'The film starts at 6:15.', answer: false },
+        { sentence: 'They meet at the cinema.', answer: true },
+        { sentence: 'Mia wants to see a film.', answer: true },
+        { sentence: 'Tom says no.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 text messages to make a simple plan with a friend.',
+      sampleAnswer: 'Hi Ani. Are you free today? Let’s meet at 6. Do you want coffee? See you at the cafe.'
+    },
+    {
+      id: 'a1-reading-04-study-timetable',
+      order: 4,
+      stage: 'A1.1',
+      title: 'A study timetable',
+      topic: 'days, times and classes',
+      description: 'Students read a weekly study timetable and find schedule information.',
+      readingText: 'Summer English School\nMonday 9:00 Grammar, 11:00 Speaking\nTuesday 10:00 Reading, 12:00 Lunch\nWednesday 9:00 Vocabulary, 11:00 Listening\nThursday 10:00 Writing, 12:00 Lunch\nFriday 9:00 Review test, 11:00 Class party',
+      focus: ['timetables', 'days', 'class subjects'],
+      words: [
+        { word: 'timetable', meaning: 'a list of days and times' },
+        { word: 'grammar', meaning: 'rules for making sentences' },
+        { word: 'speaking', meaning: 'using your voice in a language' },
+        { word: 'review', meaning: 'look again at old learning' },
+        { word: 'party', meaning: 'a fun event with people' }
+      ],
+      questions: [
+        { question: 'What class is on Monday at 9:00?', options: ['Grammar', 'Reading', 'Writing'], answer: 'Grammar' },
+        { question: 'When is Reading?', options: ['Tuesday at 10:00', 'Wednesday at 9:00', 'Friday at 11:00'], answer: 'Tuesday at 10:00' },
+        { question: 'What is on Wednesday at 11:00?', options: ['Listening', 'Lunch', 'Class party'], answer: 'Listening' },
+        { question: 'When is the review test?', options: ['Friday at 9:00', 'Thursday at 10:00', 'Monday at 11:00'], answer: 'Friday at 9:00' },
+        { question: 'What is on Friday at 11:00?', options: ['Class party', 'Vocabulary', 'Lunch'], answer: 'Class party' }
+      ],
+      details: [
+        { sentence: 'Speaking is on ___ at 11:00.', answer: 'Monday' },
+        { sentence: 'Lunch is at ___ on Tuesday.', answer: '12:00' },
+        { sentence: 'Vocabulary is on ___.', answer: 'Wednesday' },
+        { sentence: 'Writing starts at ___ on Thursday.', answer: '10:00' },
+        { sentence: 'The class party is on ___.', answer: 'Friday' }
+      ],
+      trueFalse: [
+        { sentence: 'Grammar is on Monday.', answer: true },
+        { sentence: 'Reading is on Friday.', answer: false },
+        { sentence: 'There is lunch on Tuesday.', answer: true },
+        { sentence: 'Writing is on Thursday.', answer: true },
+        { sentence: 'The review test is at 11:00.', answer: false }
+      ],
+      productionQuestion: 'Write a simple timetable for three days of your week.',
+      sampleAnswer: 'Monday: English at 7. Tuesday: work at 9. Wednesday: gym at 6. Friday: coffee with friends.'
+    },
+    {
+      id: 'a1-reading-05-restaurant-menu',
+      order: 5,
+      stage: 'A1.2',
+      title: 'A restaurant menu',
+      topic: 'food, prices and choices',
+      description: 'Students read a simple menu and choose food from details.',
+      readingText: 'City Cafe Menu\nBreakfast: eggs and toast - $5; pancakes - $6\nLunch: chicken salad - $8; tomato soup - $4\nDrinks: water - $1; coffee - $2; orange juice - $3\nSpecial today: rice with vegetables - $7',
+      focus: ['menus', 'food', 'prices'],
+      words: [
+        { word: 'menu', meaning: 'a list of food and drinks' },
+        { word: 'breakfast', meaning: 'morning meal' },
+        { word: 'lunch', meaning: 'middle-of-the-day meal' },
+        { word: 'drink', meaning: 'something you can drink' },
+        { word: 'special', meaning: 'available today or different from usual' }
+      ],
+      questions: [
+        { question: 'How much are eggs and toast?', options: ['$5', '$6', '$8'], answer: '$5' },
+        { question: 'What lunch costs $4?', options: ['Tomato soup', 'Chicken salad', 'Pancakes'], answer: 'Tomato soup' },
+        { question: 'Which drink costs $2?', options: ['Coffee', 'Water', 'Orange juice'], answer: 'Coffee' },
+        { question: 'What is the special today?', options: ['Rice with vegetables', 'Eggs and toast', 'Chicken salad'], answer: 'Rice with vegetables' },
+        { question: 'Which item is the most expensive?', options: ['Chicken salad', 'Pancakes', 'Orange juice'], answer: 'Chicken salad' }
+      ],
+      details: [
+        { sentence: 'Pancakes cost $___.', answer: '6' },
+        { sentence: 'Water costs $___.', answer: '1' },
+        { sentence: 'Orange juice costs $___.', answer: '3' },
+        { sentence: 'Chicken salad costs $___.', answer: '8' },
+        { sentence: 'The special has rice and ___.', answer: 'vegetables' }
+      ],
+      trueFalse: [
+        { sentence: 'Coffee costs $2.', answer: true },
+        { sentence: 'Tomato soup costs $8.', answer: false },
+        { sentence: 'The special is rice with vegetables.', answer: true },
+        { sentence: 'Water is the cheapest drink.', answer: true },
+        { sentence: 'Pancakes are a lunch item.', answer: false }
+      ],
+      productionQuestion: 'Write a small menu with 5 items and prices.',
+      sampleAnswer: 'Coffee - $2. Tea - $2. Soup - $4. Salad - $5. Cake - $3.'
+    },
+    {
+      id: 'a1-reading-06-office-poster',
+      order: 6,
+      stage: 'A1.2',
+      title: 'A poster at work',
+      topic: 'event posters and invitations',
+      description: 'Students read a poster and identify event information.',
+      readingText: 'Office Lunch\nFriday 14 May, 1:00 p.m.\nMeeting Room 2\nBring your lunch and meet the new team members. Tea, coffee and fruit are free. Please tell Maria before Wednesday if you can come.',
+      focus: ['posters', 'events', 'invitations'],
+      words: [
+        { word: 'poster', meaning: 'a notice with information' },
+        { word: 'meeting room', meaning: 'a room for work meetings' },
+        { word: 'bring', meaning: 'take something with you' },
+        { word: 'free', meaning: 'costing no money' },
+        { word: 'team', meaning: 'people who work together' }
+      ],
+      questions: [
+        { question: 'What is the event?', options: ['Office lunch', 'English test', 'Job interview'], answer: 'Office lunch' },
+        { question: 'When is it?', options: ['Friday 14 May', 'Wednesday 14 May', 'Monday 1 May'], answer: 'Friday 14 May' },
+        { question: 'Where is the event?', options: ['Meeting Room 2', 'The cafe', 'Maria’s office'], answer: 'Meeting Room 2' },
+        { question: 'What should people bring?', options: ['Their lunch', 'A book', 'Money for coffee'], answer: 'Their lunch' },
+        { question: 'Who should people tell?', options: ['Maria', 'The teacher', 'The driver'], answer: 'Maria' }
+      ],
+      details: [
+        { sentence: 'The lunch starts at ___ p.m.', answer: '1:00' },
+        { sentence: 'The event is in Meeting Room ___.', answer: '2' },
+        { sentence: 'Tea, coffee and ___ are free.', answer: 'fruit' },
+        { sentence: 'People should tell Maria before ___.', answer: 'Wednesday' },
+        { sentence: 'People meet new team ___.', answer: 'members' }
+      ],
+      trueFalse: [
+        { sentence: 'The office lunch is on Friday.', answer: true },
+        { sentence: 'Coffee is free.', answer: true },
+        { sentence: 'People must bring fruit.', answer: false },
+        { sentence: 'The lunch is in Meeting Room 2.', answer: true },
+        { sentence: 'People should tell Maria after Friday.', answer: false }
+      ],
+      productionQuestion: 'Write a simple poster for a class or work event.',
+      sampleAnswer: 'English Club. Friday at 6. Room 3. Bring your notebook. Coffee is free. Tell Anna today.'
+    },
+    {
+      id: 'a1-reading-07-exam-notice',
+      order: 7,
+      stage: 'A1.2',
+      title: 'A poster for exam candidates',
+      topic: 'exam room rules',
+      description: 'Students read a notice and understand simple instructions.',
+      readingText: 'Exam Room Notice\nPlease arrive 15 minutes early. Bring your ID card, pencil and eraser. Do not bring food or drinks into the room. Turn off your phone before the exam starts. If you have a question, raise your hand.',
+      focus: ['notices', 'rules', 'instructions'],
+      words: [
+        { word: 'arrive', meaning: 'come to a place' },
+        { word: 'early', meaning: 'before the usual time' },
+        { word: 'ID card', meaning: 'card with your name and photo' },
+        { word: 'turn off', meaning: 'make a phone or machine stop working' },
+        { word: 'raise', meaning: 'put something up' }
+      ],
+      questions: [
+        { question: 'How early should students arrive?', options: ['15 minutes early', '5 minutes early', '30 minutes late'], answer: '15 minutes early' },
+        { question: 'What should students bring?', options: ['ID card, pencil and eraser', 'Food and drinks', 'A phone and coffee'], answer: 'ID card, pencil and eraser' },
+        { question: 'What should students not bring?', options: ['Food or drinks', 'A pencil', 'An eraser'], answer: 'Food or drinks' },
+        { question: 'What should students do with phones?', options: ['Turn them off', 'Use them', 'Put them on the desk'], answer: 'Turn them off' },
+        { question: 'What should students do if they have a question?', options: ['Raise their hand', 'Leave the room', 'Call a friend'], answer: 'Raise their hand' }
+      ],
+      details: [
+        { sentence: 'Students should arrive ___ minutes early.', answer: '15' },
+        { sentence: 'Students should bring their ID ___.', answer: 'card' },
+        { sentence: 'Do not bring food or ___ into the room.', answer: 'drinks' },
+        { sentence: 'Turn off your ___ before the exam starts.', answer: 'phone' },
+        { sentence: 'If you have a question, raise your ___.', answer: 'hand' }
+      ],
+      trueFalse: [
+        { sentence: 'Students should arrive early.', answer: true },
+        { sentence: 'Students can bring drinks into the room.', answer: false },
+        { sentence: 'Students need an ID card.', answer: true },
+        { sentence: 'Phones should be off.', answer: true },
+        { sentence: 'Students should shout if they have a question.', answer: false }
+      ],
+      productionQuestion: 'Write 5 simple rules for your classroom or exam room.',
+      sampleAnswer: 'Arrive early. Bring your notebook. Do not use your phone. Listen to the teacher. Raise your hand.'
+    },
+    {
+      id: 'a1-reading-08-airport-board',
+      order: 8,
+      stage: 'A1.2',
+      title: 'An airport departures board',
+      topic: 'travel information',
+      description: 'Students read a departures board and scan for times, gates and status.',
+      readingText: 'Departures\nFlight BA204 to London - 09:30 - Gate 12 - On time\nFlight AF110 to Paris - 10:15 - Gate 8 - Delayed\nFlight LH330 to Berlin - 11:00 - Gate 15 - Boarding\nFlight AZ450 to Rome - 11:20 - Gate 3 - On time',
+      focus: ['travel boards', 'times', 'scanning'],
+      words: [
+        { word: 'departure', meaning: 'a plane, train or bus leaving' },
+        { word: 'flight', meaning: 'a journey by plane' },
+        { word: 'gate', meaning: 'place where people get on a plane' },
+        { word: 'delayed', meaning: 'late' },
+        { word: 'boarding', meaning: 'people are getting on the plane' }
+      ],
+      questions: [
+        { question: 'Which flight goes to London?', options: ['BA204', 'AF110', 'LH330'], answer: 'BA204' },
+        { question: 'What time is the flight to Paris?', options: ['10:15', '09:30', '11:20'], answer: '10:15' },
+        { question: 'Which flight is delayed?', options: ['AF110', 'AZ450', 'BA204'], answer: 'AF110' },
+        { question: 'Which city is at Gate 15?', options: ['Berlin', 'Rome', 'London'], answer: 'Berlin' },
+        { question: 'Which flight is boarding?', options: ['LH330', 'BA204', 'AZ450'], answer: 'LH330' }
+      ],
+      details: [
+        { sentence: 'The London flight leaves at ___.', answer: '09:30' },
+        { sentence: 'The Paris flight is at Gate ___.', answer: '8' },
+        { sentence: 'LH330 goes to ___.', answer: 'Berlin' },
+        { sentence: 'The Rome flight is AZ___.', answer: '450' },
+        { sentence: 'The London flight is on ___.', answer: 'time' }
+      ],
+      trueFalse: [
+        { sentence: 'BA204 goes to London.', answer: true },
+        { sentence: 'The Paris flight is on time.', answer: false },
+        { sentence: 'LH330 is boarding.', answer: true },
+        { sentence: 'The Rome flight leaves from Gate 3.', answer: true },
+        { sentence: 'There are five flights on the board.', answer: false }
+      ],
+      productionQuestion: 'Write a small departures board with three trips.',
+      sampleAnswer: 'Bus 20 to City Centre - 8:00 - On time. Train 5 to Gyumri - 9:30 - Delayed. Flight A1 to Rome - 11:00 - Gate 4.'
+    },
+    {
+      id: 'a1-reading-09-holiday-home-advert',
+      order: 9,
+      stage: 'A1.3',
+      title: 'Holiday home adverts',
+      topic: 'holiday homes and facilities',
+      description: 'Students read a short holiday advert and identify key information.',
+      readingText: 'Sunny House is a small holiday home near the beach. It has two bedrooms, a kitchen and a living room. There is free Wi-Fi and a garden. The beach is five minutes away on foot. The house is good for four people. Price: $80 per night.',
+      focus: ['adverts', 'homes', 'facilities'],
+      words: [
+        { word: 'holiday home', meaning: 'a place to stay on holiday' },
+        { word: 'beach', meaning: 'land next to the sea' },
+        { word: 'Wi-Fi', meaning: 'internet connection' },
+        { word: 'garden', meaning: 'outside area with plants' },
+        { word: 'per night', meaning: 'for one night' }
+      ],
+      questions: [
+        { question: 'Where is Sunny House?', options: ['Near the beach', 'In the mountains', 'Next to an airport'], answer: 'Near the beach' },
+        { question: 'How many bedrooms does it have?', options: ['Two', 'One', 'Four'], answer: 'Two' },
+        { question: 'What is free?', options: ['Wi-Fi', 'Breakfast', 'Taxi'], answer: 'Wi-Fi' },
+        { question: 'How far is the beach?', options: ['Five minutes on foot', 'One hour by bus', 'Ten minutes by car'], answer: 'Five minutes on foot' },
+        { question: 'How much is it per night?', options: ['$80', '$40', '$18'], answer: '$80' }
+      ],
+      details: [
+        { sentence: 'Sunny House has two ___.', answer: 'bedrooms' },
+        { sentence: 'There is a kitchen and a living ___.', answer: 'room' },
+        { sentence: 'The beach is five minutes away on ___.', answer: 'foot' },
+        { sentence: 'The house is good for ___ people.', answer: 'four' },
+        { sentence: 'The price is $80 per ___.', answer: 'night' }
+      ],
+      trueFalse: [
+        { sentence: 'Sunny House is near the beach.', answer: true },
+        { sentence: 'It has three bedrooms.', answer: false },
+        { sentence: 'There is a garden.', answer: true },
+        { sentence: 'The house is good for six people.', answer: false },
+        { sentence: 'Wi-Fi is free.', answer: true }
+      ],
+      productionQuestion: 'Write a short advert for a holiday home or room.',
+      sampleAnswer: 'Small flat near the park. One bedroom, kitchen and Wi-Fi. Good for two people. The price is $40 per night.'
+    },
+    {
+      id: 'a1-reading-10-job-adverts',
+      order: 10,
+      stage: 'A1.3',
+      title: 'Job adverts',
+      topic: 'simple job adverts',
+      description: 'Students read short job adverts and identify job details.',
+      readingText: 'Job 1: Cafe assistant. Work Monday to Friday, 8:00-13:00. Make coffee and help customers. Call Anna: 555 9010.\nJob 2: Hotel cleaner. Work Saturday and Sunday, 9:00-15:00. Clean rooms. Email jobs@cityhotel.com.\nJob 3: Delivery driver. Work evenings. You need a car. Phone Mark: 555 3300.',
+      focus: ['job adverts', 'work times', 'contact details'],
+      words: [
+        { word: 'assistant', meaning: 'a person who helps' },
+        { word: 'customer', meaning: 'a person who buys something' },
+        { word: 'cleaner', meaning: 'a person who cleans rooms or places' },
+        { word: 'delivery', meaning: 'taking things to people' },
+        { word: 'evenings', meaning: 'the time after afternoon' }
+      ],
+      questions: [
+        { question: 'Which job is Monday to Friday?', options: ['Cafe assistant', 'Hotel cleaner', 'Delivery driver'], answer: 'Cafe assistant' },
+        { question: 'What does the cafe assistant make?', options: ['Coffee', 'Beds', 'Pizza'], answer: 'Coffee' },
+        { question: 'Which job is on Saturday and Sunday?', options: ['Hotel cleaner', 'Cafe assistant', 'Teacher'], answer: 'Hotel cleaner' },
+        { question: 'What does the delivery driver need?', options: ['A car', 'A hotel room', 'A coffee machine'], answer: 'A car' },
+        { question: 'Who should you call for the driver job?', options: ['Mark', 'Anna', 'City Hotel'], answer: 'Mark' }
+      ],
+      details: [
+        { sentence: 'The cafe job starts at ___.', answer: '8:00' },
+        { sentence: 'The hotel cleaner works until ___.', answer: '15:00' },
+        { sentence: 'The hotel email is jobs@___.com.', answer: 'cityhotel' },
+        { sentence: 'Anna’s phone number is 555 ___.', answer: '9010' },
+        { sentence: 'The driver works in the ___.', answer: 'evenings' }
+      ],
+      trueFalse: [
+        { sentence: 'The cafe assistant works in the morning.', answer: true },
+        { sentence: 'The hotel cleaner works Monday to Friday.', answer: false },
+        { sentence: 'The delivery driver needs a car.', answer: true },
+        { sentence: 'Mark’s phone number is 555 3300.', answer: true },
+        { sentence: 'There are two job adverts.', answer: false }
+      ],
+      productionQuestion: 'Write a simple job advert.',
+      sampleAnswer: 'English helper needed. Work Monday and Wednesday, 5-7. Help students. Call Ani: 555 1234.'
+    },
+    {
+      id: 'a1-reading-11-notes-at-work',
+      order: 11,
+      stage: 'A1.3',
+      title: 'Notes at work',
+      topic: 'short workplace messages',
+      description: 'Students read short notes and find tasks, times and people.',
+      readingText: 'Note 1: Sam, please call Mr Brown before 10. He needs the sales report.\nNote 2: The meeting is in Room 4 at 2 p.m. Bring your notebook.\nNote 3: Maria, the printer is not working. Please use the printer near the kitchen.\nNote 4: Free coffee in the staff room today.',
+      focus: ['work notes', 'short messages', 'instructions'],
+      words: [
+        { word: 'report', meaning: 'a document with information' },
+        { word: 'meeting', meaning: 'people talking about work' },
+        { word: 'printer', meaning: 'machine that prints paper' },
+        { word: 'staff room', meaning: 'room for workers' },
+        { word: 'notebook', meaning: 'book for writing notes' }
+      ],
+      questions: [
+        { question: 'Who should call Mr Brown?', options: ['Sam', 'Maria', 'Anna'], answer: 'Sam' },
+        { question: 'What does Mr Brown need?', options: ['The sales report', 'A notebook', 'Free coffee'], answer: 'The sales report' },
+        { question: 'Where is the meeting?', options: ['Room 4', 'Staff room', 'Kitchen'], answer: 'Room 4' },
+        { question: 'What is not working?', options: ['The printer', 'The phone', 'The coffee machine'], answer: 'The printer' },
+        { question: 'Where is the free coffee?', options: ['In the staff room', 'In Room 4', 'Near the kitchen'], answer: 'In the staff room' }
+      ],
+      details: [
+        { sentence: 'Sam should call Mr Brown before ___.', answer: '10' },
+        { sentence: 'The meeting is at ___ p.m.', answer: '2' },
+        { sentence: 'People should bring a ___.', answer: 'notebook' },
+        { sentence: 'Maria should use the printer near the ___.', answer: 'kitchen' },
+        { sentence: 'Free ___ is in the staff room.', answer: 'coffee' }
+      ],
+      trueFalse: [
+        { sentence: 'Sam needs to call Mr Brown.', answer: true },
+        { sentence: 'The meeting is in Room 2.', answer: false },
+        { sentence: 'Maria has a printer problem.', answer: true },
+        { sentence: 'Coffee is free today.', answer: true },
+        { sentence: 'People should bring lunch to the meeting.', answer: false }
+      ],
+      productionQuestion: 'Write three short notes for work or class.',
+      sampleAnswer: 'Anna, please call me. The lesson is at 6. Bring your notebook. Free tea is in the kitchen.'
+    },
+    {
+      id: 'a1-reading-12-student-card-form',
+      order: 12,
+      stage: 'A1.3',
+      title: 'Student card application',
+      topic: 'forms and personal details',
+      description: 'Students read a simple application form and identify form information.',
+      readingText: 'Student Card Application\nFirst name: Daniel\nFamily name: Green\nDate of birth: 12 March 2001\nCourse: English A1\nClass time: Monday and Wednesday, 18:00\nEmail: daniel.green@email.com\nPhone: 555 2229\nAddress: 14 Park Street',
+      focus: ['forms', 'personal information', 'scanning'],
+      words: [
+        { word: 'application', meaning: 'a form you complete to ask for something' },
+        { word: 'first name', meaning: 'your given name' },
+        { word: 'family name', meaning: 'your surname' },
+        { word: 'date of birth', meaning: 'the day you were born' },
+        { word: 'address', meaning: 'where you live' }
+      ],
+      questions: [
+        { question: 'What is Daniel’s family name?', options: ['Green', 'Park', 'English'], answer: 'Green' },
+        { question: 'What course is Daniel taking?', options: ['English A1', 'Maths A1', 'English B2'], answer: 'English A1' },
+        { question: 'When is the class?', options: ['Monday and Wednesday', 'Tuesday and Thursday', 'Friday only'], answer: 'Monday and Wednesday' },
+        { question: 'What is Daniel’s phone number?', options: ['555 2229', '555 2292', '555 9022'], answer: '555 2229' },
+        { question: 'Where does Daniel live?', options: ['14 Park Street', '12 March Street', '18 Green Street'], answer: '14 Park Street' }
+      ],
+      details: [
+        { sentence: 'Daniel’s first name is ___.', answer: 'Daniel' },
+        { sentence: 'His date of birth is 12 ___ 2001.', answer: 'March' },
+        { sentence: 'His class time is ___.', answer: '18:00' },
+        { sentence: 'His email is daniel.green@___.com.', answer: 'email' },
+        { sentence: 'His address is 14 ___ Street.', answer: 'Park' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel’s course is English A1.', answer: true },
+        { sentence: 'His class is on Tuesday and Thursday.', answer: false },
+        { sentence: 'His phone number is 555 2229.', answer: true },
+        { sentence: 'Daniel lives on Park Street.', answer: true },
+        { sentence: 'His family name is Brown.', answer: false }
+      ],
+      productionQuestion: 'Write your own simple student card application.',
+      sampleAnswer: 'First name: Ani. Family name: Sargsyan. Course: English A1. Class time: Tuesday 19:00. Email: ani@email.com.'
+    },
+    {
+      id: 'a1-reading-13-dictionary-definitions',
+      order: 13,
+      stage: 'A1.3',
+      title: 'Dictionary definitions',
+      topic: 'simple definitions and examples',
+      description: 'Students read short dictionary-style definitions and match words to meanings.',
+      readingText: 'Dictionary page\nkind adjective: friendly and helpful. Example: My teacher is kind.\ncheap adjective: not expensive. Example: This bag is cheap.\nquick adjective: fast. Example: The train is quick.\nquiet adjective: not noisy. Example: The room is quiet.\nclean adjective: not dirty. Example: The kitchen is clean.',
+      focus: ['definitions', 'adjectives', 'examples'],
+      words: [
+        { word: 'kind', meaning: 'friendly and helpful' },
+        { word: 'cheap', meaning: 'not expensive' },
+        { word: 'quick', meaning: 'fast' },
+        { word: 'quiet', meaning: 'not noisy' },
+        { word: 'clean', meaning: 'not dirty' }
+      ],
+      questions: [
+        { question: 'Which word means friendly and helpful?', options: ['Kind', 'Cheap', 'Quiet'], answer: 'Kind' },
+        { question: 'Which word means not expensive?', options: ['Cheap', 'Clean', 'Quick'], answer: 'Cheap' },
+        { question: 'Which word means fast?', options: ['Quick', 'Quiet', 'Kind'], answer: 'Quick' },
+        { question: 'Which word means not noisy?', options: ['Quiet', 'Cheap', 'Clean'], answer: 'Quiet' },
+        { question: 'Which word means not dirty?', options: ['Clean', 'Quick', 'Kind'], answer: 'Clean' }
+      ],
+      details: [
+        { sentence: 'Kind is an ___.', answer: 'adjective' },
+        { sentence: 'The example for cheap is: This ___ is cheap.', answer: 'bag' },
+        { sentence: 'The ___ is quick.', answer: 'train' },
+        { sentence: 'The room is ___.', answer: 'quiet' },
+        { sentence: 'The kitchen is ___.', answer: 'clean' }
+      ],
+      trueFalse: [
+        { sentence: 'Kind means friendly and helpful.', answer: true },
+        { sentence: 'Cheap means very expensive.', answer: false },
+        { sentence: 'Quick means fast.', answer: true },
+        { sentence: 'Quiet means not noisy.', answer: true },
+        { sentence: 'Clean means dirty.', answer: false }
+      ],
+      productionQuestion: 'Write 5 simple definitions for words you know.',
+      sampleAnswer: 'Happy means feeling good. Cold means not warm. Big means not small. Fast means quick. Clean means not dirty.'
+    },
+    {
+      id: 'a1-reading-14-shop-notice',
+      order: 14,
+      stage: 'A1.4',
+      title: 'A shop notice',
+      topic: 'opening times and sale information',
+      description: 'Students read a shop notice and find practical shopping details.',
+      readingText: 'Fresh Market Notice\nOpen Monday to Saturday, 8:00-20:00. Closed on Sunday.\nThis week: apples $2 per kilo, tomatoes $3 per kilo, bread $1.50. Bring your own bag and get 5% off. Card and cash accepted.',
+      focus: ['notices', 'shopping', 'opening times'],
+      words: [
+        { word: 'market', meaning: 'place where people buy food' },
+        { word: 'closed', meaning: 'not open' },
+        { word: 'per kilo', meaning: 'for one kilogram' },
+        { word: 'discount', meaning: 'money off the price' },
+        { word: 'accepted', meaning: 'can be used here' }
+      ],
+      questions: [
+        { question: 'When is the market open?', options: ['Monday to Saturday', 'Sunday only', 'Every day'], answer: 'Monday to Saturday' },
+        { question: 'What time does it close?', options: ['20:00', '8:00', '15:00'], answer: '20:00' },
+        { question: 'How much are tomatoes?', options: ['$3 per kilo', '$2 per kilo', '$1.50'], answer: '$3 per kilo' },
+        { question: 'How can customers get 5% off?', options: ['Bring their own bag', 'Pay only cash', 'Come on Sunday'], answer: 'Bring their own bag' },
+        { question: 'What payment is accepted?', options: ['Card and cash', 'Card only', 'Cash only'], answer: 'Card and cash' }
+      ],
+      details: [
+        { sentence: 'The market opens at ___.', answer: '8:00' },
+        { sentence: 'The market is closed on ___.', answer: 'Sunday' },
+        { sentence: 'Apples are $___ per kilo.', answer: '2' },
+        { sentence: 'Bread costs $___.', answer: '1.50' },
+        { sentence: 'Bring your own ___ and get 5% off.', answer: 'bag' }
+      ],
+      trueFalse: [
+        { sentence: 'The market is open on Sunday.', answer: false },
+        { sentence: 'Apples cost $2 per kilo.', answer: true },
+        { sentence: 'Customers can pay by card.', answer: true },
+        { sentence: 'Bread costs $3.', answer: false },
+        { sentence: 'Customers get 5% off with their own bag.', answer: true }
+      ],
+      productionQuestion: 'Write a short notice for a shop or cafe.',
+      sampleAnswer: 'Open Monday to Friday, 9-18. Coffee is $2. Bring your own cup and get 5% off. Card accepted.'
+    },
+    {
+      id: 'a1-reading-15-email-to-teacher',
+      order: 15,
+      stage: 'A1.4',
+      title: 'An email to a teacher',
+      topic: 'short emails and requests',
+      description: 'Students read a short email and understand a simple request.',
+      readingText: 'Subject: English lesson\nDear Mr Smith,\nI am sorry, but I cannot come to class on Thursday. I have a doctor’s appointment at 6 p.m. Can I do the homework online? I can come to class on Monday.\nBest wishes,\nNora',
+      focus: ['emails', 'requests', 'reasons'],
+      words: [
+        { word: 'subject', meaning: 'the title of an email' },
+        { word: 'sorry', meaning: 'word used to apologise' },
+        { word: 'appointment', meaning: 'planned meeting with a person' },
+        { word: 'online', meaning: 'using the internet' },
+        { word: 'best wishes', meaning: 'polite ending for an email' }
+      ],
+      questions: [
+        { question: 'Who writes the email?', options: ['Nora', 'Mr Smith', 'The doctor'], answer: 'Nora' },
+        { question: 'Who is the email to?', options: ['Mr Smith', 'Nora', 'A friend'], answer: 'Mr Smith' },
+        { question: 'When can Nora not come to class?', options: ['Thursday', 'Monday', 'Tuesday'], answer: 'Thursday' },
+        { question: 'Why can Nora not come?', options: ['She has a doctor’s appointment', 'She is on holiday', 'She has no homework'], answer: 'She has a doctor’s appointment' },
+        { question: 'What does Nora ask?', options: ['Can she do homework online?', 'Can she teach the class?', 'Can she cancel Monday?'], answer: 'Can she do homework online?' }
+      ],
+      details: [
+        { sentence: 'The subject is English ___.', answer: 'lesson' },
+        { sentence: 'Nora’s appointment is at ___ p.m.', answer: '6' },
+        { sentence: 'Nora asks to do the homework ___.', answer: 'online' },
+        { sentence: 'Nora can come to class on ___.', answer: 'Monday' },
+        { sentence: 'The email ends with Best ___.', answer: 'wishes' }
+      ],
+      trueFalse: [
+        { sentence: 'Nora writes to her teacher.', answer: true },
+        { sentence: 'Nora can come on Thursday.', answer: false },
+        { sentence: 'Nora has a doctor’s appointment.', answer: true },
+        { sentence: 'The appointment is at 6 p.m.', answer: true },
+        { sentence: 'Nora can come on Friday.', answer: false }
+      ],
+      productionQuestion: 'Write a short email to your teacher.',
+      sampleAnswer: 'Dear teacher, I cannot come on Tuesday. I have work at 7 p.m. Can I do homework online? Best wishes, Ani.'
+    },
+    {
+      id: 'a1-reading-16-transport-timetable',
+      order: 16,
+      stage: 'A1.4',
+      title: 'A transport timetable',
+      topic: 'bus and train times',
+      description: 'Students read a simple transport timetable and find times and destinations.',
+      readingText: 'Bus 12 Timetable\nCity Centre to Green Park\nMonday to Friday: 07:30, 08:00, 08:30, 09:00\nSaturday: 09:00, 10:00, 11:00\nNo buses on Sunday.\nTicket price: $1. Children under 7 travel free.',
+      focus: ['transport', 'timetables', 'prices'],
+      words: [
+        { word: 'timetable', meaning: 'list of times' },
+        { word: 'city centre', meaning: 'middle of a city' },
+        { word: 'park', meaning: 'green public place' },
+        { word: 'ticket', meaning: 'paper or digital pass for travel' },
+        { word: 'free', meaning: 'costing no money' }
+      ],
+      questions: [
+        { question: 'Where does Bus 12 go?', options: ['City Centre to Green Park', 'Airport to Hotel', 'School to Beach'], answer: 'City Centre to Green Park' },
+        { question: 'What is the first bus Monday to Friday?', options: ['07:30', '09:00', '10:00'], answer: '07:30' },
+        { question: 'How many Saturday times are listed?', options: ['Three', 'Four', 'One'], answer: 'Three' },
+        { question: 'Are there buses on Sunday?', options: ['No', 'Yes', 'Only at 9:00'], answer: 'No' },
+        { question: 'How much is a ticket?', options: ['$1', '$7', '$12'], answer: '$1' }
+      ],
+      details: [
+        { sentence: 'The bus number is ___.', answer: '12' },
+        { sentence: 'The bus goes to Green ___.', answer: 'Park' },
+        { sentence: 'On Saturday, the first bus is at ___.', answer: '09:00' },
+        { sentence: 'There are no buses on ___.', answer: 'Sunday' },
+        { sentence: 'Children under ___ travel free.', answer: '7' }
+      ],
+      trueFalse: [
+        { sentence: 'Bus 12 goes to Green Park.', answer: true },
+        { sentence: 'The first weekday bus is at 8:00.', answer: false },
+        { sentence: 'There are no buses on Sunday.', answer: true },
+        { sentence: 'A ticket costs $1.', answer: true },
+        { sentence: 'Children under 7 pay $1.', answer: false }
+      ],
+      productionQuestion: 'Write a simple bus or class timetable.',
+      sampleAnswer: 'Bus 5 to the centre. Monday to Friday: 8:00, 9:00, 10:00. Ticket price: $1. No buses on Sunday.'
+    },
+    {
+      id: 'a1-reading-17-room-advert',
+      order: 17,
+      stage: 'A1.4',
+      title: 'A room advert',
+      topic: 'renting a room',
+      description: 'Students read a simple room advert and understand home details.',
+      readingText: 'Room for rent\nSmall room in a quiet flat near the city centre. The room has a bed, desk and wardrobe. There is a shared kitchen and bathroom. Wi-Fi is included. The flat is five minutes from the bus station. Price: $250 per month. Call Elena after 5 p.m.',
+      focus: ['adverts', 'rooms', 'home details'],
+      words: [
+        { word: 'rent', meaning: 'pay money to use a room or home' },
+        { word: 'quiet', meaning: 'not noisy' },
+        { word: 'shared', meaning: 'used by more than one person' },
+        { word: 'included', meaning: 'part of the price' },
+        { word: 'per month', meaning: 'for one month' }
+      ],
+      questions: [
+        { question: 'Where is the flat?', options: ['Near the city centre', 'Near the airport', 'In a village'], answer: 'Near the city centre' },
+        { question: 'What is in the room?', options: ['A bed, desk and wardrobe', 'A sofa and TV', 'A kitchen and bathroom'], answer: 'A bed, desk and wardrobe' },
+        { question: 'What is shared?', options: ['Kitchen and bathroom', 'Bedroom and desk', 'Wi-Fi and bed'], answer: 'Kitchen and bathroom' },
+        { question: 'How far is the bus station?', options: ['Five minutes', 'Fifteen minutes', 'One hour'], answer: 'Five minutes' },
+        { question: 'Who should people call?', options: ['Elena', 'Nora', 'Sam'], answer: 'Elena' }
+      ],
+      details: [
+        { sentence: 'The flat is near the city ___.', answer: 'centre' },
+        { sentence: 'The room has a bed, desk and ___.', answer: 'wardrobe' },
+        { sentence: 'Wi-Fi is ___.', answer: 'included' },
+        { sentence: 'The price is $___ per month.', answer: '250' },
+        { sentence: 'Call Elena after ___ p.m.', answer: '5' }
+      ],
+      trueFalse: [
+        { sentence: 'The room is in a quiet flat.', answer: true },
+        { sentence: 'The room has a private kitchen.', answer: false },
+        { sentence: 'Wi-Fi is included.', answer: true },
+        { sentence: 'The flat is five minutes from the bus station.', answer: true },
+        { sentence: 'People should call Elena before 5 p.m.', answer: false }
+      ],
+      productionQuestion: 'Write a short advert for a room or flat.',
+      sampleAnswer: 'Room for rent. Small room near the park. Bed and desk included. Shared kitchen. Wi-Fi included. $200 per month.'
+    },
+    {
+      id: 'a1-reading-18-review',
+      order: 18,
+      stage: 'A1 review',
+      title: 'A1 reading review',
+      topic: 'mixed A1 reading texts',
+      description: 'Students review A1 reading skills with a mixed notice, message and timetable.',
+      readingText: 'Part 1: Cafe notice. Open Monday to Friday, 8:00-18:00. Soup $4, coffee $2. Card accepted.\nPart 2: Message. Hi Leo, the English class is in Room 5 today. Please bring your homework. See you at 6.\nPart 3: Train board. Train to Lake Town: 09:15, Platform 2, On time.',
+      focus: ['A1 review', 'notices', 'messages', 'timetables'],
+      words: [
+        { word: 'notice', meaning: 'short public information' },
+        { word: 'accepted', meaning: 'can be used here' },
+        { word: 'homework', meaning: 'work students do after class' },
+        { word: 'platform', meaning: 'place where people get on a train' },
+        { word: 'on time', meaning: 'not late' }
+      ],
+      questions: [
+        { question: 'When is the cafe open?', options: ['Monday to Friday', 'Saturday only', 'Every night'], answer: 'Monday to Friday' },
+        { question: 'How much is coffee?', options: ['$2', '$4', '$8'], answer: '$2' },
+        { question: 'Where is the English class?', options: ['Room 5', 'Room 2', 'Cafe'], answer: 'Room 5' },
+        { question: 'What should Leo bring?', options: ['Homework', 'Coffee', 'A ticket'], answer: 'Homework' },
+        { question: 'What platform is the train on?', options: ['Platform 2', 'Platform 5', 'Platform 9'], answer: 'Platform 2' }
+      ],
+      details: [
+        { sentence: 'The cafe closes at ___.', answer: '18:00' },
+        { sentence: 'Soup costs $___.', answer: '4' },
+        { sentence: 'The class starts at ___.', answer: '6' },
+        { sentence: 'The train goes to Lake ___.', answer: 'Town' },
+        { sentence: 'The train time is ___.', answer: '09:15' }
+      ],
+      trueFalse: [
+        { sentence: 'The cafe accepts cards.', answer: true },
+        { sentence: 'The English class is in Room 2.', answer: false },
+        { sentence: 'Leo should bring homework.', answer: true },
+        { sentence: 'The train is delayed.', answer: false },
+        { sentence: 'Coffee costs $2.', answer: true }
+      ],
+      productionQuestion: 'Write a short notice, message or timetable with 5 details.',
+      sampleAnswer: 'English class today in Room 3. Start at 7. Bring your notebook. Coffee is $2. Bus 10 leaves at 8.'
+    }
+  ].map(buildReadingReadyLesson);
+
   const READY_LESSON_TASK_EXTENSIONS = {
     'be-profile-choice': {
       items: [
@@ -2475,6 +3287,7 @@
     const skillId = getReadyLessonSkillId(value);
     if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
     if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
+    if (skillId === 'reading') return READY_READING_LESSONS_A1;
     return [];
   }
 
@@ -2699,6 +3512,8 @@
         topic: lesson.topic,
         description: lesson.description,
         teacher_notes: lesson.teacherNotes || '',
+        reading_title: lesson.readingTitle || '',
+        reading_text: lesson.readingText || '',
         minutes: lesson.minutes,
         focus: lesson.focus || [],
         tasks: cloneData(tasks || [])
@@ -2868,6 +3683,13 @@
                 <div class="td-ready-focus">
                   ${(lesson.focus || []).map((focus) => `<span>${escapeHtml(focus)}</span>`).join('')}
                 </div>
+
+                ${lesson.readingText ? `
+                  <div class="td-ready-reading-text">
+                    <div class="td-ready-reading-title">${escapeHtml(lesson.readingTitle || 'Reading text')}</div>
+                    ${String(lesson.readingText || '').split('\n').filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}
+                  </div>
+                ` : ''}
 
                 <div class="td-grid-2">
                   <label class="td-label">
@@ -6009,6 +6831,9 @@ function renderStudentTemplateAnswers(assignment) {
       .td-ready-hero p{margin:8px 0 0;color:#475467;font-size:14px;line-height:1.55}
       .td-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
       .td-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
+      .td-ready-reading-text{border:1px solid #dbe7f3;border-radius:14px;background:#fbfdff;padding:14px;display:grid;gap:8px}
+      .td-ready-reading-title{font-size:14px;font-weight:800;color:#175cd3}
+      .td-ready-reading-text p{margin:0;color:#344054;font-size:14px;line-height:1.65;white-space:pre-wrap}
       .td-ready-task-list,.td-ready-review-list{display:grid;gap:10px}
       .td-ready-task{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}
       .td-ready-task-main{display:flex;align-items:flex-start;gap:12px;min-width:0}

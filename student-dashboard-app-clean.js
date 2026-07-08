@@ -51,8 +51,8 @@
       answerMode: 'dropdown'
     },
     grammar_lesson_pack: {
-      label: 'Ready Grammar Lesson',
-      category: 'grammar',
+      label: 'Ready Lesson',
+      category: 'general',
       answerMode: 'lesson_pack'
     }
   };
@@ -942,6 +942,14 @@ function renderSimpleProgressText(assignment) {
     const focusHtml = (content.focus || []).length
       ? `<div class="sd-ready-focus">${content.focus.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div>`
       : '';
+    const readingTextHtml = content.reading_text
+      ? `
+        <div class="sd-ready-reading-text">
+          ${content.reading_title ? `<div class="sd-template-passage-title">${escapeHtml(content.reading_title)}</div>` : '<div class="sd-template-passage-title">Reading text</div>'}
+          ${String(content.reading_text || '').split('\n').filter(Boolean).map((line) => `<p class="sd-template-passage-p">${escapeHtml(line)}</p>`).join('')}
+        </div>
+      `
+      : '';
     const metaHtml = `
       <div class="sd-compact-meta">
         ${content.stage ? `<span>${escapeHtml(content.stage)}</span>` : ''}
@@ -957,6 +965,7 @@ function renderSimpleProgressText(assignment) {
           ${content.description ? `<p class="sd-template-passage-p">${escapeHtml(content.description)}</p>` : ''}
           ${metaHtml}
           ${focusHtml}
+          ${readingTextHtml}
         </div>
         <div class="sd-template-list">
           ${(content.tasks || []).map((task, idx) => renderReadyLessonTask(task, idx, answers)).join('')}
@@ -1313,6 +1322,7 @@ function renderSimpleProgressText(assignment) {
       .sd-textarea-sm{min-height:92px}
       .sd-ready-lesson{display:grid;gap:14px}
       .sd-ready-section{border:1px solid #dbe7f3;border-radius:14px;background:#fff;padding:14px;display:grid;gap:12px}
+      .sd-ready-reading-text{border:1px solid #dbe7f3;border-radius:14px;background:#fff;padding:14px;display:grid;gap:8px}
       .sd-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
       .sd-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
       .sd-action-row{
