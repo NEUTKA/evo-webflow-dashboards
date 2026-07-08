@@ -2660,6 +2660,585 @@
     }
   ].map(buildReadingReadyLesson);
 
+  const WRITING_DEFAULT_CHECKLIST = [
+    ['Include all important details.', true],
+    ['Use very long sentences at A1.', false],
+    ['Check names, times and numbers.', true],
+    ['Do not read your text again.', false],
+    ['Use a clear ending if it is a message or email.', true]
+  ];
+
+  function buildWritingChoiceItem(lessonId, phrases, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const optionsSource = [
+      entry[0],
+      phrases[(index + 1) % phrases.length]?.[0],
+      phrases[(index + 2) % phrases.length]?.[0]
+    ];
+    const ordered = index % 3 === 0
+      ? optionsSource
+      : (index % 3 === 1
+        ? [optionsSource[1], optionsSource[0], optionsSource[2]]
+        : [optionsSource[1], optionsSource[2], optionsSource[0]]);
+    const options = ordered.map((text, optionIndex) => ({
+      id: ids[optionIndex],
+      text: text || entry[0]
+    }));
+
+    return {
+      id: `${lessonId}-phrase-choice-${index + 1}`,
+      sentence: `Choose the best phrase for: ${entry[1]}.`,
+      options,
+      answer: options.find((option) => option.text === entry[0])?.id || 'a',
+      explanation: entry[0]
+    };
+  }
+
+  function buildWritingReadyLesson(config) {
+    const phrases = config.phrases || [];
+    const gaps = config.gaps || [];
+    const checklist = config.checklist || WRITING_DEFAULT_CHECKLIST;
+    const supportText = [
+      'Model text:',
+      config.modelText,
+      '',
+      'Useful phrases:',
+      ...phrases.map((item) => `- ${item[0]} = ${item[1]}`),
+      '',
+      'Checklist:',
+      ...checklist.filter((item) => item[1]).map((item) => `- ${item[0]}`)
+    ].filter((line) => line !== undefined && line !== null).join('\n');
+
+    return {
+      id: config.id,
+      order: config.order,
+      skill: 'writing',
+      stage: config.stage || 'A1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 30,
+      description: config.description,
+      supportTitle: config.supportTitle || 'Model and writing help',
+      supportText,
+      focus: config.focus || ['guided writing', 'sentence starters', 'checking details'],
+      teacherNotes: config.teacherNotes || 'Ask the student to read the model first, complete the preparation tasks, then write their own short text.',
+      tasks: [
+        {
+          id: `${config.id}-phrase-matching`,
+          type: 'matching',
+          title: 'Useful phrases',
+          prompt: 'Match each phrase with its purpose.',
+          pairs: phrases.map((entry, index) => ({
+            id: `${config.id}-phrase-matching-${index + 1}`,
+            left_text: entry[0],
+            right_text: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-phrase-choice`,
+          type: 'choice',
+          title: 'Choose the best phrase',
+          prompt: 'Choose a useful phrase for each situation.',
+          items: phrases.map((entry, index) => buildWritingChoiceItem(config.id, phrases, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the model sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: gaps.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry[0],
+            accepted_answers: Array.isArray(entry[1]) ? entry[1] : [entry[1]],
+            hint: entry[2] || 'Use the model text.',
+            explanation: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Write your text',
+          prompt: config.productionPrompt || 'Write a short A1 text. Use the model and useful phrases.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-checklist-extra`,
+          type: 'choice',
+          title: 'Writing checklist',
+          prompt: 'Choose True or False.',
+          items: checklist.map((entry, index) => ({
+            id: `${config.id}-checklist-extra-${index + 1}`,
+            sentence: entry[0],
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: entry[1] ? 'a' : 'b',
+            explanation: entry[1] ? 'This is good writing advice.' : 'This is not good writing advice.'
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_WRITING_LESSONS_A1 = [
+    {
+      id: 'a1-writing-01-late-message',
+      order: 1,
+      stage: 'A1.1',
+      title: 'A message to say you are late',
+      topic: 'short apologies and times',
+      description: 'Students write a short message to explain they are late.',
+      modelText: 'Hi Anna. Sorry, I am late. I am on the bus now. I will be there at 6:20. See you soon.',
+      phrases: [
+        ['Sorry, I am late.', 'apologise'],
+        ['I am on the bus now.', 'say where you are'],
+        ['I will be there at 6:20.', 'give an arrival time'],
+        ['See you soon.', 'end a friendly message'],
+        ['Please wait for me.', 'ask someone to wait']
+      ],
+      gaps: [
+        ['___, I am late.', 'Sorry', 'apology word'],
+        ['I am ___ the bus now.', 'on', 'preposition'],
+        ['I will be there ___ 6:20.', 'at', 'time preposition'],
+        ['See you ___.', 'soon', 'friendly ending'],
+        ['Please ___ for me.', 'wait', 'ask someone to stay']
+      ],
+      productionQuestion: 'Write a message to a friend. Say you are late, where you are and what time you will arrive.',
+      sampleAnswer: 'Hi Tom. Sorry, I am late. I am in a taxi now. I will be there at 7:10. Please wait for me.'
+    },
+    {
+      id: 'a1-writing-02-noticeboard-message',
+      order: 2,
+      stage: 'A1.1',
+      title: 'A noticeboard message',
+      topic: 'lost and found notice',
+      description: 'Students write a short notice for a lost or found object.',
+      modelText: 'Lost: black wallet. It has my student card inside. I lost it in Room 3 on Monday. Please call me on 555 1200. Thank you.',
+      phrases: [
+        ['Lost: black wallet.', 'say what is lost'],
+        ['It has my student card inside.', 'give a detail'],
+        ['I lost it in Room 3.', 'say where it happened'],
+        ['Please call me on 555 1200.', 'give contact information'],
+        ['Thank you.', 'finish politely']
+      ],
+      gaps: [
+        ['___: black wallet.', 'Lost', 'notice word'],
+        ['It has my student card ___.', 'inside', 'where the card is'],
+        ['I lost it ___ Room 3.', 'in', 'place preposition'],
+        ['Please ___ me on 555 1200.', 'call', 'contact verb'],
+        ['Thank ___.', 'you', 'polite ending']
+      ],
+      productionQuestion: 'Write a lost or found notice. Include the object, place and contact information.',
+      sampleAnswer: 'Lost: blue bag. It has my notebook inside. I lost it in the cafe. Please call me on 555 4433. Thank you.'
+    },
+    {
+      id: 'a1-writing-03-invitation-message',
+      order: 3,
+      stage: 'A1.1',
+      title: 'A text message invitation',
+      topic: 'inviting a friend',
+      description: 'Students write a short invitation message with time and place.',
+      modelText: 'Hi Mia. Do you want to have coffee on Saturday? Let us meet at City Cafe at 5. It is near the park. Please tell me today.',
+      phrases: [
+        ['Do you want to have coffee?', 'invite someone'],
+        ['Let us meet at City Cafe.', 'suggest a place'],
+        ['At 5.', 'give a time'],
+        ['It is near the park.', 'give location help'],
+        ['Please tell me today.', 'ask for an answer']
+      ],
+      gaps: [
+        ['Do you ___ to have coffee?', 'want', 'invitation verb'],
+        ['Let us ___ at City Cafe.', 'meet', 'come together'],
+        ['It is ___ the park.', 'near', 'location word'],
+        ['Please ___ me today.', 'tell', 'answer request'],
+        ['We meet ___ 5.', 'at', 'time preposition']
+      ],
+      productionQuestion: 'Write a short invitation to a friend. Say what, when and where.',
+      sampleAnswer: 'Hi Aram. Do you want to see a film on Friday? Let us meet at the cinema at 6. Please tell me today.'
+    },
+    {
+      id: 'a1-writing-04-thank-you-email',
+      order: 4,
+      stage: 'A1.1',
+      title: 'A thank-you email',
+      topic: 'polite short emails',
+      description: 'Students write a simple thank-you email.',
+      modelText: 'Dear Nina, Thank you for the English book. It is very useful. I read it every evening. I am very happy. Best wishes, Anna',
+      phrases: [
+        ['Dear Nina,', 'start an email'],
+        ['Thank you for the English book.', 'say thank you'],
+        ['It is very useful.', 'give an opinion'],
+        ['I am very happy.', 'say how you feel'],
+        ['Best wishes, Anna', 'end an email']
+      ],
+      gaps: [
+        ['___ Nina,', 'Dear', 'email greeting'],
+        ['Thank you ___ the English book.', 'for', 'thank you + for'],
+        ['It is very ___.', 'useful', 'positive adjective'],
+        ['I am very ___.', 'happy', 'feeling word'],
+        ['Best ___, Anna', 'wishes', 'email ending']
+      ],
+      productionQuestion: 'Write a thank-you email for a present, help or a lesson.',
+      sampleAnswer: 'Dear Sam, Thank you for your help. It is very useful. I am very happy. Best wishes, Ani'
+    },
+    {
+      id: 'a1-writing-05-application-form',
+      order: 5,
+      stage: 'A1.2',
+      title: 'An application form',
+      topic: 'personal details in a form',
+      description: 'Students practise writing clear personal information in a form.',
+      modelText: 'First name: Daniel\nFamily name: Green\nDate of birth: 12 March 2001\nEmail: daniel.green@email.com\nCourse: English A1',
+      phrases: [
+        ['First name:', 'give your given name'],
+        ['Family name:', 'give your surname'],
+        ['Date of birth:', 'give your birthday'],
+        ['Email:', 'give your email address'],
+        ['Course:', 'give the class name']
+      ],
+      gaps: [
+        ['First ___: Daniel', 'name', 'given name field'],
+        ['Family ___: Green', 'name', 'surname field'],
+        ['Date of ___: 12 March 2001', 'birth', 'birthday field'],
+        ['___: daniel.green@email.com', 'Email', 'online address field'],
+        ['Course: English ___', 'A1', 'level']
+      ],
+      productionQuestion: 'Complete a short application form with your own information.',
+      sampleAnswer: 'First name: Ani. Family name: Sargsyan. Date of birth: 5 May 2000. Email: ani@email.com. Course: English A1.'
+    },
+    {
+      id: 'a1-writing-06-book-hotel-email',
+      order: 6,
+      stage: 'A1.2',
+      title: 'An email to book a hotel',
+      topic: 'booking a room',
+      description: 'Students write a short email asking for a hotel room.',
+      modelText: 'Dear Hotel City, I would like a room for two nights. I arrive on Friday. I need one room for two people. Is breakfast included? Thank you, Mark',
+      phrases: [
+        ['I would like a room.', 'ask for a room'],
+        ['For two nights.', 'say how long'],
+        ['I arrive on Friday.', 'give arrival day'],
+        ['For two people.', 'say number of guests'],
+        ['Is breakfast included?', 'ask about breakfast']
+      ],
+      gaps: [
+        ['I would ___ a room.', 'like', 'polite request'],
+        ['For two ___.', 'nights', 'hotel time'],
+        ['I arrive ___ Friday.', 'on', 'day preposition'],
+        ['For two ___.', 'people', 'number of guests'],
+        ['Is breakfast ___?', 'included', 'part of price']
+      ],
+      productionQuestion: 'Write a short email to book a hotel room. Include nights, date, people and one question.',
+      sampleAnswer: 'Dear Hotel Sun, I would like a room for three nights. I arrive on Monday. I need one room for one person. Is Wi-Fi included?'
+    },
+    {
+      id: 'a1-writing-07-confirm-appointment',
+      order: 7,
+      stage: 'A1.2',
+      title: 'Confirming an appointment',
+      topic: 'appointments and confirmation',
+      description: 'Students write a short message to confirm a lesson or appointment.',
+      modelText: 'Hello Dr Brown. I can come on Tuesday at 10:30. Thank you for the appointment. Please send me the address. See you on Tuesday.',
+      phrases: [
+        ['I can come on Tuesday.', 'confirm the day'],
+        ['At 10:30.', 'confirm the time'],
+        ['Thank you for the appointment.', 'be polite'],
+        ['Please send me the address.', 'ask for information'],
+        ['See you on Tuesday.', 'friendly ending']
+      ],
+      gaps: [
+        ['I can ___ on Tuesday.', 'come', 'confirm attendance'],
+        ['___ 10:30.', 'At', 'time preposition'],
+        ['Thank you ___ the appointment.', 'for', 'thank you + for'],
+        ['Please send me the ___.', 'address', 'place information'],
+        ['See you ___ Tuesday.', 'on', 'day preposition']
+      ],
+      productionQuestion: 'Write a message to confirm a lesson, meeting or appointment.',
+      sampleAnswer: 'Hello Anna. I can come on Friday at 6. Thank you for the lesson. Please send me the address. See you on Friday.'
+    },
+    {
+      id: 'a1-writing-08-congratulations-email',
+      order: 8,
+      stage: 'A1.2',
+      title: 'A congratulations message',
+      topic: 'short positive messages',
+      description: 'Students write a simple message to congratulate someone.',
+      modelText: 'Hi Leo. Congratulations on your new job! I am very happy for you. Your new office looks nice. Let us have coffee soon.',
+      phrases: [
+        ['Congratulations on your new job!', 'say congratulations'],
+        ['I am very happy for you.', 'show a positive feeling'],
+        ['Your new office looks nice.', 'give a positive comment'],
+        ['Let us have coffee soon.', 'suggest meeting'],
+        ['Well done!', 'short congratulations phrase']
+      ],
+      gaps: [
+        ['Congratulations ___ your new job!', 'on', 'congratulations + on'],
+        ['I am very happy ___ you.', 'for', 'happy for someone'],
+        ['Your new office ___ nice.', 'looks', 'appearance verb'],
+        ['Let us ___ coffee soon.', 'have', 'suggestion verb'],
+        ['Well ___!', 'done', 'short phrase']
+      ],
+      productionQuestion: 'Write a short congratulations message to a friend.',
+      sampleAnswer: 'Hi Sara. Congratulations on your exam! I am very happy for you. Well done! Let us have coffee soon.'
+    },
+    {
+      id: 'a1-writing-09-course-information-email',
+      order: 9,
+      stage: 'A1.2',
+      title: 'Asking about a language course',
+      topic: 'asking for course information',
+      description: 'Students write a short email asking for basic course details.',
+      modelText: 'Dear Sir or Madam, I am interested in your English A1 course. When does the course start? How much is it? Are lessons online? Thank you, Maria',
+      phrases: [
+        ['I am interested in your course.', 'show interest'],
+        ['When does the course start?', 'ask about start date'],
+        ['How much is it?', 'ask about price'],
+        ['Are lessons online?', 'ask about lesson format'],
+        ['Thank you, Maria', 'polite ending']
+      ],
+      gaps: [
+        ['I am interested ___ your course.', 'in', 'interested in'],
+        ['When does the course ___?', 'start', 'begin'],
+        ['How ___ is it?', 'much', 'price question'],
+        ['Are lessons ___?', 'online', 'internet format'],
+        ['Thank ___, Maria', 'you', 'polite ending']
+      ],
+      productionQuestion: 'Write an email asking about an English course. Ask three questions.',
+      sampleAnswer: 'Dear Sir or Madam, I am interested in your English course. When does it start? How much is it? Are lessons online? Thank you.'
+    },
+    {
+      id: 'a1-writing-10-instructions',
+      order: 10,
+      stage: 'A1.3',
+      title: 'Simple instructions',
+      topic: 'instructions for class or work',
+      description: 'Students write short step-by-step instructions.',
+      modelText: 'How to join the online lesson: Open your email. Click the lesson link. Write your name. Turn on your camera. Say hello to the teacher.',
+      phrases: [
+        ['Open your email.', 'first instruction'],
+        ['Click the lesson link.', 'computer action'],
+        ['Write your name.', 'give your name'],
+        ['Turn on your camera.', 'start camera'],
+        ['Say hello to the teacher.', 'greet someone']
+      ],
+      gaps: [
+        ['___ your email.', 'Open', 'start instruction'],
+        ['Click the lesson ___.', 'link', 'online button'],
+        ['Write your ___.', 'name', 'personal detail'],
+        ['Turn on your ___.', 'camera', 'video tool'],
+        ['Say ___ to the teacher.', 'hello', 'greeting']
+      ],
+      productionQuestion: 'Write 5 simple instructions for a class, app or work task.',
+      sampleAnswer: 'Open the app. Write your email. Click start. Listen to the teacher. Send your homework.'
+    },
+    {
+      id: 'a1-writing-11-online-introduction',
+      order: 11,
+      stage: 'A1.3',
+      title: 'Introducing yourself online',
+      topic: 'online course introductions',
+      description: 'Students write a short introduction for an online course.',
+      modelText: 'Hello everyone. My name is Aram. I am from Armenia. I work in an office. I study English because I need it for work. Nice to meet you.',
+      phrases: [
+        ['Hello everyone.', 'start a group introduction'],
+        ['My name is Aram.', 'give your name'],
+        ['I am from Armenia.', 'say where you are from'],
+        ['I study English because I need it for work.', 'give a reason'],
+        ['Nice to meet you.', 'friendly ending']
+      ],
+      gaps: [
+        ['Hello ___.', 'everyone', 'group greeting'],
+        ['My ___ is Aram.', 'name', 'name phrase'],
+        ['I am ___ Armenia.', 'from', 'origin preposition'],
+        ['I study English ___ I need it for work.', 'because', 'reason word'],
+        ['Nice to ___ you.', 'meet', 'friendly ending']
+      ],
+      productionQuestion: 'Write a short introduction for an online English course.',
+      sampleAnswer: 'Hello everyone. My name is Ani. I am from Armenia. I work in a shop. I study English because I like languages. Nice to meet you.'
+    },
+    {
+      id: 'a1-writing-12-social-media-post',
+      order: 12,
+      stage: 'A1.3',
+      title: 'A short social media post',
+      topic: 'posting about today',
+      description: 'Students write a simple social media post about a day or event.',
+      modelText: 'Today is a good day. I am at the park with my friends. The weather is sunny. We are drinking coffee. I am very happy.',
+      phrases: [
+        ['Today is a good day.', 'start a post'],
+        ['I am at the park.', 'say where you are'],
+        ['With my friends.', 'say who is with you'],
+        ['The weather is sunny.', 'describe weather'],
+        ['I am very happy.', 'say how you feel']
+      ],
+      gaps: [
+        ['Today is a ___ day.', 'good', 'positive adjective'],
+        ['I am ___ the park.', 'at', 'place preposition'],
+        ['With my ___.', 'friends', 'people with you'],
+        ['The weather is ___.', 'sunny', 'weather word'],
+        ['I am very ___.', 'happy', 'feeling word']
+      ],
+      productionQuestion: 'Write a short social media post about today.',
+      sampleAnswer: 'Today is nice. I am at home with my family. The weather is cold. We are watching a film. I am happy.'
+    },
+    {
+      id: 'a1-writing-13-about-me',
+      order: 13,
+      stage: 'A1.3',
+      title: 'About me',
+      topic: 'personal profile paragraph',
+      description: 'Students write a short paragraph about themselves.',
+      modelText: 'My name is Narek. I am 28 years old. I live in Yerevan. I work in a bank. I like football and music. I study English twice a week.',
+      phrases: [
+        ['My name is Narek.', 'give your name'],
+        ['I am 28 years old.', 'give your age'],
+        ['I live in Yerevan.', 'give your city'],
+        ['I work in a bank.', 'give your job or place of work'],
+        ['I like football and music.', 'talk about likes']
+      ],
+      gaps: [
+        ['My ___ is Narek.', 'name', 'name phrase'],
+        ['I am 28 years ___.', 'old', 'age phrase'],
+        ['I live ___ Yerevan.', 'in', 'city preposition'],
+        ['I work ___ a bank.', 'in', 'workplace preposition'],
+        ['I ___ football and music.', 'like', 'preference verb']
+      ],
+      productionQuestion: 'Write 6-8 sentences about yourself.',
+      sampleAnswer: 'My name is Ani. I am 25 years old. I live in Yerevan. I work in an office. I like coffee and books. I study English twice a week.'
+    },
+    {
+      id: 'a1-writing-14-my-family',
+      order: 14,
+      stage: 'A1.4',
+      title: 'My family',
+      topic: 'family paragraph',
+      description: 'Students write a simple paragraph about family members.',
+      modelText: 'I have a small family. My mother is a doctor. My father works in an office. I have one sister. She is a student. We like watching films together.',
+      phrases: [
+        ['I have a small family.', 'introduce your family'],
+        ['My mother is a doctor.', 'describe a family member'],
+        ['My father works in an office.', 'say where someone works'],
+        ['I have one sister.', 'say who is in your family'],
+        ['We like watching films together.', 'say what you do together']
+      ],
+      gaps: [
+        ['I have a ___ family.', 'small', 'family description'],
+        ['My mother is a ___.', 'doctor', 'job'],
+        ['My father works ___ an office.', 'in', 'workplace preposition'],
+        ['I have ___ sister.', 'one', 'number'],
+        ['We like watching films ___.', 'together', 'with each other']
+      ],
+      productionQuestion: 'Write 6-8 sentences about your family or people close to you.',
+      sampleAnswer: 'I have a small family. My mother is kind. My father works in an office. I have one brother. He is funny. We like eating dinner together.'
+    },
+    {
+      id: 'a1-writing-15-daily-routine',
+      order: 15,
+      stage: 'A1.4',
+      title: 'My daily routine',
+      topic: 'routine paragraph',
+      description: 'Students write a short paragraph about a normal day.',
+      modelText: 'I wake up at 7. I have breakfast at 8. I go to work by bus. I study English in the evening. I do not watch TV every day. I sleep at 11.',
+      phrases: [
+        ['I wake up at 7.', 'say morning time'],
+        ['I have breakfast at 8.', 'say meal time'],
+        ['I go to work by bus.', 'say transport'],
+        ['I study English in the evening.', 'say study time'],
+        ['I sleep at 11.', 'say night time']
+      ],
+      gaps: [
+        ['I wake ___ at 7.', 'up', 'wake up'],
+        ['I have ___ at 8.', 'breakfast', 'morning meal'],
+        ['I go to work ___ bus.', 'by', 'transport preposition'],
+        ['I study English in the ___.', 'evening', 'time of day'],
+        ['I ___ at 11.', 'sleep', 'night action']
+      ],
+      productionQuestion: 'Write 6-8 sentences about your daily routine.',
+      sampleAnswer: 'I wake up at 8. I have coffee. I go to work by taxi. I have lunch at 1. I study English in the evening. I sleep at 12.'
+    },
+    {
+      id: 'a1-writing-16-my-room',
+      order: 16,
+      stage: 'A1.4',
+      title: 'My room',
+      topic: 'describing a room',
+      description: 'Students write a simple description of a room or home.',
+      modelText: 'My room is small but nice. There is a bed near the window. There is a desk next to the bed. My books are on the desk. I like my room because it is quiet.',
+      phrases: [
+        ['My room is small but nice.', 'start a room description'],
+        ['There is a bed near the window.', 'describe one thing'],
+        ['There is a desk next to the bed.', 'describe position'],
+        ['My books are on the desk.', 'describe plural things'],
+        ['I like my room because it is quiet.', 'give a reason']
+      ],
+      gaps: [
+        ['My room is small ___ nice.', 'but', 'contrast word'],
+        ['There is a bed ___ the window.', 'near', 'place word'],
+        ['There is a desk next ___ the bed.', 'to', 'next to'],
+        ['My books are ___ the desk.', 'on', 'surface preposition'],
+        ['I like my room ___ it is quiet.', 'because', 'reason word']
+      ],
+      productionQuestion: 'Write 6-8 sentences describing your room or home.',
+      sampleAnswer: 'My room is small. There is a bed near the wall. There is a desk. My phone is on the desk. I like my room because it is quiet.'
+    },
+    {
+      id: 'a1-writing-17-shopping-note',
+      order: 17,
+      stage: 'A1.4',
+      title: 'A shopping list and note',
+      topic: 'shopping notes',
+      description: 'Students write a simple shopping list and message.',
+      modelText: 'Shopping list: bread, milk, apples, rice and coffee.\nHi Dad. Please buy bread and milk. We have apples at home. Do not buy coffee. Thank you.',
+      phrases: [
+        ['Shopping list:', 'start a list'],
+        ['Please buy bread and milk.', 'ask someone to buy things'],
+        ['We have apples at home.', 'say what you already have'],
+        ['Do not buy coffee.', 'say what not to buy'],
+        ['Thank you.', 'finish politely']
+      ],
+      gaps: [
+        ['Shopping ___: bread, milk, apples.', 'list', 'list title'],
+        ['Please ___ bread and milk.', 'buy', 'shopping verb'],
+        ['We have apples ___ home.', 'at', 'place phrase'],
+        ['Do not ___ coffee.', 'buy', 'negative instruction'],
+        ['Thank ___.', 'you', 'polite ending']
+      ],
+      productionQuestion: 'Write a shopping list and a short note for someone.',
+      sampleAnswer: 'Shopping list: eggs, bread, water, bananas and tea. Hi Mom. Please buy eggs and bread. We have tea at home. Thank you.'
+    },
+    {
+      id: 'a1-writing-18-review',
+      order: 18,
+      stage: 'A1 review',
+      title: 'A1 writing review',
+      topic: 'mixed A1 writing',
+      description: 'Students review A1 writing with a short message or paragraph.',
+      modelText: 'Hi Sara. I cannot come to class today. I am at work until 7. Can I do the homework online? I can come on Friday. Thank you.',
+      phrases: [
+        ['I cannot come today.', 'explain a problem'],
+        ['I am at work until 7.', 'give a reason and time'],
+        ['Can I do the homework online?', 'ask a question'],
+        ['I can come on Friday.', 'offer another day'],
+        ['Thank you.', 'finish politely']
+      ],
+      gaps: [
+        ['I ___ come today.', 'cannot', 'negative ability'],
+        ['I am at work ___ 7.', 'until', 'time word'],
+        ['Can I do the homework ___?', 'online', 'internet word'],
+        ['I can come ___ Friday.', 'on', 'day preposition'],
+        ['Thank ___.', 'you', 'polite ending']
+      ],
+      productionQuestion: 'Write one A1 text: a message, email, profile or short paragraph. Use 6-8 sentences.',
+      sampleAnswer: 'Hi teacher. I cannot come today. I am ill. Can I do homework online? I can come on Monday. Thank you.'
+    }
+  ].map(buildWritingReadyLesson);
+
   const READY_LESSON_TASK_EXTENSIONS = {
     'be-profile-choice': {
       items: [
@@ -3288,6 +3867,7 @@
     if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
     if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
     if (skillId === 'reading') return READY_READING_LESSONS_A1;
+    if (skillId === 'writing') return READY_WRITING_LESSONS_A1;
     return [];
   }
 
@@ -3512,6 +4092,8 @@
         topic: lesson.topic,
         description: lesson.description,
         teacher_notes: lesson.teacherNotes || '',
+        support_title: lesson.supportTitle || lesson.readingTitle || '',
+        support_text: lesson.supportText || lesson.readingText || '',
         reading_title: lesson.readingTitle || '',
         reading_text: lesson.readingText || '',
         minutes: lesson.minutes,
@@ -3596,6 +4178,8 @@
     const selectedStudentId = draft.studentId || '';
     const selectedLessonId = lesson?.id || '';
     const totalItems = countReadyLessonContentItems({ tasks: selectedTasks });
+    const supportTitle = lesson?.supportTitle || lesson?.readingTitle || '';
+    const supportText = lesson?.supportText || lesson?.readingText || '';
 
     const studentOptions = students.length
       ? `<option value="">Choose student</option>` + students.map((student) => {
@@ -3684,10 +4268,10 @@
                   ${(lesson.focus || []).map((focus) => `<span>${escapeHtml(focus)}</span>`).join('')}
                 </div>
 
-                ${lesson.readingText ? `
+                ${supportText ? `
                   <div class="td-ready-reading-text">
-                    <div class="td-ready-reading-title">${escapeHtml(lesson.readingTitle || 'Reading text')}</div>
-                    ${String(lesson.readingText || '').split('\n').filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}
+                    <div class="td-ready-reading-title">${escapeHtml(supportTitle || 'Lesson support')}</div>
+                    ${String(supportText || '').split('\n').filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}
                   </div>
                 ` : ''}
 

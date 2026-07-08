@@ -942,11 +942,13 @@ function renderSimpleProgressText(assignment) {
     const focusHtml = (content.focus || []).length
       ? `<div class="sd-ready-focus">${content.focus.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div>`
       : '';
-    const readingTextHtml = content.reading_text
+    const supportText = content.support_text || content.reading_text || '';
+    const supportTitle = content.support_title || content.reading_title || (content.skill === 'writing' ? 'Writing help' : 'Reading text');
+    const readingTextHtml = supportText
       ? `
         <div class="sd-ready-reading-text">
-          ${content.reading_title ? `<div class="sd-template-passage-title">${escapeHtml(content.reading_title)}</div>` : '<div class="sd-template-passage-title">Reading text</div>'}
-          ${String(content.reading_text || '').split('\n').filter(Boolean).map((line) => `<p class="sd-template-passage-p">${escapeHtml(line)}</p>`).join('')}
+          <div class="sd-template-passage-title">${escapeHtml(supportTitle)}</div>
+          ${String(supportText || '').split('\n').filter(Boolean).map((line) => `<p class="sd-template-passage-p">${escapeHtml(line)}</p>`).join('')}
         </div>
       `
       : '';
