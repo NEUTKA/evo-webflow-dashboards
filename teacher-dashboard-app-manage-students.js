@@ -65,8 +65,8 @@
       answerMode: 'dropdown'
     },
     grammar_lesson_pack: {
-      label: 'Ready Grammar Lesson',
-      category: 'grammar',
+      label: 'Ready Lesson',
+      category: 'general',
       answerMode: 'lesson_pack'
     }
   };
@@ -1419,6 +1419,435 @@
     }
   ];
 
+  function buildVocabularyChoiceItem(lessonId, entries, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const distractors = entries.filter((candidate) => candidate.word !== entry.word).slice(0, 2);
+    const orderedWords = index % 3 === 0
+      ? [entry.word, distractors[0]?.word, distractors[1]?.word]
+      : (index % 3 === 1
+        ? [distractors[0]?.word, entry.word, distractors[1]?.word]
+        : [distractors[0]?.word, distractors[1]?.word, entry.word]);
+    const options = orderedWords.map((word, optionIndex) => ({
+      id: ids[optionIndex],
+      text: word || entry.word
+    }));
+    const answer = options.find((option) => option.text === entry.word)?.id || 'a';
+
+    return {
+      id: `${lessonId}-choice-${index + 1}`,
+      sentence: entry.sentence,
+      options,
+      answer,
+      explanation: `${entry.word}: ${entry.meaning}`
+    };
+  }
+
+  function buildVocabularyReadyLesson(config) {
+    const words = config.words || [];
+    const extraWords = config.extraWords || words;
+
+    return {
+      id: config.id,
+      order: config.order,
+      skill: 'vocabulary',
+      stage: config.stage || 'A1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 25,
+      description: config.description,
+      focus: config.focus || [],
+      teacherNotes: config.teacherNotes || 'Use the final task to move from word recognition to simple personal production.',
+      tasks: [
+        {
+          id: `${config.id}-matching`,
+          type: 'matching',
+          title: 'Match words and meanings',
+          prompt: 'Match each word with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-choice`,
+          type: 'choice',
+          title: 'Choose the right word',
+          prompt: 'Choose the word that completes each sentence.',
+          items: words.map((entry, index) => buildVocabularyChoiceItem(config.id, words, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Type the missing word',
+          prompt: 'Type one word or phrase.',
+          items: words.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry.sentence,
+            accepted_answers: [entry.word],
+            hint: entry.hint || entry.meaning,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Use the words',
+          prompt: config.productionPrompt || 'Write 5 short sentences with words from this lesson.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-spelling-extra`,
+          type: 'gap_fill',
+          title: 'Extra spelling practice',
+          prompt: 'Read the meaning and type the word.',
+          items: extraWords.map((entry, index) => ({
+            id: `${config.id}-spelling-extra-${index + 1}`,
+            sentence: `Word for "${entry.meaning}": ___`,
+            accepted_answers: [entry.word],
+            hint: entry.sentence,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_VOCABULARY_LESSONS_A1 = [
+    {
+      id: 'a1-vocabulary-01-family-people',
+      order: 1,
+      stage: 'A1.1',
+      title: 'People and family',
+      topic: 'family members and people',
+      description: 'Students learn high-frequency words for family and close people.',
+      focus: ['family', 'people', 'personal life'],
+      words: [
+        { word: 'mother', meaning: 'your female parent', sentence: 'My ___ is kind.', hint: 'female parent' },
+        { word: 'father', meaning: 'your male parent', sentence: 'His ___ is at work.', hint: 'male parent' },
+        { word: 'sister', meaning: 'a girl or woman with the same parents as you', sentence: 'I have one ___.', hint: 'female sibling' },
+        { word: 'brother', meaning: 'a boy or man with the same parents as you', sentence: 'My ___ is ten years old.', hint: 'male sibling' },
+        { word: 'friend', meaning: 'a person you like and know well', sentence: 'Anna is my best ___.', hint: 'person you like' }
+      ],
+      productionQuestion: 'Write 5 sentences about your family or people you know.',
+      sampleAnswer: 'My mother is kind. My father is at work. I have one sister. My brother is funny. Anna is my friend.'
+    },
+    {
+      id: 'a1-vocabulary-02-countries-nationalities',
+      order: 2,
+      stage: 'A1.1',
+      title: 'Countries and nationalities',
+      topic: 'country, city, language and nationality',
+      description: 'Students practise words used to say where people are from.',
+      focus: ['countries', 'nationalities', 'personal information'],
+      words: [
+        { word: 'country', meaning: 'a nation, for example Armenia or Spain', sentence: 'Armenia is a small ___.', hint: 'nation' },
+        { word: 'city', meaning: 'a large town', sentence: 'Yerevan is a big ___.', hint: 'large town' },
+        { word: 'capital', meaning: 'the main city of a country', sentence: 'London is the ___ of the UK.', hint: 'main city' },
+        { word: 'language', meaning: 'English, Armenian or another way people speak', sentence: 'English is a useful ___.', hint: 'people speak it' },
+        { word: 'nationality', meaning: 'the word for where a person is from', sentence: 'What is your ___?', hint: 'Armenian, Italian, British' }
+      ],
+      productionQuestion: 'Write 5 sentences about your country, city and languages.',
+      sampleAnswer: 'My country is Armenia. My city is Yerevan. Yerevan is the capital. I speak Armenian. I study the English language.'
+    },
+    {
+      id: 'a1-vocabulary-03-time-dates',
+      order: 3,
+      stage: 'A1.1',
+      title: 'Numbers, dates and time',
+      topic: 'basic time words',
+      description: 'Students learn words needed for lessons, schedules and simple plans.',
+      focus: ['time', 'dates', 'schedules'],
+      words: [
+        { word: 'number', meaning: '1, 2, 3 or another count word', sentence: 'My phone ___ is on the card.', hint: '1, 2, 3' },
+        { word: 'hour', meaning: '60 minutes', sentence: 'The lesson is one ___ long.', hint: '60 minutes' },
+        { word: 'minute', meaning: '60 seconds', sentence: 'Please wait one ___.', hint: 'short time' },
+        { word: 'morning', meaning: 'the early part of the day', sentence: 'I study in the ___.', hint: 'before afternoon' },
+        { word: 'weekend', meaning: 'Saturday and Sunday', sentence: 'I relax at the ___.', hint: 'Saturday and Sunday' }
+      ],
+      productionQuestion: 'Write 5 sentences about your day, lesson time or weekend.',
+      sampleAnswer: 'My lesson is one hour. I wake up in the morning. I study for thirty minutes. My number is private. I relax at the weekend.'
+    },
+    {
+      id: 'a1-vocabulary-04-classroom-study',
+      order: 4,
+      stage: 'A1.1',
+      title: 'Classroom and study',
+      topic: 'study words and classroom objects',
+      description: 'Students learn words they need to follow lessons and talk about study.',
+      focus: ['classroom', 'study', 'lesson tools'],
+      words: [
+        { word: 'notebook', meaning: 'a book for writing notes', sentence: 'I write words in my ___.', hint: 'book for notes' },
+        { word: 'pencil', meaning: 'a thing you write with', sentence: 'Use a ___ for this exercise.', hint: 'write with it' },
+        { word: 'board', meaning: 'a classroom surface the teacher writes on', sentence: 'Look at the ___.', hint: 'teacher writes on it' },
+        { word: 'homework', meaning: 'work a student does after class', sentence: 'I do my ___ after dinner.', hint: 'work after class' },
+        { word: 'lesson', meaning: 'a time when you study with a teacher', sentence: 'Our English ___ starts at six.', hint: 'class time' }
+      ],
+      productionQuestion: 'Write 5 sentences about your English lessons and study things.',
+      sampleAnswer: 'I have an English lesson today. I use a notebook. I have a pencil. I look at the board. I do my homework.'
+    },
+    {
+      id: 'a1-vocabulary-05-daily-routine',
+      order: 5,
+      stage: 'A1.2',
+      title: 'Daily routine actions',
+      topic: 'common routine verbs',
+      description: 'Students practise everyday action phrases for routines.',
+      focus: ['daily routine', 'actions', 'habits'],
+      words: [
+        { word: 'wake up', meaning: 'stop sleeping', sentence: 'I ___ at seven.', hint: 'stop sleeping' },
+        { word: 'have breakfast', meaning: 'eat in the morning', sentence: 'I ___ at eight.', hint: 'morning meal' },
+        { word: 'go to work', meaning: 'travel to your job', sentence: 'My father ___ by bus.', hint: 'travel to job' },
+        { word: 'study', meaning: 'learn a subject', sentence: 'We ___ English online.', hint: 'learn' },
+        { word: 'sleep', meaning: 'rest at night', sentence: 'I ___ for eight hours.', hint: 'rest at night' }
+      ],
+      productionQuestion: 'Write 5 sentences about your daily routine.',
+      sampleAnswer: 'I wake up at seven. I have breakfast at eight. I go to work by bus. I study English. I sleep at eleven.'
+    },
+    {
+      id: 'a1-vocabulary-06-home-rooms',
+      order: 6,
+      stage: 'A1.2',
+      title: 'Home and rooms',
+      topic: 'rooms and parts of a home',
+      description: 'Students learn words for common rooms and places in a home.',
+      focus: ['home', 'rooms', 'places'],
+      words: [
+        { word: 'kitchen', meaning: 'the room where people cook', sentence: 'My mother is in the ___.', hint: 'room for cooking' },
+        { word: 'bathroom', meaning: 'the room with a shower or bath', sentence: 'The shower is in the ___.', hint: 'room with shower' },
+        { word: 'bedroom', meaning: 'the room where you sleep', sentence: 'My bed is in my ___.', hint: 'room for sleeping' },
+        { word: 'living room', meaning: 'the room where people relax together', sentence: 'We watch TV in the ___.', hint: 'room with sofa' },
+        { word: 'garden', meaning: 'an outside area with plants', sentence: 'There are flowers in the ___.', hint: 'outside plants' }
+      ],
+      productionQuestion: 'Write 5 sentences about your home.',
+      sampleAnswer: 'My home has a kitchen. I sleep in my bedroom. We watch TV in the living room. The bathroom is small. There is a garden.'
+    },
+    {
+      id: 'a1-vocabulary-07-everyday-objects',
+      order: 7,
+      stage: 'A1.2',
+      title: 'Everyday objects',
+      topic: 'common things people carry and use',
+      description: 'Students practise names of everyday objects.',
+      focus: ['objects', 'personal things', 'daily life'],
+      words: [
+        { word: 'phone', meaning: 'a thing you use to call people', sentence: 'My ___ is on the table.', hint: 'call people' },
+        { word: 'key', meaning: 'a small thing used to open a door', sentence: 'I cannot find my ___.', hint: 'opens a door' },
+        { word: 'bag', meaning: 'a thing used to carry objects', sentence: 'My books are in my ___.', hint: 'carry things' },
+        { word: 'wallet', meaning: 'a small thing for money and cards', sentence: 'My money is in my ___.', hint: 'money and cards' },
+        { word: 'umbrella', meaning: 'a thing used when it rains', sentence: 'Take an ___ today.', hint: 'for rain' }
+      ],
+      productionQuestion: 'Write 5 sentences about things you have with you today.',
+      sampleAnswer: 'I have a phone. My key is in my bag. My wallet is small. I have an umbrella. My bag is black.'
+    },
+    {
+      id: 'a1-vocabulary-08-food-drinks',
+      order: 8,
+      stage: 'A1.2',
+      title: 'Food and drinks',
+      topic: 'common food and drink words',
+      description: 'Students learn basic food and drink vocabulary for meals and shopping.',
+      focus: ['food', 'drinks', 'meals'],
+      words: [
+        { word: 'bread', meaning: 'food made from flour, often eaten with butter', sentence: 'I eat ___ for breakfast.', hint: 'food with butter' },
+        { word: 'rice', meaning: 'small white or brown grains people cook', sentence: 'We have chicken and ___.', hint: 'small grains' },
+        { word: 'chicken', meaning: 'a common meat or bird', sentence: 'I like ___ with rice.', hint: 'meat or bird' },
+        { word: 'water', meaning: 'a clear drink people need every day', sentence: 'I drink ___ every day.', hint: 'clear drink' },
+        { word: 'coffee', meaning: 'a hot dark drink', sentence: 'My father drinks ___ in the morning.', hint: 'hot dark drink' }
+      ],
+      productionQuestion: 'Write 5 sentences about food and drinks you like or have at home.',
+      sampleAnswer: 'I eat bread for breakfast. I like rice. I do not eat chicken every day. I drink water. My mother likes coffee.'
+    },
+    {
+      id: 'a1-vocabulary-09-fruit-vegetables',
+      order: 9,
+      stage: 'A1.2',
+      title: 'Fruit and vegetables',
+      topic: 'common fruit and vegetables',
+      description: 'Students practise useful words for simple food conversations.',
+      focus: ['fruit', 'vegetables', 'shopping'],
+      words: [
+        { word: 'apple', meaning: 'a round fruit, often red or green', sentence: 'I eat an ___ every day.', hint: 'red or green fruit' },
+        { word: 'banana', meaning: 'a long yellow fruit', sentence: 'This ___ is yellow.', hint: 'yellow fruit' },
+        { word: 'potato', meaning: 'a vegetable often used for chips', sentence: 'I need one ___ for soup.', hint: 'used for chips' },
+        { word: 'tomato', meaning: 'a red fruit often used in salad', sentence: 'Put a ___ in the salad.', hint: 'red salad food' },
+        { word: 'carrot', meaning: 'an orange vegetable', sentence: 'A ___ is orange.', hint: 'orange vegetable' }
+      ],
+      productionQuestion: 'Write 5 sentences about fruit and vegetables you eat.',
+      sampleAnswer: 'I like apples. I eat bananas. I cook potatoes. I put tomatoes in salad. I like carrots.'
+    },
+    {
+      id: 'a1-vocabulary-10-clothes-accessories',
+      order: 10,
+      stage: 'A1.3',
+      title: 'Clothes and accessories',
+      topic: 'basic clothing words',
+      description: 'Students learn common words for clothes and what people wear.',
+      focus: ['clothes', 'accessories', 'describing people'],
+      words: [
+        { word: 'shirt', meaning: 'clothing for the top part of the body', sentence: 'He wears a white ___.', hint: 'top clothing' },
+        { word: 'trousers', meaning: 'clothing for your legs', sentence: 'My ___ are black.', hint: 'leg clothing' },
+        { word: 'shoes', meaning: 'things you wear on your feet', sentence: 'Her ___ are new.', hint: 'on your feet' },
+        { word: 'coat', meaning: 'warm clothing for outside', sentence: 'Wear a ___ because it is cold.', hint: 'warm outside clothing' },
+        { word: 'hat', meaning: 'something you wear on your head', sentence: 'He has a blue ___.', hint: 'on your head' }
+      ],
+      productionQuestion: 'Write 5 sentences about clothes you or other people are wearing.',
+      sampleAnswer: 'I wear a shirt. My trousers are black. My shoes are old. I wear a coat in winter. My friend has a hat.'
+    },
+    {
+      id: 'a1-vocabulary-11-body-appearance',
+      order: 11,
+      stage: 'A1.3',
+      title: 'Body and appearance',
+      topic: 'body parts and simple appearance words',
+      description: 'Students practise basic words for describing people.',
+      focus: ['body', 'appearance', 'describing people'],
+      words: [
+        { word: 'hair', meaning: 'what grows on your head', sentence: 'She has long ___.', hint: 'on your head' },
+        { word: 'eyes', meaning: 'the body parts you see with', sentence: 'His ___ are blue.', hint: 'you see with them' },
+        { word: 'face', meaning: 'the front part of your head', sentence: 'Wash your ___.', hint: 'front of head' },
+        { word: 'hand', meaning: 'the body part at the end of your arm', sentence: 'Raise your ___, please.', hint: 'end of arm' },
+        { word: 'tall', meaning: 'high in height', sentence: 'My brother is very ___.', hint: 'not short' }
+      ],
+      productionQuestion: 'Write 5 sentences describing yourself or another person.',
+      sampleAnswer: 'I have dark hair. My eyes are brown. My face is round. I write with my right hand. My brother is tall.'
+    },
+    {
+      id: 'a1-vocabulary-12-jobs-work',
+      order: 12,
+      stage: 'A1.3',
+      title: 'Jobs and work',
+      topic: 'common jobs and workplaces',
+      description: 'Students learn common job words and one basic workplace word.',
+      focus: ['jobs', 'work', 'people'],
+      words: [
+        { word: 'doctor', meaning: 'a person who helps sick people', sentence: 'A ___ works in a hospital.', hint: 'helps sick people' },
+        { word: 'teacher', meaning: 'a person who helps students learn', sentence: 'My English ___ is friendly.', hint: 'helps students learn' },
+        { word: 'driver', meaning: 'a person who drives a car, bus or taxi', sentence: 'The bus ___ is careful.', hint: 'drives' },
+        { word: 'shop assistant', meaning: 'a person who works in a shop', sentence: 'The ___ helps customers.', hint: 'works in a shop' },
+        { word: 'office', meaning: 'a place where many people work at desks', sentence: 'My sister works in an ___.', hint: 'workplace with desks' }
+      ],
+      productionQuestion: 'Write 5 sentences about jobs in your family or jobs you know.',
+      sampleAnswer: 'My mother is a doctor. My teacher is kind. A driver works on a bus. A shop assistant works in a shop. My father works in an office.'
+    },
+    {
+      id: 'a1-vocabulary-13-places-town',
+      order: 13,
+      stage: 'A1.3',
+      title: 'Places in town',
+      topic: 'shops and public places',
+      description: 'Students learn common places for directions and everyday errands.',
+      focus: ['town', 'places', 'directions'],
+      words: [
+        { word: 'supermarket', meaning: 'a large shop for food and home things', sentence: 'I buy milk at the ___.', hint: 'large food shop' },
+        { word: 'bank', meaning: 'a place for money', sentence: 'The ___ is near my house.', hint: 'place for money' },
+        { word: 'pharmacy', meaning: 'a shop where you buy medicine', sentence: 'I buy medicine at the ___.', hint: 'medicine shop' },
+        { word: 'park', meaning: 'a green public place with trees', sentence: 'Children play in the ___.', hint: 'green public place' },
+        { word: 'station', meaning: 'a place where trains or buses stop', sentence: 'The bus ___ is busy.', hint: 'transport stop place' }
+      ],
+      productionQuestion: 'Write 5 sentences about places near your home.',
+      sampleAnswer: 'There is a supermarket near my home. The bank is small. I go to the pharmacy. I walk in the park. The station is busy.'
+    },
+    {
+      id: 'a1-vocabulary-14-transport-travel',
+      order: 14,
+      stage: 'A1.3',
+      title: 'Transport and travel',
+      topic: 'basic travel words',
+      description: 'Students practise vocabulary for simple travel situations.',
+      focus: ['transport', 'travel', 'tickets'],
+      words: [
+        { word: 'bus', meaning: 'a large road vehicle for many people', sentence: 'I go to work by ___.', hint: 'public road vehicle' },
+        { word: 'train', meaning: 'a vehicle that travels on rails', sentence: 'The ___ leaves at nine.', hint: 'travels on rails' },
+        { word: 'airport', meaning: 'a place where planes arrive and leave', sentence: 'We go to the ___ by taxi.', hint: 'place for planes' },
+        { word: 'ticket', meaning: 'a paper or digital pass for travel', sentence: 'I need a ___ for the bus.', hint: 'travel pass' },
+        { word: 'hotel', meaning: 'a place where travellers sleep', sentence: 'Our ___ is near the sea.', hint: 'travellers sleep there' }
+      ],
+      productionQuestion: 'Write 5 sentences about transport or travel.',
+      sampleAnswer: 'I go by bus. I like trains. The airport is far. I have a ticket. The hotel is nice.'
+    },
+    {
+      id: 'a1-vocabulary-15-hobbies-free-time',
+      order: 15,
+      stage: 'A1.4',
+      title: 'Hobbies and free time',
+      topic: 'free-time activities and interests',
+      description: 'Students learn basic words for talking about things they like doing.',
+      focus: ['hobbies', 'free time', 'likes'],
+      words: [
+        { word: 'music', meaning: 'songs and sounds people listen to', sentence: 'I listen to ___ every day.', hint: 'songs and sounds' },
+        { word: 'film', meaning: 'a story you watch on TV or at the cinema', sentence: 'We watch a ___ on Friday.', hint: 'story you watch' },
+        { word: 'sport', meaning: 'games and physical activities', sentence: 'Football is a popular ___.', hint: 'physical activity' },
+        { word: 'game', meaning: 'an activity you play for fun', sentence: 'This computer ___ is fun.', hint: 'play for fun' },
+        { word: 'book', meaning: 'something with pages that you read', sentence: 'I read a ___ at night.', hint: 'you read it' }
+      ],
+      productionQuestion: 'Write 5 sentences about your hobbies and free time.',
+      sampleAnswer: 'I like music. I watch films. My brother likes sport. I play a game on Saturday. I read a book at night.'
+    },
+    {
+      id: 'a1-vocabulary-16-weather-seasons',
+      order: 16,
+      stage: 'A1.4',
+      title: 'Weather and seasons',
+      topic: 'basic weather and season words',
+      description: 'Students practise common weather words for small talk and daily plans.',
+      focus: ['weather', 'seasons', 'daily life'],
+      words: [
+        { word: 'sunny', meaning: 'with a lot of sun', sentence: 'It is ___ today.', hint: 'a lot of sun' },
+        { word: 'rainy', meaning: 'with a lot of rain', sentence: 'Take an umbrella. It is ___.', hint: 'a lot of rain' },
+        { word: 'cold', meaning: 'not warm', sentence: 'Wear a coat because it is ___.', hint: 'not warm' },
+        { word: 'summer', meaning: 'the hot season of the year', sentence: 'I swim in ___.', hint: 'hot season' },
+        { word: 'winter', meaning: 'the cold season of the year', sentence: 'It snows in ___.', hint: 'cold season' }
+      ],
+      productionQuestion: 'Write 5 sentences about weather and seasons where you live.',
+      sampleAnswer: 'It is sunny today. It is rainy in spring. Winter is cold. Summer is hot. I wear a coat in winter.'
+    },
+    {
+      id: 'a1-vocabulary-17-health-feelings',
+      order: 17,
+      stage: 'A1.4',
+      title: 'Health and feelings',
+      topic: 'simple health and feeling words',
+      description: 'Students learn words for basic needs, health and emotions.',
+      focus: ['health', 'feelings', 'needs'],
+      words: [
+        { word: 'headache', meaning: 'pain in your head', sentence: 'I have a ___.', hint: 'head pain' },
+        { word: 'medicine', meaning: 'something you take when you are ill', sentence: 'Take this ___, please.', hint: 'take when ill' },
+        { word: 'hungry', meaning: 'wanting food', sentence: 'I am ___. I want lunch.', hint: 'want food' },
+        { word: 'happy', meaning: 'feeling good', sentence: 'She is ___ today.', hint: 'feeling good' },
+        { word: 'sad', meaning: 'not happy', sentence: 'He is ___ because he is ill.', hint: 'not happy' }
+      ],
+      productionQuestion: 'Write 5 sentences about how you feel or what you need.',
+      sampleAnswer: 'I am happy today. I am hungry at one. I have a headache sometimes. I take medicine when I am ill. My friend is sad.'
+    },
+    {
+      id: 'a1-vocabulary-18-shopping-money',
+      order: 18,
+      stage: 'A1 review',
+      title: 'Shopping and money',
+      topic: 'basic shopping words',
+      description: 'Students practise words needed for simple shopping situations.',
+      focus: ['shopping', 'money', 'sizes'],
+      words: [
+        { word: 'price', meaning: 'how much something costs', sentence: 'What is the ___ of this shirt?', hint: 'how much it costs' },
+        { word: 'cash', meaning: 'money in coins or notes', sentence: 'I pay in ___.', hint: 'coins or notes' },
+        { word: 'card', meaning: 'a bank card used to pay', sentence: 'Can I pay by ___?', hint: 'bank payment thing' },
+        { word: 'receipt', meaning: 'paper that shows what you bought', sentence: 'Can I have a ___, please?', hint: 'paper after buying' },
+        { word: 'size', meaning: 'how big or small clothes are', sentence: 'What ___ are these shoes?', hint: 'big or small clothing number' }
+      ],
+      productionQuestion: 'Write 5 sentences for a simple shopping situation.',
+      sampleAnswer: 'What is the price? I pay in cash. Can I pay by card? Can I have a receipt? What size is this shirt?'
+    }
+  ].map(buildVocabularyReadyLesson);
+
   const READY_LESSON_TASK_EXTENSIONS = {
     'be-profile-choice': {
       items: [
@@ -2045,7 +2474,20 @@
   function getReadyLessonsForSkill(value) {
     const skillId = getReadyLessonSkillId(value);
     if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
+    if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
     return [];
+  }
+
+  function getReadyLessonAssignmentType(skillId) {
+    if (skillId === 'vocabulary') return 'vocabulary_recap';
+    if (skillId === 'writing') return 'writing_task';
+    if (skillId === 'reading' || skillId === 'listening') return 'reading_listening';
+    return 'grammar_practice';
+  }
+
+  function getReadyLessonInstruction(skillId) {
+    const skill = getReadyLessonSkillConfig(skillId);
+    return `Complete all sections of this ${String(skill?.label || 'ready').toLowerCase()} lesson, then submit your work for teacher review.`;
   }
 
   function getReadyLessonById(lessonId, skillId = 'grammar') {
@@ -2267,14 +2709,15 @@
   function buildReadyLessonTemplatePayload(lesson, tasks) {
     const schemaJson = buildReadyLessonSchemaJson(lesson, tasks);
     const title = `Ready lesson: ${lesson.title}`;
-    const instruction = 'Complete all sections of this grammar lesson, then submit your work for teacher review.';
+    const skillId = getReadyLessonSkillId(lesson.skill || 'grammar');
+    const instruction = getReadyLessonInstruction(skillId);
 
     return {
       teacher_id: state.userId,
       template_key: `${slugify(lesson.id)}-${Date.now()}`,
       title,
       description: lesson.topic || lesson.description || null,
-      category: 'grammar',
+      category: skillId,
       level_range: lesson.stage || 'A1',
       estimated_time: lesson.minutes || null,
       answer_mode: 'lesson_pack',
@@ -2455,7 +2898,7 @@
 
                 <div class="td-actions">
                   <button class="td-btn td-btn-primary" type="button" data-action="ready-lesson-send" ${students.length && selectedTasks.length ? '' : 'disabled'}>Send lesson</button>
-                  <div class="td-note">The student receives one assignment with all selected grammar sections.</div>
+                  <div class="td-note">The student receives one assignment with all selected ${escapeHtml(activeSkill.label.toLowerCase())} sections.</div>
                 </div>
               ` : `
                 <div class="td-ready-empty-state">
@@ -6953,8 +7396,9 @@ assignments = (assignmentsRows || []).map((a) => {
     startButtonFeedback(button, 'Sending...');
 
     try {
+      const skillId = getReadyLessonSkillId(lesson.skill || draft.skill || state.readyLessonSkill || 'grammar');
       const readyLessonSchema = buildReadyLessonSchemaJson(lesson, selectedTasks);
-      const readyLessonInstruction = 'Complete all sections of this grammar lesson, then submit your work for teacher review.';
+      const readyLessonInstruction = getReadyLessonInstruction(skillId);
 
       const assignmentPayload = {
         teacher_id: state.userId,
@@ -6968,9 +7412,10 @@ assignments = (assignmentsRows || []).map((a) => {
         content_json: {
           student_id: studentId,
           lesson_topic: lesson.topic || null,
-          assignment_type: 'grammar_practice',
+          assignment_type: getReadyLessonAssignmentType(skillId),
           assignment_priority: 'required',
           is_optional: false,
+          ready_lesson_skill: skillId,
           ready_lesson_id: lesson.id,
           ready_lesson_stage: lesson.stage,
           ready_lesson_task_ids: selectedTasks.map((task) => task.id),
@@ -7006,6 +7451,7 @@ assignments = (assignmentsRows || []).map((a) => {
       finishButtonFeedbackBySelector('[data-action="ready-lesson-send"]', original, true, 'Sent');
 
       trackEvent('send_ready_lesson', {
+        lesson_skill: skillId,
         lesson_id: lesson.id,
         sections_count: selectedTasks.length,
         practice_items_count: countReadyLessonContentItems({ tasks: selectedTasks })
