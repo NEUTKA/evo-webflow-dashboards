@@ -111,6 +111,44 @@
     extra_practice_needed: 'Extra practice needed'
   };
 
+  const READY_LESSON_SKILLS = [
+    {
+      id: 'grammar',
+      label: 'Grammar',
+      pathway: 'A1 Grammar',
+      description: 'A complete A1 grammar pathway from basic forms to mixed review.',
+      plannedTopics: []
+    },
+    {
+      id: 'vocabulary',
+      label: 'Vocabulary',
+      pathway: 'A1 Vocabulary',
+      description: 'Topic-based word practice with matching, spelling, gap fill and short use-in-sentence tasks.',
+      plannedTopics: ['Family and people', 'Daily routines', 'Food and drink', 'Home and rooms', 'City and places', 'Hobbies']
+    },
+    {
+      id: 'reading',
+      label: 'Reading',
+      pathway: 'A1 Reading',
+      description: 'Short A1 texts with true/false, multiple choice and find-the-information questions.',
+      plannedTopics: ['Personal profile', 'Short email', 'Timetable', 'Cafe menu', 'Notice board', 'Chat message']
+    },
+    {
+      id: 'writing',
+      label: 'Writing',
+      pathway: 'A1 Writing',
+      description: 'Guided writing lessons with model answers, sentence starters and a checklist.',
+      plannedTopics: ['About me', 'My family', 'My routine', 'My room', 'A short message', 'A1 writing review']
+    },
+    {
+      id: 'listening',
+      label: 'Listening',
+      pathway: 'A1 Listening',
+      description: 'Listening-ready lessons for teacher-read audio, transcripts and later uploaded audio files.',
+      plannedTopics: ['Names and numbers', 'Classroom instructions', 'Daily routine', 'Shopping', 'Directions', 'Short conversation']
+    }
+  ];
+
   const READY_GRAMMAR_LESSONS_A1 = [
     {
       id: 'a1-grammar-01-be-profile',
@@ -1702,6 +1740,7 @@
     templateEditorOpen: false,
     activeView: 'overview',
     draftAssignmentId: null,
+    readyLessonSkill: 'grammar',
     assignmentDraft: {
       id: '',
       studentId: '',
@@ -1723,6 +1762,7 @@
       type: ''
     },
     readyLessonDraft: {
+      skill: 'grammar',
       lessonId: '',
       studentId: '',
       dueDate: '',
@@ -1992,8 +2032,25 @@
     };
   }
 
-  function getReadyLessonById(lessonId) {
-    return READY_GRAMMAR_LESSONS_A1.find((lesson) => lesson.id === lessonId) || READY_GRAMMAR_LESSONS_A1[0] || null;
+  function getReadyLessonSkillId(value) {
+    const skillId = value || 'grammar';
+    return READY_LESSON_SKILLS.some((skill) => skill.id === skillId) ? skillId : 'grammar';
+  }
+
+  function getReadyLessonSkillConfig(value) {
+    const skillId = getReadyLessonSkillId(value);
+    return READY_LESSON_SKILLS.find((skill) => skill.id === skillId) || READY_LESSON_SKILLS[0];
+  }
+
+  function getReadyLessonsForSkill(value) {
+    const skillId = getReadyLessonSkillId(value);
+    if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
+    return [];
+  }
+
+  function getReadyLessonById(lessonId, skillId = 'grammar') {
+    const lessons = getReadyLessonsForSkill(skillId);
+    return lessons.find((lesson) => lesson.id === lessonId) || lessons[0] || null;
   }
 
   function getReadyLessonDefaultTaskIds(lesson) {
@@ -2002,11 +2059,25 @@
 
   function ensureReadyLessonDraft() {
     const current = state.readyLessonDraft || {};
-    const lesson = getReadyLessonById(current.lessonId);
-    if (!lesson) return null;
+    const skillId = getReadyLessonSkillId(state.readyLessonSkill || current.skill || 'grammar');
+    state.readyLessonSkill = skillId;
 
-    if (current.lessonId !== lesson.id || !Array.isArray(current.selectedTaskIds) || !current.selectedTaskIds.length) {
+    const lesson = getReadyLessonById(current.lessonId, skillId);
+    if (!lesson) {
       state.readyLessonDraft = {
+        skill: skillId,
+        lessonId: '',
+        studentId: current.studentId || '',
+        dueDate: current.dueDate || '',
+        selectedTaskIds: [],
+        extraTaskIds: []
+      };
+      return null;
+    }
+
+    if (current.skill !== skillId || current.lessonId !== lesson.id || !Array.isArray(current.selectedTaskIds) || !current.selectedTaskIds.length) {
+      state.readyLessonDraft = {
+        skill: skillId,
         lessonId: lesson.id,
         studentId: current.studentId || '',
         dueDate: current.dueDate || '',
@@ -2180,6 +2251,7 @@
       },
       content: {
         lesson_id: lesson.id,
+        skill: lesson.skill || 'grammar',
         stage: lesson.stage,
         title: lesson.title,
         topic: lesson.topic,
@@ -2256,6 +2328,9 @@
     const lesson = ensureReadyLessonDraft();
     const draft = state.readyLessonDraft || {};
     const students = state.students || [];
+    const activeSkillId = getReadyLessonSkillId(state.readyLessonSkill || draft.skill || 'grammar');
+    const activeSkill = getReadyLessonSkillConfig(activeSkillId);
+    const readyLessons = getReadyLessonsForSkill(activeSkillId);
     const selectedTasks = lesson ? getReadyLessonSelectedTasks(lesson) : [];
     const selectedIds = new Set(draft.selectedTaskIds || []);
     const extraIds = new Set(draft.extraTaskIds || []);
@@ -2271,10 +2346,21 @@
         }).join('')
       : '<option value="">No students available</option>';
 
-    const lessonCards = READY_GRAMMAR_LESSONS_A1.map((item) => {
+    const skillTabs = READY_LESSON_SKILLS.map((skill) => {
+      const count = getReadyLessonsForSkill(skill.id).length;
+      const isActive = skill.id === activeSkillId;
+      return `
+        <button class="td-ready-skill-tab ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-skill" data-skill-id="${escapeHtml(skill.id)}">
+          <span>${escapeHtml(skill.label)}</span>
+          <small>${count ? `${escapeHtml(count)} lessons` : 'Next'}</small>
+        </button>
+      `;
+    }).join('');
+
+    const lessonCards = readyLessons.length ? readyLessons.map((item) => {
       const isActive = item.id === selectedLessonId;
       return `
-        <button class="td-ready-card ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-select" data-lesson-id="${escapeHtml(item.id)}">
+        <button class="td-ready-card ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-select" data-skill-id="${escapeHtml(activeSkillId)}" data-lesson-id="${escapeHtml(item.id)}">
           <span class="td-ready-order">${escapeHtml(item.order)}</span>
           <span class="td-ready-card-main">
             <strong>${escapeHtml(item.title)}</strong>
@@ -2282,7 +2368,12 @@
           </span>
         </button>
       `;
-    }).join('');
+    }).join('') : `
+      <div class="td-ready-empty-mini">
+        <strong>${escapeHtml(activeSkill.pathway)}</strong>
+        <span>${escapeHtml(activeSkill.description)}</span>
+      </div>
+    `;
 
     const taskHtml = selectedTasks.length
       ? selectedTasks.map((task, idx) => renderReadyLessonTaskPreview(task, idx, extraIds.has(task.id) && !selectedIds.has(task.id))).join('')
@@ -2298,18 +2389,19 @@
       <div class="td-card">
         <div class="td-head">
           <div class="td-kicker">Ready lessons</div>
-          <h2 class="td-title" style="font-size:24px;">A1 Grammar ready lessons</h2>
-          <div class="td-sub">Send a complete grammar lesson in one click. Remove sections you do not need or add an extra practice section before sending.</div>
+          <h2 class="td-title" style="font-size:24px;">Ready lessons</h2>
+          <div class="td-sub">Send complete ready-made lessons in one click. Start with A1 Grammar now, then build Vocabulary, Reading, Writing and Listening pathways in the same place.</div>
         </div>
         <div class="td-body">
+          <div class="td-ready-skill-tabs">${skillTabs}</div>
           <div class="td-ready-layout">
             <div class="td-ready-sidebar">
               <div class="td-section-headline">
                 <div>
-                  <div class="td-name" style="font-size:18px;">Pathway</div>
-                  <div class="td-note">A1 lessons are ordered from basic forms to short production.</div>
+                  <div class="td-name" style="font-size:18px;">${escapeHtml(activeSkill.pathway)}</div>
+                  <div class="td-note">${readyLessons.length ? 'Lessons are ordered from basic practice to review.' : 'This pathway is ready to be filled next.'}</div>
                 </div>
-                <span class="td-type-badge">A1</span>
+                <span class="td-type-badge">${escapeHtml(readyLessons.length ? `${readyLessons.length} lessons` : 'Planned')}</span>
               </div>
               <div class="td-ready-list">${lessonCards}</div>
             </div>
@@ -2365,7 +2457,16 @@
                   <button class="td-btn td-btn-primary" type="button" data-action="ready-lesson-send" ${students.length && selectedTasks.length ? '' : 'disabled'}>Send lesson</button>
                   <div class="td-note">The student receives one assignment with all selected grammar sections.</div>
                 </div>
-              ` : '<div class="td-empty">No ready lessons available.</div>'}
+              ` : `
+                <div class="td-ready-empty-state">
+                  <div class="td-kicker">${escapeHtml(activeSkill.pathway)}</div>
+                  <h3>${escapeHtml(activeSkill.label)} ready lessons are next</h3>
+                  <p>${escapeHtml(activeSkill.description)}</p>
+                  <div class="td-ready-planned-list">
+                    ${(activeSkill.plannedTopics || []).map((topic) => `<span>${escapeHtml(topic)}</span>`).join('')}
+                  </div>
+                </div>
+              `}
             </div>
           </div>
         </div>
@@ -5441,9 +5542,16 @@ function renderStudentTemplateAnswers(assignment) {
       .td-template-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .td-template-answer-value{border:1px solid #e6ebf1;border-radius:12px;padding:10px 12px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
       .td-template-answer-empty{border:1px dashed #cfd8e3;border-radius:12px;padding:10px 12px;background:#fbfdff;color:#667085;font-size:14px}
+      .td-ready-skill-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+      .td-ready-skill-tab{appearance:none;border:1px solid #dbe7f3;background:#f8fbff;color:#175cd3;border-radius:999px;padding:9px 12px;font:800 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+      .td-ready-skill-tab small{font-size:11px;color:#667085;font-weight:800}
+      .td-ready-skill-tab.is-active{background:#111213;border-color:#111213;color:#fff}
+      .td-ready-skill-tab.is-active small{color:#e5e7eb}
       .td-ready-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
       .td-ready-sidebar,.td-ready-builder{border:1px solid #e6ebf1;border-radius:14px;background:#fff;padding:14px;display:grid;gap:14px}
       .td-ready-list{display:grid;gap:8px;max-height:720px;overflow:auto;padding-right:2px}
+      .td-ready-empty-mini{border:1px dashed #cfd8e3;border-radius:12px;background:#fbfdff;padding:14px;color:#667085;display:grid;gap:6px;font-size:13px;line-height:1.45}
+      .td-ready-empty-mini strong{color:#111213;font-size:14px}
       .td-ready-card{appearance:none;border:1px solid #e6ebf1;border-radius:12px;background:#fbfdff;color:#111213;padding:12px;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;cursor:pointer}
       .td-ready-card:hover{border-color:#b9d8f5;background:#f8fbff}
       .td-ready-card.is-active{border-color:#111213;background:#111213;color:#fff}
@@ -5468,6 +5576,11 @@ function renderStudentTemplateAnswers(assignment) {
       .td-ready-question-list{margin:0;padding-left:19px;display:grid;gap:7px;color:#111213;font-size:13px;line-height:1.45}
       .td-ready-question-list li{padding-left:2px}
       .td-ready-options,.td-ready-answer-key{display:block;color:#667085;margin-top:2px}
+      .td-ready-empty-state{border:1px dashed #cfd8e3;border-radius:14px;background:#fbfdff;padding:18px;display:grid;gap:12px;align-content:start}
+      .td-ready-empty-state h3{margin:0;font-size:22px;line-height:1.2}
+      .td-ready-empty-state p{margin:0;color:#667085;font-size:14px;line-height:1.55}
+      .td-ready-planned-list{display:flex;flex-wrap:wrap;gap:8px}
+      .td-ready-planned-list span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid #dbe7f3;color:#344054;font-size:12px;font-weight:800}
       .td-ready-extra-select{min-width:220px;width:auto}
       .td-ready-review-task{background:#fbfdff}
 
@@ -6131,6 +6244,11 @@ assignments = (assignmentsRows || []).map((a) => {
         return;
       }
 
+      if (action === 'ready-lesson-skill') {
+        handleReadyLessonSkillSelect(button);
+        return;
+      }
+
       if (action === 'ready-lesson-reset') {
         handleReadyLessonReset();
         return;
@@ -6693,13 +6811,34 @@ assignments = (assignmentsRows || []).map((a) => {
     }
   }
 
+  function handleReadyLessonSkillSelect(button) {
+    const skillId = getReadyLessonSkillId(button.getAttribute('data-skill-id') || 'grammar');
+    const current = state.readyLessonDraft || {};
+    const firstLesson = getReadyLessonById('', skillId);
+
+    state.readyLessonSkill = skillId;
+    state.readyLessonDraft = {
+      skill: skillId,
+      lessonId: firstLesson?.id || '',
+      studentId: current.studentId || '',
+      dueDate: current.dueDate || '',
+      selectedTaskIds: firstLesson ? getReadyLessonDefaultTaskIds(firstLesson) : [],
+      extraTaskIds: []
+    };
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
   function handleReadyLessonSelect(button) {
     const lessonId = button.getAttribute('data-lesson-id') || '';
-    const lesson = getReadyLessonById(lessonId);
+    const skillId = getReadyLessonSkillId(button.getAttribute('data-skill-id') || state.readyLessonSkill || 'grammar');
+    const lesson = getReadyLessonById(lessonId, skillId);
     if (!lesson) return;
 
     const current = state.readyLessonDraft || {};
+    state.readyLessonSkill = skillId;
     state.readyLessonDraft = {
+      skill: skillId,
       lessonId: lesson.id,
       studentId: current.studentId || '',
       dueDate: current.dueDate || '',
