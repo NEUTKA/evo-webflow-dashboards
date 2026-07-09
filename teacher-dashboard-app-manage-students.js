@@ -113,7 +113,7 @@
 
   const READY_LESSON_DATA = window.EVO_READY_LESSONS || null;
   if (!READY_LESSON_DATA) {
-    console.warn('[teacher-dashboard] ready-lessons-data.js is not loaded. Ready lessons will be empty until that file is included before teacher-dashboard-app-manage-students.js.');
+    console.warn('[teacher-dashboard] Ready lesson data files are not loaded. Include ready-lessons-a1-data.js and ready-lessons-a2-data.js before teacher-dashboard-app-manage-students.js.');
   }
 
   const READY_LESSON_LEVELS = Array.isArray(READY_LESSON_DATA?.levels) ? READY_LESSON_DATA.levels : [
