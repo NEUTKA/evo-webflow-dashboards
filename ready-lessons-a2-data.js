@@ -2306,7 +2306,622 @@
     }
   ].map(buildReadingReadyLesson);
 
-  const READY_WRITING_LESSONS_A2 = [];
+  const WRITING_DEFAULT_CHECKLIST_A2 = [
+    ['Answer every point in the task.', true],
+    ['Use only one very long sentence.', false],
+    ['Use connectors such as because, but, so and also.', true],
+    ['Ignore spelling and punctuation.', false],
+    ['Read your text again before you send it.', true]
+  ];
+
+  function buildWritingChoiceItem(lessonId, phrases, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const optionsSource = [
+      entry[0],
+      phrases[(index + 1) % phrases.length]?.[0],
+      phrases[(index + 2) % phrases.length]?.[0]
+    ];
+    const ordered = index % 3 === 0
+      ? optionsSource
+      : (index % 3 === 1
+        ? [optionsSource[1], optionsSource[0], optionsSource[2]]
+        : [optionsSource[1], optionsSource[2], optionsSource[0]]);
+    const options = ordered.map((text, optionIndex) => ({
+      id: ids[optionIndex],
+      text: text || entry[0]
+    }));
+
+    return {
+      id: `${lessonId}-phrase-choice-${index + 1}`,
+      sentence: `Choose the best phrase for: ${entry[1]}.`,
+      options,
+      answer: options.find((option) => option.text === entry[0])?.id || 'a',
+      explanation: entry[0]
+    };
+  }
+
+  function buildWritingReadyLesson(config) {
+    const phrases = config.phrases || [];
+    const gaps = config.gaps || [];
+    const checklist = config.checklist || WRITING_DEFAULT_CHECKLIST_A2;
+    const supportText = [
+      'Model text:',
+      config.modelText,
+      '',
+      'Useful phrases:',
+      ...phrases.map((item) => `- ${item[0]} = ${item[1]}`),
+      '',
+      'Checklist:',
+      ...checklist.filter((item) => item[1]).map((item) => `- ${item[0]}`)
+    ].filter((line) => line !== undefined && line !== null).join('\n');
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: config.level || (String(config.stage || '').startsWith('A2') ? 'A2' : 'A1'),
+      skill: 'writing',
+      stage: config.stage || 'A2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 35,
+      description: config.description,
+      supportTitle: config.supportTitle || 'Model and writing help',
+      supportText,
+      focus: config.focus || ['guided writing', 'paragraph structure', 'connectors'],
+      teacherNotes: config.teacherNotes || 'Ask the student to notice the structure, complete the controlled tasks, then write their own A2 text with 6-8 sentences.',
+      tasks: [
+        {
+          id: `${config.id}-phrase-matching`,
+          type: 'matching',
+          title: 'Useful phrases',
+          prompt: 'Match each phrase with its purpose.',
+          pairs: phrases.map((entry, index) => ({
+            id: `${config.id}-phrase-matching-${index + 1}`,
+            left_text: entry[0],
+            right_text: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-phrase-choice`,
+          type: 'choice',
+          title: 'Choose the best phrase',
+          prompt: 'Choose a useful phrase for each situation.',
+          items: phrases.map((entry, index) => buildWritingChoiceItem(config.id, phrases, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the model sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: gaps.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry[0],
+            accepted_answers: Array.isArray(entry[1]) ? entry[1] : [entry[1]],
+            hint: entry[2] || 'Use the model text.',
+            explanation: Array.isArray(entry[1]) ? entry[1].join(' / ') : entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Write your text',
+          prompt: config.productionPrompt || 'Write an A2 text. Use the model, useful phrases and checklist.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-checklist-extra`,
+          type: 'choice',
+          title: 'Writing checklist',
+          prompt: 'Choose True or False.',
+          items: checklist.map((entry, index) => ({
+            id: `${config.id}-checklist-extra-${index + 1}`,
+            sentence: entry[0],
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: entry[1] ? 'a' : 'b',
+            explanation: entry[1] ? 'This is good writing advice.' : 'This is not good writing advice.'
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_WRITING_LESSONS_A2 = [
+    {
+      id: 'a2-writing-01-informal-email-plans',
+      order: 1,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Informal email: making plans',
+      topic: 'arranging to meet a friend',
+      description: 'Students write a friendly email to make plans and give simple details.',
+      modelText: 'Hi Mia,\nIt was great to hear from you. I am free on Saturday afternoon, so we can meet in the city center. Would you like to go to the new cafe near the station? I heard the cakes are good, and it is not too expensive. I can be there at 3:30. Let me know if this works for you.\nBest,\nLeo',
+      focus: ['informal email', 'plans', 'suggestions'],
+      phrases: [
+        ['It was great to hear from you.', 'open a friendly email'],
+        ['I am free on Saturday afternoon.', 'say when you are available'],
+        ['Would you like to go to the new cafe?', 'make a suggestion'],
+        ['I can be there at 3:30.', 'give a time'],
+        ['Let me know if this works for you.', 'ask for a reply']
+      ],
+      gaps: [
+        ['It was great to ___ from you.', 'hear', 'open the email'],
+        ['I am ___ on Saturday afternoon.', 'free', 'say you can meet'],
+        ['Would you like to ___ to the new cafe?', 'go', 'make a suggestion'],
+        ['I can be ___ at 3:30.', 'there', 'give a meeting time'],
+        ['Let me know if this ___ for you.', 'works', 'ask if the plan is OK']
+      ],
+      productionQuestion: 'Write an informal email to a friend. Suggest a place to meet, give a day and time, and ask for a reply.',
+      sampleAnswer: 'Hi Sam, It was great to hear from you. I am free on Sunday morning, so we can meet at the park. Would you like to have coffee after our walk? I can be there at 10:00. Let me know if this works for you.'
+    },
+    {
+      id: 'a2-writing-02-reply-to-invitation',
+      order: 2,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Reply to an invitation',
+      topic: 'accepting or refusing politely',
+      description: 'Students write a short reply to an invitation with a reason and next step.',
+      modelText: 'Hi Julia,\nThank you for inviting me to your birthday dinner. I would love to come. Saturday evening is perfect for me, and I can arrive at about seven. Would you like me to bring anything? I can make a salad or buy some drinks. See you soon!\nAnna',
+      focus: ['invitations', 'polite replies', 'offers'],
+      phrases: [
+        ['Thank you for inviting me.', 'thank the person'],
+        ['I would love to come.', 'accept an invitation'],
+        ['Saturday evening is perfect for me.', 'say the time is good'],
+        ['Would you like me to bring anything?', 'offer help'],
+        ['See you soon!', 'end a friendly reply']
+      ],
+      gaps: [
+        ['Thank you for ___ me.', 'inviting', 'thank the person'],
+        ['I would ___ to come.', 'love', 'accept the invitation'],
+        ['Saturday evening is ___ for me.', 'perfect', 'say the time is good'],
+        ['Would you like me to ___ anything?', 'bring', 'offer help'],
+        ['See you ___!', 'soon', 'end the message']
+      ],
+      productionQuestion: 'Write a reply to an invitation. Accept or refuse, give one reason, and add one friendly sentence.',
+      sampleAnswer: 'Hi Alex, Thank you for inviting me to the concert. I would love to come. Friday night is perfect for me because I finish work early. Would you like me to buy snacks? See you soon!'
+    },
+    {
+      id: 'a2-writing-03-apology-message',
+      order: 3,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Apology message',
+      topic: 'explaining a problem',
+      description: 'Students write a polite apology message with a reason and a new plan.',
+      modelText: 'Hi Ben,\nI am really sorry, but I cannot meet you after class today. I have to help my sister because she is moving to a new flat. I know we planned to study together, so I am sorry for changing the plan. Can we meet tomorrow after lunch instead? I can bring my notes.\nThanks for understanding,\nNina',
+      focus: ['apologies', 'reasons', 'new arrangements'],
+      phrases: [
+        ['I am really sorry, but...', 'start an apology'],
+        ['I cannot meet you after class today.', 'explain the problem'],
+        ['I have to help my sister.', 'give a reason'],
+        ['Can we meet tomorrow instead?', 'suggest a new plan'],
+        ['Thanks for understanding.', 'end politely']
+      ],
+      gaps: [
+        ['I am really ___, but I cannot come.', 'sorry', 'start an apology'],
+        ['I cannot ___ you after class today.', 'meet', 'explain the problem'],
+        ['I have to ___ my sister.', 'help', 'give a reason'],
+        ['Can we meet tomorrow ___?', 'instead', 'suggest a new plan'],
+        ['Thanks for ___.', 'understanding', 'end politely']
+      ],
+      productionQuestion: 'Write a message to apologise because you cannot meet someone. Explain why and suggest a new time.',
+      sampleAnswer: 'Hi Sara, I am really sorry, but I cannot meet you this evening. I have to work late because my colleague is ill. Can we meet on Thursday instead? I can come to the library at 5. Thanks for understanding.'
+    },
+    {
+      id: 'a2-writing-04-request-information-email',
+      order: 4,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Request email: asking for information',
+      topic: 'language course enquiry',
+      description: 'Students write a polite email to ask for practical information.',
+      modelText: 'Dear Sir or Madam,\nI am writing to ask for information about your evening English course. Could you tell me when the next course starts? I would also like to know how much it costs and how many students are in each group. I am free on Mondays and Wednesdays after 6 p.m. Thank you for your help.\nKind regards,\nMaria Lopez',
+      focus: ['formal email', 'questions', 'course information'],
+      phrases: [
+        ['I am writing to ask for information about...', 'state the reason for writing'],
+        ['Could you tell me when the course starts?', 'ask a polite question'],
+        ['I would also like to know...', 'add another question'],
+        ['I am free on Mondays and Wednesdays.', 'give your availability'],
+        ['Thank you for your help.', 'close politely']
+      ],
+      gaps: [
+        ['I am writing to ask for ___ about your course.', 'information', 'state the reason'],
+        ['Could you ___ me when the course starts?', 'tell', 'ask politely'],
+        ['I would also like to ___ how much it costs.', 'know', 'add a question'],
+        ['I am ___ on Mondays and Wednesdays.', 'free', 'give availability'],
+        ['Thank you for your ___.', 'help', 'close politely']
+      ],
+      productionQuestion: 'Write a polite email asking for information about a course, club or service. Ask three questions.',
+      sampleAnswer: 'Dear Sir or Madam, I am writing to ask for information about your swimming classes. Could you tell me when the next class starts? I would also like to know the price and the number of people in each group. Thank you for your help. Kind regards, Tom Green'
+    },
+    {
+      id: 'a2-writing-05-simple-complaint-email',
+      order: 5,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Complaint email: a service problem',
+      topic: 'polite complaint',
+      description: 'Students write a clear complaint email about a travel or service problem.',
+      modelText: 'Dear Customer Service,\nI am writing about my bus journey from York to Leeds on 14 May. The bus was 40 minutes late, and no one explained the reason. Also, the air conditioning was not working, so the journey was very uncomfortable. I arrived late for an important meeting. I would like to ask for a partial refund.\nKind regards,\nDaniel Moore',
+      focus: ['complaint email', 'past simple', 'polite requests'],
+      phrases: [
+        ['I am writing about my bus journey.', 'state the problem topic'],
+        ['The bus was 40 minutes late.', 'give a clear detail'],
+        ['No one explained the reason.', 'describe what was wrong'],
+        ['The journey was very uncomfortable.', 'explain the result'],
+        ['I would like to ask for a partial refund.', 'make a polite request']
+      ],
+      gaps: [
+        ['I am writing ___ my bus journey.', 'about', 'state the topic'],
+        ['The bus was 40 minutes ___.', 'late', 'give a detail'],
+        ['No one ___ the reason.', 'explained', 'describe the problem'],
+        ['The journey was very ___.', 'uncomfortable', 'explain the result'],
+        ['I would like to ask for a partial ___.', 'refund', 'make a request']
+      ],
+      productionQuestion: 'Write a polite complaint email about a late train, bad hotel room or poor service. Include the problem, details and your request.',
+      sampleAnswer: 'Dear Customer Service, I am writing about my hotel room last weekend. The room was not clean, and the shower was broken. I told reception, but no one helped me. I would like to ask for a partial refund. Kind regards, Elena Petrova'
+    },
+    {
+      id: 'a2-writing-06-cafe-review',
+      order: 6,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Review: a cafe or restaurant',
+      topic: 'giving opinions about a place',
+      description: 'Students write a short review with positive points, one problem and a recommendation.',
+      modelText: 'I visited Green Cafe last Saturday with my friend. The cafe is small but comfortable, and the staff were very friendly. I ordered vegetable soup and a cheese sandwich. The food was fresh, but the service was a little slow because the cafe was busy. I think the prices are reasonable. I would recommend this cafe for lunch or coffee with friends.',
+      focus: ['reviews', 'opinions', 'recommendations'],
+      phrases: [
+        ['I visited Green Cafe last Saturday.', 'say when and where you went'],
+        ['The staff were very friendly.', 'give a positive point'],
+        ['The service was a little slow.', 'mention a problem'],
+        ['The prices are reasonable.', 'comment on price'],
+        ['I would recommend this cafe.', 'give a recommendation']
+      ],
+      gaps: [
+        ['I ___ Green Cafe last Saturday.', 'visited', 'say when and where'],
+        ['The staff were very ___.', 'friendly', 'give a positive point'],
+        ['The service was a little ___.', 'slow', 'mention a problem'],
+        ['The prices are ___.', 'reasonable', 'comment on price'],
+        ['I would ___ this cafe.', 'recommend', 'give a recommendation']
+      ],
+      productionQuestion: 'Write a review of a cafe or restaurant. Include where you went, what you ordered, good points, one problem and a recommendation.',
+      sampleAnswer: 'I visited Blue Pizza on Friday. The restaurant was modern, and the waiter was friendly. I ordered pasta and salad. The food was tasty, but the music was too loud. The prices were reasonable. I would recommend it for dinner with friends.'
+    },
+    {
+      id: 'a2-writing-07-product-or-app-review',
+      order: 7,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Review: an app or product',
+      topic: 'describing advantages and disadvantages',
+      description: 'Students write a short review of an app, product or online service.',
+      modelText: 'I started using the FitSteps app two weeks ago. It counts my steps and shows how active I am every day. The app is easy to use, and the design is clear. I also like the weekly goals because they help me stay motivated. However, some features are only available if you pay. In my opinion, it is useful for beginners.',
+      focus: ['product review', 'advantages', 'disadvantages'],
+      phrases: [
+        ['I started using the app two weeks ago.', 'introduce the product'],
+        ['It is easy to use.', 'give an advantage'],
+        ['I also like the weekly goals.', 'add another positive point'],
+        ['However, some features cost money.', 'give a disadvantage'],
+        ['In my opinion, it is useful for beginners.', 'finish with an opinion']
+      ],
+      gaps: [
+        ['I started ___ the app two weeks ago.', 'using', 'introduce the product'],
+        ['It is easy to ___.', 'use', 'give an advantage'],
+        ['I also ___ the weekly goals.', 'like', 'add a positive point'],
+        ['However, some features ___ money.', 'cost', 'give a disadvantage'],
+        ['In my ___, it is useful for beginners.', 'opinion', 'finish with an opinion']
+      ],
+      productionQuestion: 'Write a short review of an app, product or website. Include what it does, two good points, one problem and your opinion.',
+      sampleAnswer: 'I started using a recipe app last month. It helps me find easy meals. The app is simple to use, and the photos are clear. I also like the shopping lists. However, there are many adverts. In my opinion, it is useful for busy people.'
+    },
+    {
+      id: 'a2-writing-08-story-day-went-wrong',
+      order: 8,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Story: a day that went wrong',
+      topic: 'past events and sequence',
+      description: 'Students write a short story using past simple and sequencing words.',
+      modelText: 'Last Monday was a difficult day. First, I woke up late because my alarm did not ring. Then I missed the bus and had to walk to work in the rain. When I arrived, I was tired and wet. Later, I realised that I forgot my lunch at home. In the end, my colleague bought me a sandwich, so the day became a little better.',
+      focus: ['story writing', 'past simple', 'sequencing words'],
+      phrases: [
+        ['Last Monday was a difficult day.', 'set the scene'],
+        ['First, I woke up late.', 'start the sequence'],
+        ['Then I missed the bus.', 'continue the story'],
+        ['Later, I realised that...', 'add another event'],
+        ['In the end, the day became better.', 'finish the story']
+      ],
+      gaps: [
+        ['Last Monday was a ___ day.', 'difficult', 'set the scene'],
+        ['First, I ___ up late.', 'woke', 'start the sequence'],
+        ['Then I ___ the bus.', 'missed', 'continue the story'],
+        ['Later, I ___ that I forgot my lunch.', 'realised', 'add another event'],
+        ['In the ___, the day became better.', 'end', 'finish the story']
+      ],
+      productionQuestion: 'Write a short story about a day that went wrong. Use First, Then, Later and In the end.',
+      sampleAnswer: 'Last Friday was a difficult day. First, I lost my keys. Then I missed my train and arrived late at college. Later, I spilled coffee on my notebook. In the end, my friend helped me study, and we laughed about it.'
+    },
+    {
+      id: 'a2-writing-09-past-weekend-paragraph',
+      order: 9,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Past weekend paragraph',
+      topic: 'describing weekend activities',
+      description: 'Students write a connected paragraph about a past weekend.',
+      modelText: 'Last weekend was quiet but nice. On Saturday morning, I cleaned my flat and went shopping for food. In the afternoon, I met my cousin in a cafe, and we talked for two hours. On Sunday, the weather was sunny, so I went for a long walk by the river. I also cooked dinner and watched a film at home. I felt relaxed and ready for the new week.',
+      focus: ['past simple', 'time phrases', 'connected paragraph'],
+      phrases: [
+        ['Last weekend was quiet but nice.', 'introduce the topic'],
+        ['On Saturday morning, I cleaned my flat.', 'say when something happened'],
+        ['In the afternoon, I met my cousin.', 'add another time'],
+        ['The weather was sunny, so I went for a walk.', 'give a reason or result'],
+        ['I felt relaxed and ready for the new week.', 'finish with a feeling']
+      ],
+      gaps: [
+        ['Last weekend was quiet ___ nice.', 'but', 'connect two ideas'],
+        ['On Saturday morning, I ___ my flat.', 'cleaned', 'past simple verb'],
+        ['In the afternoon, I ___ my cousin.', 'met', 'past simple verb'],
+        ['The weather was sunny, ___ I went for a walk.', 'so', 'show result'],
+        ['I felt relaxed and ___ for the new week.', 'ready', 'finish with a feeling']
+      ],
+      productionQuestion: 'Write a paragraph about your last weekend. Include Saturday, Sunday, one reason or result, and how you felt.',
+      sampleAnswer: 'Last weekend was busy but fun. On Saturday, I visited my grandparents and helped them in the garden. In the evening, I met my friends. On Sunday, it rained, so I stayed at home and watched a film. I felt happy and rested.'
+    },
+    {
+      id: 'a2-writing-10-travel-blog-holiday',
+      order: 10,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Travel blog: a short holiday',
+      topic: 'describing a trip',
+      description: 'Students write a simple travel blog post about a holiday or day trip.',
+      modelText: 'Last month, I spent three days in Brighton with my sister. We stayed in a small hotel near the beach. On the first day, we walked by the sea and took many photos. The weather was windy, but it was not cold. My favourite part was visiting the old pier because there were games, shops and great views. I would like to go back in summer.',
+      focus: ['travel writing', 'past simple', 'descriptive details'],
+      phrases: [
+        ['Last month, I spent three days in Brighton.', 'say when and where'],
+        ['We stayed in a small hotel.', 'describe accommodation'],
+        ['On the first day, we walked by the sea.', 'describe an activity'],
+        ['My favourite part was visiting the old pier.', 'highlight the best part'],
+        ['I would like to go back in summer.', 'finish with a future idea']
+      ],
+      gaps: [
+        ['Last month, I ___ three days in Brighton.', 'spent', 'say what you did'],
+        ['We ___ in a small hotel.', 'stayed', 'describe accommodation'],
+        ['On the first day, we walked ___ the sea.', 'by', 'describe location'],
+        ['My favourite ___ was visiting the old pier.', 'part', 'highlight the best part'],
+        ['I would like to go ___ in summer.', 'back', 'finish with a future idea']
+      ],
+      productionQuestion: 'Write a short travel blog post about a holiday or day trip. Include where you went, who with, activities, weather and the best part.',
+      sampleAnswer: 'Last summer, I spent two days in Sevan with my family. We stayed in a small guest house near the lake. On the first day, we swam and took photos. The weather was sunny but cool. My favourite part was eating dinner outside. I would like to go back next year.'
+    },
+    {
+      id: 'a2-writing-11-opinion-city-or-quiet-life',
+      order: 11,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Opinion paragraph: city or quiet life',
+      topic: 'giving reasons for an opinion',
+      description: 'Students write a simple opinion paragraph with reasons and examples.',
+      modelText: 'I prefer living in a city because there are more things to do. For example, I can go to different cafes, cinemas and language classes. Public transport is also better, so I do not need a car. However, city life can be noisy and expensive. For me, the advantages are more important because I like meeting people and trying new activities.',
+      focus: ['opinion paragraph', 'reasons', 'examples'],
+      phrases: [
+        ['I prefer living in a city because...', 'state an opinion with a reason'],
+        ['For example, I can go to different cafes.', 'give an example'],
+        ['Public transport is also better.', 'add another reason'],
+        ['However, city life can be noisy.', 'show the other side'],
+        ['For me, the advantages are more important.', 'finish with a clear opinion']
+      ],
+      gaps: [
+        ['I prefer living in a city ___ there are more things to do.', 'because', 'give a reason'],
+        ['For ___, I can go to different cafes.', 'example', 'give an example'],
+        ['Public transport is ___ better.', 'also', 'add another reason'],
+        ['___, city life can be noisy.', 'However', 'show contrast'],
+        ['For me, the advantages are more ___.', 'important', 'finish clearly']
+      ],
+      productionQuestion: 'Write an opinion paragraph. Do you prefer city life or quiet life? Give two reasons, one disadvantage and your final opinion.',
+      sampleAnswer: 'I prefer quiet life because it is more relaxing. For example, I can sleep better and spend time outside. It is also cheaper than living in a big city. However, there are fewer shops and activities. For me, quiet life is better because I like peace.'
+    },
+    {
+      id: 'a2-writing-12-advice-message',
+      order: 12,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Advice message',
+      topic: 'healthy routine or study advice',
+      description: 'Students write a friendly advice message using should and practical suggestions.',
+      modelText: 'Hi Omar,\nI am sorry you feel tired all the time. I think you should try to sleep at the same time every night. You should also drink more water and take short breaks when you study. Do not use your phone in bed because it can make sleeping harder. If you still feel bad, you should talk to a doctor. I hope you feel better soon.',
+      focus: ['advice', 'should', 'friendly message'],
+      phrases: [
+        ['I am sorry you feel tired.', 'show sympathy'],
+        ['I think you should try to sleep earlier.', 'give advice'],
+        ['You should also drink more water.', 'add another suggestion'],
+        ['Do not use your phone in bed.', 'give a negative instruction'],
+        ['I hope you feel better soon.', 'end kindly']
+      ],
+      gaps: [
+        ['I am sorry you ___ tired.', 'feel', 'show sympathy'],
+        ['I think you ___ try to sleep earlier.', 'should', 'give advice'],
+        ['You should ___ drink more water.', 'also', 'add advice'],
+        ['Do not ___ your phone in bed.', 'use', 'negative instruction'],
+        ['I hope you feel ___ soon.', 'better', 'end kindly']
+      ],
+      productionQuestion: 'Write a friendly advice message to someone who is tired, stressed or studying a lot. Give at least three suggestions.',
+      sampleAnswer: 'Hi Lena, I am sorry you feel stressed. I think you should make a small study plan. You should also take breaks and walk outside. Do not study very late every night. I hope you feel better soon.'
+    },
+    {
+      id: 'a2-writing-13-describing-a-person',
+      order: 13,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Description of a person',
+      topic: 'appearance, personality and habits',
+      description: 'Students write a clear description of a person they know.',
+      modelText: 'My best friend is called David. He is tall, with short dark hair and brown eyes. He is friendly and funny, but he can be serious when he works. David studies computer science at university, and he wants to become a software engineer. In his free time, he plays basketball and watches science fiction films. I like spending time with him because he is honest and always helps his friends.',
+      focus: ['describing people', 'personality', 'because clauses'],
+      phrases: [
+        ['My best friend is called David.', 'introduce the person'],
+        ['He is tall, with short dark hair.', 'describe appearance'],
+        ['He is friendly and funny.', 'describe personality'],
+        ['In his free time, he plays basketball.', 'describe habits'],
+        ['I like spending time with him because...', 'give a reason']
+      ],
+      gaps: [
+        ['My best friend is ___ David.', 'called', 'introduce the person'],
+        ['He is tall, ___ short dark hair.', 'with', 'describe appearance'],
+        ['He is friendly ___ funny.', 'and', 'connect adjectives'],
+        ['In his free ___, he plays basketball.', 'time', 'describe hobbies'],
+        ['I like spending time with him ___ he is honest.', 'because', 'give a reason']
+      ],
+      productionQuestion: 'Write a description of a person you know. Include appearance, personality, work or study, free time and why you like them.',
+      sampleAnswer: 'My sister is called Ani. She is short, with long black hair. She is kind and creative, but sometimes she is shy. She studies design and wants to work online. In her free time, she draws and listens to music. I like spending time with her because she understands me.'
+    },
+    {
+      id: 'a2-writing-14-describing-home-room',
+      order: 14,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Description of a home or room',
+      topic: 'place description',
+      description: 'Students write a descriptive paragraph about a home or favourite room.',
+      modelText: 'My favourite room in my flat is the living room. It is not very big, but it is bright and comfortable. There is a grey sofa near the window and a small table in front of it. I keep my books on a white shelf next to the door. I usually relax there in the evening because it is quiet. I would like to add more plants because they make the room feel warmer.',
+      focus: ['place description', 'there is/there are', 'prepositions'],
+      phrases: [
+        ['My favourite room is the living room.', 'introduce the place'],
+        ['It is bright and comfortable.', 'describe the room'],
+        ['There is a sofa near the window.', 'describe furniture'],
+        ['I usually relax there in the evening.', 'say what you do there'],
+        ['I would like to add more plants.', 'say what you want to change']
+      ],
+      gaps: [
+        ['My favourite ___ is the living room.', 'room', 'introduce the place'],
+        ['It is bright ___ comfortable.', 'and', 'connect adjectives'],
+        ['There is a sofa ___ the window.', 'near', 'describe position'],
+        ['I usually relax ___ in the evening.', 'there', 'say what you do'],
+        ['I would like to ___ more plants.', 'add', 'say what you want']
+      ],
+      productionQuestion: 'Write a description of your home or favourite room. Include size, furniture, where things are, what you do there and one change you want.',
+      sampleAnswer: 'My favourite room is my bedroom. It is small but warm. There is a bed next to the window and a desk near the wall. I study English there in the evening. I would like to add a bigger shelf for my books.'
+    },
+    {
+      id: 'a2-writing-15-schedule-change-message',
+      order: 15,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Work or school message: schedule change',
+      topic: 'changing plans politely',
+      description: 'Students write a practical message about a change of time, place or plan.',
+      modelText: 'Hi everyone,\nThere is a small change to tomorrow\'s meeting. We planned to meet at 10:00, but the room is not available then. The meeting will start at 11:30 in Room 204. Please bring your notebooks and the project plan. If you cannot come at the new time, please send me a message before 6 p.m. today.\nThanks,\nMarta',
+      focus: ['practical messages', 'schedule changes', 'clear details'],
+      phrases: [
+        ['There is a small change to tomorrow\'s meeting.', 'announce a change'],
+        ['We planned to meet at 10:00.', 'give the old plan'],
+        ['The meeting will start at 11:30.', 'give the new plan'],
+        ['Please bring your notebooks.', 'give an instruction'],
+        ['If you cannot come, please send me a message.', 'explain what to do']
+      ],
+      gaps: [
+        ['There is a small ___ to tomorrow\'s meeting.', 'change', 'announce a change'],
+        ['We planned to ___ at 10:00.', 'meet', 'give the old plan'],
+        ['The meeting will ___ at 11:30.', 'start', 'give the new time'],
+        ['Please ___ your notebooks.', 'bring', 'give an instruction'],
+        ['If you cannot ___, please send me a message.', 'come', 'explain what to do']
+      ],
+      productionQuestion: 'Write a practical message about a schedule change. Include the old plan, the new plan, what people should bring or do, and who to contact.',
+      sampleAnswer: 'Hi everyone, There is a small change to Friday\'s class. We planned to meet in Room 5 at 6:00, but the room is busy. The class will start at 6:30 in Room 8. Please bring your homework. If you cannot come, please message me.'
+    },
+    {
+      id: 'a2-writing-16-forum-post-advice',
+      order: 16,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Forum post: asking for advice',
+      topic: 'explaining a situation and asking for help',
+      description: 'Students write a forum post that explains a problem and asks for advice.',
+      modelText: 'Hi everyone,\nI moved to a new city two months ago, and I still do not know many people. I like my job, but I feel lonely after work. I tried going to a gym, but it was difficult to start conversations. I am thinking about joining a language class or a walking group. Has anyone had the same problem? What should I do to make friends here?',
+      focus: ['forum post', 'asking for advice', 'explaining a problem'],
+      phrases: [
+        ['I moved to a new city two months ago.', 'explain the situation'],
+        ['I still do not know many people.', 'describe the problem'],
+        ['I tried going to a gym.', 'say what you already tried'],
+        ['I am thinking about joining a class.', 'say your possible plan'],
+        ['What should I do?', 'ask for advice']
+      ],
+      gaps: [
+        ['I ___ to a new city two months ago.', 'moved', 'explain the situation'],
+        ['I still do not ___ many people.', 'know', 'describe the problem'],
+        ['I ___ going to a gym.', 'tried', 'say what you tried'],
+        ['I am thinking ___ joining a class.', 'about', 'say your possible plan'],
+        ['What ___ I do?', 'should', 'ask for advice']
+      ],
+      productionQuestion: 'Write a forum post asking for advice. Explain your situation, your problem, what you tried, one possible plan and a question.',
+      sampleAnswer: 'Hi everyone, I started a new course last month, and I find it difficult. I do not understand all the homework. I tried studying alone, but it takes too long. I am thinking about joining a study group. What should I do to improve?'
+    },
+    {
+      id: 'a2-writing-17-event-summary',
+      order: 17,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'Short report: event summary',
+      topic: 'summarising an event',
+      description: 'Students write a short report about an event using clear factual details.',
+      modelText: 'Our English club had a film night last Friday. Fifteen students came to the classroom at 6 p.m. We watched a short comedy film and then discussed the story in small groups. Most students enjoyed the film because it was funny and easy to understand. The only problem was that the speakers were not very loud. Next time, we should use a bigger room and better equipment.',
+      focus: ['short report', 'event summary', 'recommendations'],
+      phrases: [
+        ['Our English club had a film night.', 'introduce the event'],
+        ['Fifteen students came to the classroom.', 'give a factual detail'],
+        ['We watched a short comedy film.', 'say what happened'],
+        ['Most students enjoyed the film because...', 'report opinions'],
+        ['Next time, we should use a bigger room.', 'make a recommendation']
+      ],
+      gaps: [
+        ['Our English club ___ a film night.', 'had', 'introduce the event'],
+        ['Fifteen students ___ to the classroom.', 'came', 'give a factual detail'],
+        ['We ___ a short comedy film.', 'watched', 'say what happened'],
+        ['Most students enjoyed the film ___ it was funny.', 'because', 'report opinions'],
+        ['Next time, we ___ use a bigger room.', 'should', 'make a recommendation']
+      ],
+      productionQuestion: 'Write a short report about a class event, club meeting or party. Include when it happened, who came, what people did, one opinion and one recommendation.',
+      sampleAnswer: 'Our class had a speaking evening last Tuesday. Ten students came at 7 p.m. We played vocabulary games and talked in pairs. Most students enjoyed it because it was relaxed. The only problem was the room was hot. Next time, we should open the windows earlier.'
+    },
+    {
+      id: 'a2-writing-18-a2-writing-review',
+      order: 18,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'A2 writing review',
+      topic: 'mixed A2 writing tasks',
+      description: 'Students review A2 writing skills with email, opinion, story and review language.',
+      modelText: 'Hi Clara,\nThanks for your message. I am sorry I could not come to your party last weekend because I had to work late. I hope you had a great time. By the way, I tried the new Italian restaurant yesterday. The food was delicious, but the service was slow. I think we should go there next month when it is less busy. Let me know what you think.\nBest,\nPaul',
+      focus: ['A2 review', 'mixed writing', 'email and opinion'],
+      phrases: [
+        ['Thanks for your message.', 'open a friendly message'],
+        ['I am sorry I could not come.', 'apologise'],
+        ['The food was delicious, but the service was slow.', 'compare positive and negative points'],
+        ['I think we should go there next month.', 'make a suggestion'],
+        ['Let me know what you think.', 'ask for a reply']
+      ],
+      gaps: [
+        ['Thanks ___ your message.', 'for', 'open a friendly message'],
+        ['I am sorry I ___ not come.', 'could', 'apologise'],
+        ['The food was delicious, ___ the service was slow.', 'but', 'contrast ideas'],
+        ['I think we ___ go there next month.', 'should', 'make a suggestion'],
+        ['Let me ___ what you think.', 'know', 'ask for a reply']
+      ],
+      productionPrompt: 'Choose one A2 writing task and write 7-9 sentences. Use at least four useful phrases.',
+      productionQuestion: 'Write one of these: an informal email, a short review, a story about last weekend, or an opinion paragraph.',
+      sampleAnswer: 'Hi Kate, Thanks for your message. I am sorry I could not meet you on Friday because I was ill. I feel better now. Last weekend, I went to a small cafe near my house. The coffee was great, but the music was too loud. I think we should go there one morning when it is quiet. Let me know what you think.'
+    }
+  ].map(buildWritingReadyLesson);
   const READY_LISTENING_LESSONS_A2 = [];
 
   const root = ensureReadyLessonsRoot();
