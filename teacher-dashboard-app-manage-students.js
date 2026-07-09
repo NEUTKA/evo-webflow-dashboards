@@ -4088,7 +4088,937 @@
     }
   ].map(buildListeningReadyLesson);
 
-  const READY_GRAMMAR_LESSONS_A2 = [];
+  function buildA2GrammarReadyLesson(config) {
+    const makeOptions = (options = []) => options.map((text, index) => ({
+      id: ['a', 'b', 'c', 'd'][index] || String(index + 1),
+      text
+    }));
+
+    const makeChoiceItems = (rows = [], taskId) => rows.map((row, index) => {
+      const options = makeOptions(row[1]);
+      const answerIndex = (row[1] || []).indexOf(row[2]);
+      return {
+        id: `${taskId}-${index + 1}`,
+        sentence: row[0],
+        options,
+        answer: options[Math.max(0, answerIndex)]?.id || 'a',
+        explanation: row[3] || row[2] || ''
+      };
+    });
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'A2',
+      skill: 'grammar',
+      stage: config.stage,
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 30,
+      description: config.description,
+      focus: config.focus || [],
+      teacherNotes: config.teacherNotes || 'Use the first four sections for controlled practice, then ask the student to write their own A2 sentences in the final section.',
+      tasks: [
+        {
+          id: `${config.id}-choice`,
+          type: 'choice',
+          title: 'Choose the correct form',
+          prompt: 'Choose the best grammar option for each sentence.',
+          items: makeChoiceItems(config.choices, `${config.id}-choice`)
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: (config.gaps || []).map((row, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: row[0],
+            accepted_answers: Array.isArray(row[1]) ? row[1] : [row[1]],
+            hint: row[2] || 'Use the grammar point from this lesson.',
+            explanation: row[3] || ''
+          }))
+        },
+        {
+          id: `${config.id}-order`,
+          type: 'word_order',
+          title: 'Build the sentence',
+          prompt: 'Put the words in the correct order.',
+          items: (config.orders || []).map((row, index) => ({
+            id: `${config.id}-order-${index + 1}`,
+            words: row[0],
+            answer: row[1]
+          }))
+        },
+        {
+          id: `${config.id}-error`,
+          type: 'error_correction',
+          title: 'Find and fix the mistake',
+          prompt: 'Rewrite each sentence correctly.',
+          items: (config.errors || []).map((row, index) => ({
+            id: `${config.id}-error-${index + 1}`,
+            sentence: row[0],
+            accepted_answers: Array.isArray(row[1]) ? row[1] : [row[1]],
+            explanation: row[2] || ''
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Use it yourself',
+          prompt: config.productionPrompt || 'Write your own short answer using the grammar from this lesson.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-extra`,
+          type: 'choice',
+          title: 'Extra mixed practice',
+          prompt: 'Choose the correct answer for extra practice.',
+          items: makeChoiceItems(config.extraChoices, `${config.id}-extra`)
+        }
+      ]
+    };
+  }
+
+  const READY_GRAMMAR_LESSONS_A2 = [
+    {
+      id: 'a2-grammar-01-present-simple-continuous',
+      order: 1,
+      stage: 'A2.1',
+      title: 'Present simple vs present continuous',
+      topic: 'routines and actions happening now',
+      description: 'Students contrast everyday routines with actions happening now.',
+      focus: ['present simple', 'present continuous', 'time markers'],
+      choices: [
+        ['I usually ___ coffee in the morning.', ['drink', 'am drinking', 'drinks'], 'drink', 'Use present simple for routines.'],
+        ['Listen! The baby ___ upstairs.', ['cries', 'is crying', 'cry'], 'is crying', 'Use present continuous for now.'],
+        ['She ___ to work by bus every day.', ['go', 'is going', 'goes'], 'goes', 'Add -s with she in present simple.'],
+        ['We ___ dinner at the moment.', ['cook', 'are cooking', 'cooks'], 'are cooking', 'At the moment signals present continuous.'],
+        ['They rarely ___ TV during the week.', ['watch', 'are watching', 'watches'], 'watch', 'Use present simple with frequency adverbs.']
+      ],
+      gaps: [
+        ['My brother ___ football every Saturday. (play)', 'plays', 'he + verb + s'],
+        ['I ___ my homework right now. (do)', 'am doing', 'now = present continuous'],
+        ['They ___ in a bank. (work)', 'work', 'routine or fact'],
+        ['Look! It ___ outside. (rain)', 'is raining', 'look = happening now'],
+        ['She ___ usually ___ lunch at home. (not / eat)', ['does not usually eat', "doesn't usually eat"], 'negative present simple']
+      ],
+      orders: [
+        [['usually', 'work', 'I', 'from home'], 'I usually work from home.'],
+        [['is', 'now', 'She', 'studying'], 'She is studying now.'],
+        [['do', 'What', 'you', 'on Fridays', 'do'], 'What do you do on Fridays?'],
+        [['are', 'Why', 'you', 'laughing'], 'Why are you laughing?'],
+        [['never', 'He', 'late', 'is'], 'He is never late.']
+      ],
+      errors: [
+        ['She go to the gym every day.', 'She goes to the gym every day.', 'Use goes with she.'],
+        ['I am usually walking to work.', 'I usually walk to work.', 'Use present simple for routines.'],
+        ['They is playing tennis now.', 'They are playing tennis now.', 'Use are with they.'],
+        ['Do he live near here?', 'Does he live near here?', 'Use does with he.'],
+        ['We watches a film at the moment.', 'We are watching a film at the moment.', 'At the moment needs present continuous.']
+      ],
+      extraChoices: [
+        ['Right now, I ___ an email.', ['write', 'am writing', 'writes'], 'am writing'],
+        ['My parents ___ in a small town.', ['live', 'are living', 'lives'], 'live'],
+        ['How often ___ you exercise?', ['are', 'do', 'does'], 'do'],
+        ['She ___ lunch at home today.', ['has', 'is having', 'have'], 'is having'],
+        ['He always ___ early.', ['gets up', 'is getting up', 'get up'], 'gets up']
+      ],
+      productionQuestion: 'Write 5 sentences about your normal week and what you are doing today.',
+      sampleAnswer: 'I usually work in the morning. I often study English in the evening. Today I am working at home. I am drinking tea now. I am not going out tonight.'
+    },
+    {
+      id: 'a2-grammar-02-past-simple-regular-irregular',
+      order: 2,
+      stage: 'A2.1',
+      title: 'Past simple: regular and irregular verbs',
+      topic: 'completed past actions',
+      description: 'Students practise affirmative past simple forms with regular and common irregular verbs.',
+      focus: ['past simple', 'regular verbs', 'irregular verbs'],
+      choices: [
+        ['Yesterday, I ___ my friend after work.', ['meet', 'met', 'meeting'], 'met', 'Meet is irregular: met.'],
+        ['She ___ a new phone last week.', ['bought', 'buyed', 'buys'], 'bought', 'Buy is irregular: bought.'],
+        ['We ___ a film on Sunday.', ['watched', 'watch', 'watching'], 'watched', 'Add -ed to regular verbs.'],
+        ['They ___ home late last night.', ['come', 'came', 'comed'], 'came', 'Come is irregular: came.'],
+        ['He ___ for the test yesterday.', ['studied', 'studyed', 'studies'], 'studied', 'Study becomes studied.']
+      ],
+      gaps: [
+        ['I ___ dinner at seven yesterday. (cook)', 'cooked', 'regular verb + ed'],
+        ['She ___ to Paris last summer. (go)', 'went', 'go is irregular'],
+        ['We ___ the lesson at six. (finish)', 'finished', 'regular verb + ed'],
+        ['He ___ a long email. (write)', 'wrote', 'write is irregular'],
+        ['They ___ coffee after lunch. (drink)', 'drank', 'drink is irregular']
+      ],
+      orders: [
+        [['visited', 'I', 'my parents', 'last weekend'], 'I visited my parents last weekend.'],
+        [['bought', 'She', 'new shoes', 'yesterday'], 'She bought new shoes yesterday.'],
+        [['to the cinema', 'We', 'went', 'on Friday'], 'We went to the cinema on Friday.'],
+        [['played', 'They', 'football', 'after school'], 'They played football after school.'],
+        [['had', 'He', 'breakfast', 'early'], 'He had breakfast early.']
+      ],
+      errors: [
+        ['I go to the supermarket yesterday.', 'I went to the supermarket yesterday.', 'Use past form with yesterday.'],
+        ['She buyed a dress.', 'She bought a dress.', 'Buy is irregular.'],
+        ['We stoped near the cafe.', 'We stopped near the cafe.', 'Double p: stopped.'],
+        ['He writed a message.', 'He wrote a message.', 'Write is irregular.'],
+        ['They was tired after the trip.', 'They were tired after the trip.', 'Use were with they.']
+      ],
+      extraChoices: [
+        ['I ___ a great book last month.', ['read', 'readed', 'reading'], 'read'],
+        ['She ___ at the hotel at ten.', ['arrived', 'arrive', 'arrives'], 'arrived'],
+        ['We ___ pizza for dinner.', ['ate', 'eated', 'eat'], 'ate'],
+        ['He ___ the door.', ['opened', 'open', 'opens'], 'opened'],
+        ['They ___ very happy.', ['were', 'was', 'are'], 'were']
+      ],
+      productionQuestion: 'Write 5 sentences about things you did yesterday or last weekend.',
+      sampleAnswer: 'Yesterday I worked in the morning. I bought food after work. I cooked dinner at home. I watched a film. I went to bed early.'
+    },
+    {
+      id: 'a2-grammar-03-past-simple-questions-negatives',
+      order: 3,
+      stage: 'A2.1',
+      title: 'Past simple: questions and negatives',
+      topic: 'did / did not + base verb',
+      description: 'Students practise asking and answering questions about completed past actions.',
+      focus: ['did questions', 'past negatives', 'base verb after did'],
+      choices: [
+        ['___ you visit your parents yesterday?', ['Did', 'Were', 'Do'], 'Did', 'Use Did + subject + base verb.'],
+        ['She ___ go to work on Monday.', ['did not', 'does not', 'was not'], 'did not', 'Use did not + base verb.'],
+        ['Where ___ they stay?', ['did', 'were', 'do'], 'did', 'Use did for past simple questions.'],
+        ['He did not ___ the answer.', ['knew', 'know', 'knows'], 'know', 'Use base verb after did not.'],
+        ['Did you ___ the email?', ['sent', 'send', 'sending'], 'send', 'Use base verb after did.']
+      ],
+      gaps: [
+        ['___ you watch the match last night?', 'Did', 'Past question'],
+        ['I did not ___ breakfast today. (have)', 'have', 'base verb after did not'],
+        ['Where did she ___ last summer? (go)', 'go', 'base verb after did'],
+        ['They ___ not finish the project. (did)', 'did', 'negative past simple'],
+        ['What did he ___ at the shop? (buy)', 'buy', 'base verb after did']
+      ],
+      orders: [
+        [['you', 'Did', 'call', 'me'], 'Did you call me?'],
+        [['not', 'She', 'did', 'come', 'to class'], 'She did not come to class.'],
+        [['did', 'Where', 'they', 'meet'], 'Where did they meet?'],
+        [['not', 'We', 'did', 'understand', 'the question'], 'We did not understand the question.'],
+        [['What', 'you', 'did', 'eat'], 'What did you eat?']
+      ],
+      errors: [
+        ['Did you went to the bank?', 'Did you go to the bank?', 'Use base verb after did.'],
+        ['She did not bought anything.', 'She did not buy anything.', 'Use base verb after did not.'],
+        ['Where you did stay?', 'Where did you stay?', 'Question word + did + subject.'],
+        ['He not did call me.', 'He did not call me.', 'Correct order is did not + verb.'],
+        ['Did they watched TV?', 'Did they watch TV?', 'Use base verb after did.']
+      ],
+      extraChoices: [
+        ['Did she ___ lunch?', ['had', 'have', 'has'], 'have'],
+        ['I ___ not see him yesterday.', ['did', 'do', 'was'], 'did'],
+        ['What time ___ you arrive?', ['did', 'were', 'do'], 'did'],
+        ['They did not ___ the bus.', ['missed', 'miss', 'missing'], 'miss'],
+        ['___ he at home last night?', ['Was', 'Did', 'Does'], 'Was']
+      ],
+      productionQuestion: 'Write 5 past simple questions and negatives about yesterday.',
+      sampleAnswer: 'Did you work yesterday? I did not go out. Did you call your friend? I did not watch TV. What did you eat?'
+    },
+    {
+      id: 'a2-grammar-04-past-continuous-past-simple',
+      order: 4,
+      stage: 'A2.2',
+      title: 'Past continuous and past simple',
+      topic: 'when / while and interrupted actions',
+      description: 'Students contrast background actions with shorter completed events.',
+      focus: ['past continuous', 'past simple', 'when / while'],
+      choices: [
+        ['I ___ dinner when you called.', ['cooked', 'was cooking', 'cook'], 'was cooking', 'Long action in progress.'],
+        ['While she ___, the phone rang.', ['slept', 'was sleeping', 'sleeping'], 'was sleeping', 'Use while with past continuous.'],
+        ['They were walking home when it ___.', ['started', 'was starting', 'start'], 'started', 'Short event in past simple.'],
+        ['He ___ TV when I arrived.', ['watched', 'was watching', 'watches'], 'was watching', 'Action in progress.'],
+        ['We ___ a taxi because it was raining.', ['took', 'were taking', 'take'], 'took', 'Completed past action.']
+      ],
+      gaps: [
+        ['I ___ a book when the lights went out. (read)', 'was reading', 'past continuous'],
+        ['She was cooking when her friend ___. (arrive)', 'arrived', 'short event'],
+        ['They ___ football at 5 p.m. yesterday. (play)', 'were playing', 'past continuous at a time'],
+        ['While we were waiting, the bus ___. (come)', 'came', 'short event'],
+        ['He ___ his leg while he was skiing. (break)', 'broke', 'short event']
+      ],
+      orders: [
+        [['was', 'I', 'working', 'when', 'you called'], 'I was working when you called.'],
+        [['while', 'She', 'was sleeping', 'the phone rang'], 'While she was sleeping, the phone rang.'],
+        [['They', 'were driving', 'home', 'when', 'it started raining'], 'They were driving home when it started raining.'],
+        [['What', 'were', 'you', 'doing', 'at seven'], 'What were you doing at seven?'],
+        [['We', 'were not', 'listening', 'when', 'he explained it'], 'We were not listening when he explained it.']
+      ],
+      errors: [
+        ['I cooked when you called.', 'I was cooking when you called.', 'Use past continuous for the action in progress.'],
+        ['While she slept, the alarm was ringing.', 'While she was sleeping, the alarm rang.', 'Use while + past continuous and a short past event.'],
+        ['They was playing tennis.', 'They were playing tennis.', 'Use were with they.'],
+        ['He was watched TV at 8.', 'He was watching TV at 8.', 'Past continuous = was/were + -ing.'],
+        ['When I was seeing him, he was running.', 'When I saw him, he was running.', 'Use saw for the short event.']
+      ],
+      extraChoices: [
+        ['At 9 p.m., we ___ dinner.', ['had', 'were having', 'have'], 'were having'],
+        ['She fell while she ___.', ['ran', 'was running', 'runs'], 'was running'],
+        ['When I arrived, they ___ music.', ['played', 'were playing', 'play'], 'were playing'],
+        ['He ___ his keys yesterday.', ['lost', 'was losing', 'lose'], 'lost'],
+        ['While I was shopping, I ___ Anna.', ['met', 'was meeting', 'meet'], 'met']
+      ],
+      productionQuestion: 'Write 5 sentences about what people were doing when something happened.',
+      sampleAnswer: 'I was cooking when my friend called. My brother was studying when I came home. We were walking when it started raining. I was reading at nine. My phone rang while I was sleeping.'
+    },
+    {
+      id: 'a2-grammar-05-going-to-plans',
+      order: 5,
+      stage: 'A2.2',
+      title: 'Future plans: going to',
+      topic: 'plans and intentions',
+      description: 'Students practise going to for future plans and intentions.',
+      focus: ['going to', 'plans', 'intentions'],
+      choices: [
+        ['I ___ visit my cousin tomorrow.', ['am going to', 'go to', 'will going to'], 'am going to', 'Use be going to + verb.'],
+        ['She ___ study tonight.', ['is going to', 'are going to', 'going to'], 'is going to', 'Use is with she.'],
+        ['They ___ buy a new car next month.', ['are going to', 'is going to', 'go to'], 'are going to', 'Use are with they.'],
+        ['Are you ___ watch the film?', ['going to', 'go to', 'will to'], 'going to', 'Question: be + subject + going to.'],
+        ['We are not going to ___ late.', ['arrive', 'arrived', 'arrives'], 'arrive', 'Use base verb after going to.']
+      ],
+      gaps: [
+        ['I ___ going to clean my room. (be)', 'am', 'I am going to'],
+        ['She is going to ___ dinner. (cook)', 'cook', 'base verb'],
+        ['They ___ going to travel in July. (be)', 'are', 'they are'],
+        ['___ you going to call him?', 'Are', 'question form'],
+        ['He is not going to ___ today. (work)', 'work', 'base verb']
+      ],
+      orders: [
+        [['am', 'I', 'going to', 'study', 'tonight'], 'I am going to study tonight.'],
+        [['is', 'She', 'going to', 'meet', 'her friend'], 'She is going to meet her friend.'],
+        [['Are', 'you', 'going to', 'come'], 'Are you going to come?'],
+        [['not', 'We', 'are', 'going to', 'eat out'], 'We are not going to eat out.'],
+        [['What', 'are', 'they', 'going to', 'do'], 'What are they going to do?']
+      ],
+      errors: [
+        ['I going to visit my aunt.', 'I am going to visit my aunt.', 'Add am.'],
+        ['She are going to cook dinner.', 'She is going to cook dinner.', 'Use is with she.'],
+        ['They going buy a house.', 'They are going to buy a house.', 'Use are going to + verb.'],
+        ['Are you go to study?', 'Are you going to study?', 'Use going to.'],
+        ['He is going to works tomorrow.', 'He is going to work tomorrow.', 'Use base verb after going to.']
+      ],
+      extraChoices: [
+        ['We ___ have lunch at home.', ['are going to', 'is going to', 'going'], 'are going to'],
+        ['What ___ you going to do?', ['are', 'is', 'do'], 'are'],
+        ['He is going to ___ English.', ['learn', 'learns', 'learned'], 'learn'],
+        ['I am not ___ buy it.', ['going to', 'go to', 'will to'], 'going to'],
+        ['Is she going to ___ us?', ['join', 'joins', 'joined'], 'join']
+      ],
+      productionQuestion: 'Write 5 sentences about your plans for tomorrow or next week.',
+      sampleAnswer: 'I am going to wake up early. I am going to study English. I am going to meet my friend. I am not going to work late. I am going to cook dinner.'
+    },
+    {
+      id: 'a2-grammar-06-will-predictions-decisions',
+      order: 6,
+      stage: 'A2.2',
+      title: 'Future with will',
+      topic: 'predictions and quick decisions',
+      description: 'Students practise will for predictions, offers and decisions made now.',
+      focus: ['will', 'predictions', 'quick decisions'],
+      choices: [
+        ['I think it ___ rain tomorrow.', ['will', 'is going', 'does'], 'will', 'Use will for predictions.'],
+        ['This bag is heavy. I ___ help you.', ['will', 'am going', 'do'], 'will', 'Use will for offers.'],
+        ['She probably ___ be late.', ['will', 'is', 'does'], 'will', 'Use will with probably for predictions.'],
+        ['I am tired. I ___ go to bed now.', ['will', 'going to', 'am'], 'will', 'Decision made now.'],
+        ['___ you help me with this?', ['Will', 'Do', 'Are'], 'Will', 'Use will for requests.']
+      ],
+      gaps: [
+        ['I think our team ___ win. (will)', 'will', 'prediction'],
+        ['Do not worry. I ___ call you later. (will)', 'will', 'promise'],
+        ['She ___ probably arrive at eight. (will)', 'will', 'will + probably'],
+        ['I ___ not forget your birthday. (will)', 'will', 'negative: will not'],
+        ['___ you open the window, please?', 'Will', 'request']
+      ],
+      orders: [
+        [['will', 'I', 'help', 'you'], 'I will help you.'],
+        [['think', 'I', 'it', 'will', 'be sunny'], 'I think it will be sunny.'],
+        [['will', 'She', 'probably', 'call', 'later'], 'She will probably call later.'],
+        [['not', 'They', 'will', 'come', 'today'], 'They will not come today.'],
+        [['Will', 'you', 'send', 'the file'], 'Will you send the file?']
+      ],
+      errors: [
+        ['I will to call you.', 'I will call you.', 'Use will + base verb.'],
+        ['She wills arrive soon.', 'She will arrive soon.', 'Will does not change.'],
+        ['They will not comes.', 'They will not come.', 'Use base verb after will.'],
+        ['Will you to help me?', 'Will you help me?', 'No to after will.'],
+        ['I think it is rain tomorrow.', 'I think it will rain tomorrow.', 'Use will for prediction.']
+      ],
+      extraChoices: [
+        ['I ___ have the chicken, please.', ['will', 'am', 'do'], 'will'],
+        ['He ___ not pass if he does not study.', ['will', 'is', 'does'], 'will'],
+        ['Will they ___ tomorrow?', ['come', 'comes', 'coming'], 'come'],
+        ['I think the shop ___ be open.', ['will', 'is going', 'does'], 'will'],
+        ['I forgot my pen. I ___ use a pencil.', ['will', 'am going', 'do'], 'will']
+      ],
+      productionQuestion: 'Write 5 sentences with will: predictions, offers or quick decisions.',
+      sampleAnswer: 'I think tomorrow will be sunny. I will call my friend later. I will help my mother. I will not stay up late. I think English will be useful for me.'
+    },
+    {
+      id: 'a2-grammar-07-comparative-adjectives',
+      order: 7,
+      stage: 'A2.3',
+      title: 'Comparative adjectives',
+      topic: 'comparing two people or things',
+      description: 'Students practise comparative adjectives with -er, more and irregular forms.',
+      focus: ['comparatives', 'than', 'irregular adjectives'],
+      choices: [
+        ['My new phone is ___ than my old phone.', ['faster', 'fastest', 'more fast'], 'faster', 'Short adjective + -er.'],
+        ['This book is ___ than that one.', ['more interesting', 'interestinger', 'most interesting'], 'more interesting', 'Long adjective: more + adjective.'],
+        ['The blue bag is ___ than the black bag.', ['cheaper', 'more cheap', 'cheapest'], 'cheaper', 'Cheap becomes cheaper.'],
+        ['Today is ___ than yesterday.', ['better', 'gooder', 'best'], 'better', 'Good becomes better.'],
+        ['The train is ___ than the bus.', ['more comfortable', 'comfortabler', 'most comfortable'], 'more comfortable', 'Use more with long adjectives.']
+      ],
+      gaps: [
+        ['This street is ___ than my street. (quiet)', 'quieter', 'quiet -> quieter'],
+        ['English is ___ than I expected. (easy)', 'easier', 'y -> ier'],
+        ['This hotel is ___ than that hotel. (expensive)', 'more expensive', 'long adjective'],
+        ['My bag is ___ than yours. (heavy)', 'heavier', 'y -> ier'],
+        ['This cafe is ___ than the one near work. (good)', 'better', 'irregular']
+      ],
+      orders: [
+        [['is', 'My city', 'bigger', 'than', 'your city'], 'My city is bigger than your city.'],
+        [['more expensive', 'This jacket', 'is', 'than', 'that one'], 'This jacket is more expensive than that one.'],
+        [['The metro', 'is', 'faster', 'than', 'the bus'], 'The metro is faster than the bus.'],
+        [['better', 'This lesson', 'is', 'than', 'the last one'], 'This lesson is better than the last one.'],
+        [['is', 'Her room', 'cleaner', 'than', 'mine'], 'Her room is cleaner than mine.']
+      ],
+      errors: [
+        ['This car is more fast than that car.', 'This car is faster than that car.', 'Use faster for short adjectives.'],
+        ['My room is clean than yours.', 'My room is cleaner than yours.', 'Use comparative form.'],
+        ['This film is interestinger.', 'This film is more interesting.', 'Use more with long adjectives.'],
+        ['Today is more good than yesterday.', 'Today is better than yesterday.', 'Good becomes better.'],
+        ['The red dress is expensiver than the blue one.', 'The red dress is more expensive than the blue one.', 'Use more expensive.']
+      ],
+      extraChoices: [
+        ['This test is ___ than the first one.', ['easier', 'more easy', 'easyer'], 'easier'],
+        ['My brother is ___ than me.', ['taller', 'more tall', 'tallest'], 'taller'],
+        ['This sofa is ___ than the chair.', ['more comfortable', 'comfortabler', 'comfortable'], 'more comfortable'],
+        ['Her English is ___ now.', ['better', 'gooder', 'best'], 'better'],
+        ['The cafe is ___ than the restaurant.', ['cheaper', 'more cheap', 'cheapest'], 'cheaper']
+      ],
+      productionQuestion: 'Write 5 sentences comparing two things, places or people.',
+      sampleAnswer: 'My city is smaller than London. The metro is faster than the bus. My phone is newer than my laptop. This cafe is cheaper than the restaurant. English is easier than before.'
+    },
+    {
+      id: 'a2-grammar-08-superlative-adjectives',
+      order: 8,
+      stage: 'A2.3',
+      title: 'Superlative adjectives',
+      topic: 'the biggest, the most interesting, the best',
+      description: 'Students practise superlatives for comparing one item with a group.',
+      focus: ['superlatives', 'the', 'irregular adjectives'],
+      choices: [
+        ['This is ___ room in the house.', ['the biggest', 'bigger', 'the most big'], 'the biggest', 'Use the + superlative.'],
+        ['She is ___ person in my class.', ['the friendliest', 'friendlier', 'the most friendly'], 'the friendliest', 'Friendly can become friendliest.'],
+        ['That was ___ film of the year.', ['the best', 'the goodest', 'better'], 'the best', 'Good becomes the best.'],
+        ['This is ___ restaurant in town.', ['the most expensive', 'more expensive', 'the expensivest'], 'the most expensive', 'Use most with long adjectives.'],
+        ['Monday is ___ day for me.', ['the busiest', 'busier', 'the busyest'], 'the busiest', 'Busy becomes busiest.']
+      ],
+      gaps: [
+        ['This is ___ street in the city. (long)', 'the longest', 'the + -est'],
+        ['Anna is ___ student in the group. (young)', 'the youngest', 'the + -est'],
+        ['That is ___ idea. (good)', 'the best', 'irregular'],
+        ['This is ___ lesson so far. (difficult)', 'the most difficult', 'long adjective'],
+        ['It is ___ shop near my house. (cheap)', 'the cheapest', 'the + -est']
+      ],
+      orders: [
+        [['is', 'This', 'the best', 'answer'], 'This is the best answer.'],
+        [['the most interesting', 'It', 'is', 'book', 'in the shop'], 'It is the most interesting book in the shop.'],
+        [['She', 'the youngest', 'is', 'in her family'], 'She is the youngest in her family.'],
+        [['the busiest', 'Friday', 'is', 'day'], 'Friday is the busiest day.'],
+        [['This hotel', 'is', 'the most comfortable'], 'This hotel is the most comfortable.']
+      ],
+      errors: [
+        ['This is biggest room.', 'This is the biggest room.', 'Use the before superlatives.'],
+        ['He is the more tall student.', 'He is the tallest student.', 'Use tallest.'],
+        ['It is the most cheap shop.', 'It is the cheapest shop.', 'Use cheapest for short adjectives.'],
+        ['This is the goodest pizza.', 'This is the best pizza.', 'Good becomes best.'],
+        ['She is youngest than me.', 'She is younger than me.', 'Use comparative with than, not superlative.']
+      ],
+      extraChoices: [
+        ['This is ___ place in town.', ['the nicest', 'nicer', 'the more nice'], 'the nicest'],
+        ['It is ___ question on the test.', ['the most difficult', 'more difficult', 'the difficultest'], 'the most difficult'],
+        ['He is ___ player in the team.', ['the best', 'better', 'the goodest'], 'the best'],
+        ['This is ___ month of the year.', ['the coldest', 'colder', 'the most cold'], 'the coldest'],
+        ['She is ___ person I know.', ['the kindest', 'kinder', 'the more kind'], 'the kindest']
+      ],
+      productionQuestion: 'Write 5 sentences about the best, biggest or most interesting things in your life.',
+      sampleAnswer: 'My kitchen is the warmest room in my home. My best friend is the funniest person I know. Summer is the best season. This is the most useful app. Monday is my busiest day.'
+    },
+    {
+      id: 'a2-grammar-09-articles-a-an-the',
+      order: 9,
+      stage: 'A2.3',
+      title: 'Articles: a, an, the',
+      topic: 'first mention and specific things',
+      description: 'Students practise basic article choice in everyday sentences.',
+      focus: ['a / an', 'the', 'first and second mention'],
+      choices: [
+        ['I saw ___ interesting film last night.', ['a', 'an', 'the'], 'an', 'Use an before vowel sound.'],
+        ['There is ___ bank near my house.', ['a', 'an', 'the'], 'a', 'First mention.'],
+        ['I went to the bank. ___ bank was closed.', ['A', 'An', 'The'], 'The', 'Second mention uses the.'],
+        ['She bought ___ umbrella.', ['a', 'an', 'the'], 'an', 'Umbrella starts with a vowel sound.'],
+        ['Can you close ___ door?', ['a', 'an', 'the'], 'the', 'The listener knows which door.']
+      ],
+      gaps: [
+        ['I need ___ new bag.', 'a', 'one new bag'],
+        ['She is ___ honest person.', 'an', 'honest starts with a vowel sound'],
+        ['We stayed in a hotel. ___ hotel was small.', 'The', 'second mention'],
+        ['Please pass me ___ salt.', 'the', 'specific thing on the table'],
+        ['He has ___ old car.', 'an', 'old starts with vowel sound']
+      ],
+      orders: [
+        [['I', 'have', 'a', 'new laptop'], 'I have a new laptop.'],
+        [['She', 'is', 'an', 'English teacher'], 'She is an English teacher.'],
+        [['The', 'restaurant', 'was', 'full'], 'The restaurant was full.'],
+        [['Can', 'you', 'open', 'the window'], 'Can you open the window?'],
+        [['There', 'is', 'a park', 'near here'], 'There is a park near here.']
+      ],
+      errors: [
+        ['I bought an book.', 'I bought a book.', 'Use a before consonant sound.'],
+        ['She is a artist.', 'She is an artist.', 'Use an before vowel sound.'],
+        ['I saw a dog. A dog was black.', 'I saw a dog. The dog was black.', 'Use the for second mention.'],
+        ['Please turn off a light.', 'Please turn off the light.', 'Specific light.'],
+        ['He is an university student.', 'He is a university student.', 'University begins with /ju/ sound.']
+      ],
+      extraChoices: [
+        ['I have ___ idea.', ['a', 'an', 'the'], 'an'],
+        ['She works in ___ office.', ['a', 'an', 'the'], 'an'],
+        ['___ office is near the station.', ['A', 'An', 'The'], 'The'],
+        ['He bought ___ new jacket.', ['a', 'an', 'the'], 'a'],
+        ['Could you answer ___ phone?', ['a', 'an', 'the'], 'the']
+      ],
+      productionQuestion: 'Write 5 sentences with a, an and the.',
+      sampleAnswer: 'I have a phone. I bought an orange. The orange was sweet. There is a cafe near my house. The cafe is small.'
+    },
+    {
+      id: 'a2-grammar-10-the-or-no-article',
+      order: 10,
+      stage: 'A2.3',
+      title: 'The or no article',
+      topic: 'places, meals and general ideas',
+      description: 'Students practise using the or no article in common A2 phrases.',
+      focus: ['the', 'no article', 'common phrases'],
+      choices: [
+        ['I usually go to ___ work by bus.', ['the', 'a', 'no article'], 'no article', 'Use no article in go to work.'],
+        ['We had dinner at ___ home.', ['the', 'a', 'no article'], 'no article', 'At home has no article.'],
+        ['She went to ___ cinema last night.', ['the', 'a', 'no article'], 'the', 'Use the cinema.'],
+        ['I love ___ music.', ['the', 'a', 'no article'], 'no article', 'General ideas often use no article.'],
+        ['They live near ___ sea.', ['the', 'a', 'no article'], 'the', 'Use the sea.']
+      ],
+      gaps: [
+        ['I go to ___ school by metro.', ['school', ''], 'no article before school as institution'],
+        ['We visited ___ museum on Sunday.', 'the', 'specific place'],
+        ['She plays ___ tennis every week.', ['', 'no article'], 'sports use no article'],
+        ['He is at ___ home now.', ['', 'no article'], 'at home'],
+        ['I like ___ Italian food.', ['', 'no article'], 'food in general']
+      ],
+      orders: [
+        [['I', 'go', 'to work', 'at nine'], 'I go to work at nine.'],
+        [['She', 'went', 'to the cinema', 'yesterday'], 'She went to the cinema yesterday.'],
+        [['We', 'had', 'lunch', 'at home'], 'We had lunch at home.'],
+        [['They', 'live', 'near', 'the sea'], 'They live near the sea.'],
+        [['I', 'like', 'coffee', 'in the morning'], 'I like coffee in the morning.']
+      ],
+      errors: [
+        ['I go to the work every day.', 'I go to work every day.', 'No article in go to work.'],
+        ['She is at the home.', 'She is at home.', 'No article in at home.'],
+        ['We went to cinema.', 'We went to the cinema.', 'Use the cinema.'],
+        ['I like the music.', 'I like music.', 'General idea: no article.'],
+        ['He plays the football.', 'He plays football.', 'Sports use no article.']
+      ],
+      extraChoices: [
+        ['I have ___ breakfast at seven.', ['the', 'a', 'no article'], 'no article'],
+        ['They went to ___ beach.', ['the', 'a', 'no article'], 'the'],
+        ['She studies ___ English.', ['the', 'a', 'no article'], 'no article'],
+        ['We are at ___ airport.', ['the', 'a', 'no article'], 'the'],
+        ['He listens to ___ radio.', ['the', 'a', 'no article'], 'the']
+      ],
+      productionQuestion: 'Write 5 sentences about places or activities using the or no article.',
+      sampleAnswer: 'I go to work by bus. I have lunch at home. I like music. I went to the cinema yesterday. I live near the city center.'
+    },
+    {
+      id: 'a2-grammar-11-countable-uncountable',
+      order: 11,
+      stage: 'A2.4',
+      title: 'Countable and uncountable nouns',
+      topic: 'some, any, much and many',
+      description: 'Students practise noun types and common quantifiers for food, shopping and everyday objects.',
+      focus: ['countable nouns', 'uncountable nouns', 'some / any / much / many'],
+      choices: [
+        ['How ___ apples do you need?', ['much', 'many', 'some'], 'many', 'Use many with countable plural nouns.'],
+        ['How ___ water do we have?', ['much', 'many', 'any'], 'much', 'Use much with uncountable nouns.'],
+        ['There is ___ rice in the cupboard.', ['some', 'any', 'many'], 'some', 'Use some in affirmative sentences.'],
+        ['We do not have ___ eggs.', ['some', 'any', 'much'], 'any', 'Use any in negatives.'],
+        ['Can I have ___ milk?', ['some', 'many', 'few'], 'some', 'Use some in requests and offers.']
+      ],
+      gaps: [
+        ['How ___ people are coming?', 'many', 'countable plural'],
+        ['How ___ money do you need?', 'much', 'uncountable'],
+        ['There are ___ bananas on the table.', 'some', 'affirmative plural'],
+        ['There is not ___ cheese in the fridge.', 'any', 'negative'],
+        ['I bought ___ bread.', 'some', 'uncountable affirmative']
+      ],
+      orders: [
+        [['How', 'many', 'chairs', 'do', 'we need'], 'How many chairs do we need?'],
+        [['How', 'much', 'coffee', 'do', 'you drink'], 'How much coffee do you drink?'],
+        [['There', 'is', 'some', 'milk', 'in the fridge'], 'There is some milk in the fridge.'],
+        [['We', 'do not', 'have', 'any', 'eggs'], 'We do not have any eggs.'],
+        [['Can', 'I', 'have', 'some', 'water'], 'Can I have some water?']
+      ],
+      errors: [
+        ['How many rice do you want?', 'How much rice do you want?', 'Rice is uncountable.'],
+        ['There are some milk.', 'There is some milk.', 'Milk is uncountable singular.'],
+        ['We do not have some apples.', 'We do not have any apples.', 'Use any in negatives.'],
+        ['How much books are there?', 'How many books are there?', 'Books are countable.'],
+        ['I need many information.', 'I need much information.', 'Information is uncountable.']
+      ],
+      extraChoices: [
+        ['How ___ time do we have?', ['much', 'many', 'some'], 'much'],
+        ['There are ___ chairs in the room.', ['some', 'any', 'much'], 'some'],
+        ['Do you have ___ questions?', ['some', 'any', 'much'], 'any'],
+        ['How ___ sandwiches did you buy?', ['many', 'much', 'any'], 'many'],
+        ['She does not drink ___ coffee.', ['some', 'any', 'many'], 'any']
+      ],
+      productionQuestion: 'Write 5 sentences about food or shopping using some, any, much and many.',
+      sampleAnswer: 'I need some bread. I do not have any eggs. How much milk do we need? How many apples do you want? I bought some cheese.'
+    },
+    {
+      id: 'a2-grammar-12-quantifiers-few-little',
+      order: 12,
+      stage: 'A2.4',
+      title: 'Quantifiers: a few, few, a little, little',
+      topic: 'small amounts and quantity meaning',
+      description: 'Students learn the difference between positive and negative small quantities.',
+      focus: ['a few / few', 'a little / little', 'countable and uncountable nouns'],
+      choices: [
+        ['I have ___ friends in this city, so I am not lonely.', ['a few', 'little', 'few'], 'a few', 'A few = some, positive.'],
+        ['There is ___ milk left. We can make tea.', ['a little', 'few', 'many'], 'a little', 'A little with uncountable nouns.'],
+        ['He has ___ time, so he cannot help.', ['little', 'few', 'a few'], 'little', 'Little = not much, negative.'],
+        ['We have ___ problems, but everything is OK.', ['a few', 'little', 'much'], 'a few', 'A few with countable plural nouns.'],
+        ['There are ___ buses after midnight.', ['few', 'little', 'a little'], 'few', 'Few with countable plural nouns, negative meaning.']
+      ],
+      gaps: [
+        ['I know ___ people here. (some)', 'a few', 'positive countable'],
+        ['There is ___ sugar in the jar. (some)', 'a little', 'positive uncountable'],
+        ['She has ___ money this month. (not much)', 'little', 'negative uncountable'],
+        ['There are ___ seats left. (not many)', 'few', 'negative countable'],
+        ['We need ___ bit of help.', 'a', 'a bit of']
+      ],
+      orders: [
+        [['I', 'have', 'a few', 'questions'], 'I have a few questions.'],
+        [['There', 'is', 'a little', 'water', 'in the bottle'], 'There is a little water in the bottle.'],
+        [['He', 'has', 'little', 'free time'], 'He has little free time.'],
+        [['Few', 'people', 'came', 'to the meeting'], 'Few people came to the meeting.'],
+        [['Can', 'I', 'have', 'a bit of', 'coffee'], 'Can I have a bit of coffee?']
+      ],
+      errors: [
+        ['I have a little friends.', 'I have a few friends.', 'Use a few with countable plural nouns.'],
+        ['There are a little chairs.', 'There are a few chairs.', 'Use a few with countable plural nouns.'],
+        ['She has few money.', 'She has little money.', 'Money is uncountable.'],
+        ['We have little problems.', 'We have few problems.', 'Problems are countable.'],
+        ['Can I have a few water?', 'Can I have a little water?', 'Water is uncountable.']
+      ],
+      extraChoices: [
+        ['I need ___ minutes.', ['a few', 'a little', 'little'], 'a few'],
+        ['There is ___ coffee in my cup.', ['a little', 'a few', 'few'], 'a little'],
+        ['She has ___ patience with noise.', ['little', 'few', 'a few'], 'little'],
+        ['Only ___ students passed the test.', ['few', 'little', 'a little'], 'few'],
+        ['Add ___ bit of salt.', ['a', 'few', 'many'], 'a']
+      ],
+      productionQuestion: 'Write 5 sentences using a few, few, a little, little or a bit of.',
+      sampleAnswer: 'I have a few close friends. I have a little free time today. There is little sugar at home. Few people use this road at night. I need a bit of help.'
+    },
+    {
+      id: 'a2-grammar-13-infinitive-purpose',
+      order: 13,
+      stage: 'A2.4',
+      title: 'Infinitive of purpose',
+      topic: 'to + verb for reasons',
+      description: 'Students practise using to + verb to explain why someone does something.',
+      focus: ['to + verb', 'purpose', 'why'],
+      choices: [
+        ['I went to the shop ___ some bread.', ['to buy', 'buy', 'for buy'], 'to buy', 'Use to + verb for purpose.'],
+        ['She called me ___ about the lesson.', ['to ask', 'ask', 'for ask'], 'to ask', 'Purpose = to ask.'],
+        ['We use this app ___ English.', ['to practise', 'practise', 'for practise'], 'to practise', 'Use to + base verb.'],
+        ['He opened the window ___ fresh air.', ['to get', 'get', 'for getting'], 'to get', 'Purpose.'],
+        ['They went online ___ tickets.', ['to book', 'book', 'for book'], 'to book', 'Use to + verb.']
+      ],
+      gaps: [
+        ['I study English ___ travel. (purpose)', 'to', 'to + verb'],
+        ['She went to the bank ___ pay a bill.', 'to', 'purpose'],
+        ['We saved money ___ buy a car.', 'to', 'purpose'],
+        ['He used his phone ___ check the time.', 'to', 'purpose'],
+        ['They came early ___ help us.', 'to', 'purpose']
+      ],
+      orders: [
+        [['I', 'went', 'to the cafe', 'to meet', 'my friend'], 'I went to the cafe to meet my friend.'],
+        [['She', 'called', 'to ask', 'a question'], 'She called to ask a question.'],
+        [['We', 'study', 'to improve', 'our English'], 'We study to improve our English.'],
+        [['He', 'went outside', 'to get', 'some air'], 'He went outside to get some air.'],
+        [['They', 'opened', 'the map', 'to find', 'the hotel'], 'They opened the map to find the hotel.']
+      ],
+      errors: [
+        ['I went to the shop for buy milk.', 'I went to the shop to buy milk.', 'Use to + verb.'],
+        ['She called me ask a question.', 'She called me to ask a question.', 'Add to.'],
+        ['We study for improve our English.', 'We study to improve our English.', 'Use to for purpose.'],
+        ['He used a knife to cutting bread.', 'He used a knife to cut bread.', 'Use base verb after to.'],
+        ['They went to the station for meet Anna.', 'They went to the station to meet Anna.', 'Use to + verb.']
+      ],
+      extraChoices: [
+        ['I need a pen ___ this form.', ['to complete', 'complete', 'for complete'], 'to complete'],
+        ['She went home ___ dinner.', ['to cook', 'cook', 'for cook'], 'to cook'],
+        ['We came here ___ you.', ['to see', 'see', 'for seeing'], 'to see'],
+        ['He saved money ___ a bike.', ['to buy', 'buy', 'for buy'], 'to buy'],
+        ['I turned on the light ___ better.', ['to see', 'see', 'for see'], 'to see']
+      ],
+      productionQuestion: 'Write 5 sentences explaining why you do things using to + verb.',
+      sampleAnswer: 'I study English to travel. I use my phone to read messages. I go to the gym to stay healthy. I save money to buy a laptop. I call my friend to talk.'
+    },
+    {
+      id: 'a2-grammar-14-verb-patterns-ing-to',
+      order: 14,
+      stage: 'A2.4',
+      title: 'Verb patterns: -ing or to + infinitive',
+      topic: 'like doing, want to do, need to do',
+      description: 'Students practise common verbs followed by -ing or to + infinitive.',
+      focus: ['verb + -ing', 'verb + to infinitive', 'common patterns'],
+      choices: [
+        ['I enjoy ___ in the evening.', ['reading', 'to read', 'read'], 'reading', 'Enjoy + -ing.'],
+        ['She wants ___ a new job.', ['finding', 'to find', 'find'], 'to find', 'Want + to + verb.'],
+        ['We decided ___ at home.', ['staying', 'to stay', 'stay'], 'to stay', 'Decide + to + verb.'],
+        ['He avoids ___ late.', ['arriving', 'to arrive', 'arrive'], 'arriving', 'Avoid + -ing.'],
+        ['They need ___ earlier.', ['leaving', 'to leave', 'leave'], 'to leave', 'Need + to + verb.']
+      ],
+      gaps: [
+        ['I like ___ coffee in the morning. (drink)', 'drinking', 'like + -ing'],
+        ['She hopes ___ English abroad. (study)', 'to study', 'hope + to'],
+        ['We finished ___ the report. (write)', 'writing', 'finish + -ing'],
+        ['He agreed ___ us. (help)', 'to help', 'agree + to'],
+        ['They plan ___ next year. (travel)', 'to travel', 'plan + to']
+      ],
+      orders: [
+        [['I', 'enjoy', 'listening', 'to music'], 'I enjoy listening to music.'],
+        [['She', 'wants', 'to learn', 'Spanish'], 'She wants to learn Spanish.'],
+        [['We', 'finished', 'cleaning', 'the room'], 'We finished cleaning the room.'],
+        [['He', 'decided', 'to call', 'his sister'], 'He decided to call his sister.'],
+        [['They', 'avoid', 'eating', 'late'], 'They avoid eating late.']
+      ],
+      errors: [
+        ['I enjoy to cook.', 'I enjoy cooking.', 'Enjoy + -ing.'],
+        ['She wants finding a job.', 'She wants to find a job.', 'Want + to.'],
+        ['We decided staying home.', 'We decided to stay home.', 'Decide + to.'],
+        ['He avoids to drive at night.', 'He avoids driving at night.', 'Avoid + -ing.'],
+        ['They need leave now.', 'They need to leave now.', 'Need + to.']
+      ],
+      extraChoices: [
+        ['I finished ___ my homework.', ['doing', 'to do', 'do'], 'doing'],
+        ['She promised ___ me.', ['helping', 'to help', 'help'], 'to help'],
+        ['He keeps ___ the same mistake.', ['making', 'to make', 'make'], 'making'],
+        ['We would like ___ coffee.', ['having', 'to have', 'have'], 'to have'],
+        ['They love ___ together.', ['cooking', 'to cooking', 'cook'], 'cooking']
+      ],
+      productionQuestion: 'Write 5 sentences with verbs followed by -ing or to + infinitive.',
+      sampleAnswer: 'I enjoy reading books. I want to improve my English. I need to practise more. I finished cleaning my room. I decided to study tonight.'
+    },
+    {
+      id: 'a2-grammar-15-ed-ing-adjectives',
+      order: 15,
+      stage: 'A2.5',
+      title: 'Adjectives ending in -ed and -ing',
+      topic: 'feelings and descriptions',
+      description: 'Students practise the difference between bored and boring, excited and exciting.',
+      focus: ['-ed adjectives', '-ing adjectives', 'feelings'],
+      choices: [
+        ['The film was very ___.', ['bored', 'boring', 'bore'], 'boring', '-ing describes the thing.'],
+        ['I was ___ during the long meeting.', ['bored', 'boring', 'bore'], 'bored', '-ed describes how a person feels.'],
+        ['She is ___ about her trip.', ['excited', 'exciting', 'excite'], 'excited', 'A person feels excited.'],
+        ['The news was ___.', ['surprised', 'surprising', 'surprise'], 'surprising', 'News can be surprising.'],
+        ['We were ___ after the long walk.', ['tired', 'tiring', 'tire'], 'tired', 'People feel tired.']
+      ],
+      gaps: [
+        ['This book is very ___. (interest)', 'interesting', 'thing = -ing'],
+        ['I am ___ in history. (interest)', 'interested', 'person feeling = -ed'],
+        ['The journey was ___. (tire)', 'tiring', 'thing = -ing'],
+        ['They were ___ by the story. (surprise)', 'surprised', 'people feel -ed'],
+        ['The game was ___. (excite)', 'exciting', 'thing = -ing']
+      ],
+      orders: [
+        [['The lesson', 'was', 'interesting'], 'The lesson was interesting.'],
+        [['I', 'am', 'interested', 'in music'], 'I am interested in music.'],
+        [['The trip', 'was', 'tiring'], 'The trip was tiring.'],
+        [['She', 'felt', 'excited', 'about the news'], 'She felt excited about the news.'],
+        [['That', 'was', 'a surprising', 'answer'], 'That was a surprising answer.']
+      ],
+      errors: [
+        ['I am boring in this class.', 'I am bored in this class.', 'A person feels bored.'],
+        ['The film was bored.', 'The film was boring.', 'The thing is boring.'],
+        ['She is exciting about the party.', 'She is excited about the party.', 'A person feels excited.'],
+        ['The news was surprised.', 'The news was surprising.', 'The thing is surprising.'],
+        ['We had a tired journey.', 'We had a tiring journey.', 'The journey is tiring.']
+      ],
+      extraChoices: [
+        ['I felt ___ after work.', ['tired', 'tiring', 'tire'], 'tired'],
+        ['The story was ___.', ['amused', 'amusing', 'amuse'], 'amusing'],
+        ['He was ___ by the noise.', ['annoyed', 'annoying', 'annoy'], 'annoyed'],
+        ['The noise was ___.', ['annoyed', 'annoying', 'annoy'], 'annoying'],
+        ['They were ___ to hear the result.', ['surprised', 'surprising', 'surprise'], 'surprised']
+      ],
+      productionQuestion: 'Write 5 sentences with -ed and -ing adjectives.',
+      sampleAnswer: 'The film was interesting. I was interested in the story. The journey was tiring. I felt tired after work. The news was surprising.'
+    },
+    {
+      id: 'a2-grammar-16-adjectives-prepositions',
+      order: 16,
+      stage: 'A2.5',
+      title: 'Adjectives and prepositions',
+      topic: 'interested in, good at, afraid of',
+      description: 'Students practise common adjective + preposition combinations.',
+      focus: ['adjective + preposition', 'fixed phrases', 'feelings and abilities'],
+      choices: [
+        ['She is interested ___ photography.', ['in', 'on', 'at'], 'in', 'Interested in.'],
+        ['He is good ___ maths.', ['at', 'in', 'for'], 'at', 'Good at.'],
+        ['I am afraid ___ dogs.', ['of', 'from', 'about'], 'of', 'Afraid of.'],
+        ['They are proud ___ their daughter.', ['of', 'for', 'with'], 'of', 'Proud of.'],
+        ['We are worried ___ the test.', ['about', 'of', 'at'], 'about', 'Worried about.']
+      ],
+      gaps: [
+        ['I am bad ___ remembering names.', 'at', 'bad at'],
+        ['She is excited ___ her holiday.', 'about', 'excited about'],
+        ['He is famous ___ his music.', 'for', 'famous for'],
+        ['We are ready ___ the lesson.', 'for', 'ready for'],
+        ['They are similar ___ each other.', 'to', 'similar to']
+      ],
+      orders: [
+        [['She', 'is', 'interested', 'in art'], 'She is interested in art.'],
+        [['He', 'is', 'good', 'at cooking'], 'He is good at cooking.'],
+        [['I', 'am', 'afraid', 'of spiders'], 'I am afraid of spiders.'],
+        [['They', 'are', 'proud', 'of their work'], 'They are proud of their work.'],
+        [['We', 'are', 'ready', 'for the test'], 'We are ready for the test.']
+      ],
+      errors: [
+        ['I am interested on music.', 'I am interested in music.', 'Interested in.'],
+        ['She is good in English.', 'She is good at English.', 'Good at.'],
+        ['He is afraid from heights.', 'He is afraid of heights.', 'Afraid of.'],
+        ['They are worried of the exam.', 'They are worried about the exam.', 'Worried about.'],
+        ['This bag is similar with mine.', 'This bag is similar to mine.', 'Similar to.']
+      ],
+      extraChoices: [
+        ['I am excited ___ the weekend.', ['about', 'of', 'at'], 'about'],
+        ['She is responsible ___ the tickets.', ['for', 'of', 'to'], 'for'],
+        ['He is different ___ his brother.', ['from', 'to', 'at'], 'from'],
+        ['We are pleased ___ the result.', ['with', 'about', 'at'], 'with'],
+        ['They are ready ___ dinner.', ['for', 'to', 'of'], 'for']
+      ],
+      productionQuestion: 'Write 5 sentences about yourself using adjective + preposition phrases.',
+      sampleAnswer: 'I am interested in languages. I am good at cooking. I am afraid of snakes. I am excited about summer. I am ready for the next lesson.'
+    },
+    {
+      id: 'a2-grammar-17-modals-should-have-to-must',
+      order: 17,
+      stage: 'A2.5',
+      title: 'Modals: should, have to, must not',
+      topic: 'advice, obligation and rules',
+      description: 'Students practise advice, rules and obligation with should, have to and must not.',
+      focus: ['should', 'have to', 'must not', 'rules'],
+      choices: [
+        ['You ___ see a doctor if you feel ill.', ['should', 'have', 'must not'], 'should', 'Should gives advice.'],
+        ['I ___ wear a uniform at work.', ['have to', 'should to', 'must not'], 'have to', 'Have to shows obligation.'],
+        ['You ___ smoke here. It is not allowed.', ['must not', 'should', 'have to'], 'must not', 'Must not means it is not allowed.'],
+        ['She ___ wake up early tomorrow.', ['has to', 'have to', 'should to'], 'has to', 'Use has to with she.'],
+        ['We ___ hurry. The train leaves soon.', ['should', 'must not', 'do not have'], 'should', 'Advice or strong suggestion.']
+      ],
+      gaps: [
+        ['You ___ drink more water. (advice)', 'should', 'advice'],
+        ['He ___ to finish the report today. (obligation)', 'has', 'has to'],
+        ['We ___ not park here. (not allowed)', 'must', 'must not'],
+        ['I ___ to pay the bill now. (obligation)', 'have', 'have to'],
+        ['She ___ not eat so much sugar. (advice)', 'should', 'should not']
+      ],
+      orders: [
+        [['You', 'should', 'rest', 'today'], 'You should rest today.'],
+        [['I', 'have to', 'work', 'on Saturday'], 'I have to work on Saturday.'],
+        [['She', 'has to', 'call', 'her manager'], 'She has to call her manager.'],
+        [['You', 'must not', 'use', 'your phone here'], 'You must not use your phone here.'],
+        [['Should', 'we', 'take', 'a taxi'], 'Should we take a taxi?']
+      ],
+      errors: [
+        ['You should to study more.', 'You should study more.', 'Use should + base verb.'],
+        ['She have to leave now.', 'She has to leave now.', 'Use has to with she.'],
+        ['You must to not smoke here.', 'You must not smoke here.', 'Use must not + base verb.'],
+        ['I has to wear a badge.', 'I have to wear a badge.', 'Use have to with I.'],
+        ['He shoulds call his mother.', 'He should call his mother.', 'Should does not change.']
+      ],
+      extraChoices: [
+        ['You ___ eat more vegetables.', ['should', 'must not', 'has to'], 'should'],
+        ['They ___ bring their passports.', ['have to', 'has to', 'should to'], 'have to'],
+        ['He ___ drive too fast.', ['must not', 'have to', 'should'], 'must not'],
+        ['Do I ___ pay now?', ['have to', 'must to', 'should to'], 'have to'],
+        ['She ___ ask for help.', ['should', 'shoulds', 'must to'], 'should']
+      ],
+      productionQuestion: 'Write 5 sentences giving advice, obligations or rules.',
+      sampleAnswer: 'You should sleep more. I have to work tomorrow. She has to study tonight. You must not smoke here. We should take a taxi.'
+    },
+    {
+      id: 'a2-grammar-18-review',
+      order: 18,
+      stage: 'A2.5',
+      title: 'A2 grammar review',
+      topic: 'mixed A2 grammar test',
+      description: 'Students review the key A2 grammar points in a mixed practice lesson.',
+      focus: ['A2 review', 'mixed grammar', 'short writing'],
+      teacherNotes: 'Use this as a checkpoint before moving the student to B1 preparation. Ask the student to explain any answers they found difficult.',
+      choices: [
+        ['I ___ dinner when my friend arrived.', ['cooked', 'was cooking', 'cook'], 'was cooking', 'Past continuous for action in progress.'],
+        ['This lesson is ___ than the last one.', ['easier', 'more easy', 'easiest'], 'easier', 'Comparative adjective.'],
+        ['She wants ___ a new language.', ['learning', 'to learn', 'learn'], 'to learn', 'Want + to.'],
+        ['You ___ not use your phone here.', ['must', 'should', 'have'], 'must', 'Must not means not allowed.'],
+        ['There is ___ milk in the fridge.', ['some', 'many', 'few'], 'some', 'Milk is uncountable.']
+      ],
+      gaps: [
+        ['I ___ to the supermarket yesterday. (go)', 'went', 'past simple'],
+        ['They are ___ to travel next month. (going)', 'going', 'going to future'],
+        ['This is ___ most interesting book in the shop.', 'the', 'superlative'],
+        ['I went to the cafe ___ meet my friend.', 'to', 'purpose'],
+        ['She is interested ___ art.', 'in', 'adjective + preposition']
+      ],
+      orders: [
+        [['Did', 'you', 'watch', 'the film'], 'Did you watch the film?'],
+        [['I', 'am going to', 'call', 'Anna'], 'I am going to call Anna.'],
+        [['This', 'is', 'the best', 'answer'], 'This is the best answer.'],
+        [['You', 'should', 'ask', 'for help'], 'You should ask for help.'],
+        [['She', 'enjoys', 'reading', 'at night'], 'She enjoys reading at night.']
+      ],
+      errors: [
+        ['Did you went home?', 'Did you go home?', 'Use base verb after did.'],
+        ['This is more cheap.', 'This is cheaper.', 'Use cheaper.'],
+        ['I enjoy to swim.', 'I enjoy swimming.', 'Enjoy + -ing.'],
+        ['She is good in English.', 'She is good at English.', 'Good at.'],
+        ['You should to rest.', 'You should rest.', 'Should + base verb.']
+      ],
+      extraChoices: [
+        ['She ___ probably call later.', ['will', 'is', 'does'], 'will'],
+        ['How ___ money do you need?', ['much', 'many', 'some'], 'much'],
+        ['I am ___ in this story.', ['interested', 'interesting', 'interest'], 'interested'],
+        ['We went to ___ cinema.', ['the', 'a', 'no article'], 'the'],
+        ['He has ___ finish the report.', ['to', 'for', 'at'], 'to']
+      ],
+      productionQuestion: 'Write a short A2 paragraph of 6-8 sentences using at least five grammar points from this review.',
+      sampleAnswer: 'Last weekend I went to the city center. I was walking when it started raining. I went to a cafe to wait for my friend. The cafe was cheaper than the restaurant near my house. Next weekend I am going to visit my parents. I think it will be fun.'
+    }
+  ].map(buildA2GrammarReadyLesson);
   const READY_VOCABULARY_LESSONS_A2 = [];
   const READY_READING_LESSONS_A2 = [];
   const READY_WRITING_LESSONS_A2 = [];
