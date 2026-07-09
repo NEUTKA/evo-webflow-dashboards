@@ -111,6 +111,19 @@
     extra_practice_needed: 'Extra practice needed'
   };
 
+  const READY_LESSON_LEVELS = [
+    {
+      id: 'A1',
+      label: 'A1',
+      description: 'Starter ready-made lesson pathways.'
+    },
+    {
+      id: 'A2',
+      label: 'A2',
+      description: 'Prepared space for the next grammar, vocabulary, reading, writing and listening pathways.'
+    }
+  ];
+
   const READY_LESSON_SKILLS = [
     {
       id: 'grammar',
@@ -148,6 +161,29 @@
       plannedTopics: ['Names and numbers', 'Classroom instructions', 'Daily routine', 'Shopping', 'Directions', 'Short conversation']
     }
   ];
+
+  const READY_LESSON_A2_PATHWAYS = {
+    grammar: {
+      description: 'A2 grammar pathway space for longer sentence control, past forms, comparisons and practical accuracy.',
+      plannedTopics: ['Past simple', 'Past continuous', 'Comparatives', 'Superlatives', 'Going to / will', 'Should / have to']
+    },
+    vocabulary: {
+      description: 'A2 vocabulary pathway space for everyday situations, opinions, travel, work and more precise descriptions.',
+      plannedTopics: ['Travel', 'Work and jobs', 'Health', 'Shopping', 'Feelings and opinions', 'Technology']
+    },
+    reading: {
+      description: 'A2 reading pathway space for short articles, messages, reviews, notices and everyday information texts.',
+      plannedTopics: ['Short article', 'Review', 'Travel notice', 'Work email', 'Story', 'Advice text']
+    },
+    writing: {
+      description: 'A2 writing pathway space for guided paragraphs, informal emails, opinions, stories and practical messages.',
+      plannedTopics: ['Informal email', 'Opinion paragraph', 'Story', 'Review', 'Advice message', 'A2 writing review']
+    },
+    listening: {
+      description: 'A2 listening pathway space for short conversations, plans, opinions, instructions and everyday audio tasks.',
+      plannedTopics: ['Travel conversation', 'Work routine', 'Weekend plans', 'Opinions', 'Directions', 'A2 listening review']
+    }
+  };
 
   const READY_GRAMMAR_LESSONS_A1 = [
     {
@@ -4052,6 +4088,12 @@
     }
   ].map(buildListeningReadyLesson);
 
+  const READY_GRAMMAR_LESSONS_A2 = [];
+  const READY_VOCABULARY_LESSONS_A2 = [];
+  const READY_READING_LESSONS_A2 = [];
+  const READY_WRITING_LESSONS_A2 = [];
+  const READY_LISTENING_LESSONS_A2 = [];
+
   const READY_LESSON_TASK_EXTENSIONS = {
     'be-profile-choice': {
       items: [
@@ -4373,6 +4415,7 @@
     templateEditorOpen: false,
     activeView: 'overview',
     draftAssignmentId: null,
+    readyLessonLevel: 'A1',
     readyLessonSkill: 'grammar',
     assignmentDraft: {
       id: '',
@@ -4670,13 +4713,54 @@
     return READY_LESSON_SKILLS.some((skill) => skill.id === skillId) ? skillId : 'grammar';
   }
 
+  function getReadyLessonLevelId(value) {
+    const levelId = String(value || 'A1').toUpperCase();
+    return READY_LESSON_LEVELS.some((level) => level.id === levelId) ? levelId : 'A1';
+  }
+
+  function getReadyLessonLevelConfig(value) {
+    const levelId = getReadyLessonLevelId(value);
+    return READY_LESSON_LEVELS.find((level) => level.id === levelId) || READY_LESSON_LEVELS[0];
+  }
+
   function getReadyLessonSkillConfig(value) {
     const skillId = getReadyLessonSkillId(value);
     return READY_LESSON_SKILLS.find((skill) => skill.id === skillId) || READY_LESSON_SKILLS[0];
   }
 
-  function getReadyLessonsForSkill(value) {
+  function getReadyLessonPathway(skillId, levelId) {
+    const skill = getReadyLessonSkillConfig(skillId);
+    const level = getReadyLessonLevelId(levelId);
+    return `${level} ${skill.label}`;
+  }
+
+  function getReadyLessonPathwayDescription(skillId, levelId) {
+    const skill = getReadyLessonSkillConfig(skillId);
+    const level = getReadyLessonLevelId(levelId);
+    if (level === 'A2') return READY_LESSON_A2_PATHWAYS[skill.id]?.description || `A2 ${skill.label} pathway space is ready to be filled next.`;
+    return skill.description || `${level} ${skill.label} ready lessons.`;
+  }
+
+  function getReadyLessonPlannedTopics(skillId, levelId) {
+    const skill = getReadyLessonSkillConfig(skillId);
+    const level = getReadyLessonLevelId(levelId);
+    if (level === 'A2') return READY_LESSON_A2_PATHWAYS[skill.id]?.plannedTopics || [];
+    return skill.plannedTopics || [];
+  }
+
+  function getReadyLessonsForSkill(value, levelValue = 'A1') {
     const skillId = getReadyLessonSkillId(value);
+    const levelId = getReadyLessonLevelId(levelValue);
+
+    if (levelId === 'A2') {
+      if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A2;
+      if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A2;
+      if (skillId === 'reading') return READY_READING_LESSONS_A2;
+      if (skillId === 'writing') return READY_WRITING_LESSONS_A2;
+      if (skillId === 'listening') return READY_LISTENING_LESSONS_A2;
+      return [];
+    }
+
     if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
     if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
     if (skillId === 'reading') return READY_READING_LESSONS_A1;
@@ -4697,9 +4781,11 @@
     return `Complete all sections of this ${String(skill?.label || 'ready').toLowerCase()} lesson, then submit your work for teacher review.`;
   }
 
-  function getReadyLessonById(lessonId, skillId = 'grammar') {
-    const lessons = getReadyLessonsForSkill(skillId);
-    return lessons.find((lesson) => lesson.id === lessonId) || lessons[0] || null;
+  function getReadyLessonById(lessonId, skillId = 'grammar', levelId = 'A1') {
+    const safeLevelId = getReadyLessonLevelId(levelId);
+    const lessons = getReadyLessonsForSkill(skillId, safeLevelId);
+    const lesson = lessons.find((item) => item.id === lessonId) || lessons[0] || null;
+    return lesson ? { ...lesson, level: safeLevelId } : null;
   }
 
   function getReadyLessonDefaultTaskIds(lesson) {
@@ -4708,12 +4794,15 @@
 
   function ensureReadyLessonDraft() {
     const current = state.readyLessonDraft || {};
+    const levelId = getReadyLessonLevelId(state.readyLessonLevel || current.level || 'A1');
     const skillId = getReadyLessonSkillId(state.readyLessonSkill || current.skill || 'grammar');
+    state.readyLessonLevel = levelId;
     state.readyLessonSkill = skillId;
 
-    const lesson = getReadyLessonById(current.lessonId, skillId);
+    const lesson = getReadyLessonById(current.lessonId, skillId, levelId);
     if (!lesson) {
       state.readyLessonDraft = {
+        level: levelId,
         skill: skillId,
         lessonId: '',
         studentId: current.studentId || '',
@@ -4724,8 +4813,9 @@
       return null;
     }
 
-    if (current.skill !== skillId || current.lessonId !== lesson.id || !Array.isArray(current.selectedTaskIds) || !current.selectedTaskIds.length) {
+    if (current.level !== levelId || current.skill !== skillId || current.lessonId !== lesson.id || !Array.isArray(current.selectedTaskIds) || !current.selectedTaskIds.length) {
       state.readyLessonDraft = {
+        level: levelId,
         skill: skillId,
         lessonId: lesson.id,
         studentId: current.studentId || '',
@@ -4900,6 +4990,7 @@
       },
       content: {
         lesson_id: lesson.id,
+        level: lesson.level || '',
         skill: lesson.skill || 'grammar',
         stage: lesson.stage,
         title: lesson.title,
@@ -4983,9 +5074,14 @@
     const lesson = ensureReadyLessonDraft();
     const draft = state.readyLessonDraft || {};
     const students = state.students || [];
+    const activeLevelId = getReadyLessonLevelId(state.readyLessonLevel || draft.level || 'A1');
+    const activeLevel = getReadyLessonLevelConfig(activeLevelId);
     const activeSkillId = getReadyLessonSkillId(state.readyLessonSkill || draft.skill || 'grammar');
     const activeSkill = getReadyLessonSkillConfig(activeSkillId);
-    const readyLessons = getReadyLessonsForSkill(activeSkillId);
+    const activePathway = getReadyLessonPathway(activeSkillId, activeLevelId);
+    const activeDescription = getReadyLessonPathwayDescription(activeSkillId, activeLevelId);
+    const plannedTopics = getReadyLessonPlannedTopics(activeSkillId, activeLevelId);
+    const readyLessons = getReadyLessonsForSkill(activeSkillId, activeLevelId);
     const selectedTasks = lesson ? getReadyLessonSelectedTasks(lesson) : [];
     const selectedIds = new Set(draft.selectedTaskIds || []);
     const extraIds = new Set(draft.extraTaskIds || []);
@@ -5004,11 +5100,22 @@
         }).join('')
       : '<option value="">No students available</option>';
 
+    const levelTabs = READY_LESSON_LEVELS.map((level) => {
+      const count = READY_LESSON_SKILLS.reduce((sum, skill) => sum + getReadyLessonsForSkill(skill.id, level.id).length, 0);
+      const isActive = level.id === activeLevelId;
+      return `
+        <button class="td-ready-level-tab ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-level" data-level-id="${escapeHtml(level.id)}">
+          <span>${escapeHtml(level.label)}</span>
+          <small>${count ? `${escapeHtml(count)} lessons` : 'Setup'}</small>
+        </button>
+      `;
+    }).join('');
+
     const skillTabs = READY_LESSON_SKILLS.map((skill) => {
-      const count = getReadyLessonsForSkill(skill.id).length;
+      const count = getReadyLessonsForSkill(skill.id, activeLevelId).length;
       const isActive = skill.id === activeSkillId;
       return `
-        <button class="td-ready-skill-tab ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-skill" data-skill-id="${escapeHtml(skill.id)}">
+        <button class="td-ready-skill-tab ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-skill" data-level-id="${escapeHtml(activeLevelId)}" data-skill-id="${escapeHtml(skill.id)}">
           <span>${escapeHtml(skill.label)}</span>
           <small>${count ? `${escapeHtml(count)} lessons` : 'Next'}</small>
         </button>
@@ -5018,7 +5125,7 @@
     const lessonCards = readyLessons.length ? readyLessons.map((item) => {
       const isActive = item.id === selectedLessonId;
       return `
-        <button class="td-ready-card ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-select" data-skill-id="${escapeHtml(activeSkillId)}" data-lesson-id="${escapeHtml(item.id)}">
+        <button class="td-ready-card ${isActive ? 'is-active' : ''}" type="button" data-action="ready-lesson-select" data-level-id="${escapeHtml(activeLevelId)}" data-skill-id="${escapeHtml(activeSkillId)}" data-lesson-id="${escapeHtml(item.id)}">
           <span class="td-ready-order">${escapeHtml(item.order)}</span>
           <span class="td-ready-card-main">
             <strong>${escapeHtml(item.title)}</strong>
@@ -5028,8 +5135,8 @@
       `;
     }).join('') : `
       <div class="td-ready-empty-mini">
-        <strong>${escapeHtml(activeSkill.pathway)}</strong>
-        <span>${escapeHtml(activeSkill.description)}</span>
+        <strong>${escapeHtml(activePathway)}</strong>
+        <span>${escapeHtml(activeDescription)}</span>
       </div>
     `;
 
@@ -5048,15 +5155,19 @@
         <div class="td-head">
           <div class="td-kicker">Ready lessons</div>
           <h2 class="td-title" style="font-size:24px;">Ready lessons</h2>
-          <div class="td-sub">Send complete ready-made lessons in one click. Start with A1 Grammar now, then build Vocabulary, Reading, Writing and Listening pathways in the same place.</div>
+          <div class="td-sub">Send complete ready-made lessons in one click. Choose a level, then pick Grammar, Vocabulary, Reading, Writing or Listening.</div>
         </div>
         <div class="td-body">
-          <div class="td-ready-skill-tabs">${skillTabs}</div>
+          <div class="td-ready-toolbar">
+            <div class="td-ready-level-tabs">${levelTabs}</div>
+            <div class="td-note">${escapeHtml(activeLevel.description)}</div>
+            <div class="td-ready-skill-tabs">${skillTabs}</div>
+          </div>
           <div class="td-ready-layout">
             <div class="td-ready-sidebar">
               <div class="td-section-headline">
                 <div>
-                  <div class="td-name" style="font-size:18px;">${escapeHtml(activeSkill.pathway)}</div>
+                  <div class="td-name" style="font-size:18px;">${escapeHtml(activePathway)}</div>
                   <div class="td-note">${readyLessons.length ? 'Lessons are ordered from basic practice to review.' : 'This pathway is ready to be filled next.'}</div>
                 </div>
                 <span class="td-type-badge">${escapeHtml(readyLessons.length ? `${readyLessons.length} lessons` : 'Planned')}</span>
@@ -5125,11 +5236,11 @@
                 </div>
               ` : `
                 <div class="td-ready-empty-state">
-                  <div class="td-kicker">${escapeHtml(activeSkill.pathway)}</div>
-                  <h3>${escapeHtml(activeSkill.label)} ready lessons are next</h3>
-                  <p>${escapeHtml(activeSkill.description)}</p>
+                  <div class="td-kicker">${escapeHtml(activePathway)}</div>
+                  <h3>${escapeHtml(activePathway)} ready lessons are next</h3>
+                  <p>${escapeHtml(activeDescription)}</p>
                   <div class="td-ready-planned-list">
-                    ${(activeSkill.plannedTopics || []).map((topic) => `<span>${escapeHtml(topic)}</span>`).join('')}
+                    ${plannedTopics.map((topic) => `<span>${escapeHtml(topic)}</span>`).join('')}
                   </div>
                 </div>
               `}
@@ -8208,7 +8319,13 @@ function renderStudentTemplateAnswers(assignment) {
       .td-template-answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .td-template-answer-value{border:1px solid #e6ebf1;border-radius:12px;padding:10px 12px;background:#fcfcfd;color:#111213;font-size:14px;line-height:1.6;white-space:pre-wrap}
       .td-template-answer-empty{border:1px dashed #cfd8e3;border-radius:12px;padding:10px 12px;background:#fbfdff;color:#667085;font-size:14px}
-      .td-ready-skill-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+      .td-ready-toolbar{display:grid;gap:12px;margin-bottom:16px}
+      .td-ready-level-tabs{display:inline-flex;align-items:center;gap:4px;width:max-content;max-width:100%;padding:4px;border:1px solid #dbe7f3;border-radius:12px;background:#f8fbff}
+      .td-ready-level-tab{appearance:none;border:0;background:transparent;color:#344054;border-radius:9px;padding:8px 12px;font:800 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+      .td-ready-level-tab small{font-size:11px;color:#667085;font-weight:800}
+      .td-ready-level-tab.is-active{background:#111213;color:#fff}
+      .td-ready-level-tab.is-active small{color:#e5e7eb}
+      .td-ready-skill-tabs{display:flex;flex-wrap:wrap;gap:8px}
       .td-ready-skill-tab{appearance:none;border:1px solid #dbe7f3;background:#f8fbff;color:#175cd3;border-radius:999px;padding:9px 12px;font:800 13px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
       .td-ready-skill-tab small{font-size:11px;color:#667085;font-weight:800}
       .td-ready-skill-tab.is-active{background:#111213;border-color:#111213;color:#fff}
@@ -8919,6 +9036,11 @@ assignments = (assignmentsRows || []).map((a) => {
         return;
       }
 
+      if (action === 'ready-lesson-level') {
+        handleReadyLessonLevelSelect(button);
+        return;
+      }
+
       if (action === 'ready-lesson-reset') {
         handleReadyLessonReset();
         return;
@@ -9481,13 +9603,37 @@ assignments = (assignmentsRows || []).map((a) => {
     }
   }
 
-  function handleReadyLessonSkillSelect(button) {
-    const skillId = getReadyLessonSkillId(button.getAttribute('data-skill-id') || 'grammar');
+  function handleReadyLessonLevelSelect(button) {
+    const levelId = getReadyLessonLevelId(button.getAttribute('data-level-id') || 'A1');
     const current = state.readyLessonDraft || {};
-    const firstLesson = getReadyLessonById('', skillId);
+    const skillId = getReadyLessonSkillId(state.readyLessonSkill || current.skill || 'grammar');
+    const firstLesson = getReadyLessonById('', skillId, levelId);
 
+    state.readyLessonLevel = levelId;
     state.readyLessonSkill = skillId;
     state.readyLessonDraft = {
+      level: levelId,
+      skill: skillId,
+      lessonId: firstLesson?.id || '',
+      studentId: current.studentId || '',
+      dueDate: current.dueDate || '',
+      selectedTaskIds: firstLesson ? getReadyLessonDefaultTaskIds(firstLesson) : [],
+      extraTaskIds: []
+    };
+    state.activeView = 'ready_lessons';
+    renderDashboard();
+  }
+
+  function handleReadyLessonSkillSelect(button) {
+    const skillId = getReadyLessonSkillId(button.getAttribute('data-skill-id') || 'grammar');
+    const levelId = getReadyLessonLevelId(button.getAttribute('data-level-id') || state.readyLessonLevel || 'A1');
+    const current = state.readyLessonDraft || {};
+    const firstLesson = getReadyLessonById('', skillId, levelId);
+
+    state.readyLessonLevel = levelId;
+    state.readyLessonSkill = skillId;
+    state.readyLessonDraft = {
+      level: levelId,
       skill: skillId,
       lessonId: firstLesson?.id || '',
       studentId: current.studentId || '',
@@ -9502,12 +9648,15 @@ assignments = (assignmentsRows || []).map((a) => {
   function handleReadyLessonSelect(button) {
     const lessonId = button.getAttribute('data-lesson-id') || '';
     const skillId = getReadyLessonSkillId(button.getAttribute('data-skill-id') || state.readyLessonSkill || 'grammar');
-    const lesson = getReadyLessonById(lessonId, skillId);
+    const levelId = getReadyLessonLevelId(button.getAttribute('data-level-id') || state.readyLessonLevel || 'A1');
+    const lesson = getReadyLessonById(lessonId, skillId, levelId);
     if (!lesson) return;
 
     const current = state.readyLessonDraft || {};
+    state.readyLessonLevel = levelId;
     state.readyLessonSkill = skillId;
     state.readyLessonDraft = {
+      level: levelId,
       skill: skillId,
       lessonId: lesson.id,
       studentId: current.studentId || '',
@@ -9624,6 +9773,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
     try {
       const skillId = getReadyLessonSkillId(lesson.skill || draft.skill || state.readyLessonSkill || 'grammar');
+      const levelId = getReadyLessonLevelId(lesson.level || draft.level || state.readyLessonLevel || 'A1');
       const readyLessonSchema = buildReadyLessonSchemaJson(lesson, selectedTasks);
       const readyLessonInstruction = getReadyLessonInstruction(skillId);
 
@@ -9642,6 +9792,7 @@ assignments = (assignmentsRows || []).map((a) => {
           assignment_type: getReadyLessonAssignmentType(skillId),
           assignment_priority: 'required',
           is_optional: false,
+          ready_lesson_level: levelId,
           ready_lesson_skill: skillId,
           ready_lesson_id: lesson.id,
           ready_lesson_stage: lesson.stage,
@@ -9678,6 +9829,7 @@ assignments = (assignmentsRows || []).map((a) => {
       finishButtonFeedbackBySelector('[data-action="ready-lesson-send"]', original, true, 'Sent');
 
       trackEvent('send_ready_lesson', {
+        lesson_level: levelId,
         lesson_skill: skillId,
         lesson_id: lesson.id,
         sections_count: selectedTasks.length,
