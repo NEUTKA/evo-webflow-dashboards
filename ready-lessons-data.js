@@ -1781,6 +1781,7 @@
     return {
       id: config.id,
       order: config.order,
+      level: config.level || (String(config.stage || '').startsWith('A2') ? 'A2' : 'A1'),
       skill: 'reading',
       stage: config.stage || 'A1',
       title: config.title,
@@ -5254,7 +5255,746 @@
       sampleAnswer: 'We made an arrangement to study together. It was a good choice because I needed help. The reason was simple. I wanted a solution to my problem. Now I am making progress.'
     }
   ].map(buildVocabularyReadyLesson);
-  const READY_READING_LESSONS_A2 = [];
+  const READY_READING_LESSONS_A2 = [
+    {
+      id: 'a2-reading-01-weekend-trip',
+      order: 1,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'A weekend trip',
+      topic: 'travel blog and short trip',
+      description: 'Students read a short travel blog about a weekend trip and identify key details.',
+      readingText: 'Last weekend, Maya and her friend Leo took a train to Lake Town. The journey took two hours, but it was comfortable because the train was not crowded. They arrived at 10:30 and walked to a small guesthouse near the station. After checking in, they visited the old market and tried local cheese. In the afternoon, they rented bikes and rode around the lake. The weather was cool but sunny. On Sunday morning, they climbed a small hill to see the view. Maya wants to go back in summer because she would like to swim in the lake.',
+      focus: ['travel details', 'past simple', 'sequence of events'],
+      words: [
+        { word: 'journey', meaning: 'travel from one place to another' },
+        { word: 'crowded', meaning: 'full of many people' },
+        { word: 'guesthouse', meaning: 'a small place where visitors can sleep' },
+        { word: 'rented', meaning: 'paid to use something for a short time' },
+        { word: 'view', meaning: 'what you can see from a place' }
+      ],
+      questions: [
+        { question: 'How did Maya and Leo travel to Lake Town?', options: ['By train', 'By bus', 'By car'], answer: 'By train' },
+        { question: 'How long did the journey take?', options: ['Two hours', 'Thirty minutes', 'Four hours'], answer: 'Two hours' },
+        { question: 'Where was the guesthouse?', options: ['Near the station', 'Near the lake', 'In the old market'], answer: 'Near the station' },
+        { question: 'What did they do in the afternoon?', options: ['Rented bikes', 'Went swimming', 'Visited a museum'], answer: 'Rented bikes' },
+        { question: 'Why does Maya want to return in summer?', options: ['To swim in the lake', 'To buy cheese', 'To take the train again'], answer: 'To swim in the lake' }
+      ],
+      details: [
+        { sentence: 'Maya travelled with her friend ___.', answer: 'Leo' },
+        { sentence: 'They arrived at ___.', answer: '10:30' },
+        { sentence: 'They tried local ___.', answer: 'cheese' },
+        { sentence: 'The weather was cool but ___.', answer: 'sunny' },
+        { sentence: 'On Sunday morning, they climbed a small ___.', answer: 'hill' }
+      ],
+      trueFalse: [
+        { sentence: 'The train was very crowded.', answer: false },
+        { sentence: 'They stayed near the station.', answer: true },
+        { sentence: 'They rented bikes around the lake.', answer: true },
+        { sentence: 'They swam in the lake last weekend.', answer: false },
+        { sentence: 'Maya would like to visit Lake Town again.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a short trip you took or would like to take.',
+      sampleAnswer: 'I would like to take a train to a small town. I want to stay in a guesthouse near the center. I will visit the market and try local food. I would like to rent a bike. I hope the weather is sunny.'
+    },
+    {
+      id: 'a2-reading-02-hotel-review',
+      order: 2,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'A hotel review',
+      topic: 'hotel stay and online review',
+      description: 'Students read an online hotel review and understand positive and negative points.',
+      readingText: 'Review: City Bridge Hotel\nI stayed at City Bridge Hotel for three nights during a work trip. The hotel is in a useful location, only five minutes from the metro station. My room was small but clean, and the bed was very comfortable. Breakfast was included in the price, but it finished at 9:00, which was a little early for me. The staff at reception were polite and helped me print my boarding pass. The only real problem was the noise from the street at night. I would stay there again, but next time I will ask for a room at the back of the hotel.',
+      focus: ['reviews', 'advantages and disadvantages', 'hotel vocabulary'],
+      words: [
+        { word: 'location', meaning: 'the place where something is' },
+        { word: 'included', meaning: 'part of the price or package' },
+        { word: 'staff', meaning: 'people who work in a place' },
+        { word: 'polite', meaning: 'speaking and behaving in a respectful way' },
+        { word: 'noise', meaning: 'unwanted or loud sound' }
+      ],
+      questions: [
+        { question: 'Why did the writer stay at the hotel?', options: ['For a work trip', 'For a family holiday', 'For a wedding'], answer: 'For a work trip' },
+        { question: 'How far was the metro station?', options: ['Five minutes away', 'Twenty minutes away', 'One hour away'], answer: 'Five minutes away' },
+        { question: 'What was the room like?', options: ['Small but clean', 'Large but dirty', 'Old and cold'], answer: 'Small but clean' },
+        { question: 'What did reception help the writer print?', options: ['A boarding pass', 'A report', 'A ticket for the metro'], answer: 'A boarding pass' },
+        { question: 'What will the writer ask for next time?', options: ['A room at the back', 'No breakfast', 'A room near the street'], answer: 'A room at the back' }
+      ],
+      details: [
+        { sentence: 'The writer stayed for ___ nights.', answer: 'three' },
+        { sentence: 'Breakfast finished at ___.', answer: '9:00' },
+        { sentence: 'The bed was very ___.', answer: 'comfortable' },
+        { sentence: 'The staff at reception were ___.', answer: 'polite' },
+        { sentence: 'The noise came from the ___ at night.', answer: 'street' }
+      ],
+      trueFalse: [
+        { sentence: 'The hotel was far from the metro station.', answer: false },
+        { sentence: 'Breakfast was included in the price.', answer: true },
+        { sentence: 'The writer liked the bed.', answer: true },
+        { sentence: 'The staff were rude.', answer: false },
+        { sentence: 'The writer would stay there again.', answer: true }
+      ],
+      productionQuestion: 'Write a short review of a hotel, cafe or place you visited.',
+      sampleAnswer: 'I stayed in a small hotel last year. The location was good and the room was clean. The staff were friendly. Breakfast was simple but nice. I would stay there again.'
+    },
+    {
+      id: 'a2-reading-03-work-email-schedule',
+      order: 3,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'A work email',
+      topic: 'schedule change and office communication',
+      description: 'Students read a workplace email about a meeting time change.',
+      readingText: 'Subject: Change to Thursday meeting\nHi team,\nI need to change the time of our Thursday meeting. It was planned for 10:00, but the client can only join us at 11:30. Please come to Meeting Room 3 at 11:20 so we can prepare before the call starts. Bring your notes from last week and the new sales numbers. The meeting should finish by 12:15, so the lunch break will start a little later than usual. If you cannot come, please send me your update by email before Wednesday evening.\nThanks,\nKaren',
+      focus: ['work email', 'time changes', 'instructions'],
+      words: [
+        { word: 'client', meaning: 'a person or company that pays for a service' },
+        { word: 'prepare', meaning: 'get ready for something' },
+        { word: 'notes', meaning: 'short written information' },
+        { word: 'sales', meaning: 'the number or value of things sold' },
+        { word: 'update', meaning: 'new information about something' }
+      ],
+      questions: [
+        { question: 'What is the email about?', options: ['A meeting time change', 'A holiday plan', 'A new job'], answer: 'A meeting time change' },
+        { question: 'When can the client join?', options: ['At 11:30', 'At 10:00', 'At 12:15'], answer: 'At 11:30' },
+        { question: 'Where should the team go?', options: ['Meeting Room 3', 'The cafe', 'Karen s office'], answer: 'Meeting Room 3' },
+        { question: 'What should people bring?', options: ['Notes and sales numbers', 'Lunch and coffee', 'A passport'], answer: 'Notes and sales numbers' },
+        { question: 'What should people do if they cannot come?', options: ['Send an update by email', 'Call the client', 'Cancel the meeting'], answer: 'Send an update by email' }
+      ],
+      details: [
+        { sentence: 'The original meeting time was ___.', answer: '10:00' },
+        { sentence: 'The team should arrive at ___.', answer: '11:20' },
+        { sentence: 'The call starts at ___.', answer: '11:30' },
+        { sentence: 'The meeting should finish by ___.', answer: '12:15' },
+        { sentence: 'Updates must be sent before Wednesday ___.', answer: 'evening' }
+      ],
+      trueFalse: [
+        { sentence: 'The meeting is on Thursday.', answer: true },
+        { sentence: 'The client can join at 10:00.', answer: false },
+        { sentence: 'The team needs to prepare before the call.', answer: true },
+        { sentence: 'Lunch will start earlier than usual.', answer: false },
+        { sentence: 'Karen wrote the email.', answer: true }
+      ],
+      productionQuestion: 'Write a short email about changing a meeting, class or appointment.',
+      sampleAnswer: 'Hi Alex, I need to change our meeting time. Can we meet at 11:30 instead of 10:00? Please bring your notes. If you cannot come, send me a message. Thanks.'
+    },
+    {
+      id: 'a2-reading-04-job-advert',
+      order: 4,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'A job advert',
+      topic: 'work, skills and job requirements',
+      description: 'Students read a simple job advert and find requirements and benefits.',
+      readingText: 'Part-time Reception Assistant\nBright Gym is looking for a part-time reception assistant. The job is three evenings a week, from 17:00 to 21:00. You will welcome members, answer phone calls, check bookings and keep the reception area tidy. We need someone friendly, organized and confident with basic computer work. Experience in customer service is useful but not necessary because training is provided. The pay is 12 dollars per hour. To apply, send your CV and a short message to jobs@brightgym.com by 20 May.',
+      focus: ['job adverts', 'requirements', 'work details'],
+      words: [
+        { word: 'part-time', meaning: 'working for only part of the week or day' },
+        { word: 'reception', meaning: 'the desk or area where visitors are welcomed' },
+        { word: 'organized', meaning: 'able to plan and keep things in order' },
+        { word: 'training', meaning: 'teaching someone how to do a job' },
+        { word: 'apply', meaning: 'ask officially for a job or place' }
+      ],
+      questions: [
+        { question: 'What job is advertised?', options: ['Reception assistant', 'Gym trainer', 'Cleaner'], answer: 'Reception assistant' },
+        { question: 'How many evenings a week is the job?', options: ['Three', 'Five', 'Two'], answer: 'Three' },
+        { question: 'What computer skills are needed?', options: ['Basic computer work', 'Advanced design', 'Programming'], answer: 'Basic computer work' },
+        { question: 'Is customer service experience necessary?', options: ['No, but it is useful', 'Yes, it is required', 'No, and it is not useful'], answer: 'No, but it is useful' },
+        { question: 'How should applicants apply?', options: ['Send a CV and short message', 'Visit the gym at night', 'Call every member'], answer: 'Send a CV and short message' }
+      ],
+      details: [
+        { sentence: 'The job is from 17:00 to ___.', answer: '21:00' },
+        { sentence: 'The assistant will answer phone ___.', answer: 'calls' },
+        { sentence: 'The reception area must be kept ___.', answer: 'tidy' },
+        { sentence: 'The pay is ___ dollars per hour.', answer: '12' },
+        { sentence: 'Applications must be sent by ___ May.', answer: '20' }
+      ],
+      trueFalse: [
+        { sentence: 'The job is full-time.', answer: false },
+        { sentence: 'The assistant will welcome members.', answer: true },
+        { sentence: 'Training is provided.', answer: true },
+        { sentence: 'Applicants need to send their CV.', answer: true },
+        { sentence: 'The job is in a hotel.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a job you would like or a job advert.',
+      sampleAnswer: 'I would like a part-time job in a cafe. I can work three evenings a week. I am friendly and organized. I can use a computer. I would send my CV by email.'
+    },
+    {
+      id: 'a2-reading-05-health-advice',
+      order: 5,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Health advice',
+      topic: 'simple advice for feeling tired',
+      description: 'Students read a short advice article about tiredness and healthy habits.',
+      readingText: 'Feeling tired all the time?\nMany people feel tired because they sleep badly, drink too much coffee or spend too much time on screens before bed. Small changes can help. Try to go to bed and wake up at the same time every day, even at weekends. Do not drink coffee late in the afternoon. If you study or work online, take a short break every hour and move your body. A ten-minute walk can give you more energy. If you feel tired for many weeks or you have pain, you should speak to a doctor.',
+      focus: ['health advice', 'main ideas', 'should'],
+      words: [
+        { word: 'tired', meaning: 'needing rest or sleep' },
+        { word: 'screen', meaning: 'the part of a phone or computer you look at' },
+        { word: 'break', meaning: 'a short rest from work or study' },
+        { word: 'energy', meaning: 'the power to do things' },
+        { word: 'pain', meaning: 'a bad feeling in your body' }
+      ],
+      questions: [
+        { question: 'What is the article mainly about?', options: ['Feeling tired and healthy habits', 'Buying coffee', 'Working at weekends'], answer: 'Feeling tired and healthy habits' },
+        { question: 'What can make people tired?', options: ['Bad sleep and too much screen time', 'Walking every day', 'Drinking water'], answer: 'Bad sleep and too much screen time' },
+        { question: 'When should people avoid coffee?', options: ['Late in the afternoon', 'In the morning', 'At breakfast'], answer: 'Late in the afternoon' },
+        { question: 'How often should online workers take a break?', options: ['Every hour', 'Every day', 'Every month'], answer: 'Every hour' },
+        { question: 'When should someone speak to a doctor?', options: ['If tiredness continues for many weeks or there is pain', 'If they drink water', 'If they take a walk'], answer: 'If tiredness continues for many weeks or there is pain' }
+      ],
+      details: [
+        { sentence: 'People should wake up at the same ___ every day.', answer: 'time' },
+        { sentence: 'People should not drink coffee late in the ___.', answer: 'afternoon' },
+        { sentence: 'A short break every ___ can help online workers.', answer: 'hour' },
+        { sentence: 'A ___-minute walk can give more energy.', answer: 'ten' },
+        { sentence: 'If tiredness lasts many weeks, speak to a ___.', answer: 'doctor' }
+      ],
+      trueFalse: [
+        { sentence: 'Too much screen time before bed can make people tired.', answer: true },
+        { sentence: 'The article says to drink coffee late at night.', answer: false },
+        { sentence: 'A short walk can help your energy.', answer: true },
+        { sentence: 'Online workers should never take breaks.', answer: false },
+        { sentence: 'Pain can be a reason to speak to a doctor.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences giving advice for a healthy routine.',
+      sampleAnswer: 'You should sleep at the same time every day. You should not drink coffee late. Take breaks when you work online. Walk for ten minutes. If you feel bad for weeks, speak to a doctor.'
+    },
+    {
+      id: 'a2-reading-06-pharmacy-message',
+      order: 6,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'A pharmacy message',
+      topic: 'medicine and instructions',
+      description: 'Students read a pharmacy message and understand simple medicine instructions.',
+      readingText: 'Text message from Green Pharmacy\nHello Mr Carter. Your prescription is ready to collect. Please come before 18:00 today or between 9:00 and 13:00 tomorrow. Take one tablet after breakfast and one tablet after dinner for seven days. Do not take the medicine before driving because it can make you sleepy. If you feel worse or have a temperature after three days, call your doctor. The total cost is 14 dollars. Please bring your ID when you collect it.',
+      focus: ['medicine instructions', 'time details', 'warnings'],
+      words: [
+        { word: 'prescription', meaning: 'a note from a doctor for medicine' },
+        { word: 'collect', meaning: 'go and get something' },
+        { word: 'tablet', meaning: 'a small hard piece of medicine' },
+        { word: 'sleepy', meaning: 'wanting to sleep' },
+        { word: 'temperature', meaning: 'high body heat when ill' }
+      ],
+      questions: [
+        { question: 'Who is the message for?', options: ['Mr Carter', 'The doctor', 'Green Pharmacy'], answer: 'Mr Carter' },
+        { question: 'What is ready to collect?', options: ['A prescription', 'An ID card', 'A breakfast order'], answer: 'A prescription' },
+        { question: 'How long should he take the tablets?', options: ['Seven days', 'Three days', 'One month'], answer: 'Seven days' },
+        { question: 'Why should he not take the medicine before driving?', options: ['It can make him sleepy', 'It is too expensive', 'It is not ready'], answer: 'It can make him sleepy' },
+        { question: 'What should he bring?', options: ['His ID', 'A sandwich', 'A receipt'], answer: 'His ID' }
+      ],
+      details: [
+        { sentence: 'Today, he should come before ___.', answer: '18:00' },
+        { sentence: 'Tomorrow, he can come between 9:00 and ___.', answer: '13:00' },
+        { sentence: 'He should take one tablet after ___.', answer: 'breakfast' },
+        { sentence: 'The total cost is ___ dollars.', answer: '14' },
+        { sentence: 'If he feels worse, he should call his ___.', answer: 'doctor' }
+      ],
+      trueFalse: [
+        { sentence: 'The prescription is ready.', answer: true },
+        { sentence: 'He should take three tablets after lunch.', answer: false },
+        { sentence: 'The medicine can make him sleepy.', answer: true },
+        { sentence: 'He should call the doctor if he feels worse.', answer: true },
+        { sentence: 'He does not need ID.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences with simple instructions for medicine or health.',
+      sampleAnswer: 'Take one tablet after breakfast. Drink water with it. Do not drive if you feel sleepy. Call your doctor if you feel worse. Bring your ID to the pharmacy.'
+    },
+    {
+      id: 'a2-reading-07-shop-return-policy',
+      order: 7,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'A shop return policy',
+      topic: 'shopping rules and refunds',
+      description: 'Students read a return policy and understand rules for refunds and exchanges.',
+      readingText: 'Returns and exchanges\nYou can return most items within 30 days if they are unused and in the original packaging. Please bring your receipt or online order number. We can give you a refund to the card you used to pay. If you paid in cash, we can give you cash back. Sale items can only be exchanged, not refunded, unless they are faulty. We cannot accept returns on earrings or opened beauty products. Online orders can also be returned by post, but customers must pay the postage.',
+      focus: ['shopping policy', 'rules', 'refunds'],
+      words: [
+        { word: 'return', meaning: 'take something back to a shop' },
+        { word: 'exchange', meaning: 'change one item for another' },
+        { word: 'receipt', meaning: 'proof that you paid' },
+        { word: 'faulty', meaning: 'broken or not working correctly' },
+        { word: 'postage', meaning: 'money paid to send something by post' }
+      ],
+      questions: [
+        { question: 'How long do customers have to return most items?', options: ['30 days', '7 days', 'One year'], answer: '30 days' },
+        { question: 'What must customers bring?', options: ['A receipt or order number', 'A passport', 'A photo'], answer: 'A receipt or order number' },
+        { question: 'What happens if someone paid by card?', options: ['Refund goes to the card', 'They get cash only', 'They cannot return it'], answer: 'Refund goes to the card' },
+        { question: 'What can customers do with sale items?', options: ['Exchange them only', 'Always get a refund', 'Return earrings'], answer: 'Exchange them only' },
+        { question: 'Who pays postage for online returns?', options: ['The customer', 'The shop', 'The bank'], answer: 'The customer' }
+      ],
+      details: [
+        { sentence: 'Items must be unused and in the original ___.', answer: 'packaging' },
+        { sentence: 'Customers can bring an online order ___.', answer: 'number' },
+        { sentence: 'Cash payments can be returned as ___.', answer: 'cash' },
+        { sentence: 'Sale items can be refunded if they are ___.', answer: 'faulty' },
+        { sentence: 'Opened beauty ___ cannot be returned.', answer: 'products' }
+      ],
+      trueFalse: [
+        { sentence: 'Most items can be returned within 30 days.', answer: true },
+        { sentence: 'Customers never need a receipt or order number.', answer: false },
+        { sentence: 'Sale items can only be exchanged unless faulty.', answer: true },
+        { sentence: 'Opened beauty products can be returned anytime.', answer: false },
+        { sentence: 'Online orders can be returned by post.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences explaining a simple shop rule or return problem.',
+      sampleAnswer: 'I bought a jacket online. It did not fit me. I kept the receipt and original packaging. I returned it within 30 days. The refund went to my card.'
+    },
+    {
+      id: 'a2-reading-08-restaurant-review',
+      order: 8,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'A restaurant review',
+      topic: 'food, service and opinions',
+      description: 'Students read a short restaurant review and identify opinions and details.',
+      readingText: 'Review: Green Bowl Cafe\nGreen Bowl Cafe is a small vegetarian restaurant near the park. I went there with two friends on Saturday evening. The menu was not very long, but everything sounded fresh and healthy. I ordered vegetable soup as a starter and mushroom pasta as my main course. The soup was excellent, but the pasta needed more salt. My friends loved their salads. The service was friendly, although we waited twenty minutes for a table. The prices were reasonable. I would recommend this cafe for lunch or a relaxed dinner.',
+      focus: ['restaurant review', 'opinions', 'food vocabulary'],
+      words: [
+        { word: 'vegetarian', meaning: 'not containing meat or fish' },
+        { word: 'starter', meaning: 'small dish before the main meal' },
+        { word: 'main course', meaning: 'the main dish in a meal' },
+        { word: 'service', meaning: 'how staff help customers' },
+        { word: 'reasonable', meaning: 'fair, not too expensive' }
+      ],
+      questions: [
+        { question: 'Where is Green Bowl Cafe?', options: ['Near the park', 'Near the station', 'Inside a hotel'], answer: 'Near the park' },
+        { question: 'When did the writer visit?', options: ['Saturday evening', 'Monday morning', 'Friday lunch'], answer: 'Saturday evening' },
+        { question: 'What starter did the writer order?', options: ['Vegetable soup', 'Mushroom pasta', 'Salad'], answer: 'Vegetable soup' },
+        { question: 'What was wrong with the pasta?', options: ['It needed more salt', 'It was cold', 'It had meat'], answer: 'It needed more salt' },
+        { question: 'What does the writer recommend it for?', options: ['Lunch or a relaxed dinner', 'A quick breakfast', 'A business meeting only'], answer: 'Lunch or a relaxed dinner' }
+      ],
+      details: [
+        { sentence: 'The writer went with two ___.', answer: 'friends' },
+        { sentence: 'The menu was not very ___.', answer: 'long' },
+        { sentence: 'The writer ordered mushroom ___.', answer: 'pasta' },
+        { sentence: 'They waited ___ minutes for a table.', answer: 'twenty' },
+        { sentence: 'The prices were ___.', answer: 'reasonable' }
+      ],
+      trueFalse: [
+        { sentence: 'Green Bowl Cafe serves vegetarian food.', answer: true },
+        { sentence: 'The writer hated the vegetable soup.', answer: false },
+        { sentence: 'The writer s friends loved their salads.', answer: true },
+        { sentence: 'The service was unfriendly.', answer: false },
+        { sentence: 'The cafe is recommended for a relaxed dinner.', answer: true }
+      ],
+      productionQuestion: 'Write a short review of a restaurant or cafe.',
+      sampleAnswer: 'I went to a small cafe near my home. The menu was short but good. I ordered soup and pasta. The service was friendly. I would recommend it for lunch.'
+    },
+    {
+      id: 'a2-reading-09-app-review',
+      order: 9,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'An app review',
+      topic: 'technology and learning apps',
+      description: 'Students read an app review and understand features, problems and recommendations.',
+      readingText: 'App review: StudySteps\nStudySteps is an app for people who want to build better study habits. You can create a weekly plan, set reminders and track how much time you spend studying. I like the simple design because I can see my tasks quickly. The app also sends a notification if I forget to study. However, the free version only lets you create three plans, and the calendar sometimes loads slowly. I still think it is useful for students who need help organizing their week. I use it every evening before I start my English homework.',
+      focus: ['technology reviews', 'features', 'advantages and problems'],
+      words: [
+        { word: 'habit', meaning: 'something you do often or regularly' },
+        { word: 'reminder', meaning: 'a message that helps you remember something' },
+        { word: 'track', meaning: 'record or follow information' },
+        { word: 'notification', meaning: 'a message from an app or website' },
+        { word: 'version', meaning: 'one form of a product or app' }
+      ],
+      questions: [
+        { question: 'Who is StudySteps for?', options: ['People who want better study habits', 'People booking hotels', 'People buying clothes'], answer: 'People who want better study habits' },
+        { question: 'What can users create?', options: ['A weekly plan', 'A restaurant menu', 'A travel ticket'], answer: 'A weekly plan' },
+        { question: 'Why does the writer like the design?', options: ['Tasks are easy to see', 'It has many colours', 'It has no reminders'], answer: 'Tasks are easy to see' },
+        { question: 'What is a problem with the free version?', options: ['Only three plans', 'No calendar at all', 'No notifications'], answer: 'Only three plans' },
+        { question: 'When does the writer use the app?', options: ['Every evening', 'Only on Monday morning', 'Never'], answer: 'Every evening' }
+      ],
+      details: [
+        { sentence: 'The app helps people build better study ___.', answer: 'habits' },
+        { sentence: 'Users can set ___.', answer: 'reminders' },
+        { sentence: 'The app can track study ___.', answer: 'time' },
+        { sentence: 'The calendar sometimes loads ___.', answer: 'slowly' },
+        { sentence: 'The writer uses it before English ___.', answer: 'homework' }
+      ],
+      trueFalse: [
+        { sentence: 'StudySteps helps with study organization.', answer: true },
+        { sentence: 'The writer finds the design confusing.', answer: false },
+        { sentence: 'The app can send notifications.', answer: true },
+        { sentence: 'The free version has unlimited plans.', answer: false },
+        { sentence: 'The writer thinks the app is useful.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences reviewing an app or website you use.',
+      sampleAnswer: 'I use a language app every day. It helps me remember new words. I like the simple design. It sends reminders. The free version has limits, but it is useful.'
+    },
+    {
+      id: 'a2-reading-10-online-safety',
+      order: 10,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Online safety advice',
+      topic: 'passwords, messages and online accounts',
+      description: 'Students read practical advice about staying safe online.',
+      readingText: 'Stay safe online\nMany people use the same password for every account because it is easy to remember. This is risky. If someone finds one password, they can enter all your accounts. Use a different password for important accounts, such as email and banking. Do not click links in messages from people you do not know. Some messages look real, but they can take you to a fake website. Before you type personal information, check the website address carefully. If an offer looks too good to be true, it probably is.',
+      focus: ['online safety', 'advice', 'main ideas'],
+      words: [
+        { word: 'account', meaning: 'a personal area on a website or app' },
+        { word: 'risky', meaning: 'not safe; possibly dangerous' },
+        { word: 'link', meaning: 'text or a button that opens a web page' },
+        { word: 'fake', meaning: 'not real' },
+        { word: 'personal information', meaning: 'private details about you' }
+      ],
+      questions: [
+        { question: 'Why do many people use the same password?', options: ['It is easy to remember', 'It is safer', 'Banks ask them to'], answer: 'It is easy to remember' },
+        { question: 'Why is using one password risky?', options: ['One password can open many accounts', 'It is too long', 'It costs money'], answer: 'One password can open many accounts' },
+        { question: 'Which accounts need different passwords?', options: ['Important accounts like email and banking', 'Only game accounts', 'No accounts'], answer: 'Important accounts like email and banking' },
+        { question: 'What should you not click?', options: ['Links from people you do not know', 'Your own email', 'The keyboard'], answer: 'Links from people you do not know' },
+        { question: 'What should you check before typing personal information?', options: ['The website address', 'The weather', 'Your lunch plan'], answer: 'The website address' }
+      ],
+      details: [
+        { sentence: 'Using the same password is ___.', answer: 'risky' },
+        { sentence: 'Email and banking are examples of important ___.', answer: 'accounts' },
+        { sentence: 'Some messages can take you to a fake ___.', answer: 'website' },
+        { sentence: 'You should check the website address ___.', answer: 'carefully' },
+        { sentence: 'If an offer looks too good to be true, it probably ___.', answer: 'is' }
+      ],
+      trueFalse: [
+        { sentence: 'The text says one password for all accounts is safe.', answer: false },
+        { sentence: 'Different passwords are good for important accounts.', answer: true },
+        { sentence: 'Some fake websites can look real.', answer: true },
+        { sentence: 'You should click all links from strangers.', answer: false },
+        { sentence: 'Checking website addresses is important.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences giving online safety advice.',
+      sampleAnswer: 'Use different passwords for important accounts. Do not click links from strangers. Check website addresses carefully. Do not share personal information. Be careful with offers that look too good.'
+    },
+    {
+      id: 'a2-reading-11-room-advert',
+      order: 11,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'A room advert',
+      topic: 'renting a room and flat details',
+      description: 'Students read a room advert and identify costs, rules and facilities.',
+      readingText: 'Room to rent\nLarge room in a shared flat near Central Park. The room has a bed, desk, wardrobe and small balcony. You will share the kitchen and bathroom with two friendly students. Bills are included in the rent, but internet costs 15 dollars extra per month. The flat is ten minutes from the metro and close to a supermarket. No smoking and no pets. The room is available from 1 June. Rent: 420 dollars per month. Deposit: one month s rent. Contact: lena.rooms@email.com.',
+      focus: ['housing adverts', 'rent and rules', 'scanning'],
+      words: [
+        { word: 'shared flat', meaning: 'a flat where more than one person lives' },
+        { word: 'balcony', meaning: 'a small outside area above the ground' },
+        { word: 'bills', meaning: 'money paid for electricity, water or services' },
+        { word: 'available', meaning: 'ready for use' },
+        { word: 'deposit', meaning: 'money paid at the start and often returned later' }
+      ],
+      questions: [
+        { question: 'Where is the room?', options: ['Near Central Park', 'Near the airport', 'Inside a hotel'], answer: 'Near Central Park' },
+        { question: 'Who will the tenant share with?', options: ['Two students', 'A family', 'One teacher'], answer: 'Two students' },
+        { question: 'What costs extra?', options: ['Internet', 'Water bills', 'The wardrobe'], answer: 'Internet' },
+        { question: 'When is the room available?', options: ['1 June', '1 July', '15 May'], answer: '1 June' },
+        { question: 'How much is the rent?', options: ['420 dollars per month', '15 dollars per month', '840 dollars per month'], answer: '420 dollars per month' }
+      ],
+      details: [
+        { sentence: 'The room has a bed, desk, wardrobe and small ___.', answer: 'balcony' },
+        { sentence: 'Internet costs ___ dollars extra per month.', answer: '15' },
+        { sentence: 'The flat is ten minutes from the ___.', answer: 'metro' },
+        { sentence: 'No smoking and no ___ are allowed.', answer: 'pets' },
+        { sentence: 'The deposit is one month s ___.', answer: 'rent' }
+      ],
+      trueFalse: [
+        { sentence: 'The kitchen and bathroom are shared.', answer: true },
+        { sentence: 'Bills are not included in the rent.', answer: false },
+        { sentence: 'The flat is close to a supermarket.', answer: true },
+        { sentence: 'Pets are allowed.', answer: false },
+        { sentence: 'The advert gives an email address.', answer: true }
+      ],
+      productionQuestion: 'Write a short advert for a room or flat.',
+      sampleAnswer: 'Small room to rent near the metro. The room has a bed and desk. The kitchen is shared. Bills are included. The room is available from July.'
+    },
+    {
+      id: 'a2-reading-12-city-events',
+      order: 12,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'City events guide',
+      topic: 'events, dates and activities',
+      description: 'Students read a city events guide and choose suitable activities.',
+      readingText: 'This weekend in North City\nSaturday 10:00-13:00: Farmers Market in River Square. Local fruit, bread and cheese. Bring your own bag and get a small discount.\nSaturday 18:30: Outdoor film in Green Park. The film is free, but bring a blanket or chair.\nSunday 11:00: History walk from the old town hall. Tickets cost 8 dollars and must be booked online.\nSunday 16:00: Free guitar concert at the city library. Places are limited, so arrive early. The cafe at the library will be open until 18:00.',
+      focus: ['event listings', 'times and places', 'choosing information'],
+      words: [
+        { word: 'farmers market', meaning: 'a market where local people sell food' },
+        { word: 'discount', meaning: 'a lower price than usual' },
+        { word: 'outdoor', meaning: 'outside, not inside a building' },
+        { word: 'booked', meaning: 'reserved before going' },
+        { word: 'limited', meaning: 'not many available' }
+      ],
+      questions: [
+        { question: 'Where is the Farmers Market?', options: ['River Square', 'Green Park', 'The library'], answer: 'River Square' },
+        { question: 'What should people bring to the outdoor film?', options: ['A blanket or chair', 'A guitar', 'A ticket for 8 dollars'], answer: 'A blanket or chair' },
+        { question: 'Which event must be booked online?', options: ['History walk', 'Farmers Market', 'Outdoor film'], answer: 'History walk' },
+        { question: 'Where is the guitar concert?', options: ['At the city library', 'At the old town hall', 'In River Square'], answer: 'At the city library' },
+        { question: 'Why should people arrive early for the concert?', options: ['Places are limited', 'Tickets are expensive', 'The concert starts at 10:00'], answer: 'Places are limited' }
+      ],
+      details: [
+        { sentence: 'The Farmers Market is on Saturday from 10:00 to ___.', answer: '13:00' },
+        { sentence: 'People can buy local fruit, bread and ___.', answer: 'cheese' },
+        { sentence: 'The outdoor film starts at ___.', answer: '18:30' },
+        { sentence: 'History walk tickets cost ___ dollars.', answer: '8' },
+        { sentence: 'The library cafe is open until ___.', answer: '18:00' }
+      ],
+      trueFalse: [
+        { sentence: 'The outdoor film is free.', answer: true },
+        { sentence: 'The history walk starts from the city library.', answer: false },
+        { sentence: 'People can get a discount at the market if they bring their own bag.', answer: true },
+        { sentence: 'The guitar concert is on Sunday.', answer: true },
+        { sentence: 'There are unlimited places at the concert.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences about events in your city or an event you want to visit.',
+      sampleAnswer: 'There is a market on Saturday. I want to buy local food. In the evening, there is an outdoor film. On Sunday, I would like to go to a concert. I will arrive early.'
+    },
+    {
+      id: 'a2-reading-13-recycling-notice',
+      order: 13,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'A recycling notice',
+      topic: 'environment and local rules',
+      description: 'Students read a notice about recycling rules in an apartment building.',
+      readingText: 'Building notice: Recycling changes\nFrom Monday, please put paper, plastic and metal in the blue bins behind the building. Glass must go in the green bin near the car park. Do not put food waste in the recycling bins because it makes the materials dirty. Cardboard boxes should be flat before you put them in the bin. If a bin is full, do not leave bags on the ground. Please take them back and try again the next day. These changes will help us reduce waste and keep the building area clean.',
+      focus: ['notices', 'rules', 'environment vocabulary'],
+      words: [
+        { word: 'recycling', meaning: 'using old materials again' },
+        { word: 'bin', meaning: 'a container for rubbish or recycling' },
+        { word: 'waste', meaning: 'things people throw away' },
+        { word: 'cardboard', meaning: 'thick paper used for boxes' },
+        { word: 'reduce', meaning: 'make something smaller or less' }
+      ],
+      questions: [
+        { question: 'When do the changes start?', options: ['Monday', 'Friday', 'Next month'], answer: 'Monday' },
+        { question: 'Where should paper go?', options: ['In the blue bins', 'In the green bin', 'On the ground'], answer: 'In the blue bins' },
+        { question: 'Where should glass go?', options: ['In the green bin near the car park', 'Behind the building', 'In food waste'], answer: 'In the green bin near the car park' },
+        { question: 'What should people do with cardboard boxes?', options: ['Make them flat', 'Put food in them', 'Leave them on the ground'], answer: 'Make them flat' },
+        { question: 'What should people do if a bin is full?', options: ['Take bags back and try the next day', 'Leave bags on the ground', 'Put everything in the glass bin'], answer: 'Take bags back and try the next day' }
+      ],
+      details: [
+        { sentence: 'Paper, plastic and metal go in the ___ bins.', answer: 'blue' },
+        { sentence: 'The green bin is near the car ___.', answer: 'park' },
+        { sentence: 'Food waste makes the materials ___.', answer: 'dirty' },
+        { sentence: 'Do not leave bags on the ___.', answer: 'ground' },
+        { sentence: 'The changes will help reduce ___.', answer: 'waste' }
+      ],
+      trueFalse: [
+        { sentence: 'Metal goes in the blue bins.', answer: true },
+        { sentence: 'Food waste should go in recycling bins.', answer: false },
+        { sentence: 'Cardboard boxes should be flat.', answer: true },
+        { sentence: 'People should leave bags on the ground if bins are full.', answer: false },
+        { sentence: 'The notice is about keeping the area clean.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about recycling rules at home, school or work.',
+      sampleAnswer: 'We put paper in a blue bin. Glass goes in a different bin. Food waste should not go with recycling. Boxes should be flat. Recycling helps reduce waste.'
+    },
+    {
+      id: 'a2-reading-14-course-description',
+      order: 14,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'A course description',
+      topic: 'education and learning',
+      description: 'Students read a course description and find information about schedule, goals and requirements.',
+      readingText: 'English for Travel - Evening Course\nThis six-week course is for adults who want to feel more confident when travelling. Classes are on Tuesday and Thursday from 18:30 to 20:00. Students will practise airport conversations, hotel check-in, asking for directions and ordering food. Each week includes listening practice and short role plays. The course is suitable for A2 students. You do not need a textbook because the teacher provides all materials. At the end, students will complete a short speaking task and receive a certificate.',
+      focus: ['course information', 'learning goals', 'schedule'],
+      words: [
+        { word: 'confident', meaning: 'sure about yourself and your ability' },
+        { word: 'role play', meaning: 'practice where students act a situation' },
+        { word: 'suitable', meaning: 'right or good for a purpose' },
+        { word: 'materials', meaning: 'things used for studying or teaching' },
+        { word: 'certificate', meaning: 'paper or digital document showing completion' }
+      ],
+      questions: [
+        { question: 'Who is the course for?', options: ['Adults who want travel English', 'Children learning maths', 'Hotel managers only'], answer: 'Adults who want travel English' },
+        { question: 'How long is the course?', options: ['Six weeks', 'Six months', 'Two days'], answer: 'Six weeks' },
+        { question: 'When are classes?', options: ['Tuesday and Thursday evenings', 'Monday mornings', 'Every weekend'], answer: 'Tuesday and Thursday evenings' },
+        { question: 'What level is the course suitable for?', options: ['A2', 'C1', 'Beginner only'], answer: 'A2' },
+        { question: 'What do students receive at the end?', options: ['A certificate', 'A passport', 'A hotel room'], answer: 'A certificate' }
+      ],
+      details: [
+        { sentence: 'Classes are from 18:30 to ___.', answer: '20:00' },
+        { sentence: 'Students practise airport conversations and hotel ___.', answer: 'check-in' },
+        { sentence: 'Each week includes listening practice and short role ___.', answer: 'plays' },
+        { sentence: 'Students do not need a ___.', answer: 'textbook' },
+        { sentence: 'The teacher provides all ___.', answer: 'materials' }
+      ],
+      trueFalse: [
+        { sentence: 'The course is for travel English.', answer: true },
+        { sentence: 'Classes are in the morning.', answer: false },
+        { sentence: 'Students practise ordering food.', answer: true },
+        { sentence: 'Students must buy a textbook.', answer: false },
+        { sentence: 'There is a speaking task at the end.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a course you would like to take.',
+      sampleAnswer: 'I would like to take an English for Travel course. I want to feel more confident. I need to practise hotel check-in and directions. Evening classes are good for me. I would like a certificate.'
+    },
+    {
+      id: 'a2-reading-15-personal-story',
+      order: 15,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'A personal story',
+      topic: 'a problem during a day out',
+      description: 'Students read a short personal story and follow the sequence of events.',
+      readingText: 'A day that started badly\nOn Saturday, I planned to meet my cousin at the new shopping centre. I left home early, but I took the wrong bus and only noticed after fifteen minutes. I got off near a quiet street and checked the map on my phone. Unfortunately, my battery was almost empty. I asked a woman at a bakery for help, and she showed me the right bus stop. I arrived thirty minutes late, but my cousin was not angry. We laughed about it, had lunch and bought a charger so it would not happen again.',
+      focus: ['personal stories', 'sequence', 'problem and solution'],
+      words: [
+        { word: 'planned', meaning: 'decided what to do before doing it' },
+        { word: 'noticed', meaning: 'saw or realized something' },
+        { word: 'battery', meaning: 'power in a phone or device' },
+        { word: 'bakery', meaning: 'a shop that sells bread and cakes' },
+        { word: 'charger', meaning: 'a tool for putting power into a device' }
+      ],
+      questions: [
+        { question: 'Where did the writer plan to meet their cousin?', options: ['At the new shopping centre', 'At a bakery', 'At home'], answer: 'At the new shopping centre' },
+        { question: 'What mistake did the writer make?', options: ['Took the wrong bus', 'Forgot money', 'Bought the wrong charger'], answer: 'Took the wrong bus' },
+        { question: 'What problem did the phone have?', options: ['The battery was almost empty', 'The screen was broken', 'It was lost'], answer: 'The battery was almost empty' },
+        { question: 'Who helped the writer?', options: ['A woman at a bakery', 'A bus driver', 'A police officer'], answer: 'A woman at a bakery' },
+        { question: 'What did they buy later?', options: ['A charger', 'A new phone', 'A map'], answer: 'A charger' }
+      ],
+      details: [
+        { sentence: 'The writer noticed the mistake after ___ minutes.', answer: 'fifteen' },
+        { sentence: 'The writer got off near a quiet ___.', answer: 'street' },
+        { sentence: 'The woman showed the right bus ___.', answer: 'stop' },
+        { sentence: 'The writer arrived ___ minutes late.', answer: 'thirty' },
+        { sentence: 'The cousin was not ___.', answer: 'angry' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer left home early.', answer: true },
+        { sentence: 'The writer s phone battery was full.', answer: false },
+        { sentence: 'A woman at a bakery helped.', answer: true },
+        { sentence: 'The cousin was very angry.', answer: false },
+        { sentence: 'They laughed about the problem.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a day when something went wrong.',
+      sampleAnswer: 'I planned to meet my friend. I took the wrong bus and arrived late. My phone battery was low. I asked someone for help. In the end, everything was OK.'
+    },
+    {
+      id: 'a2-reading-16-complaint-email',
+      order: 16,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'A complaint email',
+      topic: 'travel problem and polite complaint',
+      description: 'Students read a polite complaint email about a delayed journey.',
+      readingText: 'Subject: Delayed bus journey\nDear Customer Service,\nI am writing about my bus journey from Bristol to Oxford on 12 April. The bus was planned to leave at 14:00, but it did not arrive until 14:45. No one at the station explained the reason for the delay. When the bus finally arrived, the driver was polite, but the air conditioning was not working and the bus was very hot. I arrived in Oxford almost one hour late and missed the start of my meeting. I would like to ask for a partial refund.\nKind regards,\nDaniel Green',
+      focus: ['complaint email', 'travel problems', 'formal phrases'],
+      words: [
+        { word: 'delayed', meaning: 'late' },
+        { word: 'customer service', meaning: 'department that helps customers' },
+        { word: 'reason', meaning: 'why something happens' },
+        { word: 'air conditioning', meaning: 'system that cools the air' },
+        { word: 'partial refund', meaning: 'some money back, not all of it' }
+      ],
+      questions: [
+        { question: 'What journey is the email about?', options: ['Bristol to Oxford', 'Oxford to London', 'Bristol to London'], answer: 'Bristol to Oxford' },
+        { question: 'When was the journey?', options: ['12 April', '14 April', '12 May'], answer: '12 April' },
+        { question: 'When did the bus arrive?', options: ['14:45', '14:00', '15:45'], answer: '14:45' },
+        { question: 'What was wrong on the bus?', options: ['Air conditioning was not working', 'The driver was rude', 'There were no seats'], answer: 'Air conditioning was not working' },
+        { question: 'What does Daniel want?', options: ['A partial refund', 'A new meeting', 'A job'], answer: 'A partial refund' }
+      ],
+      details: [
+        { sentence: 'The bus was planned to leave at ___.', answer: '14:00' },
+        { sentence: 'No one explained the reason for the ___.', answer: 'delay' },
+        { sentence: 'The driver was ___.', answer: 'polite' },
+        { sentence: 'The bus was very ___.', answer: 'hot' },
+        { sentence: 'Daniel missed the start of his ___.', answer: 'meeting' }
+      ],
+      trueFalse: [
+        { sentence: 'The bus left exactly on time.', answer: false },
+        { sentence: 'The driver was polite.', answer: true },
+        { sentence: 'The air conditioning worked well.', answer: false },
+        { sentence: 'Daniel arrived almost one hour late.', answer: true },
+        { sentence: 'Daniel asks for a partial refund.', answer: true }
+      ],
+      productionQuestion: 'Write a short polite complaint email about a travel or service problem.',
+      sampleAnswer: 'Dear Customer Service, I am writing about my train journey. The train was delayed and no one explained why. I arrived late for my meeting. I would like to ask for a partial refund. Kind regards.'
+    },
+    {
+      id: 'a2-reading-17-advice-forum',
+      order: 17,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'An advice forum post',
+      topic: 'moving to a new city',
+      description: 'Students read an advice forum post and identify practical suggestions.',
+      readingText: 'Forum question: I am moving to a new city next month for work. I do not know anyone there. How can I make friends and feel less lonely?\nBest answer: Start with small routines. Go to the same cafe, gym or language class every week, because you will see the same people again and again. Join local online groups, but choose events where people actually meet, such as walks, board game nights or sports. Do not wait for perfect friends immediately. Friendly conversations are a good beginning. Also, keep in touch with old friends while you build a new life.',
+      focus: ['advice text', 'main ideas', 'suggestions'],
+      words: [
+        { word: 'lonely', meaning: 'sad because you are alone' },
+        { word: 'routine', meaning: 'something you do regularly' },
+        { word: 'local', meaning: 'connected with the area near you' },
+        { word: 'immediately', meaning: 'now or very soon' },
+        { word: 'keep in touch', meaning: 'continue communicating' }
+      ],
+      questions: [
+        { question: 'Why is the person moving?', options: ['For work', 'For holiday', 'For school only'], answer: 'For work' },
+        { question: 'What is the main problem?', options: ['They do not know anyone', 'They cannot find a flat', 'They lost their job'], answer: 'They do not know anyone' },
+        { question: 'What routines does the answer suggest?', options: ['Cafe, gym or language class', 'Only online games', 'Staying at home'], answer: 'Cafe, gym or language class' },
+        { question: 'What kind of online group events are recommended?', options: ['Events where people meet', 'Only events with no people', 'Shopping discounts'], answer: 'Events where people meet' },
+        { question: 'What should the person do with old friends?', options: ['Keep in touch', 'Forget them immediately', 'Move them to the city'], answer: 'Keep in touch' }
+      ],
+      details: [
+        { sentence: 'The person is moving next ___.', answer: 'month' },
+        { sentence: 'Going to the same places helps you see the same people again and ___.', answer: 'again' },
+        { sentence: 'Suggested events include walks and board game ___.', answer: 'nights' },
+        { sentence: 'Friendly conversations are a good ___.', answer: 'beginning' },
+        { sentence: 'The person is building a new ___.', answer: 'life' }
+      ],
+      trueFalse: [
+        { sentence: 'The advice says routines can help.', answer: true },
+        { sentence: 'The answer says to wait for perfect friends immediately.', answer: false },
+        { sentence: 'Sports are one possible way to meet people.', answer: true },
+        { sentence: 'The person should stop talking to old friends.', answer: false },
+        { sentence: 'Friendly conversations can be a beginning.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences giving advice to someone moving to a new place.',
+      sampleAnswer: 'You should start with small routines. Join a class or local group. Go to events where people meet. Do not wait for perfect friends immediately. Keep in touch with old friends too.'
+    },
+    {
+      id: 'a2-reading-18-a2-review',
+      order: 18,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'A2 reading review',
+      topic: 'mixed everyday texts',
+      description: 'Students review A2 reading skills with short texts in different everyday formats.',
+      readingText: 'Text 1: Message\nHi Sara, I booked the tickets for Saturday. The film starts at 19:10, but let s meet at 18:30 because the cinema is usually busy.\nText 2: Notice\nLibrary computers are available for one hour per person. Please save your work before your time finishes. Printing costs 10 cents per page.\nText 3: Review\nThe new Thai restaurant is small but friendly. The main courses are a little expensive, but the lunch menu is good value. I recommend the vegetable noodles.',
+      focus: ['mixed texts', 'scanning', 'review'],
+      words: [
+        { word: 'booked', meaning: 'reserved before going' },
+        { word: 'available', meaning: 'ready for use' },
+        { word: 'save', meaning: 'keep work on a computer' },
+        { word: 'good value', meaning: 'worth the money paid' },
+        { word: 'recommend', meaning: 'say that something is good' }
+      ],
+      questions: [
+        { question: 'What did the writer book?', options: ['Film tickets', 'Library computers', 'Lunch'], answer: 'Film tickets' },
+        { question: 'Why should Sara meet at 18:30?', options: ['The cinema is usually busy', 'The film starts then', 'The library closes'], answer: 'The cinema is usually busy' },
+        { question: 'How long can one person use a library computer?', options: ['One hour', 'Ten minutes', 'All day'], answer: 'One hour' },
+        { question: 'How much does printing cost?', options: ['10 cents per page', '19 cents per page', 'Free'], answer: '10 cents per page' },
+        { question: 'What does the reviewer recommend?', options: ['Vegetable noodles', 'Film tickets', 'Printing'], answer: 'Vegetable noodles' }
+      ],
+      details: [
+        { sentence: 'The film starts at ___.', answer: '19:10' },
+        { sentence: 'Sara should meet at ___.', answer: '18:30' },
+        { sentence: 'Library computers are available for one hour per ___.', answer: 'person' },
+        { sentence: 'The new restaurant is small but ___.', answer: 'friendly' },
+        { sentence: 'The lunch menu is good ___.', answer: 'value' }
+      ],
+      trueFalse: [
+        { sentence: 'The film starts at 18:30.', answer: false },
+        { sentence: 'People should save work before computer time finishes.', answer: true },
+        { sentence: 'Printing is free.', answer: false },
+        { sentence: 'The main courses are a little expensive.', answer: true },
+        { sentence: 'The reviewer recommends vegetable noodles.', answer: true }
+      ],
+      productionQuestion: 'Write three short everyday texts: a message, a notice and a short review.',
+      sampleAnswer: 'Message: Hi, let s meet at 6 because the cafe is busy. Notice: Computers are available for one hour. Review: The restaurant is small but friendly, and the lunch menu is good value.'
+    }
+  ].map(buildReadingReadyLesson);
   const READY_WRITING_LESSONS_A2 = [];
   const READY_LISTENING_LESSONS_A2 = [];
 
