@@ -2922,7 +2922,837 @@
       sampleAnswer: 'Hi Kate, Thanks for your message. I am sorry I could not meet you on Friday because I was ill. I feel better now. Last weekend, I went to a small cafe near my house. The coffee was great, but the music was too loud. I think we should go there one morning when it is quiet. Let me know what you think.'
     }
   ].map(buildWritingReadyLesson);
-  const READY_LISTENING_LESSONS_A2 = [];
+  function buildListeningReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: config.level || (String(config.stage || '').startsWith('A2') ? 'A2' : 'A1'),
+      skill: 'listening',
+      stage: config.stage || 'A2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 30,
+      description: config.description,
+      audioUrl: config.audioUrl,
+      supportTitle: 'Audio and transcript',
+      supportText: `Transcript:\n${config.transcriptText}`,
+      focus: config.focus || ['listening for gist', 'listening for detail', 'A2 transcript support'],
+      teacherNotes: config.teacherNotes || 'Ask the student to listen once without reading, answer the main questions, then listen again with the transcript to check details.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before listening: useful words',
+          prompt: 'Match each useful word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Listening comprehension',
+          prompt: 'Listen and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Listen for details',
+          prompt: 'Type the missing word, number or phrase from the audio.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Listen again and check the transcript.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 5-6 sentences about the topic.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Listen again and choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_LISTENING_LESSONS_A2 = [
+    {
+      id: 'a2-listening-01-checking-into-hotel',
+      order: 1,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Checking into a hotel',
+      topic: 'hotel check-in and services',
+      description: 'Students listen to a hotel receptionist and guest checking in and asking practical questions.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695fc9deac22aa7ecdc937f2_Listening%20A2%20Pre-Intermediate.%20Checking%20into%20a%20hotel.mp3',
+      transcriptText: 'Receptionist: Good evening. Welcome to Blue Sky Hotel. How can I help you?\nGuest: Good evening. I have a reservation. My name is Daniel Smith.\nReceptionist: Thank you, Mr Smith. Let me check. Yes, I can see it here. You booked a double room for two nights, right?\nGuest: Yes, that is correct. My wife is with me. She is waiting in the lobby with the luggage.\nReceptionist: Great. Could I see your passport or ID, please?\nGuest: Sure. Here you are.\nReceptionist: Thank you. Could you also confirm your phone number and email address?\nGuest: Yes. My phone number is +1 202 555 0184, and my email is daniel.smith94@gmail.com.\nReceptionist: Perfect. Would you like one key card or two?\nGuest: Two, please.\nReceptionist: Would you like one double bed, or two single beds?\nGuest: One double bed, please.\nReceptionist: Your room is on the sixth floor, room 612. The elevator is on your left.\nGuest: Thank you. What time is breakfast?\nReceptionist: Breakfast is from 7:00 to 10:30 in the restaurant on the ground floor.\nGuest: Is breakfast included in our booking?\nReceptionist: Yes, it is included. You do not need to pay extra.\nGuest: Great. And is there free Wi-Fi?\nReceptionist: Yes. The Wi-Fi name is BlueSkyGuest, and the password is StayHappy2026.\nGuest: We arrived by car. Do you have parking?\nReceptionist: Yes. We have an underground parking garage. It is $12 per day.\nGuest: Let us add it to the room, please.\nReceptionist: Sure. Would you like to pay for the room now or at check-out?\nGuest: At check-out, please.\nReceptionist: We will just take a card for a security deposit. The deposit is $100, and it will be released after you check out.\nGuest: Okay, thanks for explaining.\nReceptionist: Would you like a wake-up call in the morning?\nGuest: Yes, please. At 7:30 a.m.\nReceptionist: And do you need help with your luggage?\nGuest: Yes, please. That would be helpful.\nReceptionist: Here are your two key cards. Room 612. Enjoy your stay, Mr Smith.\nGuest: Thank you very much. Have a nice evening.',
+      words: [
+        { word: 'reservation', meaning: 'a booking made before arriving' },
+        { word: 'lobby', meaning: 'the main entrance area of a hotel' },
+        { word: 'key card', meaning: 'a card used to open a hotel room door' },
+        { word: 'deposit', meaning: 'money held for safety and returned later' },
+        { word: 'wake-up call', meaning: 'a hotel phone call to wake a guest' }
+      ],
+      questions: [
+        { question: 'What name is the reservation under?', options: ['Daniel Smith', 'David Smith', 'Anna Petrova'], answer: 'Daniel Smith' },
+        { question: 'How many nights did he book?', options: ['Two nights', 'Three nights', 'One night'], answer: 'Two nights' },
+        { question: 'What room number does he get?', options: ['612', '216', '602'], answer: '612' },
+        { question: 'Where is breakfast served?', options: ['On the ground floor', 'On the sixth floor', 'In the lobby'], answer: 'On the ground floor' },
+        { question: 'What wake-up call does he ask for?', options: ['7:30 a.m.', '7:00 a.m.', '10:30 a.m.'], answer: '7:30 a.m.' }
+      ],
+      details: [
+        { sentence: 'Daniel booked a ___ room for two nights.', answer: 'double' },
+        { sentence: 'His wife is waiting in the lobby with the ___.', answer: 'luggage' },
+        { sentence: 'The Wi-Fi password is ___.', answer: 'StayHappy2026' },
+        { sentence: 'Parking costs $___ per day.', answer: '12' },
+        { sentence: 'The security deposit is $___.', answer: '100' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel asks for two key cards.', answer: true },
+        { sentence: 'Breakfast is not included.', answer: false },
+        { sentence: 'The room is on the sixth floor.', answer: true },
+        { sentence: 'Daniel wants to pay for the room immediately.', answer: false },
+        { sentence: 'The receptionist offers help with luggage.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about checking into a hotel. Include a room type, breakfast, Wi-Fi and one question.',
+      sampleAnswer: 'I have a reservation for two nights. I would like a double room. I want to know if breakfast is included. I also need the Wi-Fi password. Could I have two key cards, please?'
+    },
+    {
+      id: 'a2-listening-02-roommates',
+      order: 2,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'What are your roommates like?',
+      topic: 'describing people and shared living',
+      description: 'Students listen to a daughter describing her roommates, room rules and dorm life.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69611447d512487d1a96e0cd_Listening%20A2%20Pre-Intermediate.%20What%20are%20your%20roommates%20like.mp3',
+      transcriptText: 'Mum: Hi, sweetheart! How is dorm life going?\nDaughter: Hi, Mum! It is going well. It is busy, but I like it.\nMum: Tell me about your roommates. Are they nice?\nDaughter: Yes, they are nice, but they are very different. I live with two girls in one room.\nMum: What are they like?\nDaughter: The first one is Chloe. She is very friendly and very talkative. She always says hello to everyone. She likes meeting new people, and she often invites friends to our room.\nMum: That sounds fun, but also noisy.\nDaughter: Yes, sometimes it is noisy. The second roommate is Mia. She is quiet and very organized. Her desk is always clean, and her books are in perfect order. She studies every evening.\nMum: And what about you?\nDaughter: I am in the middle. I like talking, but I also need quiet time. So we made some simple rules.\nMum: What rules?\nDaughter: We keep the room clean, and we do not play loud music after 10 p.m. If Chloe wants to invite friends, she tells us first. And if Mia is studying, we try to be quiet.\nMum: That sounds very mature. Do you get along?\nDaughter: Yes, most of the time. Sometimes we disagree about small things, like the window or the lights, but we talk and fix it.\nMum: I am proud of you. Dorm life teaches you a lot.\nDaughter: It does. And it is helping me become more independent.',
+      words: [
+        { word: 'dorm life', meaning: 'life in student accommodation' },
+        { word: 'talkative', meaning: 'liking to talk a lot' },
+        { word: 'organized', meaning: 'keeping things in good order' },
+        { word: 'get along', meaning: 'have a good relationship' },
+        { word: 'independent', meaning: 'able to do things without much help' }
+      ],
+      questions: [
+        { question: 'How many roommates does the daughter have?', options: ['Two', 'One', 'Three'], answer: 'Two' },
+        { question: 'What is Chloe like?', options: ['Friendly and talkative', 'Quiet and organized', 'Angry and lazy'], answer: 'Friendly and talkative' },
+        { question: 'What is Mia like?', options: ['Quiet and organized', 'Very noisy', 'Never studies'], answer: 'Quiet and organized' },
+        { question: 'What rule do they have after 10 p.m.?', options: ['No loud music', 'No studying', 'No cleaning'], answer: 'No loud music' },
+        { question: 'How does dorm life help the daughter?', options: ['It helps her become independent', 'It helps her sleep all day', 'It helps her avoid people'], answer: 'It helps her become independent' }
+      ],
+      details: [
+        { sentence: 'Chloe often invites ___ to the room.', answer: 'friends' },
+        { sentence: 'Mia studies every ___.', answer: 'evening' },
+        { sentence: 'They keep the room ___.', answer: 'clean' },
+        { sentence: 'They sometimes disagree about the window or the ___.', answer: 'lights' },
+        { sentence: 'The daughter says she is in the ___.', answer: 'middle' }
+      ],
+      trueFalse: [
+        { sentence: 'The daughter dislikes dorm life.', answer: false },
+        { sentence: 'Chloe likes meeting new people.', answer: true },
+        { sentence: 'Mia has a messy desk.', answer: false },
+        { sentence: 'The roommates made simple rules.', answer: true },
+        { sentence: 'They never disagree about anything.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences describing a roommate, classmate or friend. Include personality and one rule for sharing a room.',
+      sampleAnswer: 'My roommate is friendly but quiet. She studies in the evening and keeps her desk clean. I like talking, but I also need quiet time. We do not play loud music after ten. This rule helps us get along.'
+    },
+    {
+      id: 'a2-listening-03-giving-directions',
+      order: 3,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Giving directions',
+      topic: 'directions around town',
+      description: 'Students listen to a conversation about walking from a hotel to a museum.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69625bf8ee3e6e37d12b4635_Listening%20A2%20Pre-Intermediate.%20Giving%20directions.mp3',
+      transcriptText: 'Woman: Excuse me, can you help me, please? I think I am lost.\nMan: Sure. Where do you need to go?\nWoman: I need to get to the City Art Museum. I am staying at the Blue Star Hotel, and I walked for ten minutes, but now I am not sure.\nMan: No problem. You are quite close. Are you walking or taking a bus?\nWoman: I prefer walking if it is not too far.\nMan: It is about fifteen minutes on foot. First, go straight along this street. Walk past the supermarket on your left and the small bakery on your right. After that, you will see traffic lights. At the traffic lights, turn left. Then walk straight for about five minutes. You will pass a park on your right. Keep walking until you come to a big roundabout. At the roundabout, take the second exit. After you take the second exit, you will see a long street with cafes. Walk for two more minutes and look for a tall grey building with a glass entrance. That is the museum.\nWoman: Is it across from something?\nMan: Yes, it is across from a bookshop called Green Pages. You cannot miss it.\nWoman: Let me check: straight, left at the traffic lights, past the park, second exit at the roundabout, and then the museum across from the bookshop.\nMan: That is right. You can also take bus number 12 from the hotel, but walking is easier today.\nWoman: Thank you so much. You explained it very clearly.\nMan: You are welcome. Enjoy the museum!',
+      words: [
+        { word: 'lost', meaning: 'not knowing where you are' },
+        { word: 'traffic lights', meaning: 'lights that control cars and pedestrians' },
+        { word: 'roundabout', meaning: 'a circular road junction' },
+        { word: 'second exit', meaning: 'the second road you leave from' },
+        { word: 'across from', meaning: 'opposite something' }
+      ],
+      questions: [
+        { question: 'Where does the woman want to go?', options: ['City Art Museum', 'Blue Star Hotel', 'Green Park'], answer: 'City Art Museum' },
+        { question: 'How long is the walk?', options: ['About fifteen minutes', 'About five minutes', 'About fifty minutes'], answer: 'About fifteen minutes' },
+        { question: 'Where should she turn left?', options: ['At the traffic lights', 'At the hotel', 'At the bookshop'], answer: 'At the traffic lights' },
+        { question: 'Where is the park?', options: ['On her right', 'On her left', 'Behind the museum'], answer: 'On her right' },
+        { question: 'What is opposite the museum?', options: ['A bookshop', 'A bakery', 'A supermarket'], answer: 'A bookshop' }
+      ],
+      details: [
+        { sentence: 'The woman is staying at the Blue Star ___.', answer: 'Hotel' },
+        { sentence: 'She walks past a supermarket and a small ___.', answer: 'bakery' },
+        { sentence: 'At the roundabout, she should take the ___ exit.', answer: 'second' },
+        { sentence: 'The museum is a tall grey building with a glass ___.', answer: 'entrance' },
+        { sentence: 'The man says bus number ___ also goes from the hotel.', answer: '12' }
+      ],
+      trueFalse: [
+        { sentence: 'The woman prefers walking if it is not too far.', answer: true },
+        { sentence: 'The museum is across from a supermarket.', answer: false },
+        { sentence: 'The woman should turn right at the traffic lights.', answer: false },
+        { sentence: 'The man says walking is easier today.', answer: true },
+        { sentence: 'The museum has a glass entrance.', answer: true }
+      ],
+      productionQuestion: 'Write directions from your home, school or hotel to a useful place. Use at least five direction phrases.',
+      sampleAnswer: 'Go straight along this street. Walk past the supermarket and turn left at the traffic lights. Keep walking until you see a park. Take the second exit at the roundabout. The cafe is across from the bank.'
+    },
+    {
+      id: 'a2-listening-04-household-chores',
+      order: 4,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Household chores',
+      topic: 'family responsibilities',
+      description: 'Students listen to two friends discussing children, chores, rewards and routines.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696271cc3642c8fd6a9e0b1a_Listening%20A2%20Pre-Intermediate.%20Do%20your%20kids%20help%20with%20household%20chores.mp3',
+      transcriptText: 'Lena: Hey, Nadia! You look tired today. Everything okay?\nNadia: I am okay, just busy. The house is a mess again, and the kids say they help, but I am not sure they really do.\nLena: Do your kids help with household chores?\nNadia: They help sometimes, but I have to ask them three times. My son can take out the trash, but he forgets. My daughter can tidy her room, but she does it very slowly.\nLena: Same here. My kids help, but only when I make it a rule. They must do one small chore before they play on their phones.\nNadia: What chores do they usually do?\nLena: My older one washes the dishes after dinner. My younger one feeds the cat and puts toys away.\nNadia: Do you pay them for chores?\nLena: I do not pay them, but I give small rewards sometimes, like choosing a movie on Friday night.\nNadia: Maybe a reward is better than money. My son loves screen time, so I can use that.\nLena: It helps if the chores are clear. I made a simple list on the fridge: Monday - set the table. Tuesday - take out the trash. Wednesday - vacuum the living room.\nNadia: I often redo their work, and then they get lazy.\nLena: Maybe start small: make your bed and put your dirty clothes in the basket.\nNadia: Yes. I will start with easy chores and a simple schedule. I want them to be more responsible.\nLena: It just takes time and patience.\nNadia: Thanks, Lena. Now I feel more motivated.',
+      words: [
+        { word: 'household chores', meaning: 'regular jobs at home' },
+        { word: 'take out the trash', meaning: 'put rubbish outside' },
+        { word: 'reward', meaning: 'something good given for effort' },
+        { word: 'schedule', meaning: 'a plan for times and tasks' },
+        { word: 'responsible', meaning: 'able to do duties well' }
+      ],
+      questions: [
+        { question: 'Why does Nadia look tired?', options: ['The house is a mess', 'She went running', 'She lost her job'], answer: 'The house is a mess' },
+        { question: 'What can Nadia s son do?', options: ['Take out the trash', 'Cook dinner', 'Wash the car'], answer: 'Take out the trash' },
+        { question: 'What does Lena use instead of money?', options: ['Small rewards', 'Long lectures', 'No rules'], answer: 'Small rewards' },
+        { question: 'Where did Lena put the chore list?', options: ['On the fridge', 'On the door', 'On the table'], answer: 'On the fridge' },
+        { question: 'What does Nadia decide to start with?', options: ['Easy chores and a simple schedule', 'Paying more money', 'Doing everything alone'], answer: 'Easy chores and a simple schedule' }
+      ],
+      details: [
+        { sentence: 'Nadia has to ask her kids ___ times.', answer: 'three' },
+        { sentence: 'Lena s older child washes the ___ after dinner.', answer: 'dishes' },
+        { sentence: 'The younger child feeds the ___.', answer: 'cat' },
+        { sentence: 'Wednesday on the list is vacuum the living ___.', answer: 'room' },
+        { sentence: 'Lena says it takes time and ___.', answer: 'patience' }
+      ],
+      trueFalse: [
+        { sentence: 'Nadia pays her children for chores now.', answer: false },
+        { sentence: 'Lena thinks clear chores help.', answer: true },
+        { sentence: 'Nadia often redoes her children s work.', answer: true },
+        { sentence: 'Lena suggests starting with difficult chores.', answer: false },
+        { sentence: 'Nadia feels more motivated after the conversation.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about chores in a family. Say who does what, what rules help and whether rewards are useful.',
+      sampleAnswer: 'In my family, everyone helps at home. I take out the trash and tidy my room. My sister washes the dishes. A simple schedule helps us remember. I think small rewards are better than money.'
+    },
+    {
+      id: 'a2-listening-05-renting-a-car',
+      order: 5,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Renting a car',
+      topic: 'car rental and insurance',
+      description: 'Students listen to a customer renting a car and asking about insurance, fuel and late returns.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69634992e4c07135f1c724c8_Listening%20A2%20Pre-Intermediate.%20Renting%20a%20car.mp3',
+      transcriptText: 'Woman: Hello. I would like to rent a car, please.\nMan: Sure. Do you have a reservation?\nWoman: Yes, I do. My name is Anna Petrova.\nMan: You booked a small car for three days, right?\nWoman: Yes, from Friday to Monday.\nMan: Can I see your driving license and passport, please?\nWoman: Sure. Here you are.\nMan: Will you pay by card?\nWoman: Yes. How much is the deposit?\nMan: The deposit is 200 dollars. We block it on your card and return it after you bring the car back.\nWoman: Is insurance included?\nMan: Basic insurance is included. It covers damage to the other car, but it has an excess.\nWoman: What does excess mean?\nMan: It means if there is damage, you pay the first 500 dollars. After that, insurance pays the rest.\nWoman: Is there an option with full insurance?\nMan: Yes. Full insurance is 15 dollars per day, and then the excess is zero.\nWoman: I think I want full insurance. I am not used to driving in this city.\nMan: No problem. Do you need a GPS?\nWoman: I can use my phone. Is there a phone holder in the car?\nMan: Yes, and the car has Bluetooth.\nWoman: What about fuel?\nMan: It is a full-to-full policy. The tank is full now, and you return it full.\nWoman: Where do I pick up the car?\nMan: It is in parking lot B, space 17.\nWoman: I am driving to the countryside tomorrow. Is this car okay for that?\nMan: Yes, for normal roads. Please return the car by 10 a.m. on Monday. If you are late more than one hour, we charge an extra day.\nWoman: Okay, I will be on time.\nMan: Here is your contract. Please sign here and here.\nWoman: Done. Thank you.',
+      words: [
+        { word: 'rent', meaning: 'pay to use something for a short time' },
+        { word: 'deposit', meaning: 'money held until something is returned' },
+        { word: 'insurance', meaning: 'protection against costs after an accident' },
+        { word: 'excess', meaning: 'the first amount the customer must pay' },
+        { word: 'full-to-full', meaning: 'take the car with full fuel and return it full' }
+      ],
+      questions: [
+        { question: 'How long did Anna book the car for?', options: ['Three days', 'One week', 'Two days'], answer: 'Three days' },
+        { question: 'How much is the deposit?', options: ['200 dollars', '500 dollars', '15 dollars'], answer: '200 dollars' },
+        { question: 'How much is full insurance per day?', options: ['15 dollars', '50 dollars', '12 dollars'], answer: '15 dollars' },
+        { question: 'Where is the car?', options: ['Parking lot B, space 17', 'Parking lot A, space 12', 'Outside the hotel'], answer: 'Parking lot B, space 17' },
+        { question: 'When must Anna return the car?', options: ['By 10 a.m. on Monday', 'By 10 p.m. on Friday', 'By noon on Sunday'], answer: 'By 10 a.m. on Monday' }
+      ],
+      details: [
+        { sentence: 'Anna booked a ___ car.', answer: 'small' },
+        { sentence: 'Basic insurance has an ___.', answer: 'excess' },
+        { sentence: 'With full insurance, the excess is ___.', answer: 'zero' },
+        { sentence: 'The car has Bluetooth and a phone ___.', answer: 'holder' },
+        { sentence: 'If Anna is late more than one hour, they charge an extra ___.', answer: 'day' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna pays by card.', answer: true },
+        { sentence: 'Anna is used to driving in this city.', answer: false },
+        { sentence: 'The car is fine for normal roads.', answer: true },
+        { sentence: 'The fuel policy is empty-to-empty.', answer: false },
+        { sentence: 'Anna signs the contract.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about renting a car. Include deposit, insurance, fuel and return time.',
+      sampleAnswer: 'I would like to rent a small car for three days. I will pay by card. I want full insurance because I do not know the city well. I understand the full-to-full fuel policy. I will return the car on time.'
+    },
+    {
+      id: 'a2-listening-06-party-experience',
+      order: 6,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Party experiences',
+      topic: 'social events and feelings',
+      description: 'Students listen to Anna describing a birthday party and how she felt.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696350bffabbb8e1efd3b945_Listening%20A2.%20Party%20experiences%20(Anna).mp3',
+      transcriptText: 'Hi, I am Anna. Last month I went to my friend s birthday party in a small cafe. It was my first time going to a party with people I did not know well, so I felt a little nervous at the beginning. But everyone was friendly. We played a simple game with questions, and it helped me talk to new people. The music was loud, but it was fun. I danced for a while, then I sat and chatted with two girls about work and travel. The food was great - there were sandwiches, cake, and fruit. I did not stay very late because I had work the next morning, but I really enjoyed it. Next time, I want to stay longer and dance more.',
+      words: [
+        { word: 'nervous', meaning: 'worried or not relaxed' },
+        { word: 'at the beginning', meaning: 'at the start' },
+        { word: 'chat', meaning: 'talk in a friendly informal way' },
+        { word: 'stay late', meaning: 'remain until a late time' },
+        { word: 'enjoyed it', meaning: 'liked the experience' }
+      ],
+      questions: [
+        { question: 'Where was the party?', options: ['In a small cafe', 'At Anna s house', 'In a hotel'], answer: 'In a small cafe' },
+        { question: 'How did Anna feel at the beginning?', options: ['A little nervous', 'Very angry', 'Bored'], answer: 'A little nervous' },
+        { question: 'What helped Anna talk to people?', options: ['A game with questions', 'A dance lesson', 'A work meeting'], answer: 'A game with questions' },
+        { question: 'Who did Anna chat with?', options: ['Two girls', 'Her boss', 'A waiter'], answer: 'Two girls' },
+        { question: 'Why did Anna not stay very late?', options: ['She had work the next morning', 'She disliked the music', 'The cafe closed early'], answer: 'She had work the next morning' }
+      ],
+      details: [
+        { sentence: 'Anna went to her friend s birthday party last ___.', answer: 'month' },
+        { sentence: 'The music was loud, but it was ___.', answer: 'fun' },
+        { sentence: 'Anna talked about work and ___.', answer: 'travel' },
+        { sentence: 'There were sandwiches, cake and ___.', answer: 'fruit' },
+        { sentence: 'Next time, Anna wants to stay longer and dance ___.', answer: 'more' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna knew everyone at the party well.', answer: false },
+        { sentence: 'Everyone was friendly.', answer: true },
+        { sentence: 'Anna danced for a while.', answer: true },
+        { sentence: 'The food was bad.', answer: false },
+        { sentence: 'Anna wants to stay longer next time.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a party or social event you went to. Say how you felt and what happened.',
+      sampleAnswer: 'Last month I went to a small birthday party. I felt nervous because I did not know many people. We played a game and talked. The food was good, and the music was fun. I enjoyed it.'
+    },
+    {
+      id: 'a2-listening-07-hobbies',
+      order: 7,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'What are your hobbies?',
+      topic: 'hobbies and relaxation',
+      description: 'Students listen to Anna talking about cooking, reading, yoga and photography.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696358f220ca87fc15112eb4_Listening%20A2.%20What%20are%20your%20hobbies_%20%20(Anna).mp3',
+      transcriptText: 'Hi, I am Anna. I have a few hobbies that help me relax after a busy day. My main hobby is cooking. I like trying simple new recipes, especially pasta dishes and soups. On weekends I often cook for my family, and I enjoy choosing fresh vegetables at the market. I also like reading, but I do not read very difficult books. I prefer short stories and easy novels in English because I want to improve my language. In the evenings, I sometimes do yoga at home with a video. It helps me feel calm and sleep better. When I have more time, I take photos of the city - small streets, cafes, and sunsets. I am not a professional, but it makes me happy.',
+      words: [
+        { word: 'recipe', meaning: 'instructions for cooking food' },
+        { word: 'market', meaning: 'a place where people buy fresh food' },
+        { word: 'novel', meaning: 'a long story in a book' },
+        { word: 'calm', meaning: 'relaxed and not worried' },
+        { word: 'professional', meaning: 'doing something as a job' }
+      ],
+      questions: [
+        { question: 'What is Anna s main hobby?', options: ['Cooking', 'Swimming', 'Singing'], answer: 'Cooking' },
+        { question: 'What food does she especially like making?', options: ['Pasta dishes and soups', 'Cakes and pies', 'Fish and chips'], answer: 'Pasta dishes and soups' },
+        { question: 'Why does she read easy novels in English?', options: ['To improve her language', 'To become a writer', 'To teach children'], answer: 'To improve her language' },
+        { question: 'What does yoga help her do?', options: ['Feel calm and sleep better', 'Run faster', 'Cook better'], answer: 'Feel calm and sleep better' },
+        { question: 'What does she take photos of?', options: ['The city', 'Animals', 'Food only'], answer: 'The city' }
+      ],
+      details: [
+        { sentence: 'Anna s hobbies help her relax after a busy ___.', answer: 'day' },
+        { sentence: 'She chooses fresh vegetables at the ___.', answer: 'market' },
+        { sentence: 'She prefers short stories and easy ___ in English.', answer: 'novels' },
+        { sentence: 'She does yoga at home with a ___.', answer: 'video' },
+        { sentence: 'She takes photos of small streets, cafes and ___.', answer: 'sunsets' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna cooks for her family on weekends.', answer: true },
+        { sentence: 'Anna only reads very difficult books.', answer: false },
+        { sentence: 'Yoga helps Anna sleep better.', answer: true },
+        { sentence: 'Anna is a professional photographer.', answer: false },
+        { sentence: 'Taking photos makes Anna happy.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about your hobbies. Say what you do, when you do it and why you enjoy it.',
+      sampleAnswer: 'My main hobby is cooking. I like trying simple recipes on weekends. I also read short stories in English. In the evening, I walk outside because it helps me relax. These hobbies make me happy.'
+    },
+    {
+      id: 'a2-listening-08-have-you-ever',
+      order: 8,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Have you ever...?',
+      topic: 'present perfect and past details',
+      description: 'Students listen to Anna and David asking about experiences and giving past details.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696364ff7b44da5cc12e8015_Listening%20A2.%20Have%20you%20ever%E2%80%A6.mp3',
+      transcriptText: 'Anna: Hey, David. I am bored. Let us play Have you ever?\nDavid: Sure. That sounds fun. You start.\nAnna: Have you ever missed a flight?\nDavid: Yes, I have. Last year I arrived at the airport late because of traffic. I felt really stressed. I bought a new ticket and waited for the next flight.\nDavid: Anna, have you ever lost your phone?\nAnna: Yes, I have. I left it in a taxi once. Luckily, I called my number from my friend s phone, and the driver answered. He came back.\nAnna: Have you ever eaten something really strange?\nDavid: Yes, I have. I tried very spicy noodles in a small restaurant. I thought I was going to cry. I did not finish them.\nDavid: Have you ever spoken to a stranger in English for a long time?\nAnna: Yes, I have. I talked to a tourist in a cafe. At first, it was not easy, but after a minute, I felt more confident.\nAnna: Have you ever broken something at work by accident?\nDavid: Yes, I have. I spilled coffee on my keyboard once. My boss was not happy, but it was an accident. I bought a new keyboard the same day.\nDavid: Last question. Anna, have you ever stayed up all night?\nAnna: Yes, I have, many times. Sometimes I stay up late watching a series, and then I regret it in the morning.',
+      words: [
+        { word: 'missed a flight', meaning: 'arrived too late for a plane' },
+        { word: 'stressed', meaning: 'worried and under pressure' },
+        { word: 'strange', meaning: 'unusual or not normal' },
+        { word: 'confident', meaning: 'feeling able to do something' },
+        { word: 'regret', meaning: 'feel sorry about doing something' }
+      ],
+      questions: [
+        { question: 'Why did David miss a flight?', options: ['Because of traffic', 'Because he lost his passport', 'Because he slept late'], answer: 'Because of traffic' },
+        { question: 'Where did Anna leave her phone?', options: ['In a taxi', 'At the airport', 'In a cafe'], answer: 'In a taxi' },
+        { question: 'What strange food did David try?', options: ['Very spicy noodles', 'Raw fish', 'Hot soup'], answer: 'Very spicy noodles' },
+        { question: 'Who did Anna speak to in English?', options: ['A tourist', 'Her boss', 'A driver'], answer: 'A tourist' },
+        { question: 'What did David spill on his keyboard?', options: ['Coffee', 'Water', 'Tea'], answer: 'Coffee' }
+      ],
+      details: [
+        { sentence: 'David bought a new ___ after missing the flight.', answer: 'ticket' },
+        { sentence: 'Anna called her number from her friend s ___.', answer: 'phone' },
+        { sentence: 'David drank a lot of water, but it did not ___.', answer: 'help' },
+        { sentence: 'Anna felt more confident after a ___.', answer: 'minute' },
+        { sentence: 'David bought a new keyboard the same ___.', answer: 'day' }
+      ],
+      trueFalse: [
+        { sentence: 'David has missed a flight.', answer: true },
+        { sentence: 'Anna never got her phone back.', answer: false },
+        { sentence: 'David finished the spicy noodles.', answer: false },
+        { sentence: 'Anna spoke to a stranger in English.', answer: true },
+        { sentence: 'Anna sometimes regrets staying up late.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences answering Have you ever questions. Include at least two past details.',
+      sampleAnswer: 'I have lost my keys once. I left them at work and noticed it at home. I have also spoken to a tourist in English. At first I was nervous, but then I felt confident.'
+    },
+    {
+      id: 'a2-listening-09-shopping-for-clothes',
+      order: 9,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Shopping for clothes',
+      topic: 'clothes, sizes and fitting rooms',
+      description: 'Students listen to a customer buying a jacket and scarf in a clothes shop.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69636f1d504f28272af57544_Listening%20A2.%20Shopping%20for%20clothes.mp3',
+      transcriptText: 'Shop assistant: Hi. Welcome. Can I help you with anything?\nCustomer: Yes, please. I am looking for a jacket.\nShop assistant: What kind of jacket do you want - casual or more formal?\nCustomer: Casual, for everyday. Something warm, but not too heavy.\nShop assistant: What size do you usually wear?\nCustomer: Usually a medium, but it depends on the brand.\nShop assistant: We have these jackets here. This one is a light puffer jacket, and this one is a denim jacket.\nCustomer: I like the puffer jacket. Do you have it in black?\nShop assistant: Yes. Here you are.\nCustomer: Can I try it on?\nShop assistant: Of course. The fitting rooms are over there on the right.\nCustomer: I tried it on. It feels comfortable, but the sleeves are a little long.\nShop assistant: Would you like to try a smaller size?\nCustomer: Yes, please. Can I try a small?\nShop assistant: Here is a small in black.\nCustomer: This size is better, but now it feels tight when I move my arms.\nShop assistant: Would you like a different model? This one has more space in the shoulders.\nCustomer: Yes, I would like to try it.\nShop assistant: It is also water-resistant, so it is good for rainy days.\nCustomer: I like this one. It fits well, and it is not too heavy. How much is it?\nShop assistant: It is 65 dollars. Today we have a 10% discount if you buy two items.\nCustomer: I also need a scarf.\nShop assistant: Do you prefer something plain or with a pattern?\nCustomer: Something plain, maybe grey.\nShop assistant: This grey scarf is soft and warm.\nCustomer: I will take the jacket and the scarf, please.\nShop assistant: Please come to the checkout, and I will ring it up for you.',
+      words: [
+        { word: 'casual', meaning: 'relaxed and not formal' },
+        { word: 'puffer jacket', meaning: 'a warm jacket filled with soft material' },
+        { word: 'fitting room', meaning: 'a place to try on clothes' },
+        { word: 'sleeves', meaning: 'the parts of clothes covering the arms' },
+        { word: 'water-resistant', meaning: 'not easily damaged by rain' }
+      ],
+      questions: [
+        { question: 'What is the customer looking for first?', options: ['A jacket', 'A dress', 'Shoes'], answer: 'A jacket' },
+        { question: 'What size does she usually wear?', options: ['Medium', 'Small', 'Large'], answer: 'Medium' },
+        { question: 'What is wrong with the first jacket?', options: ['The sleeves are long', 'It is too heavy', 'It is too expensive'], answer: 'The sleeves are long' },
+        { question: 'Why is the different model good for rainy days?', options: ['It is water-resistant', 'It is formal', 'It has a pattern'], answer: 'It is water-resistant' },
+        { question: 'What second item does she buy?', options: ['A scarf', 'A hat', 'A shirt'], answer: 'A scarf' }
+      ],
+      details: [
+        { sentence: 'The customer wants something warm, but not too ___.', answer: 'heavy' },
+        { sentence: 'The first jacket is a light ___ jacket.', answer: 'puffer' },
+        { sentence: 'The fitting rooms are on the ___.', answer: 'right' },
+        { sentence: 'The jacket costs ___ dollars.', answer: '65' },
+        { sentence: 'There is a ___% discount if she buys two items.', answer: '10' }
+      ],
+      trueFalse: [
+        { sentence: 'The customer wants a formal jacket.', answer: false },
+        { sentence: 'A small size feels tight when she moves her arms.', answer: true },
+        { sentence: 'The final jacket fits well.', answer: true },
+        { sentence: 'The customer wants a scarf with a pattern.', answer: false },
+        { sentence: 'The grey scarf is soft and warm.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about shopping for clothes. Include size, colour, fit and price.',
+      sampleAnswer: 'I am looking for a casual jacket. I usually wear a medium. I want it in black or grey. The first jacket is too tight, but the second one fits well. It costs 65 dollars.'
+    },
+    {
+      id: 'a2-listening-10-new-years-resolutions',
+      order: 10,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'New Year resolutions',
+      topic: 'plans and healthy habits',
+      description: 'Students listen to Anna talking about changes she is going to make this year.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696374aef864bc7fc50f9623_Listening%20A2.%20New%20Year%E2%80%99s%20resolutions%20%20(Anna).mp3',
+      transcriptText: 'Hi, I am Anna. This year, I am going to change a few things in my life. First, I am going to wake up earlier on weekdays because I often feel rushed in the morning. I am also going to cook at home more. I usually buy food when I am tired, but I want to eat healthier and save money. Another plan is to exercise three times a week. I am not going to do anything extreme - just walking, stretching, and maybe a short workout video. I am also going to practice English every day for ten minutes. Even a little practice will help me improve. Finally, I am going to spend less time on my phone at night and read a book before I sleep.',
+      words: [
+        { word: 'resolution', meaning: 'a plan to improve yourself' },
+        { word: 'rushed', meaning: 'having too little time' },
+        { word: 'healthier', meaning: 'better for your body' },
+        { word: 'extreme', meaning: 'very strong or unusual' },
+        { word: 'improve', meaning: 'become better' }
+      ],
+      questions: [
+        { question: 'When does Anna feel rushed?', options: ['In the morning', 'At night', 'On weekends'], answer: 'In the morning' },
+        { question: 'Why does she want to cook at home more?', options: ['To eat healthier and save money', 'To open a cafe', 'To invite friends every day'], answer: 'To eat healthier and save money' },
+        { question: 'How often is she going to exercise?', options: ['Three times a week', 'Every day for one hour', 'Once a month'], answer: 'Three times a week' },
+        { question: 'How long will she practice English every day?', options: ['Ten minutes', 'Thirty minutes', 'Two hours'], answer: 'Ten minutes' },
+        { question: 'What will she do before she sleeps?', options: ['Read a book', 'Watch videos', 'Cook dinner'], answer: 'Read a book' }
+      ],
+      details: [
+        { sentence: 'Anna is going to wake up earlier on ___.', answer: 'weekdays' },
+        { sentence: 'She is not going to do anything ___.', answer: 'extreme' },
+        { sentence: 'She may do a short workout ___.', answer: 'video' },
+        { sentence: 'A little English practice will help her ___.', answer: 'improve' },
+        { sentence: 'She is going to spend less time on her ___ at night.', answer: 'phone' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna wants to change a few things this year.', answer: true },
+        { sentence: 'Anna plans to buy food more often.', answer: false },
+        { sentence: 'Anna plans to do extreme exercise.', answer: false },
+        { sentence: 'Anna wants to practice English every day.', answer: true },
+        { sentence: 'Anna wants to read before sleep.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about your resolutions or plans. Use going to.',
+      sampleAnswer: 'This year, I am going to wake up earlier. I am going to cook at home more. I am also going to exercise twice a week. I am going to practice English every day. I want to feel healthier.'
+    },
+    {
+      id: 'a2-listening-11-talking-about-films',
+      order: 11,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Talking about films',
+      topic: 'film genres and preferences',
+      description: 'Students listen to Anna explaining what kinds of films she likes and dislikes.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696389bd9e97a11aa46a1e22_Listening%20A2.%20Talking%20about%20films%20%20%20(Anna).mp3',
+      transcriptText: 'Hi, I am Anna. I love watching different kinds of movies, but my favorite is romantic comedy. I like them because they are light and easy to understand. After a long day, I do not want a very serious story. I also enjoy animated films. They are not only for kids - some of them are really funny and have a good message. I do not like horror movies because I get scared easily and I cannot sleep well after. Sometimes I watch dramas, but only when I am in the right mood. If the film is too sad, it can stay in my head for a long time. On weekends, I usually watch a movie at home with snacks and a warm drink.',
+      words: [
+        { word: 'romantic comedy', meaning: 'a funny film about love' },
+        { word: 'animated film', meaning: 'a film made with drawings or computer images' },
+        { word: 'horror movie', meaning: 'a scary film' },
+        { word: 'mood', meaning: 'how someone feels' },
+        { word: 'message', meaning: 'an idea or lesson in a story' }
+      ],
+      questions: [
+        { question: 'What is Anna s favorite kind of movie?', options: ['Romantic comedy', 'Horror', 'Documentary'], answer: 'Romantic comedy' },
+        { question: 'Why does she like romantic comedies?', options: ['They are light and easy to understand', 'They are very serious', 'They are always short'], answer: 'They are light and easy to understand' },
+        { question: 'What other films does she enjoy?', options: ['Animated films', 'Only horror films', 'Old westerns'], answer: 'Animated films' },
+        { question: 'Why does she dislike horror movies?', options: ['She gets scared easily', 'They are too funny', 'They are for children'], answer: 'She gets scared easily' },
+        { question: 'What does she usually have with a movie at home?', options: ['Snacks and a warm drink', 'Dinner at a restaurant', 'Coffee only'], answer: 'Snacks and a warm drink' }
+      ],
+      details: [
+        { sentence: 'After a long day, Anna does not want a very serious ___.', answer: 'story' },
+        { sentence: 'Some animated films are funny and have a good ___.', answer: 'message' },
+        { sentence: 'Anna cannot sleep well after ___ movies.', answer: 'horror' },
+        { sentence: 'She watches dramas only when she is in the right ___.', answer: 'mood' },
+        { sentence: 'A sad film can stay in her ___ for a long time.', answer: 'head' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna likes romantic comedies.', answer: true },
+        { sentence: 'Anna thinks animated films are only for kids.', answer: false },
+        { sentence: 'Anna likes horror movies.', answer: false },
+        { sentence: 'Anna sometimes watches dramas.', answer: true },
+        { sentence: 'Anna usually watches movies at home on weekends.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about films you like and dislike. Give reasons.',
+      sampleAnswer: 'I like comedies because they help me relax. I also enjoy animated films because they have good stories. I do not like horror movies because I get scared. On weekends, I watch films at home with tea.'
+    },
+    {
+      id: 'a2-listening-12-future-plans',
+      order: 12,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Future plans',
+      topic: 'plans, goals and dreams',
+      description: 'Students listen to Anna talking about English, travel, money and career goals.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6963952390e73056cbb7e8ac_Anna%20%E2%80%94%20Future%20plans%20(%20A2%20Pre-Intermediate).mp3',
+      transcriptText: 'Hi, I am Anna. When I think about my future, I feel excited and a little nervous. This year, I am going to focus on my English. I want to speak more confidently at work and when I travel. Next summer, I am planning to visit a new country with my sister. We want to see museums, try local food, and take lots of photos. I am also going to save money every month because I want to move to a bigger apartment one day. In the future, I would like to change my job and work in a more creative area. I do not know exactly when, but I am taking small steps now, and that feels good.',
+      words: [
+        { word: 'future', meaning: 'the time after now' },
+        { word: 'confidently', meaning: 'in a sure and comfortable way' },
+        { word: 'local food', meaning: 'food from a particular place' },
+        { word: 'creative', meaning: 'connected with new ideas or art' },
+        { word: 'small steps', meaning: 'little actions toward a bigger goal' }
+      ],
+      questions: [
+        { question: 'How does Anna feel about the future?', options: ['Excited and a little nervous', 'Angry and bored', 'Only worried'], answer: 'Excited and a little nervous' },
+        { question: 'What is she going to focus on this year?', options: ['English', 'Driving', 'Cooking'], answer: 'English' },
+        { question: 'Who is she planning to travel with?', options: ['Her sister', 'Her manager', 'Her friend David'], answer: 'Her sister' },
+        { question: 'Why is she going to save money?', options: ['To move to a bigger apartment', 'To buy a car', 'To stop working'], answer: 'To move to a bigger apartment' },
+        { question: 'What kind of area would she like to work in?', options: ['A more creative area', 'A colder area', 'A quieter area only'], answer: 'A more creative area' }
+      ],
+      details: [
+        { sentence: 'Anna wants to speak more confidently at work and when she ___.', answer: 'travels' },
+        { sentence: 'Next summer, Anna wants to visit a new ___.', answer: 'country' },
+        { sentence: 'She and her sister want to see museums and try local ___.', answer: 'food' },
+        { sentence: 'Anna is going to save money every ___.', answer: 'month' },
+        { sentence: 'Anna is taking small ___ now.', answer: 'steps' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna feels only excited and not nervous.', answer: false },
+        { sentence: 'Anna wants to improve her English.', answer: true },
+        { sentence: 'Anna plans to travel alone.', answer: false },
+        { sentence: 'Anna wants a bigger apartment one day.', answer: true },
+        { sentence: 'Anna knows exactly when she will change her job.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences about your future plans. Include study, travel, money or work.',
+      sampleAnswer: 'This year, I am going to focus on English. I want to speak more confidently at work. Next summer, I am planning to visit a new city. I am also going to save money every month. In the future, I would like to find a more creative job.'
+    },
+    {
+      id: 'a2-listening-13-if-i-were-a-millionaire',
+      order: 13,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'If I were a millionaire',
+      topic: 'imaginary situations',
+      description: 'Students listen to Anna describing what she would do if she had a lot of money.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69649cb5537da6a59cf4ec8c_Anna%20%E2%80%94%20If%20I%20were%20a%20millionaire.%20A2%20Pre-Intermediate.mp3',
+      transcriptText: 'Hi, I am Anna. If I were a millionaire, I would help my family first. I would buy my parents a comfortable home, so they could relax and enjoy life. I would also travel a lot. I would visit Italy, Japan, and Spain because I love food, culture, and beautiful cities. If I had that much money, I would study more too. I would take English classes with a great teacher and maybe learn another language. I would not work every day, but I would not stop working completely. I would start a small project, like a language-learning website, and I would make it simple and friendly for beginners. If I were a millionaire, I would feel safer, and I would have more time for things I really enjoy.',
+      words: [
+        { word: 'millionaire', meaning: 'a person with a very large amount of money' },
+        { word: 'comfortable', meaning: 'nice and easy to live in' },
+        { word: 'culture', meaning: 'customs, art and way of life' },
+        { word: 'completely', meaning: 'fully or totally' },
+        { word: 'beginner', meaning: 'a person starting to learn something' }
+      ],
+      questions: [
+        { question: 'Who would Anna help first?', options: ['Her family', 'Her teacher', 'Her colleagues'], answer: 'Her family' },
+        { question: 'What would she buy her parents?', options: ['A comfortable home', 'A car', 'A restaurant'], answer: 'A comfortable home' },
+        { question: 'Which countries does she mention?', options: ['Italy, Japan and Spain', 'Canada, France and Mexico', 'Armenia, Georgia and Turkey'], answer: 'Italy, Japan and Spain' },
+        { question: 'What classes would she take?', options: ['English classes', 'Cooking classes', 'Driving classes'], answer: 'English classes' },
+        { question: 'What project would she start?', options: ['A language-learning website', 'A hotel', 'A clothing shop'], answer: 'A language-learning website' }
+      ],
+      details: [
+        { sentence: 'Anna would buy her parents a comfortable ___.', answer: 'home' },
+        { sentence: 'She loves food, culture and beautiful ___.', answer: 'cities' },
+        { sentence: 'She would maybe learn another ___.', answer: 'language' },
+        { sentence: 'She would not stop working ___.', answer: 'completely' },
+        { sentence: 'The website would be simple and friendly for ___.', answer: 'beginners' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna would help her family first.', answer: true },
+        { sentence: 'Anna would never travel.', answer: false },
+        { sentence: 'Anna would study more.', answer: true },
+        { sentence: 'Anna would stop working completely.', answer: false },
+        { sentence: 'Anna would like more time for things she enjoys.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about what you would do if you were a millionaire.',
+      sampleAnswer: 'If I were a millionaire, I would help my family first. I would buy a small house near the sea. I would travel to Japan and Italy. I would also study more. I would start a small project online.'
+    },
+    {
+      id: 'a2-listening-14-city-where-i-live',
+      order: 14,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'The city where I live',
+      topic: 'describing a city',
+      description: 'Students listen to David describing Greenhill, transport, restaurants and nature.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6964a21ea1224b0df45eccc8_Listening%20A2.%20The%20city%20where%20I%20live%20%20(David).mp3',
+      transcriptText: 'Hello, I am David. I live in a city called Greenhill. It is not the capital, but it is a very nice place to live. Greenhill has a mix of modern buildings and older streets. In the old part of the city, there are small houses, local markets, and friendly neighbors. People often say hello, and it feels safe.\nI work near the city center, so I walk to work when the weather is good. If it rains, I take a bus. The buses are usually on time, and I do not need a car every day. There are also many small restaurants, and you can find food from different countries.\nWhat I like most is that Greenhill has nature close by. In just twenty minutes, you can be in the hills or in a forest. I go there to relax and breathe fresh air. The city is not perfect - sometimes it is noisy at night, and parking is difficult - but for me it is a good balance between city life and calm living.',
+      words: [
+        { word: 'capital', meaning: 'the main city of a country' },
+        { word: 'local market', meaning: 'a market in the area where people live' },
+        { word: 'on time', meaning: 'not late' },
+        { word: 'fresh air', meaning: 'clean air outside' },
+        { word: 'balance', meaning: 'a good mix of different things' }
+      ],
+      questions: [
+        { question: 'What is David s city called?', options: ['Greenhill', 'Bluehill', 'Greendale'], answer: 'Greenhill' },
+        { question: 'What is in the old part of the city?', options: ['Small houses and local markets', 'Only tall offices', 'An airport'], answer: 'Small houses and local markets' },
+        { question: 'How does David go to work when the weather is good?', options: ['He walks', 'He drives', 'He cycles'], answer: 'He walks' },
+        { question: 'What can you reach in twenty minutes?', options: ['Hills or a forest', 'The capital', 'The airport'], answer: 'Hills or a forest' },
+        { question: 'What is difficult in the city?', options: ['Parking', 'Finding food', 'Taking buses'], answer: 'Parking' }
+      ],
+      details: [
+        { sentence: 'Greenhill has modern buildings and older ___.', answer: 'streets' },
+        { sentence: 'People often say ___ in the old part.', answer: 'hello' },
+        { sentence: 'David takes a bus if it ___.', answer: 'rains' },
+        { sentence: 'He goes to nature to relax and breathe fresh ___.', answer: 'air' },
+        { sentence: 'For David, Greenhill is a balance between city life and calm ___.', answer: 'living' }
+      ],
+      trueFalse: [
+        { sentence: 'Greenhill is the capital.', answer: false },
+        { sentence: 'David needs a car every day.', answer: false },
+        { sentence: 'The buses are usually on time.', answer: true },
+        { sentence: 'Greenhill has nature close by.', answer: true },
+        { sentence: 'David thinks the city is perfect.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences about the city or town where you live. Include transport, food, nature and one problem.',
+      sampleAnswer: 'I live in a busy city. There are modern buildings and old streets. I usually take the bus, and it is often on time. There are many cafes and restaurants. The city has nice parks, but parking is difficult.'
+    },
+    {
+      id: 'a2-listening-15-my-friends',
+      order: 15,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'My friends',
+      topic: 'friendship and personality',
+      description: 'Students listen to Maria describing her friends, their personalities and why they matter.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6964b0a905da3ef85eaa9829_Listening%20A2.%20My%20friends%20%20(Maria).mp3',
+      transcriptText: 'Hi, I am Maria, and my friends are very important to me. I have friends from different parts of my life - school, work, and my neighborhood. My best friend is Julia. She is kind, honest, and a little shy at first, but when you know her, she is very funny. We often meet after work, drink tea, and talk about our plans. Julia is great at giving support, especially when I feel stressed.\nI also have a friend called Sofia. She is very creative and loves making things. She paints, takes photos, and sometimes makes small gifts for her friends. When I feel bored, Sofia always has an idea, like going to a craft market or trying a new hobby.\nI trust my friends, and I feel lucky because they accept me. When we are together, I feel calm and happy.',
+      words: [
+        { word: 'neighborhood', meaning: 'the area around your home' },
+        { word: 'honest', meaning: 'telling the truth' },
+        { word: 'support', meaning: 'help and kindness when someone needs it' },
+        { word: 'creative', meaning: 'good at making or imagining things' },
+        { word: 'trust', meaning: 'believe someone is good and reliable' }
+      ],
+      questions: [
+        { question: 'Where does Maria have friends from?', options: ['School, work and her neighborhood', 'Only school', 'Only online'], answer: 'School, work and her neighborhood' },
+        { question: 'What is Julia like at first?', options: ['A little shy', 'Very loud', 'Angry'], answer: 'A little shy' },
+        { question: 'What does Julia help with?', options: ['Giving support', 'Fixing cars', 'Cooking dinner'], answer: 'Giving support' },
+        { question: 'What does Sofia love doing?', options: ['Making things', 'Playing football', 'Driving'], answer: 'Making things' },
+        { question: 'How does Maria feel with her friends?', options: ['Calm and happy', 'Nervous and tired', 'Bored'], answer: 'Calm and happy' }
+      ],
+      details: [
+        { sentence: 'Maria s best friend is called ___.', answer: 'Julia' },
+        { sentence: 'Julia is kind, honest and a little ___.', answer: 'shy' },
+        { sentence: 'Maria and Julia often drink ___ after work.', answer: 'tea' },
+        { sentence: 'Sofia sometimes makes small ___ for friends.', answer: 'gifts' },
+        { sentence: 'Maria feels lucky because her friends ___ her.', answer: 'accept' }
+      ],
+      trueFalse: [
+        { sentence: 'Maria says her friends are important to her.', answer: true },
+        { sentence: 'Julia is never funny.', answer: false },
+        { sentence: 'Sofia is creative.', answer: true },
+        { sentence: 'Sofia has no ideas when Maria is bored.', answer: false },
+        { sentence: 'Maria trusts her friends.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a good friend. Include personality, activities and why you trust them.',
+      sampleAnswer: 'My best friend is kind and honest. She is a little shy at first, but she is funny. We often drink coffee and talk after work. She gives me support when I feel stressed. I trust her because she accepts me.'
+    },
+    {
+      id: 'a2-listening-16-stolen-phone',
+      order: 16,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'At the police station: stolen phone',
+      topic: 'reporting a problem',
+      description: 'Students listen to a woman reporting a stolen phone and describing what happened.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6964b8f04c1cfb8a8ac5ef6f_Listening%20A2.%20At%20the%20Police%20Station%20Stolen%20Phone.mp3',
+      transcriptText: 'Police officer: Good afternoon. Please have a seat. Can you tell me what happened?\nWoman: My phone was stolen this morning.\nPolice officer: Where were you when it happened?\nWoman: I was at the Central Bus Station, near the ticket machines.\nPolice officer: What time was it?\nWoman: Around 9:20 a.m.\nPolice officer: What were you doing at that time?\nWoman: I was buying a ticket and checking the timetable. I was also texting my sister. Then I put the phone in my coat pocket.\nPolice officer: When did you notice it was missing?\nWoman: A few minutes later. I was walking to Platform 3, and I wanted to check my ticket again. I reached into my pocket, but the phone was not there.\nPolice officer: Had you used your phone before you left home?\nWoman: Yes. I had checked the weather and called my boss. After that, I left my apartment quickly because I did not want to miss the bus.\nPolice officer: Did you see anyone suspicious?\nWoman: A man bumped into me while I was turning around. He said Sorry, and he walked away fast. He was about thirty, medium height, with a dark jacket and a black cap.\nPolice officer: Were you carrying anything else?\nWoman: Yes, a coffee and a small shopping bag. I think I was distracted.\nPolice officer: What did you do after you noticed the phone was gone?\nWoman: I checked all my pockets, went back to the ticket machine area, and called my phone from my friend s number, but no one answered.\nPolice officer: Had you locked your phone with a PIN?\nWoman: Yes, and I had turned on Face ID. It is a blue iPhone 13 with a clear case and a small sticker on the back.\nPolice officer: We will check the station cameras and make a report. Please block your SIM card and change your passwords as soon as possible.',
+      words: [
+        { word: 'stolen', meaning: 'taken by another person without permission' },
+        { word: 'ticket machine', meaning: 'a machine for buying tickets' },
+        { word: 'suspicious', meaning: 'seeming strange or possibly wrong' },
+        { word: 'bumped into', meaning: 'hit someone lightly by accident or on purpose' },
+        { word: 'distracted', meaning: 'not paying full attention' }
+      ],
+      questions: [
+        { question: 'Where was the woman when the phone was stolen?', options: ['Central Bus Station', 'A cafe', 'A hotel lobby'], answer: 'Central Bus Station' },
+        { question: 'What time did it happen?', options: ['Around 9:20 a.m.', 'Around 7:30 a.m.', 'Around 6 p.m.'], answer: 'Around 9:20 a.m.' },
+        { question: 'Where was she walking when she noticed the phone was missing?', options: ['To Platform 3', 'To the police station', 'To a cafe'], answer: 'To Platform 3' },
+        { question: 'What did the suspicious man wear?', options: ['A dark jacket and black cap', 'A blue suit', 'A red coat'], answer: 'A dark jacket and black cap' },
+        { question: 'What model was the phone?', options: ['A blue iPhone 13', 'A black iPhone 12', 'A blue Samsung'], answer: 'A blue iPhone 13' }
+      ],
+      details: [
+        { sentence: 'The woman was buying a ticket and checking the ___.', answer: 'timetable' },
+        { sentence: 'She had checked the weather and called her ___.', answer: 'boss' },
+        { sentence: 'The man was about thirty and medium ___.', answer: 'height' },
+        { sentence: 'The phone had a clear case and a small ___ on the back.', answer: 'sticker' },
+        { sentence: 'The officer tells her to block her SIM card and change her ___.', answer: 'passwords' }
+      ],
+      trueFalse: [
+        { sentence: 'The woman noticed the phone was gone immediately.', answer: false },
+        { sentence: 'The woman had locked the phone with a PIN.', answer: true },
+        { sentence: 'A man bumped into her at the station.', answer: true },
+        { sentence: 'The officer says they will check station cameras.', answer: true },
+        { sentence: 'The woman was carrying only her phone.', answer: false }
+      ],
+      productionQuestion: 'Write 5-6 sentences reporting a lost or stolen item. Include where, when, what happened and what the item looks like.',
+      sampleAnswer: 'My phone was stolen at the bus station at about nine. I was buying a ticket and checking the timetable. A man bumped into me, and later my phone was missing. It is a blue phone with a clear case. I blocked my SIM card.'
+    },
+    {
+      id: 'a2-listening-17-job-interview',
+      order: 17,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'Job interview',
+      topic: 'work experience and strengths',
+      description: 'Students listen to a simple job interview for a customer service position.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6966689c0c7308af961b678c_Listening%20A2.%20Job%20interview.mp3',
+      transcriptText: 'Interviewer: Good morning. Please come in and have a seat.\nCandidate: Good morning. Thank you.\nInterviewer: My name is Emma. I am the office manager here. What is your name?\nCandidate: I am Daniel Smith.\nInterviewer: Why are you here today?\nCandidate: I am here for the customer service job. I saw your advertisement online, and I want to work here because I like helping people.\nInterviewer: Can you tell me a little about yourself?\nCandidate: I am 27 years old, and I live near the city center. I am friendly and calm, and I work well with people. I speak English and a little Russian.\nInterviewer: Do you have work experience?\nCandidate: Yes. I worked in a small hotel for one year. I answered calls, helped guests, and solved small problems. I also worked in a cafe on weekends.\nInterviewer: What did you like about that hotel job?\nCandidate: I liked talking to guests and making them feel comfortable. When someone was angry, I stayed polite and tried to find a solution.\nInterviewer: What are your strengths?\nCandidate: I am patient, responsible, and I learn fast. I can work under pressure, and I am good at organizing my time.\nInterviewer: What is one thing you want to improve?\nCandidate: Sometimes I worry too much about small details. Now I try to focus on the most important tasks first.\nInterviewer: Can you work shifts, including weekends?\nCandidate: Yes, I can. I am flexible.\nInterviewer: This job includes answering emails, chatting with customers, and writing short reports. Are you okay with that?\nCandidate: Yes. I can type fast, and I use a computer every day.\nInterviewer: Do you have any questions for me?\nCandidate: Yes. What time does a normal shift start and finish? And is there training?\nInterviewer: A normal shift is from 9 to 6, but we also have evening shifts. We give training for the first two weeks.\nCandidate: That sounds good. Thank you.',
+      words: [
+        { word: 'customer service', meaning: 'helping customers with questions or problems' },
+        { word: 'advertisement', meaning: 'information about a job or product' },
+        { word: 'experience', meaning: 'knowledge from doing a job or activity' },
+        { word: 'strengths', meaning: 'things a person is good at' },
+        { word: 'flexible', meaning: 'able to change plans or times' }
+      ],
+      questions: [
+        { question: 'What job is Daniel applying for?', options: ['Customer service', 'Hotel manager', 'Cafe cook'], answer: 'Customer service' },
+        { question: 'Where did he work for one year?', options: ['In a small hotel', 'In a school', 'In a bank'], answer: 'In a small hotel' },
+        { question: 'What languages does Daniel speak?', options: ['English and a little Russian', 'English and Spanish', 'Only Russian'], answer: 'English and a little Russian' },
+        { question: 'What are Daniel s strengths?', options: ['Patient, responsible and learns fast', 'Creative and loud', 'Quiet and slow'], answer: 'Patient, responsible and learns fast' },
+        { question: 'How long is the training?', options: ['Two weeks', 'Two days', 'Two months'], answer: 'Two weeks' }
+      ],
+      details: [
+        { sentence: 'Daniel is ___ years old.', answer: '27' },
+        { sentence: 'He saw the advertisement ___.', answer: 'online' },
+        { sentence: 'At the hotel, he answered calls and helped ___.', answer: 'guests' },
+        { sentence: 'He can work under ___.', answer: 'pressure' },
+        { sentence: 'A normal shift is from 9 to ___.', answer: '6' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel wants the job because he likes helping people.', answer: true },
+        { sentence: 'Daniel has no work experience.', answer: false },
+        { sentence: 'Daniel says he can type fast.', answer: true },
+        { sentence: 'Daniel cannot work weekends.', answer: false },
+        { sentence: 'The company gives training.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences introducing yourself in a job interview. Include experience, strengths and one question.',
+      sampleAnswer: 'I am applying for a customer service job. I worked in a hotel for one year. I am patient and responsible, and I work well with people. I can use a computer every day. I would like to know if there is training.'
+    },
+    {
+      id: 'a2-listening-18-life-changes',
+      order: 18,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'Life changes',
+      topic: 'moving, work and new habits',
+      description: 'Students listen to Anna describing recent changes in her home, job and habits.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696671ca4f87ead420b2db04_Listening%20A2.%20Life%20changes%20(Anna).mp3',
+      transcriptText: 'Hi, I am Anna. Recently, my life has changed a lot. About three months ago, I moved to a new apartment. Before that, I lived with my sister, and we shared everything. Now I live alone, and I have my own routine. At first, I felt a little nervous because the apartment was quiet at night. But now I enjoy it. I can choose my music, my food, and my schedule.\nAnother big change is my job. I started working at a small travel company. My old job was simple and calm, but this new job is much busier. I answer emails, speak to customers, and help people plan trips. In the beginning, I made many small mistakes, and I felt embarrassed. But my manager is kind, and my colleagues help me. I am learning every day.\nI also changed my habits. I cook more often now, and I try to eat healthier food. I even started going for short walks after dinner. These changes are not always easy, but I feel more independent and more confident. I think this new chapter is good for me.',
+      words: [
+        { word: 'recently', meaning: 'not long ago' },
+        { word: 'routine', meaning: 'regular way of doing things' },
+        { word: 'embarrassed', meaning: 'uncomfortable because of a mistake' },
+        { word: 'colleagues', meaning: 'people you work with' },
+        { word: 'new chapter', meaning: 'a new period in life' }
+      ],
+      questions: [
+        { question: 'When did Anna move to a new apartment?', options: ['About three months ago', 'Last week', 'Two years ago'], answer: 'About three months ago' },
+        { question: 'Who did she live with before?', options: ['Her sister', 'Her parents', 'Her friend'], answer: 'Her sister' },
+        { question: 'Where does she work now?', options: ['At a small travel company', 'At a cafe', 'At a school'], answer: 'At a small travel company' },
+        { question: 'How did she feel after making mistakes?', options: ['Embarrassed', 'Angry', 'Bored'], answer: 'Embarrassed' },
+        { question: 'What new habit did she start after dinner?', options: ['Going for short walks', 'Watching films', 'Calling customers'], answer: 'Going for short walks' }
+      ],
+      details: [
+        { sentence: 'Now Anna lives ___.', answer: 'alone' },
+        { sentence: 'At first, the apartment was quiet at ___.', answer: 'night' },
+        { sentence: 'Her new job is much ___.', answer: 'busier' },
+        { sentence: 'Her manager is ___.', answer: 'kind' },
+        { sentence: 'Anna feels more independent and more ___.', answer: 'confident' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna used to live with her sister.', answer: true },
+        { sentence: 'Anna dislikes living alone now.', answer: false },
+        { sentence: 'Anna helps people plan trips at work.', answer: true },
+        { sentence: 'Anna s colleagues do not help her.', answer: false },
+        { sentence: 'Anna thinks the new chapter is good for her.', answer: true }
+      ],
+      productionQuestion: 'Write 5-6 sentences about a change in your life or a change you would like to make.',
+      sampleAnswer: 'Recently, I changed my routine. I started studying English every evening. At first, it was difficult because I was tired after work. Now I feel more confident. I also cook more often and walk after dinner.'
+    }
+  ].map(buildListeningReadyLesson);
 
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
