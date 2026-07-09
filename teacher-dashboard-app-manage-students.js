@@ -3239,6 +3239,339 @@
     }
   ].map(buildWritingReadyLesson);
 
+  function buildListeningReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      skill: 'listening',
+      stage: config.stage || 'A1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 25,
+      description: config.description,
+      audioUrl: config.audioUrl,
+      supportTitle: 'Audio and transcript',
+      supportText: `Transcript:\n${config.transcriptText}`,
+      focus: config.focus || ['listening for gist', 'listening for detail', 'A1 transcript support'],
+      teacherNotes: config.teacherNotes || 'Ask the student to listen once without reading, answer the first section, then listen again with the transcript for detail checking.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before listening: useful words',
+          prompt: 'Match each useful word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Listening comprehension',
+          prompt: 'Listen and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Listen for details',
+          prompt: 'Type the missing word, number or phrase from the audio.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Listen again and check the transcript.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 4-5 short sentences about the topic.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Listen again and choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_LISTENING_LESSONS_A1 = [
+    {
+      id: 'a1-listening-01-my-daily-life',
+      order: 1,
+      stage: 'A1.1',
+      title: 'My daily life',
+      topic: 'daily routine and work',
+      description: 'Students listen to Anna talking about her family, job and daily routine.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69538927b8f13a47a81c7924_Listening%20A1.%20Lesson%201.%20My%20daily%20life.mp3',
+      transcriptText: 'Hello.\nMy name is Anna.\nI am twenty-six years old.\nI live in a small city.\nI live with my parents and my younger brother.\nMy family is very friendly.\nI work in a cafe near my home.\nI like my job because the people are nice.\nEvery day, I wake up at seven o clock.\nI wash my face and brush my teeth.\nThen I have breakfast.\nFor breakfast, I usually drink coffee and eat toast.\nSometimes I eat eggs or fruit.\nI leave home at eight o clock.\nI go to work by bus.\nThe bus ride takes about twenty minutes.\nAt work, I make coffee and serve customers.\nI talk to people and smile a lot.\nI finish work at four o clock.\nAfter work, I go home.\nIn the evening, I like to relax.\nI watch TV or listen to music.\nSometimes I read a book.\nI like reading simple stories.\nI also like learning English.\nOn weekends, I do not work.\nI meet my friends or stay at home.\nWe go for a walk or drink tea together.\nI like weekends very much.\nThank you for listening.',
+      words: [
+        { word: 'friendly', meaning: 'kind and nice to other people' },
+        { word: 'cafe', meaning: 'a place where people drink coffee or tea' },
+        { word: 'customers', meaning: 'people who buy something' },
+        { word: 'toast', meaning: 'bread cooked until it is brown' },
+        { word: 'weekends', meaning: 'Saturday and Sunday' }
+      ],
+      questions: [
+        { question: 'What is the speaker’s name?', options: ['Anna', 'Maria', 'Lina'], answer: 'Anna' },
+        { question: 'How old is Anna?', options: ['Twenty-six', 'Twenty', 'Thirty'], answer: 'Twenty-six' },
+        { question: 'Where does Anna work?', options: ['In a cafe', 'In a school', 'In a supermarket'], answer: 'In a cafe' },
+        { question: 'How does Anna go to work?', options: ['By bus', 'By bike', 'On foot'], answer: 'By bus' },
+        { question: 'What does Anna do on weekends?', options: ['Meets friends or stays at home', 'Works in the cafe', 'Goes to school'], answer: 'Meets friends or stays at home' }
+      ],
+      details: [
+        { sentence: 'Anna lives with her parents and her younger ___.', answer: 'brother' },
+        { sentence: 'She wakes up at ___ o clock.', answer: 'seven' },
+        { sentence: 'She leaves home at ___ o clock.', answer: 'eight' },
+        { sentence: 'The bus ride takes about ___ minutes.', answer: 'twenty' },
+        { sentence: 'She finishes work at ___ o clock.', answer: 'four' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna lives in a small city.', answer: true },
+        { sentence: 'Anna eats toast for breakfast every day.', answer: false },
+        { sentence: 'Anna works near her home.', answer: true },
+        { sentence: 'Anna does not like learning English.', answer: false },
+        { sentence: 'Anna likes weekends very much.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your daily routine.',
+      sampleAnswer: 'I wake up at seven. I have breakfast at home. I go to work by bus. In the evening, I watch TV. On weekends, I meet my friends.'
+    },
+    {
+      id: 'a1-listening-02-new-class',
+      order: 2,
+      stage: 'A1.1',
+      title: 'Students in a new class',
+      topic: 'people, countries and hobbies',
+      description: 'Students listen to Anna talking about her new language class.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6953ca29a25e926ab54497e9_Listening%20A1.%20Lesson%202.%20Students%20in%20a%20new%20class.mp3',
+      transcriptText: 'Hello.\nMy name is Anna, and I want to tell you about my new language class.\nI study Japanese at a language school in the city.\nOur class is small. There are eight students.\nOur teacher s name is Mr Tanaka.\nHe is from Japan, and he is forty-five years old.\nHe is very kind and friendly.\nHe loves music, and sometimes he plays the guitar in class.\nThe students in my class are from different countries.\nOne student is Maria. She is from Mexico.\nShe is twenty years old, and she is a university student.\nShe likes dancing and music.\nAnother student is Paul. He is from Canada.\nHe is thirty years old, and he works as a waiter.\nHe likes football and video games.\nWe also have a student from France.\nHer name is Silvie. She is a nurse, and she loves anime and Japan.\nI really like my class.\nThe students are friendly, and the teacher is great.\nI enjoy learning Japanese, and I am happy to be in this class.',
+      words: [
+        { word: 'language class', meaning: 'a class where people learn a language' },
+        { word: 'teacher', meaning: 'a person who helps students learn' },
+        { word: 'kind', meaning: 'nice and helpful' },
+        { word: 'waiter', meaning: 'a person who serves food and drinks' },
+        { word: 'nurse', meaning: 'a person who helps sick people' }
+      ],
+      questions: [
+        { question: 'What language does Anna study?', options: ['Japanese', 'English', 'Spanish'], answer: 'Japanese' },
+        { question: 'How many students are in the class?', options: ['Eight', 'Ten', 'Five'], answer: 'Eight' },
+        { question: 'Where is Mr Tanaka from?', options: ['Japan', 'Mexico', 'Canada'], answer: 'Japan' },
+        { question: 'Where is Maria from?', options: ['Mexico', 'France', 'Canada'], answer: 'Mexico' },
+        { question: 'What is Paul’s job?', options: ['Waiter', 'Teacher', 'Doctor'], answer: 'Waiter' }
+      ],
+      details: [
+        { sentence: 'Mr Tanaka is ___ years old.', answer: 'forty-five' },
+        { sentence: 'Mr Tanaka sometimes plays the ___ in class.', answer: 'guitar' },
+        { sentence: 'Maria is ___ years old.', answer: 'twenty' },
+        { sentence: 'Paul likes football and video ___.', answer: 'games' },
+        { sentence: 'Silvie is from ___.', answer: 'France' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna studies Japanese.', answer: true },
+        { sentence: 'The class is very big.', answer: false },
+        { sentence: 'Maria is a university student.', answer: true },
+        { sentence: 'Paul is from France.', answer: false },
+        { sentence: 'Anna is happy to be in the class.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about a class you know or want to join.',
+      sampleAnswer: 'I study English online. My class is small. My teacher is friendly. The students are from different places. I like my class.'
+    },
+    {
+      id: 'a1-listening-03-how-often',
+      order: 3,
+      stage: 'A1.2',
+      title: 'How often I do different activities',
+      topic: 'frequency and free-time habits',
+      description: 'Students listen to Mark talking about how often he shops, exercises and eats out.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6953d534622e92094f8e69d3_Listening%20A1.%20Lesson%203.%20How%20often%20I%20do%20different%20activities.mp3',
+      transcriptText: 'Hello.\nMy name is Mark.\nToday I want to talk about my daily life and how often I do some activities.\nFirst, shopping.\nI usually go shopping once a week.\nI often go to the supermarket on Monday evening.\nI buy food for the next few days.\nI rarely go shopping on weekends because the shops are very busy.\nI do not buy clothes very often.\nWhen I need new clothes, I sometimes go to a shopping center near my home.\nNow, exercise.\nI like to stay active.\nI usually exercise two or three times a week.\nI often go running in the park near my house.\nI run for about forty minutes and listen to music while I run.\nOn Fridays, I sometimes play football with my friends.\nWe meet after work in the evening.\nIt is fun and helps me relax.\nLet me talk about drinks.\nI drink coffee every day.\nI always have one cup in the morning.\nSometimes I drink another coffee at work.\nI like tea too, but I do not drink it very often.\nI usually drink tea on weekends.\nI also want to talk about my family.\nI talk to my mum very often.\nShe usually calls me first.\nSometimes we speak every day, and sometimes only a few times a week.\nFinally, eating out.\nI do not eat out every day.\nI usually eat at home during the week.\nOn weekends, I often go to a cafe or restaurant.\nI like trying different food, especially Italian and Asian food.\nThat is a little about my life and how often I do different things.\nThank you for listening.',
+      words: [
+        { word: 'usually', meaning: 'something happens most of the time' },
+        { word: 'rarely', meaning: 'not often' },
+        { word: 'exercise', meaning: 'do sport or physical activity' },
+        { word: 'relax', meaning: 'rest and feel calm' },
+        { word: 'eat out', meaning: 'eat in a cafe or restaurant' }
+      ],
+      questions: [
+        { question: 'How often does Mark go shopping?', options: ['Once a week', 'Every day', 'Once a month'], answer: 'Once a week' },
+        { question: 'When does he often go to the supermarket?', options: ['Monday evening', 'Friday morning', 'Sunday afternoon'], answer: 'Monday evening' },
+        { question: 'How often does he exercise?', options: ['Two or three times a week', 'Every day', 'Once a year'], answer: 'Two or three times a week' },
+        { question: 'What does he drink every day?', options: ['Coffee', 'Tea', 'Juice'], answer: 'Coffee' },
+        { question: 'When does he often eat out?', options: ['On weekends', 'Every day', 'On Monday evening'], answer: 'On weekends' }
+      ],
+      details: [
+        { sentence: 'Mark runs for about ___ minutes.', answer: 'forty' },
+        { sentence: 'On Fridays, he sometimes plays ___ with his friends.', answer: 'football' },
+        { sentence: 'He always has one cup of coffee in the ___.', answer: 'morning' },
+        { sentence: 'His mum usually calls him ___.', answer: 'first' },
+        { sentence: 'He likes Italian and ___ food.', answer: 'Asian' }
+      ],
+      trueFalse: [
+        { sentence: 'Mark rarely goes shopping on weekends.', answer: true },
+        { sentence: 'Mark buys clothes very often.', answer: false },
+        { sentence: 'Mark listens to music while he runs.', answer: true },
+        { sentence: 'Mark drinks tea every day.', answer: false },
+        { sentence: 'Mark usually eats at home during the week.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about how often you do different activities.',
+      sampleAnswer: 'I go shopping once a week. I drink coffee every day. I sometimes exercise. I rarely eat out. I talk to my family often.'
+    },
+    {
+      id: 'a1-listening-04-right-now',
+      order: 4,
+      stage: 'A1.2',
+      title: 'What we are doing right now',
+      topic: 'present continuous and home activities',
+      description: 'Students listen to Tom describing what his family is doing now.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6953e18cc17165f5b98e0462_Listening%20A1.%20Lesson%203.%20What%20we%20are%20doing%20right%20now.mp3',
+      transcriptText: 'Hello.\nMy name is Tom.\nI want to tell you what my family is doing right now.\nToday we are all at home.\nIt is a quiet day, and everyone is busy.\nMy wife is in the living room.\nShe is sitting on the sofa and studying Spanish.\nShe is writing new words in her notebook and listening to a lesson on her phone.\nShe wants to learn Spanish because we are planning a trip next year.\nMy son is in the kitchen.\nHe is cooking lunch at the moment.\nHe is cutting vegetables and boiling pasta.\nHe likes cooking, and he often finds new recipes online.\nMy daughter is in her bedroom.\nShe is doing her homework.\nShe is reading a book and answering questions.\nShe is also listening to music while she is studying.\nMy father is outside.\nHe is washing the car in front of the house.\nHe is wearing headphones and listening to his favorite songs.\nAs for me, I am in my room.\nI am drinking tea and working on my computer.\nI am watching some old family videos and smiling a lot.\nEveryone is doing something different, but we are all at home together.\nIt is a nice and relaxing day.\nThank you for listening.',
+      words: [
+        { word: 'right now', meaning: 'at this moment' },
+        { word: 'living room', meaning: 'room where people relax' },
+        { word: 'notebook', meaning: 'book for writing notes' },
+        { word: 'recipes', meaning: 'instructions for cooking food' },
+        { word: 'headphones', meaning: 'things you wear to listen privately' }
+      ],
+      questions: [
+        { question: 'Where is Tom’s wife?', options: ['In the living room', 'In the kitchen', 'Outside'], answer: 'In the living room' },
+        { question: 'What language is Tom’s wife studying?', options: ['Spanish', 'Japanese', 'English'], answer: 'Spanish' },
+        { question: 'What is Tom’s son doing?', options: ['Cooking lunch', 'Doing homework', 'Washing the car'], answer: 'Cooking lunch' },
+        { question: 'Where is Tom’s daughter?', options: ['In her bedroom', 'In the living room', 'In the garden'], answer: 'In her bedroom' },
+        { question: 'What is Tom doing?', options: ['Drinking tea and working', 'Cooking pasta', 'Playing football'], answer: 'Drinking tea and working' }
+      ],
+      details: [
+        { sentence: 'Tom’s wife is sitting on the ___.', answer: 'sofa' },
+        { sentence: 'Tom’s son is boiling ___.', answer: 'pasta' },
+        { sentence: 'Tom’s daughter is answering ___.', answer: 'questions' },
+        { sentence: 'Tom’s father is washing the ___.', answer: 'car' },
+        { sentence: 'Tom is watching old family ___.', answer: 'videos' }
+      ],
+      trueFalse: [
+        { sentence: 'Everyone is at home.', answer: true },
+        { sentence: 'Tom’s wife is learning French.', answer: false },
+        { sentence: 'Tom’s son likes cooking.', answer: true },
+        { sentence: 'Tom’s father is inside.', answer: false },
+        { sentence: 'It is a nice and relaxing day.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about what people around you are doing now.',
+      sampleAnswer: 'I am studying English now. My mother is cooking. My brother is watching TV. My friend is working. We are all busy.'
+    },
+    {
+      id: 'a1-listening-05-michael-routine',
+      order: 5,
+      stage: 'A1.3',
+      title: 'Michael’s daily life',
+      topic: 'work, routine and future goals',
+      description: 'Students listen to Michael describing his home, job, routine and goals.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6953f72489bec422321a323b_speech_1767110387213.mp3',
+      transcriptText: 'Hello.\nMy name is Michael.\nI am thirty years old.\nI live in a small town near the sea.\nI live in a flat with my wife.\nWe do not have children.\nI work in a supermarket.\nI am a shop assistant.\nI help customers and work at the cash desk.\nI like my job because my colleagues are friendly.\nOn weekdays, I wake up at six thirty.\nI take a shower and get dressed.\nThen I have breakfast at home.\nI usually drink coffee and eat a sandwich.\nI go to work by bike.\nIt takes about ten minutes.\nI start work at eight o clock.\nAfter work, I go home and rest.\nIn the evening, I cook dinner with my wife.\nWe watch TV or talk about our day.\nOn weekends, I do not work.\nI like walking near the sea.\nSometimes I meet my friends and play football.\nI also like listening to music.\nI am learning English now.\nI study English at home.\nI want to travel and meet new people in the future.\nThank you for listening.',
+      words: [
+        { word: 'flat', meaning: 'an apartment' },
+        { word: 'shop assistant', meaning: 'person who helps customers in a shop' },
+        { word: 'cash desk', meaning: 'place where customers pay' },
+        { word: 'colleagues', meaning: 'people you work with' },
+        { word: 'future', meaning: 'time after now' }
+      ],
+      questions: [
+        { question: 'How old is Michael?', options: ['Thirty', 'Twenty-six', 'Forty-five'], answer: 'Thirty' },
+        { question: 'Where does Michael live?', options: ['In a small town near the sea', 'In a big city', 'In a village in the mountains'], answer: 'In a small town near the sea' },
+        { question: 'Where does Michael work?', options: ['In a supermarket', 'In a cafe', 'In a hotel'], answer: 'In a supermarket' },
+        { question: 'How does Michael go to work?', options: ['By bike', 'By bus', 'By car'], answer: 'By bike' },
+        { question: 'Why is Michael learning English?', options: ['He wants to travel and meet new people', 'He wants a new bike', 'He needs to cook dinner'], answer: 'He wants to travel and meet new people' }
+      ],
+      details: [
+        { sentence: 'Michael lives in a flat with his ___.', answer: 'wife' },
+        { sentence: 'He wakes up at six ___.', answer: 'thirty' },
+        { sentence: 'He usually eats a ___ for breakfast.', answer: 'sandwich' },
+        { sentence: 'It takes about ___ minutes to go to work.', answer: 'ten' },
+        { sentence: 'He starts work at ___ o clock.', answer: 'eight' }
+      ],
+      trueFalse: [
+        { sentence: 'Michael has children.', answer: false },
+        { sentence: 'Michael helps customers.', answer: true },
+        { sentence: 'Michael goes to work by bike.', answer: true },
+        { sentence: 'Michael works on weekends.', answer: false },
+        { sentence: 'Michael studies English at home.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your work, study or routine.',
+      sampleAnswer: 'I live in a small city. I study English at home. I wake up at seven. I go to work by bus. I want to travel in the future.'
+    },
+    {
+      id: 'a1-listening-06-plans-tomorrow',
+      order: 6,
+      stage: 'A1.3',
+      title: 'My plans for tomorrow',
+      topic: 'future plans with going to',
+      description: 'Students listen to Alex describing his plans for a busy day tomorrow.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6954da5a4a9cd19c55a22ba3_Listening%20A1.%20Lesson%206.%20My%20Plans%20for%20Tomorrow.mp3',
+      transcriptText: 'Hello.\nMy name is Alex.\nTomorrow is going to be a busy day for me.\nI am going to wake up at seven o clock.\nFirst, I am going to take a shower and get dressed.\nThen I am going to have breakfast.\nI am going to drink tea and eat some toast.\nAfter breakfast, I am going to go to the bank.\nI need to take some money and pay a bill.\nThen I am going to go to the supermarket.\nI am going to buy bread, fruit, and chicken.\nI am also going to buy some water.\nAt noon, I am going to meet my friend near the cafe.\nWe are going to have lunch together.\nI am going to eat a salad, and he is going to have a sandwich.\nAfter lunch, I am going to go to the library.\nI am going to return two books and get a new one.\nIn the afternoon, I am going to clean my room.\nI am going to wash the dishes and tidy my desk.\nThen I am going to do my English homework.\nI am going to listen to an audio and write a few answers.\nIn the evening, I am going to cook dinner at home.\nI am going to make pasta with vegetables.\nAfter dinner, I am going to call my sister.\nWe are going to talk for a few minutes.\nBefore I go to bed, I am going to prepare my clothes for the next day.\nI am going to set my alarm at eleven o clock.\nTomorrow is going to be full, but it is going to be a good day.\nThank you for listening.',
+      words: [
+        { word: 'busy', meaning: 'having many things to do' },
+        { word: 'bill', meaning: 'money you must pay for something' },
+        { word: 'noon', meaning: '12 o clock in the day' },
+        { word: 'library', meaning: 'place with books people can read or borrow' },
+        { word: 'alarm', meaning: 'sound that wakes you up or reminds you' }
+      ],
+      questions: [
+        { question: 'What time is Alex going to wake up?', options: ['Seven o clock', 'Eight o clock', 'Eleven o clock'], answer: 'Seven o clock' },
+        { question: 'Where is Alex going after breakfast?', options: ['To the bank', 'To the library', 'To the cafe'], answer: 'To the bank' },
+        { question: 'What is Alex going to buy at the supermarket?', options: ['Bread, fruit, chicken and water', 'Coffee and cake', 'Two books'], answer: 'Bread, fruit, chicken and water' },
+        { question: 'Where is Alex going to meet his friend?', options: ['Near the cafe', 'At the bank', 'In the library'], answer: 'Near the cafe' },
+        { question: 'What is Alex going to set at eleven o clock?', options: ['His alarm', 'His computer', 'His lunch'], answer: 'His alarm' }
+      ],
+      details: [
+        { sentence: 'Alex is going to drink tea and eat some ___.', answer: 'toast' },
+        { sentence: 'He needs to take some money and pay a ___.', answer: 'bill' },
+        { sentence: 'At noon, he is going to meet his ___.', answer: 'friend' },
+        { sentence: 'At the library, he is going to return ___ books.', answer: 'two' },
+        { sentence: 'In the evening, he is going to make pasta with ___.', answer: 'vegetables' }
+      ],
+      trueFalse: [
+        { sentence: 'Tomorrow is going to be a busy day for Alex.', answer: true },
+        { sentence: 'Alex is going to buy coffee at the supermarket.', answer: false },
+        { sentence: 'Alex and his friend are going to have lunch together.', answer: true },
+        { sentence: 'Alex is going to do English homework.', answer: true },
+        { sentence: 'Alex is going to call his brother after dinner.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your plans for tomorrow.',
+      sampleAnswer: 'Tomorrow I am going to wake up at eight. I am going to study English. I am going to go shopping. I am going to call my friend. I am going to sleep at eleven.'
+    }
+  ].map(buildListeningReadyLesson);
+
   const READY_LESSON_TASK_EXTENSIONS = {
     'be-profile-choice': {
       items: [
@@ -3868,6 +4201,7 @@
     if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
     if (skillId === 'reading') return READY_READING_LESSONS_A1;
     if (skillId === 'writing') return READY_WRITING_LESSONS_A1;
+    if (skillId === 'listening') return READY_LISTENING_LESSONS_A1;
     return [];
   }
 
@@ -4092,6 +4426,7 @@
         topic: lesson.topic,
         description: lesson.description,
         teacher_notes: lesson.teacherNotes || '',
+        audio_url: lesson.audioUrl || '',
         support_title: lesson.supportTitle || lesson.readingTitle || '',
         support_text: lesson.supportText || lesson.readingText || '',
         reading_title: lesson.readingTitle || '',
@@ -4180,6 +4515,7 @@
     const totalItems = countReadyLessonContentItems({ tasks: selectedTasks });
     const supportTitle = lesson?.supportTitle || lesson?.readingTitle || '';
     const supportText = lesson?.supportText || lesson?.readingText || '';
+    const audioUrl = lesson?.audioUrl || '';
 
     const studentOptions = students.length
       ? `<option value="">Choose student</option>` + students.map((student) => {
@@ -4268,9 +4604,10 @@
                   ${(lesson.focus || []).map((focus) => `<span>${escapeHtml(focus)}</span>`).join('')}
                 </div>
 
-                ${supportText ? `
+                ${audioUrl || supportText ? `
                   <div class="td-ready-reading-text">
                     <div class="td-ready-reading-title">${escapeHtml(supportTitle || 'Lesson support')}</div>
+                    ${audioUrl ? `<audio class="td-ready-audio" controls preload="none" src="${escapeHtml(audioUrl)}"></audio>` : ''}
                     ${String(supportText || '').split('\n').filter(Boolean).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}
                   </div>
                 ` : ''}
@@ -7417,6 +7754,7 @@ function renderStudentTemplateAnswers(assignment) {
       .td-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
       .td-ready-reading-text{border:1px solid #dbe7f3;border-radius:14px;background:#fbfdff;padding:14px;display:grid;gap:8px}
       .td-ready-reading-title{font-size:14px;font-weight:800;color:#175cd3}
+      .td-ready-audio{width:100%;min-height:38px}
       .td-ready-reading-text p{margin:0;color:#344054;font-size:14px;line-height:1.65;white-space:pre-wrap}
       .td-ready-task-list,.td-ready-review-list{display:grid;gap:10px}
       .td-ready-task{border:1px solid #e6ebf1;border-radius:12px;background:#fff;padding:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}

@@ -944,10 +944,12 @@ function renderSimpleProgressText(assignment) {
       : '';
     const supportText = content.support_text || content.reading_text || '';
     const supportTitle = content.support_title || content.reading_title || (content.skill === 'writing' ? 'Writing help' : 'Reading text');
-    const readingTextHtml = supportText
+    const audioUrl = content.audio_url || '';
+    const readingTextHtml = supportText || audioUrl
       ? `
         <div class="sd-ready-reading-text">
           <div class="sd-template-passage-title">${escapeHtml(supportTitle)}</div>
+          ${audioUrl ? `<audio class="sd-ready-audio" controls preload="none" src="${escapeHtml(audioUrl)}"></audio>` : ''}
           ${String(supportText || '').split('\n').filter(Boolean).map((line) => `<p class="sd-template-passage-p">${escapeHtml(line)}</p>`).join('')}
         </div>
       `
@@ -1325,6 +1327,7 @@ function renderSimpleProgressText(assignment) {
       .sd-ready-lesson{display:grid;gap:14px}
       .sd-ready-section{border:1px solid #dbe7f3;border-radius:14px;background:#fff;padding:14px;display:grid;gap:12px}
       .sd-ready-reading-text{border:1px solid #dbe7f3;border-radius:14px;background:#fff;padding:14px;display:grid;gap:8px}
+      .sd-ready-audio{width:100%;min-height:38px}
       .sd-ready-focus{display:flex;flex-wrap:wrap;gap:8px}
       .sd-ready-focus span{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:#ecfdf3;border:1px solid #b7ebc6;color:#027a48;font-size:12px;font-weight:700}
       .sd-action-row{
