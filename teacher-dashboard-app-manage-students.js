@@ -3569,6 +3569,486 @@
       ],
       productionQuestion: 'Write 4-5 sentences about your plans for tomorrow.',
       sampleAnswer: 'Tomorrow I am going to wake up at eight. I am going to study English. I am going to go shopping. I am going to call my friend. I am going to sleep at eleven.'
+    },
+    {
+      id: 'a1-listening-07-comparing-cars',
+      order: 7,
+      stage: 'A1.3',
+      title: 'Comparing things and people',
+      topic: 'comparisons and buying a car',
+      description: 'Students listen to Mike comparing a Toyota and a Nissan before buying a car.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6954e301d0ebbca07d22ed0f_Listening%20A1.%20Lesson%207.%20Comparing%20things%20and%20people%20.mp3',
+      transcriptText: 'Hello. My name is Mike, and I want to buy a car.\nNow I am choosing between a Toyota and a Nissan.\nFirst, I think about Toyota.\nToyota cars are usually very reliable. They do not break often.\nThe fuel economy is good, so I can save money on petrol.\nAlso, many people say Toyota is easy to sell later.\nBut Toyota can be more expensive, and some models feel a little simple inside.\nNow I think about Nissan.\nNissan can be cheaper, and I can get more options for the same price.\nSome Nissan cars are comfortable, and the design looks modern.\nBut I hear that some Nissan models can have more repairs.\nI also worry about higher service costs.\nSo I ask myself: what is more important - price or reliability?\nI think I will choose the Toyota, because I want a car that works well for many years.',
+      words: [
+        { word: 'reliable', meaning: 'works well and does not break often' },
+        { word: 'fuel economy', meaning: 'how much petrol a car uses' },
+        { word: 'petrol', meaning: 'fuel for a car' },
+        { word: 'repairs', meaning: 'work to fix something broken' },
+        { word: 'service costs', meaning: 'money paid to look after or fix a car' }
+      ],
+      questions: [
+        { question: 'What does Mike want to buy?', options: ['A car', 'A bike', 'A phone'], answer: 'A car' },
+        { question: 'Which two cars is Mike choosing between?', options: ['Toyota and Nissan', 'Toyota and Honda', 'Nissan and Ford'], answer: 'Toyota and Nissan' },
+        { question: 'What does Mike say about Toyota cars?', options: ['They are reliable', 'They break often', 'They are always cheap'], answer: 'They are reliable' },
+        { question: 'What can Nissan be?', options: ['Cheaper', 'Older', 'Slower'], answer: 'Cheaper' },
+        { question: 'Which car does Mike think he will choose?', options: ['Toyota', 'Nissan', 'No car'], answer: 'Toyota' }
+      ],
+      details: [
+        { sentence: 'Toyota cars are usually very ___.', answer: 'reliable' },
+        { sentence: 'The fuel economy is ___.', answer: 'good' },
+        { sentence: 'Nissan design looks ___.', answer: 'modern' },
+        { sentence: 'Mike worries about higher service ___.', answer: 'costs' },
+        { sentence: 'Mike wants a car that works well for many ___.', answer: 'years' }
+      ],
+      trueFalse: [
+        { sentence: 'Mike is choosing between a Toyota and a Nissan.', answer: true },
+        { sentence: 'Toyota cars break often.', answer: false },
+        { sentence: 'Nissan can be cheaper.', answer: true },
+        { sentence: 'Mike does not worry about service costs.', answer: false },
+        { sentence: 'Mike thinks he will choose the Toyota.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences comparing two things you want to buy.',
+      sampleAnswer: 'I want to buy a phone. One phone is cheaper. The other phone is faster. I think the expensive phone is better. I want a phone that works well.'
+    },
+    {
+      id: 'a1-listening-08-sofia-bedroom',
+      order: 8,
+      stage: 'A1.3',
+      title: 'Describing my bedroom',
+      topic: 'rooms, furniture and there is',
+      description: 'Students listen to Sofia describing her bedroom and the things in it.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695806442e9e533cdb912721_Listening%20A1.%20Lesson%207.people%20describing%20rooms%20in%20their%20houses%20(part1).mp3',
+      transcriptText: 'Hello. My name is Sofia.\nI want to tell you about my bedroom.\nMy bedroom is small, but I like it.\nThe walls are light blue, and the room is bright in the morning.\nThere is a bed next to the window.\nI have a warm blanket and two pillows.\nNear the bed, there is a small table and a lamp.\nI also have a wardrobe for my clothes.\nIn the corner, there is a desk and a chair.\nI study English at my desk in the evening.\nOn the desk, I keep my notebook, a pen, and my phone charger.\nI also have a small shelf with books.\nMy room is clean and quiet.\nI feel relaxed there.\nThank you for listening.',
+      words: [
+        { word: 'bedroom', meaning: 'a room where you sleep' },
+        { word: 'blanket', meaning: 'warm cover for a bed' },
+        { word: 'wardrobe', meaning: 'furniture for clothes' },
+        { word: 'shelf', meaning: 'a place on a wall or furniture for books or things' },
+        { word: 'relaxed', meaning: 'calm and comfortable' }
+      ],
+      questions: [
+        { question: 'Who is speaking?', options: ['Sofia', 'Anna', 'Emma'], answer: 'Sofia' },
+        { question: 'What room does Sofia describe?', options: ['Her bedroom', 'Her kitchen', 'Her living room'], answer: 'Her bedroom' },
+        { question: 'What colour are the walls?', options: ['Light blue', 'White', 'Green'], answer: 'Light blue' },
+        { question: 'Where is the bed?', options: ['Next to the window', 'Near the door', 'In the corner'], answer: 'Next to the window' },
+        { question: 'Where does Sofia study English?', options: ['At her desk', 'On her bed', 'In the kitchen'], answer: 'At her desk' }
+      ],
+      details: [
+        { sentence: 'The room is bright in the ___.', answer: 'morning' },
+        { sentence: 'Sofia has a warm blanket and two ___.', answer: 'pillows' },
+        { sentence: 'Near the bed, there is a small table and a ___.', answer: 'lamp' },
+        { sentence: 'On the desk, she keeps her phone ___.', answer: 'charger' },
+        { sentence: 'Sofia has a small shelf with ___.', answer: 'books' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia likes her bedroom.', answer: true },
+        { sentence: 'Her bedroom is very big.', answer: false },
+        { sentence: 'There is a wardrobe for her clothes.', answer: true },
+        { sentence: 'She studies English in the morning.', answer: false },
+        { sentence: 'Her room is clean and quiet.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences describing your bedroom or another room.',
+      sampleAnswer: 'My bedroom is small. There is a bed near the wall. I have a desk and a chair. My books are on a shelf. I feel relaxed there.'
+    },
+    {
+      id: 'a1-listening-09-countries-languages',
+      order: 9,
+      stage: 'A1.3',
+      title: 'Countries, nationalities and languages',
+      topic: 'countries, nationalities and languages',
+      description: 'Students listen to Emma talking about Canada, French and friends from other countries.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69593224763c6f46416b9942_Listening%20A1.%20Lesson%207.Countries%2C%20nationalities%2C%20and%20languages%20(Emma).mp3',
+      transcriptText: 'Hello. My name is Emma.\nI am from Canada, and I am Canadian.\nMy city is Toronto.\nMy first language is English, but I also study French.\nIn Canada, many people speak English and French, so French is very useful.\nI learn French at a language school two evenings a week.\nIt is not easy, but I like it.\nMy teacher is from France, and she speaks French very clearly.\nI want to travel to Paris one day, so I practice every day.\nI listen to short videos and repeat simple phrases.\nI also have friends from different countries.\nMy friend Sofia is from Mexico.\nShe is Mexican, and she speaks Spanish.\nWe sometimes teach each other new words.\nI think languages are fun and helpful.',
+      words: [
+        { word: 'Canadian', meaning: 'from Canada' },
+        { word: 'first language', meaning: 'the language you learn first' },
+        { word: 'useful', meaning: 'helpful or good to use' },
+        { word: 'phrases', meaning: 'small groups of words' },
+        { word: 'nationality', meaning: 'the country a person belongs to' }
+      ],
+      questions: [
+        { question: 'Where is Emma from?', options: ['Canada', 'France', 'Mexico'], answer: 'Canada' },
+        { question: 'What is Emma s city?', options: ['Toronto', 'Paris', 'Montreal'], answer: 'Toronto' },
+        { question: 'What is Emma s first language?', options: ['English', 'French', 'Spanish'], answer: 'English' },
+        { question: 'How often does Emma learn French at school?', options: ['Two evenings a week', 'Every morning', 'Once a month'], answer: 'Two evenings a week' },
+        { question: 'Where is Sofia from?', options: ['Mexico', 'Canada', 'France'], answer: 'Mexico' }
+      ],
+      details: [
+        { sentence: 'Emma is from Canada, and she is ___.', answer: 'Canadian' },
+        { sentence: 'Many people in Canada speak English and ___.', answer: 'French' },
+        { sentence: 'Emma s teacher is from ___.', answer: 'France' },
+        { sentence: 'Emma wants to travel to ___ one day.', answer: 'Paris' },
+        { sentence: 'Sofia speaks ___.', answer: 'Spanish' }
+      ],
+      trueFalse: [
+        { sentence: 'Emma is Canadian.', answer: true },
+        { sentence: 'Emma studies Spanish.', answer: false },
+        { sentence: 'Emma practices every day.', answer: true },
+        { sentence: 'Sofia is from France.', answer: false },
+        { sentence: 'Emma thinks languages are helpful.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your country, language or a language you study.',
+      sampleAnswer: 'I am from Armenia. My first language is Armenian. I study English. English is useful for travel. I practice every day.'
+    },
+    {
+      id: 'a1-listening-10-favourite-room-kitchen',
+      order: 10,
+      stage: 'A1.4',
+      title: 'My favourite room',
+      topic: 'the house and kitchen objects',
+      description: 'Students listen to Anna describing her favourite room: the kitchen.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695939d3c36ff8ea692d3af1_Listening%20A1.%20The%20house%20My%20favourite%20room%20(anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nMy favourite room is my kitchen.\nIt is small, but it is bright and clean.\nIn the morning, I make coffee there and eat breakfast.\nI have a little table near the window, and I like to sit there.\nI also cook simple food in my kitchen, like pasta, soup, and eggs.\nI have a fridge, a cooker, and a microwave.\nMy dishes are in a white cupboard.\nI keep fruit on the counter, so the kitchen looks nice.\nWhen I have free time, I listen to music and cook slowly.\nSometimes my friends visit, and we drink tea in the kitchen.\nIt is a warm room, and I feel relaxed there.',
+      words: [
+        { word: 'kitchen', meaning: 'a room where people cook' },
+        { word: 'fridge', meaning: 'a cold place for food' },
+        { word: 'cooker', meaning: 'a machine for cooking food' },
+        { word: 'cupboard', meaning: 'furniture with doors for dishes or food' },
+        { word: 'counter', meaning: 'a flat work surface in a kitchen' }
+      ],
+      questions: [
+        { question: 'What is Anna s favourite room?', options: ['The kitchen', 'The bedroom', 'The living room'], answer: 'The kitchen' },
+        { question: 'What does Anna make in the morning?', options: ['Coffee', 'Soup', 'Cake'], answer: 'Coffee' },
+        { question: 'Where is the little table?', options: ['Near the window', 'Near the door', 'In the garden'], answer: 'Near the window' },
+        { question: 'What simple food does Anna cook?', options: ['Pasta, soup and eggs', 'Rice, fish and salad', 'Pizza and cake'], answer: 'Pasta, soup and eggs' },
+        { question: 'How does Anna feel in the kitchen?', options: ['Relaxed', 'Tired', 'Angry'], answer: 'Relaxed' }
+      ],
+      details: [
+        { sentence: 'Anna s kitchen is small, bright and ___.', answer: 'clean' },
+        { sentence: 'Anna has a fridge, a cooker and a ___.', answer: 'microwave' },
+        { sentence: 'Her dishes are in a white ___.', answer: 'cupboard' },
+        { sentence: 'She keeps fruit on the ___.', answer: 'counter' },
+        { sentence: 'Sometimes her friends visit and drink ___.', answer: 'tea' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna s favourite room is her kitchen.', answer: true },
+        { sentence: 'Anna s kitchen is dark and dirty.', answer: false },
+        { sentence: 'Anna eats breakfast in the kitchen.', answer: true },
+        { sentence: 'Anna keeps fruit in her bedroom.', answer: false },
+        { sentence: 'Anna feels relaxed in the kitchen.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your favourite room.',
+      sampleAnswer: 'My favourite room is my kitchen. It is small and clean. I make tea there. I cook simple food. I feel relaxed there.'
+    },
+    {
+      id: 'a1-listening-11-whats-your-job',
+      order: 11,
+      stage: 'A1.4',
+      title: 'What is your job?',
+      topic: 'jobs and work routines',
+      description: 'Students listen to Emma describing her job as a barista.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695941618eada26dfe2d2493_Listening%20A1.%20%20What%E2%80%99s%20your%20job%20(Emma).mp3',
+      transcriptText: 'Hello. My name is Emma.\nI work in a cafe in the city center. I am a barista.\nI start work at eight o clock in the morning.\nFirst, I turn on the coffee machine and clean the tables.\nThen I make coffee and tea for customers.\nI also prepare simple food like sandwiches and cakes.\nDuring the day, I talk to many people and I try to be friendly.\nSometimes the cafe is very busy, especially at lunchtime.\nIt can be tiring, but I like my job because the team is nice.\nAfter work, I feel proud because I help people start their day with a good drink.',
+      words: [
+        { word: 'barista', meaning: 'a person who makes coffee in a cafe' },
+        { word: 'city center', meaning: 'the middle part of a city' },
+        { word: 'customers', meaning: 'people who buy something' },
+        { word: 'lunchtime', meaning: 'the time when people eat lunch' },
+        { word: 'proud', meaning: 'happy about something you do well' }
+      ],
+      questions: [
+        { question: 'Where does Emma work?', options: ['In a cafe', 'In a school', 'In a supermarket'], answer: 'In a cafe' },
+        { question: 'What is Emma s job?', options: ['Barista', 'Teacher', 'Nurse'], answer: 'Barista' },
+        { question: 'What time does Emma start work?', options: ['Eight o clock', 'Seven o clock', 'Nine o clock'], answer: 'Eight o clock' },
+        { question: 'What does Emma prepare?', options: ['Sandwiches and cakes', 'Soup and salad', 'Rice and chicken'], answer: 'Sandwiches and cakes' },
+        { question: 'Why does Emma like her job?', options: ['The team is nice', 'It is always quiet', 'She works at home'], answer: 'The team is nice' }
+      ],
+      details: [
+        { sentence: 'Emma turns on the coffee ___.', answer: 'machine' },
+        { sentence: 'Emma cleans the ___.', answer: 'tables' },
+        { sentence: 'Emma makes coffee and tea for ___.', answer: 'customers' },
+        { sentence: 'The cafe is very busy at ___.', answer: 'lunchtime' },
+        { sentence: 'After work, Emma feels ___.', answer: 'proud' }
+      ],
+      trueFalse: [
+        { sentence: 'Emma works in a cafe.', answer: true },
+        { sentence: 'Emma starts work at ten o clock.', answer: false },
+        { sentence: 'Emma talks to many people during the day.', answer: true },
+        { sentence: 'The cafe is never busy.', answer: false },
+        { sentence: 'Emma helps people start their day with a good drink.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your job or a job you know.',
+      sampleAnswer: 'My friend works in a cafe. She starts work at eight. She makes coffee. She talks to customers. She likes her team.'
+    },
+    {
+      id: 'a1-listening-12-invitations',
+      order: 12,
+      stage: 'A1.4',
+      title: 'Invitations: Would you like to...',
+      topic: 'invitations, likes and dislikes',
+      description: 'Students listen to Anna answering invitations with would and would not.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69594ffedfbbcb07139736db_Listening%20A1.%20Invitations%20Would%20you%20like%20to%20%E2%80%A6%20(Anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nToday I want to talk about what I would and would not like to do.\nWhen someone asks me, Would you like to...?, I think about my day and my mood.\nWould you like to go for a walk after work? Yes, I would.\nI like fresh air and I like to relax.\nWould you like to have coffee in a cafe? Yes, I would.\nI enjoy coffee and a quiet place.\nWould you like to go shopping for clothes? No, I would not.\nI do not like crowded shops.\nWould you like to stay up late and watch a long movie? No, I would not, because I get tired.\nWould you like to have dinner at my place? Yes, I would, if it is not too late.',
+      words: [
+        { word: 'invitation', meaning: 'a question asking someone to do something' },
+        { word: 'mood', meaning: 'how you feel now' },
+        { word: 'fresh air', meaning: 'clean air outside' },
+        { word: 'crowded', meaning: 'with many people' },
+        { word: 'stay up late', meaning: 'not go to bed early' }
+      ],
+      questions: [
+        { question: 'Who is speaking?', options: ['Anna', 'Emma', 'Sofia'], answer: 'Anna' },
+        { question: 'Would Anna like to go for a walk after work?', options: ['Yes, she would', 'No, she would not', 'She does not say'], answer: 'Yes, she would' },
+        { question: 'Where would Anna like to have coffee?', options: ['In a cafe', 'At the cinema', 'In a shop'], answer: 'In a cafe' },
+        { question: 'Would Anna like to go shopping for clothes?', options: ['No, she would not', 'Yes, she would', 'Only on Friday'], answer: 'No, she would not' },
+        { question: 'Why does Anna not want to stay up late?', options: ['She gets tired', 'She is hungry', 'She has no movie'], answer: 'She gets tired' }
+      ],
+      details: [
+        { sentence: 'Anna likes fresh air and likes to ___.', answer: 'relax' },
+        { sentence: 'Anna enjoys coffee and a quiet ___.', answer: 'place' },
+        { sentence: 'Anna does not like crowded ___.', answer: 'shops' },
+        { sentence: 'Anna would not like to watch a long ___.', answer: 'movie' },
+        { sentence: 'Anna would like to have dinner if it is not too ___.', answer: 'late' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna thinks about her day and mood.', answer: true },
+        { sentence: 'Anna would like to go shopping for clothes.', answer: false },
+        { sentence: 'Anna likes quiet places.', answer: true },
+        { sentence: 'Anna wants to stay up late.', answer: false },
+        { sentence: 'Anna would like to have dinner if it is not too late.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences answering invitations with Yes, I would or No, I would not.',
+      sampleAnswer: 'Would you like to go for a walk? Yes, I would. I like fresh air. Would you like to go shopping? No, I would not. I do not like crowded shops.'
+    },
+    {
+      id: 'a1-listening-13-last-weekend',
+      order: 13,
+      stage: 'A1.5',
+      title: 'What did you do last weekend?',
+      topic: 'past simple and weekend activities',
+      description: 'Students listen to Anna describing what she did last weekend.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695953ceda00327d5edd9222_Listening%20A1.%20What%20did%20you%20do%20last%20weekend%20(Anna).mp3',
+      transcriptText: 'Hello. I am Anna.\nToday I want to tell you what I did last weekend.\nOn Saturday morning, I woke up at about eight o clock and I made breakfast.\nI had toast and tea.\nThen I cleaned my apartment and did the laundry.\nIn the afternoon, I went to the supermarket and bought fruit, vegetables, and bread.\nAfter that, I met my friend in a small cafe.\nWe talked and drank coffee.\nIn the evening, I stayed at home and watched a movie.\nOn Sunday, I went for a walk in the park.\nThe weather was cool but nice.\nI took some photos and listened to music.\nLater, I visited my parents for dinner.\nWe ate soup and salad, and we talked a lot.\nThen I went home and prepared for the new week.',
+      words: [
+        { word: 'last weekend', meaning: 'the Saturday and Sunday before now' },
+        { word: 'laundry', meaning: 'clothes that need washing or are washed' },
+        { word: 'supermarket', meaning: 'a large food shop' },
+        { word: 'visited', meaning: 'went to see someone' },
+        { word: 'prepared', meaning: 'got ready' }
+      ],
+      questions: [
+        { question: 'What time did Anna wake up on Saturday?', options: ['About eight o clock', 'About six o clock', 'At noon'], answer: 'About eight o clock' },
+        { question: 'What did Anna have for breakfast?', options: ['Toast and tea', 'Eggs and coffee', 'Soup and salad'], answer: 'Toast and tea' },
+        { question: 'Where did Anna go in the afternoon?', options: ['To the supermarket', 'To the cinema', 'To work'], answer: 'To the supermarket' },
+        { question: 'Who did Anna meet in a small cafe?', options: ['Her friend', 'Her teacher', 'Her sister'], answer: 'Her friend' },
+        { question: 'Who did Anna visit for dinner?', options: ['Her parents', 'Her friends', 'Her neighbours'], answer: 'Her parents' }
+      ],
+      details: [
+        { sentence: 'Anna cleaned her apartment and did the ___.', answer: 'laundry' },
+        { sentence: 'She bought fruit, vegetables and ___.', answer: 'bread' },
+        { sentence: 'In the evening, she watched a ___.', answer: 'movie' },
+        { sentence: 'On Sunday, the weather was cool but ___.', answer: 'nice' },
+        { sentence: 'Anna went home and prepared for the new ___.', answer: 'week' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna made breakfast on Saturday morning.', answer: true },
+        { sentence: 'Anna stayed at home all Saturday afternoon.', answer: false },
+        { sentence: 'Anna drank coffee with her friend.', answer: true },
+        { sentence: 'Anna went to the park on Sunday.', answer: true },
+        { sentence: 'Anna visited her parents for lunch.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 sentences about what you did last weekend.',
+      sampleAnswer: 'Last weekend I woke up late. I cleaned my room. I met my friend in a cafe. On Sunday I went for a walk. Then I prepared for the new week.'
+    },
+    {
+      id: 'a1-listening-14-ordering-food',
+      order: 14,
+      stage: 'A1.5',
+      title: 'Ordering food at a restaurant',
+      topic: 'restaurant language and food orders',
+      description: 'Students listen to a waiter and customer ordering food and drinks in a restaurant.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a0979dc7af2cb38e15195_Ordering%20food%20at%20the%20restaurant.mp3',
+      transcriptText: 'Waiter: Good evening. Welcome to Sunny Restaurant.\nCustomer: Good evening. A table for one, please.\nWaiter: Of course. Please sit here. Here is the menu.\nCustomer: Thank you.\nWaiter: Would you like something to drink?\nCustomer: Yes, please. A glass of water. And an orange juice.\nWaiter: Sure. Are you ready to order food?\nCustomer: Yes. I would like a chicken salad, please.\nWaiter: Chicken salad. Would you like bread with that?\nCustomer: Yes, please.\nWaiter: And would you like soup or fries?\nCustomer: Soup, please. Tomato soup.\nWaiter: Great. Anything else?\nCustomer: No, that is all. Thank you.\nWaiter: OK. I will bring your drinks now.\nCustomer: Thank you.',
+      words: [
+        { word: 'menu', meaning: 'a list of food and drinks in a restaurant' },
+        { word: 'order', meaning: 'ask for food or drink in a restaurant' },
+        { word: 'glass of water', meaning: 'water served in a glass' },
+        { word: 'chicken salad', meaning: 'a salad with chicken' },
+        { word: 'anything else', meaning: 'one more thing or another thing' }
+      ],
+      questions: [
+        { question: 'Where is the dialogue?', options: ['In a restaurant', 'In a classroom', 'At a bus stop'], answer: 'In a restaurant' },
+        { question: 'How many people is the table for?', options: ['One', 'Two', 'Four'], answer: 'One' },
+        { question: 'What drinks does the customer order?', options: ['Water and orange juice', 'Tea and coffee', 'Water and cola'], answer: 'Water and orange juice' },
+        { question: 'What food does the customer order?', options: ['Chicken salad', 'Fish and chips', 'Pasta'], answer: 'Chicken salad' },
+        { question: 'What soup does the customer choose?', options: ['Tomato soup', 'Chicken soup', 'Vegetable soup'], answer: 'Tomato soup' }
+      ],
+      details: [
+        { sentence: 'The restaurant is called ___ Restaurant.', answer: 'Sunny' },
+        { sentence: 'The waiter gives the customer the ___.', answer: 'menu' },
+        { sentence: 'The customer orders a glass of ___.', answer: 'water' },
+        { sentence: 'The customer would like ___ with the salad.', answer: 'bread' },
+        { sentence: 'The waiter will bring the ___ now.', answer: 'drinks' }
+      ],
+      trueFalse: [
+        { sentence: 'The customer asks for a table for one.', answer: true },
+        { sentence: 'The customer orders coffee.', answer: false },
+        { sentence: 'The customer orders chicken salad.', answer: true },
+        { sentence: 'The customer chooses fries.', answer: false },
+        { sentence: 'The waiter will bring the drinks now.', answer: true }
+      ],
+      productionQuestion: 'Write a short restaurant order with 4-5 sentences.',
+      sampleAnswer: 'Good evening. A table for one, please. I would like water and orange juice. I would like chicken salad. That is all, thank you.'
+    },
+    {
+      id: 'a1-listening-15-free-time',
+      order: 15,
+      stage: 'A1.5',
+      title: 'Free time',
+      topic: 'free-time activities and routines',
+      description: 'Students listen to Anna talking about what she likes to do in her free time.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a8a6c2b74305d156712cb_Listening%20A1%20Elementary.%20Free%20time%20(Anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nIn my free time, I like simple things.\nAfter work, I usually go home and rest.\nI often make tea and listen to music.\nSometimes I watch a short comedy on my phone.\nOn weekdays, I do not go out a lot, because I feel tired.\nBut I always try to do one nice thing.\nFor example, I read an easy book for ten or fifteen minutes.\nOn Fridays, I sometimes meet my friend in a cafe.\nWe talk and drink coffee.\nAt the weekend, I have more free time.\nI like walking in the park and taking photos.\nIf the weather is bad, I stay at home and cook pasta or soup.\nFree time helps me feel happy and calm.',
+      words: [
+        { word: 'free time', meaning: 'time when you do not work or study' },
+        { word: 'rest', meaning: 'relax and do not work' },
+        { word: 'comedy', meaning: 'a funny film or show' },
+        { word: 'weekdays', meaning: 'Monday to Friday' },
+        { word: 'calm', meaning: 'quiet and relaxed' }
+      ],
+      questions: [
+        { question: 'What does Anna like in her free time?', options: ['Simple things', 'Expensive things', 'Loud parties'], answer: 'Simple things' },
+        { question: 'What does Anna often make after work?', options: ['Tea', 'Coffee', 'Juice'], answer: 'Tea' },
+        { question: 'What does Anna sometimes watch on her phone?', options: ['A short comedy', 'A long movie', 'The news'], answer: 'A short comedy' },
+        { question: 'Who does Anna sometimes meet on Fridays?', options: ['Her friend', 'Her teacher', 'Her parents'], answer: 'Her friend' },
+        { question: 'What does Anna do if the weather is bad?', options: ['Stays at home and cooks', 'Goes swimming', 'Rides a bike'], answer: 'Stays at home and cooks' }
+      ],
+      details: [
+        { sentence: 'After work, Anna usually goes home and ___.', answer: 'rests' },
+        { sentence: 'Anna reads an easy book for ten or fifteen ___.', answer: 'minutes' },
+        { sentence: 'On Fridays, Anna meets her friend in a ___.', answer: 'cafe' },
+        { sentence: 'At the weekend, Anna likes walking in the ___.', answer: 'park' },
+        { sentence: 'Free time helps Anna feel happy and ___.', answer: 'calm' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna likes simple things in her free time.', answer: true },
+        { sentence: 'Anna goes out a lot on weekdays.', answer: false },
+        { sentence: 'Anna sometimes drinks coffee with her friend.', answer: true },
+        { sentence: 'Anna takes photos in the park.', answer: true },
+        { sentence: 'Anna always goes out when the weather is bad.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 sentences about your free time.',
+      sampleAnswer: 'In my free time, I listen to music. I sometimes meet my friend. At the weekend, I walk in the park. If the weather is bad, I stay at home. Free time helps me relax.'
+    },
+    {
+      id: 'a1-listening-16-transport-city',
+      order: 16,
+      stage: 'A1.5',
+      title: 'Transport in the city',
+      topic: 'public transport and city travel',
+      description: 'Students listen to Anna talking about buses, metro, taxis and walking in her city.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a8eb69b05aa42ee04b546_Listening%20A1%20Elementary.%20Transport%20in%20the%20city%20(Anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nIn my city, I use public transport every day.\nIn the morning, I usually take the bus to work.\nThe bus stop is near my home, so it is easy.\nThe bus is sometimes crowded, especially at eight o clock.\nI do not like that, but it is cheap and quick.\nWhen the weather is nice, I sometimes walk instead.\nIt takes about twenty minutes.\nIn the evening, I often take the metro because it is faster than the bus.\nI always keep my ticket in my bag.\nSometimes there is traffic on the roads, so taxis can be slow.\nI use a taxi only when I am late or when it is raining.\nFor me, the best transport is the metro.',
+      words: [
+        { word: 'public transport', meaning: 'buses, metro or trains people use in a city' },
+        { word: 'bus stop', meaning: 'a place where buses stop' },
+        { word: 'crowded', meaning: 'full of many people' },
+        { word: 'traffic', meaning: 'many cars on the road' },
+        { word: 'ticket', meaning: 'paper or digital pass for travel' }
+      ],
+      questions: [
+        { question: 'What does Anna use every day?', options: ['Public transport', 'A car', 'A bike'], answer: 'Public transport' },
+        { question: 'How does Anna usually go to work in the morning?', options: ['By bus', 'By taxi', 'On foot'], answer: 'By bus' },
+        { question: 'Where is the bus stop?', options: ['Near her home', 'Far from her home', 'Near her office'], answer: 'Near her home' },
+        { question: 'Why does Anna take the metro in the evening?', options: ['It is faster than the bus', 'It is free', 'It is near the park'], answer: 'It is faster than the bus' },
+        { question: 'When does Anna use a taxi?', options: ['When she is late or it is raining', 'Every morning', 'Only on holidays'], answer: 'When she is late or it is raining' }
+      ],
+      details: [
+        { sentence: 'The bus is sometimes crowded at ___ o clock.', answer: 'eight' },
+        { sentence: 'The bus is cheap and ___.', answer: 'quick' },
+        { sentence: 'Walking takes about ___ minutes.', answer: 'twenty' },
+        { sentence: 'Anna keeps her ticket in her ___.', answer: 'bag' },
+        { sentence: 'For Anna, the best transport is the ___.', answer: 'metro' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna uses public transport every day.', answer: true },
+        { sentence: 'The bus stop is far from Anna s home.', answer: false },
+        { sentence: 'Anna sometimes walks when the weather is nice.', answer: true },
+        { sentence: 'Taxis can be slow because of traffic.', answer: true },
+        { sentence: 'Anna thinks the bus is the best transport.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 sentences about transport in your city.',
+      sampleAnswer: 'I use public transport every day. I usually take the bus. The bus stop is near my home. Sometimes I walk. I use a taxi when I am late.'
+    },
+    {
+      id: 'a1-listening-17-describing-people',
+      order: 17,
+      stage: 'A1.5',
+      title: 'Describing people',
+      topic: 'people, personality and routines',
+      description: 'Students listen to Anna describing her husband Alex.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a9866ac968c6b738ac842_Listening%20A1%20Elementary.%20Describing%20people%20(Anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nI want to tell you about my husband.\nHis name is Alex.\nHe is thirty-one years old, and he is very kind.\nHe works in an office, and he usually comes home at six o clock.\nWhen he comes home, he says hello and asks about my day.\nAlex helps me a lot.\nHe often cooks dinner, especially on Fridays.\nHe makes pasta or rice with chicken.\nAfter dinner, he usually washes the dishes.\nOn weekends, we go for a walk in the park or visit my parents.\nAlex is calm and friendly, and he makes me feel safe and happy.',
+      words: [
+        { word: 'husband', meaning: 'a married man in relation to his wife' },
+        { word: 'kind', meaning: 'nice and helpful' },
+        { word: 'office', meaning: 'a place where people work at desks' },
+        { word: 'dishes', meaning: 'plates, cups and bowls' },
+        { word: 'safe', meaning: 'not in danger; protected' }
+      ],
+      questions: [
+        { question: 'Who does Anna describe?', options: ['Her husband', 'Her brother', 'Her teacher'], answer: 'Her husband' },
+        { question: 'What is his name?', options: ['Alex', 'Mike', 'Tom'], answer: 'Alex' },
+        { question: 'How old is Alex?', options: ['Thirty-one', 'Thirty', 'Twenty-six'], answer: 'Thirty-one' },
+        { question: 'Where does Alex work?', options: ['In an office', 'In a cafe', 'In a school'], answer: 'In an office' },
+        { question: 'What does Alex often cook?', options: ['Dinner', 'Breakfast', 'Lunch'], answer: 'Dinner' }
+      ],
+      details: [
+        { sentence: 'Alex usually comes home at ___ o clock.', answer: 'six' },
+        { sentence: 'When he comes home, he asks about Anna s ___.', answer: 'day' },
+        { sentence: 'Alex often cooks dinner, especially on ___.', answer: 'Fridays' },
+        { sentence: 'Alex makes pasta or rice with ___.', answer: 'chicken' },
+        { sentence: 'After dinner, Alex usually washes the ___.', answer: 'dishes' }
+      ],
+      trueFalse: [
+        { sentence: 'Alex is thirty-one years old.', answer: true },
+        { sentence: 'Alex works in a supermarket.', answer: false },
+        { sentence: 'Alex helps Anna a lot.', answer: true },
+        { sentence: 'Alex never cooks dinner.', answer: false },
+        { sentence: 'Alex is calm and friendly.', answer: true }
+      ],
+      productionQuestion: 'Write 4-5 sentences describing a person you know.',
+      sampleAnswer: 'My friend is kind. She works in an office. She helps people a lot. On weekends, we go for a walk. She is calm and friendly.'
+    },
+    {
+      id: 'a1-listening-18-last-summer',
+      order: 18,
+      stage: 'A1.5',
+      title: 'What did you do last summer?',
+      topic: 'past simple and holidays',
+      description: 'Students listen to Anna describing what she did last summer.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/695a9cad4865d9fa8d9ba1e6_Listening%20A1%20Elementary.%20What%20did%20you%20do%20last%20summer%20(Anna).mp3',
+      transcriptText: 'Hello. My name is Anna.\nLast summer was very nice.\nIn June, I worked a lot, but in July I had a short vacation.\nI visited my parents for one week.\nWe ate dinner together every day, and we talked a lot.\nOn sunny days, I went for walks in the park and took photos.\nI also met my friends and we drank coffee in a small cafe.\nIn August, I stayed in the city, but I did fun things.\nI went to the cinema two times and watched comedy movies.\nI also cooked at home and tried new simple recipes.\nLast summer was calm and happy for me.',
+      words: [
+        { word: 'last summer', meaning: 'the summer before now' },
+        { word: 'vacation', meaning: 'time when you do not work or study' },
+        { word: 'sunny', meaning: 'with a lot of sun' },
+        { word: 'cinema', meaning: 'a place where people watch films' },
+        { word: 'recipes', meaning: 'instructions for cooking food' }
+      ],
+      questions: [
+        { question: 'How was Anna s last summer?', options: ['Very nice', 'Very bad', 'Very cold'], answer: 'Very nice' },
+        { question: 'When did Anna have a short vacation?', options: ['In July', 'In June', 'In August'], answer: 'In July' },
+        { question: 'Who did Anna visit?', options: ['Her parents', 'Her teacher', 'Her brother'], answer: 'Her parents' },
+        { question: 'What did Anna do on sunny days?', options: ['Went for walks and took photos', 'Stayed at home', 'Worked all day'], answer: 'Went for walks and took photos' },
+        { question: 'How many times did Anna go to the cinema?', options: ['Two times', 'One time', 'Three times'], answer: 'Two times' }
+      ],
+      details: [
+        { sentence: 'In June, Anna worked a ___.', answer: 'lot' },
+        { sentence: 'Anna visited her parents for one ___.', answer: 'week' },
+        { sentence: 'Anna met her friends and drank coffee in a small ___.', answer: 'cafe' },
+        { sentence: 'In August, Anna stayed in the ___.', answer: 'city' },
+        { sentence: 'Anna tried new simple ___.', answer: 'recipes' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna had a short vacation in July.', answer: true },
+        { sentence: 'Anna visited her parents for one month.', answer: false },
+        { sentence: 'Anna took photos on sunny days.', answer: true },
+        { sentence: 'Anna went to the cinema two times.', answer: true },
+        { sentence: 'Last summer was sad for Anna.', answer: false }
+      ],
+      productionQuestion: 'Write 4-5 sentences about what you did last summer.',
+      sampleAnswer: 'Last summer was nice. I visited my family. I walked in the park and took photos. I met my friends in a cafe. It was calm and happy.'
     }
   ].map(buildListeningReadyLesson);
 
