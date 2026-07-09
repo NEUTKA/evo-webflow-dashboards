@@ -1375,6 +1375,7 @@
     return {
       id: config.id,
       order: config.order,
+      level: config.level || (String(config.stage || '').startsWith('A2') ? 'A2' : 'A1'),
       skill: 'vocabulary',
       stage: config.stage || 'A1',
       title: config.title,
@@ -4909,7 +4910,350 @@
       sampleAnswer: 'Last weekend I went to the city center. I was walking when it started raining. I went to a cafe to wait for my friend. The cafe was cheaper than the restaurant near my house. Next weekend I am going to visit my parents. I think it will be fun.'
     }
   ].map(buildA2GrammarReadyLesson);
-  const READY_VOCABULARY_LESSONS_A2 = [];
+  const READY_VOCABULARY_LESSONS_A2 = [
+    {
+      id: 'a2-vocabulary-01-travel-transport',
+      order: 1,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Travel and transport',
+      topic: 'getting around and travel plans',
+      description: 'Students practise useful A2 words for transport, tickets and journeys.',
+      focus: ['travel', 'transport', 'journeys'],
+      words: [
+        { word: 'journey', meaning: 'travel from one place to another', sentence: 'The ___ took three hours.', hint: 'travel from one place to another' },
+        { word: 'platform', meaning: 'the place where you wait for a train', sentence: 'Our train leaves from ___ 4.', hint: 'train waiting place' },
+        { word: 'ticket', meaning: 'a paper or digital pass for travel', sentence: 'I bought my ___ online.', hint: 'pass for travel' },
+        { word: 'delay', meaning: 'a time when something is late', sentence: 'There is a thirty-minute ___.', hint: 'late time' },
+        { word: 'destination', meaning: 'the place you are travelling to', sentence: 'Paris is our final ___.', hint: 'place you travel to' }
+      ],
+      productionQuestion: 'Write 5 sentences about a journey or transport in your city.',
+      sampleAnswer: 'My journey to work takes thirty minutes. I wait on the platform. I buy a ticket online. Sometimes there is a delay. My destination is the city center.'
+    },
+    {
+      id: 'a2-vocabulary-02-hotels-accommodation',
+      order: 2,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Hotels and accommodation',
+      topic: 'staying in a hotel',
+      description: 'Students learn practical words for hotels, rooms and bookings.',
+      focus: ['hotels', 'travel', 'booking'],
+      words: [
+        { word: 'reception', meaning: 'the desk where hotel guests get help', sentence: 'Please ask at ___ for your key.', hint: 'hotel desk' },
+        { word: 'booking', meaning: 'an arrangement to stay somewhere or use a service', sentence: 'I made a hotel ___ yesterday.', hint: 'reservation' },
+        { word: 'guest', meaning: 'a person staying in a hotel or visiting a home', sentence: 'Every ___ needs a passport.', hint: 'person staying there' },
+        { word: 'single room', meaning: 'a hotel room for one person', sentence: 'I would like a ___ for two nights.', hint: 'room for one person' },
+        { word: 'check out', meaning: 'leave a hotel and pay the bill', sentence: 'We need to ___ before eleven.', hint: 'leave a hotel' }
+      ],
+      productionQuestion: 'Write 5 sentences about booking or staying in a hotel.',
+      sampleAnswer: 'I made a booking online. I went to reception. I needed a single room. The guest showed a passport. We checked out before eleven.'
+    },
+    {
+      id: 'a2-vocabulary-03-work-jobs',
+      order: 3,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Work and jobs',
+      topic: 'jobs, workplaces and employment',
+      description: 'Students practise A2 words for talking about jobs and work life.',
+      focus: ['work', 'jobs', 'employment'],
+      words: [
+        { word: 'employee', meaning: 'a person who works for a company', sentence: 'Every ___ has an ID card.', hint: 'worker in a company' },
+        { word: 'manager', meaning: 'a person who organizes people or work', sentence: 'My ___ is very helpful.', hint: 'person in charge' },
+        { word: 'colleague', meaning: 'a person you work with', sentence: 'I had lunch with a ___.', hint: 'person you work with' },
+        { word: 'salary', meaning: 'money you earn from your job', sentence: 'The ___ is paid every month.', hint: 'job money' },
+        { word: 'experience', meaning: 'knowledge or skill from doing something', sentence: 'She has five years of ___.', hint: 'knowledge from work' }
+      ],
+      productionQuestion: 'Write 5 sentences about a job or workplace.',
+      sampleAnswer: 'My manager is friendly. I work with nice colleagues. Every employee starts at nine. The salary is OK. I want more experience.'
+    },
+    {
+      id: 'a2-vocabulary-04-workplace-tasks',
+      order: 4,
+      level: 'A2',
+      stage: 'A2.1',
+      title: 'Workplace tasks',
+      topic: 'meetings, deadlines and office tasks',
+      description: 'Students learn vocabulary for everyday tasks at work or study.',
+      focus: ['workplace', 'tasks', 'office English'],
+      words: [
+        { word: 'meeting', meaning: 'a time when people discuss work or plans', sentence: 'We have a ___ at ten.', hint: 'work discussion' },
+        { word: 'deadline', meaning: 'the latest time when work must be finished', sentence: 'The ___ is Friday afternoon.', hint: 'final time' },
+        { word: 'report', meaning: 'a written or spoken description of information', sentence: 'I need to write a ___.', hint: 'work document' },
+        { word: 'schedule', meaning: 'a plan of times and activities', sentence: 'My ___ is full today.', hint: 'time plan' },
+        { word: 'task', meaning: 'a piece of work you need to do', sentence: 'This ___ is difficult.', hint: 'piece of work' }
+      ],
+      productionQuestion: 'Write 5 sentences about tasks you do at work or in your studies.',
+      sampleAnswer: 'I have a meeting today. My deadline is Friday. I need to write a report. My schedule is busy. This task is important.'
+    },
+    {
+      id: 'a2-vocabulary-05-health-symptoms',
+      order: 5,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Health and symptoms',
+      topic: 'talking about common health problems',
+      description: 'Students practise words for describing simple symptoms and health problems.',
+      focus: ['health', 'symptoms', 'doctor'],
+      words: [
+        { word: 'headache', meaning: 'pain in your head', sentence: 'I have a bad ___.', hint: 'head pain' },
+        { word: 'temperature', meaning: 'how hot your body is when you are ill', sentence: 'She has a high ___.', hint: 'body heat' },
+        { word: 'cough', meaning: 'a sudden sound from your throat when you are ill', sentence: 'He has a dry ___.', hint: 'throat sound' },
+        { word: 'sore throat', meaning: 'pain in your throat', sentence: 'I cannot speak because I have a ___.', hint: 'throat pain' },
+        { word: 'stomach ache', meaning: 'pain in your stomach', sentence: 'After lunch, I had a ___.', hint: 'stomach pain' }
+      ],
+      productionQuestion: 'Write 5 sentences about feeling ill or helping someone who is ill.',
+      sampleAnswer: 'I have a headache. My friend has a cough. She has a temperature. I sometimes get a sore throat. A stomach ache is unpleasant.'
+    },
+    {
+      id: 'a2-vocabulary-06-doctor-pharmacy',
+      order: 6,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Doctor and pharmacy',
+      topic: 'medicine and appointments',
+      description: 'Students learn practical A2 vocabulary for appointments, medicine and advice.',
+      focus: ['healthcare', 'medicine', 'appointments'],
+      words: [
+        { word: 'appointment', meaning: 'an arranged time to see someone', sentence: 'I have a doctor ___ at four.', hint: 'arranged time' },
+        { word: 'medicine', meaning: 'something you take to feel better when ill', sentence: 'Take this ___ twice a day.', hint: 'helps you get better' },
+        { word: 'pharmacy', meaning: 'a shop where you buy medicine', sentence: 'There is a ___ near the hospital.', hint: 'medicine shop' },
+        { word: 'prescription', meaning: 'a note from a doctor for medicine', sentence: 'The doctor gave me a ___.', hint: 'doctor note for medicine' },
+        { word: 'advice', meaning: 'an idea about what someone should do', sentence: 'The nurse gave me useful ___.', hint: 'what you should do' }
+      ],
+      productionQuestion: 'Write 5 sentences about visiting a doctor or pharmacy.',
+      sampleAnswer: 'I have an appointment at four. The doctor gave me advice. I need a prescription. I bought medicine at the pharmacy. I feel better now.'
+    },
+    {
+      id: 'a2-vocabulary-07-shopping-money',
+      order: 7,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Shopping and money',
+      topic: 'prices, payment and shopping problems',
+      description: 'Students practise vocabulary for buying things and talking about prices.',
+      focus: ['shopping', 'money', 'prices'],
+      words: [
+        { word: 'price', meaning: 'the amount of money something costs', sentence: 'The ___ is too high.', hint: 'how much it costs' },
+        { word: 'receipt', meaning: 'paper or digital proof that you paid', sentence: 'Please keep your ___.', hint: 'proof of payment' },
+        { word: 'discount', meaning: 'a lower price than usual', sentence: 'This jacket has a 20 percent ___.', hint: 'lower price' },
+        { word: 'cash', meaning: 'money in coins or notes', sentence: 'I paid in ___.', hint: 'coins or notes' },
+        { word: 'refund', meaning: 'money returned to you after you give something back', sentence: 'Can I get a ___ for this bag?', hint: 'money back' }
+      ],
+      productionQuestion: 'Write 5 sentences about shopping or paying for something.',
+      sampleAnswer: 'The price is high. I paid in cash. I got a receipt. The shop had a discount. I asked for a refund.'
+    },
+    {
+      id: 'a2-vocabulary-08-clothes-style',
+      order: 8,
+      level: 'A2',
+      stage: 'A2.2',
+      title: 'Clothes and style',
+      topic: 'describing clothes and shopping for clothes',
+      description: 'Students learn A2 words for clothes, style, size and fit.',
+      focus: ['clothes', 'style', 'shopping'],
+      words: [
+        { word: 'size', meaning: 'how big or small clothes are', sentence: 'What ___ do you wear?', hint: 'small, medium or large' },
+        { word: 'fit', meaning: 'be the right size or shape', sentence: 'These shoes do not ___.', hint: 'be the right size' },
+        { word: 'try on', meaning: 'put clothes on to see if they are right', sentence: 'Can I ___ this coat?', hint: 'test clothes in a shop' },
+        { word: 'comfortable', meaning: 'nice to wear or use', sentence: 'This sweater is very ___.', hint: 'feels good' },
+        { word: 'fashionable', meaning: 'popular and stylish now', sentence: 'Those glasses are ___.', hint: 'stylish now' }
+      ],
+      productionQuestion: 'Write 5 sentences about clothes you like or bought recently.',
+      sampleAnswer: 'My size is medium. I tried on a coat. The shoes did not fit. My sweater is comfortable. I like fashionable glasses.'
+    },
+    {
+      id: 'a2-vocabulary-09-food-restaurants',
+      order: 9,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Food and restaurants',
+      topic: 'menus, meals and eating out',
+      description: 'Students practise useful vocabulary for restaurants and meals.',
+      focus: ['restaurants', 'food', 'eating out'],
+      words: [
+        { word: 'menu', meaning: 'a list of food and drinks in a restaurant', sentence: 'Could I see the ___, please?', hint: 'food list' },
+        { word: 'starter', meaning: 'a small dish before the main meal', sentence: 'I had soup as a ___.', hint: 'first small dish' },
+        { word: 'main course', meaning: 'the largest or most important dish in a meal', sentence: 'For the ___, I chose chicken.', hint: 'big meal dish' },
+        { word: 'dessert', meaning: 'sweet food after the main meal', sentence: 'We shared a chocolate ___.', hint: 'sweet food after dinner' },
+        { word: 'bill', meaning: 'paper showing how much you must pay', sentence: 'Can we have the ___, please?', hint: 'restaurant payment paper' }
+      ],
+      productionQuestion: 'Write 5 sentences about eating in a restaurant.',
+      sampleAnswer: 'I looked at the menu. I had soup as a starter. My main course was chicken. I ordered dessert. Then I asked for the bill.'
+    },
+    {
+      id: 'a2-vocabulary-10-feelings-opinions',
+      order: 10,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Feelings and opinions',
+      topic: 'saying how you feel and what you think',
+      description: 'Students learn words for feelings, opinions and everyday reactions.',
+      focus: ['feelings', 'opinions', 'reactions'],
+      words: [
+        { word: 'worried', meaning: 'feeling nervous about a problem', sentence: 'I am ___ about the exam.', hint: 'nervous about a problem' },
+        { word: 'relieved', meaning: 'happy because a problem has ended', sentence: 'She felt ___ after the test.', hint: 'happy after a problem ends' },
+        { word: 'annoyed', meaning: 'a little angry', sentence: 'He was ___ because the bus was late.', hint: 'a little angry' },
+        { word: 'opinion', meaning: 'what you think or believe about something', sentence: 'What is your ___ about this film?', hint: 'what you think' },
+        { word: 'agree', meaning: 'have the same opinion as someone', sentence: 'I ___ with you.', hint: 'think the same' }
+      ],
+      productionQuestion: 'Write 5 sentences about your feelings or opinions.',
+      sampleAnswer: 'I am worried about the test. I felt relieved after work. I was annoyed by the noise. My opinion is different. I agree with my friend.'
+    },
+    {
+      id: 'a2-vocabulary-11-personality-relationships',
+      order: 11,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Personality and relationships',
+      topic: 'describing people and relationships',
+      description: 'Students practise A2 adjectives and nouns for people and relationships.',
+      focus: ['personality', 'relationships', 'describing people'],
+      words: [
+        { word: 'generous', meaning: 'happy to give or share things', sentence: 'My aunt is very ___.', hint: 'likes giving' },
+        { word: 'patient', meaning: 'able to wait calmly', sentence: 'A good teacher is ___.', hint: 'can wait calmly' },
+        { word: 'confident', meaning: 'sure about yourself and your abilities', sentence: 'She feels ___ when she speaks English.', hint: 'sure about yourself' },
+        { word: 'neighbour', meaning: 'a person who lives near you', sentence: 'Our ___ helped us yesterday.', hint: 'person living near you' },
+        { word: 'relationship', meaning: 'the way two people know or feel about each other', sentence: 'They have a good ___.', hint: 'connection between people' }
+      ],
+      productionQuestion: 'Write 5 sentences describing people you know.',
+      sampleAnswer: 'My aunt is generous. My teacher is patient. I feel confident in class. My neighbour is friendly. I have a good relationship with my sister.'
+    },
+    {
+      id: 'a2-vocabulary-12-technology-devices',
+      order: 12,
+      level: 'A2',
+      stage: 'A2.3',
+      title: 'Technology and devices',
+      topic: 'devices and everyday technology',
+      description: 'Students learn words for devices, batteries and basic tech problems.',
+      focus: ['technology', 'devices', 'problems'],
+      words: [
+        { word: 'device', meaning: 'a phone, tablet, laptop or other electronic tool', sentence: 'This ___ is easy to use.', hint: 'electronic tool' },
+        { word: 'screen', meaning: 'the part of a device where you see information', sentence: 'My phone ___ is broken.', hint: 'where you see information' },
+        { word: 'keyboard', meaning: 'the part of a computer used for typing', sentence: 'The ___ is small but comfortable.', hint: 'typing part' },
+        { word: 'battery', meaning: 'the power inside a device', sentence: 'My ___ is almost empty.', hint: 'device power' },
+        { word: 'charger', meaning: 'a tool used to put power into a device', sentence: 'I forgot my phone ___.', hint: 'puts power into a phone' }
+      ],
+      productionQuestion: 'Write 5 sentences about devices you use.',
+      sampleAnswer: 'My device is new. The screen is large. I use the keyboard every day. My battery is low. I need my charger.'
+    },
+    {
+      id: 'a2-vocabulary-13-internet-apps',
+      order: 13,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Internet and apps',
+      topic: 'online accounts and digital actions',
+      description: 'Students practise vocabulary for using websites, apps and online accounts.',
+      focus: ['internet', 'apps', 'online life'],
+      words: [
+        { word: 'account', meaning: 'a personal area on a website or app', sentence: 'I created a new ___.', hint: 'personal online area' },
+        { word: 'password', meaning: 'a secret word used to enter an account', sentence: 'Do not share your ___.', hint: 'secret login word' },
+        { word: 'download', meaning: 'get a file or app from the internet', sentence: 'I need to ___ the app.', hint: 'get from the internet' },
+        { word: 'upload', meaning: 'send a file from your device to the internet', sentence: 'Please ___ the photo.', hint: 'send to the internet' },
+        { word: 'notification', meaning: 'a message from an app or website', sentence: 'I got a ___ on my phone.', hint: 'app message' }
+      ],
+      productionQuestion: 'Write 5 sentences about apps or websites you use.',
+      sampleAnswer: 'I have an online account. My password is private. I download apps for study. I upload photos sometimes. I get notifications on my phone.'
+    },
+    {
+      id: 'a2-vocabulary-14-home-problems',
+      order: 14,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Home and household problems',
+      topic: 'things that break or need fixing at home',
+      description: 'Students learn practical words for common home problems.',
+      focus: ['home', 'problems', 'repairs'],
+      words: [
+        { word: 'leak', meaning: 'water coming out where it should not', sentence: 'There is a ___ under the sink.', hint: 'water problem' },
+        { word: 'repair', meaning: 'fix something that is broken', sentence: 'We need to ___ the window.', hint: 'fix' },
+        { word: 'heating', meaning: 'a system that keeps a home warm', sentence: 'The ___ is not working.', hint: 'keeps home warm' },
+        { word: 'electricity', meaning: 'power used for lights and machines', sentence: 'The ___ went off last night.', hint: 'power' },
+        { word: 'landlord', meaning: 'a person who owns a home that someone rents', sentence: 'I called the ___ about the problem.', hint: 'owner of rented home' }
+      ],
+      productionQuestion: 'Write 5 sentences about a problem at home.',
+      sampleAnswer: 'There is a leak in the kitchen. We need to repair the door. The heating is not working. The electricity went off. I called the landlord.'
+    },
+    {
+      id: 'a2-vocabulary-15-city-services',
+      order: 15,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'City services and errands',
+      topic: 'places and tasks around town',
+      description: 'Students practise vocabulary for everyday errands and useful city places.',
+      focus: ['city', 'services', 'errands'],
+      words: [
+        { word: 'post office', meaning: 'a place where you send letters or parcels', sentence: 'I went to the ___ to send a parcel.', hint: 'send letters there' },
+        { word: 'bank', meaning: 'a place where people keep or manage money', sentence: 'I need to go to the ___ today.', hint: 'money place' },
+        { word: 'appointment', meaning: 'an arranged time for a service or meeting', sentence: 'My ___ is at noon.', hint: 'arranged time' },
+        { word: 'parcel', meaning: 'a package sent by post', sentence: 'This ___ is for my sister.', hint: 'package' },
+        { word: 'queue', meaning: 'a line of people waiting', sentence: 'There was a long ___ at the bank.', hint: 'line of people' }
+      ],
+      productionQuestion: 'Write 5 sentences about errands you do in your city.',
+      sampleAnswer: 'I went to the post office. I sent a parcel. Then I went to the bank. There was a long queue. My appointment was at noon.'
+    },
+    {
+      id: 'a2-vocabulary-16-weather-environment',
+      order: 16,
+      level: 'A2',
+      stage: 'A2.4',
+      title: 'Weather and environment',
+      topic: 'weather, nature and simple environmental words',
+      description: 'Students learn words for weather conditions and simple environmental topics.',
+      focus: ['weather', 'environment', 'nature'],
+      words: [
+        { word: 'forecast', meaning: 'information about future weather', sentence: 'The weather ___ says it will rain.', hint: 'future weather information' },
+        { word: 'storm', meaning: 'very bad weather with wind, rain or thunder', sentence: 'There was a big ___ last night.', hint: 'bad weather' },
+        { word: 'pollution', meaning: 'dirty or harmful things in air, water or land', sentence: 'Air ___ is a problem in big cities.', hint: 'dirty air or water' },
+        { word: 'recycle', meaning: 'use old materials again', sentence: 'We ___ paper and plastic.', hint: 'use old things again' },
+        { word: 'nature', meaning: 'plants, animals and the world outside cities', sentence: 'I like spending time in ___.', hint: 'outside world' }
+      ],
+      productionQuestion: 'Write 5 sentences about weather or the environment.',
+      sampleAnswer: 'I checked the forecast. There was a storm last night. Pollution is bad for cities. We recycle plastic. I like nature.'
+    },
+    {
+      id: 'a2-vocabulary-17-education-learning',
+      order: 17,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'Education and learning',
+      topic: 'courses, exams and study habits',
+      description: 'Students practise useful vocabulary for classes, exams and learning progress.',
+      focus: ['education', 'learning', 'study'],
+      words: [
+        { word: 'course', meaning: 'a series of lessons about a subject', sentence: 'I started an English ___.', hint: 'series of lessons' },
+        { word: 'exam', meaning: 'a test of what you know', sentence: 'The ___ is next week.', hint: 'test' },
+        { word: 'result', meaning: 'the mark or answer you get after a test or action', sentence: 'I got a good ___.', hint: 'mark or outcome' },
+        { word: 'improve', meaning: 'become better', sentence: 'I want to ___ my speaking.', hint: 'become better' },
+        { word: 'mistake', meaning: 'something wrong in your work or speech', sentence: 'I made a small ___.', hint: 'something wrong' }
+      ],
+      productionQuestion: 'Write 5 sentences about studying or learning English.',
+      sampleAnswer: 'I started an English course. I have an exam next week. I want a good result. I need to improve my speaking. Mistakes help me learn.'
+    },
+    {
+      id: 'a2-vocabulary-18-a2-review',
+      order: 18,
+      level: 'A2',
+      stage: 'A2.5',
+      title: 'A2 vocabulary review',
+      topic: 'mixed A2 everyday vocabulary',
+      description: 'Students review useful A2 words from travel, work, health, shopping and study topics.',
+      focus: ['A2 review', 'mixed vocabulary', 'everyday English'],
+      words: [
+        { word: 'arrangement', meaning: 'a plan that has been agreed', sentence: 'We made an ___ to meet at six.', hint: 'agreed plan' },
+        { word: 'choice', meaning: 'something you can choose', sentence: 'This is the best ___ for me.', hint: 'option' },
+        { word: 'reason', meaning: 'why something happens or why someone does something', sentence: 'What is the ___ for your decision?', hint: 'why' },
+        { word: 'solution', meaning: 'an answer to a problem', sentence: 'We found a good ___ to the problem.', hint: 'answer to a problem' },
+        { word: 'progress', meaning: 'improvement or movement towards a goal', sentence: 'You are making good ___.', hint: 'improvement' }
+      ],
+      productionQuestion: 'Write a short A2 paragraph using at least 5 words from this review.',
+      sampleAnswer: 'We made an arrangement to study together. It was a good choice because I needed help. The reason was simple. I wanted a solution to my problem. Now I am making progress.'
+    }
+  ].map(buildVocabularyReadyLesson);
   const READY_READING_LESSONS_A2 = [];
   const READY_WRITING_LESSONS_A2 = [];
   const READY_LISTENING_LESSONS_A2 = [];
