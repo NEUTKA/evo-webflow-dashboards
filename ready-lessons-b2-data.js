@@ -48,7 +48,7 @@
     },
     vocabulary: {
       description: 'B2 vocabulary pathway space for precise collocations, idioms, work, media, society, technology and abstract topics.',
-      plannedTopics: []
+      plannedTopics: ['Career progression', 'Meetings and business', 'Education', 'Technology', 'Media', 'Environment', 'Wellbeing', 'Society', 'Money', 'Travel', 'Argumentation', 'Phrasal verbs', 'Idioms', 'Trends']
     },
     reading: {
       description: 'B2 reading pathway space for longer articles, viewpoints, reports, reviews and inference-based comprehension.',
@@ -68,6 +68,109 @@
     root.levels = upsertById(root.levels, READY_LESSON_B2_LEVEL);
     root.skills = Array.isArray(root.skills) && root.skills.length ? root.skills : READY_LESSON_SKILLS_FALLBACK;
     root.pathways = { ...root.pathways, B2: { ...(root.pathways?.B2 || {}), ...READY_LESSON_B2_PATHWAYS } };
+  }
+
+  function buildVocabularyChoiceItem(lessonId, entries, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const distractors = entries.filter((candidate) => candidate.word !== entry.word).slice(0, 2);
+    const orderedWords = index % 3 === 0
+      ? [entry.word, distractors[0]?.word, distractors[1]?.word]
+      : (index % 3 === 1
+        ? [distractors[0]?.word, entry.word, distractors[1]?.word]
+        : [distractors[0]?.word, distractors[1]?.word, entry.word]);
+    const options = orderedWords.map((word, optionIndex) => ({
+      id: ids[optionIndex],
+      text: word || entry.word
+    }));
+    const answer = options.find((option) => option.text === entry.word)?.id || 'a';
+
+    return {
+      id: `${lessonId}-choice-${index + 1}`,
+      sentence: entry.sentence,
+      options,
+      answer,
+      explanation: `${entry.word}: ${entry.meaning}`
+    };
+  }
+
+  function buildVocabularyReadyLesson(config) {
+    const words = config.words || [];
+    const extraWords = config.extraWords || words;
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2',
+      skill: 'vocabulary',
+      stage: config.stage || 'B2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 35,
+      description: config.description,
+      focus: config.focus || [],
+      teacherNotes: config.teacherNotes || 'Use the final task to push students from recognition to accurate B2 production with examples, nuance and a short opinion.',
+      tasks: [
+        {
+          id: `${config.id}-matching`,
+          type: 'matching',
+          title: 'Match words and meanings',
+          prompt: 'Match each word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-choice`,
+          type: 'choice',
+          title: 'Choose the right word',
+          prompt: 'Choose the word or phrase that completes each sentence.',
+          items: words.map((entry, index) => buildVocabularyChoiceItem(config.id, words, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Type the missing word',
+          prompt: 'Type one word or phrase.',
+          items: words.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry.sentence,
+            accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
+            hint: entry.hint || entry.meaning,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Use the words',
+          prompt: config.productionPrompt || 'Write 7-9 sentences using vocabulary from this lesson.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-spelling-extra`,
+          type: 'gap_fill',
+          title: 'Extra spelling practice',
+          prompt: 'Read the meaning and type the word or phrase.',
+          items: extraWords.map((entry, index) => ({
+            id: `${config.id}-spelling-extra-${index + 1}`,
+            sentence: `Word or phrase for "${entry.meaning}": ___`,
+            accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
+            hint: entry.sentence,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        }
+      ]
+    };
   }
 
   function buildB2GrammarReadyLesson(config) {
@@ -1002,11 +1105,339 @@
     }
   ].map(buildB2GrammarReadyLesson);
 
+  const READY_VOCABULARY_LESSONS_B2 = [
+    {
+      id: 'b2-vocabulary-01-career-progression',
+      order: 1,
+      stage: 'B2.1',
+      title: 'Career progression',
+      topic: 'career growth, responsibility and performance',
+      description: 'Students practise useful B2 vocabulary for discussing professional growth and workplace expectations.',
+      focus: ['career', 'workplace', 'professional development'],
+      words: [
+        { word: 'career path', meaning: 'the series of jobs and choices that shape your working life', sentence: 'Her ___ changed when she moved from sales to project management.', hint: 'professional direction' },
+        { word: 'take on responsibility', meaning: 'accept more duties or a more important role', sentence: 'He is ready to ___ for a small team.', hint: 'accept duties' },
+        { word: 'workload', meaning: 'the amount of work someone has to do', sentence: 'My ___ became heavier after two colleagues left.', hint: 'amount of work' },
+        { word: 'performance review', meaning: 'a formal discussion about how well someone works', sentence: 'She prepared examples of her achievements for the ___.', hint: 'formal work evaluation' },
+        { word: 'leadership skills', meaning: 'abilities needed to guide and motivate people', sentence: 'The course helped him develop stronger ___.', hint: 'managing people well' }
+      ],
+      productionQuestion: 'Write 7-9 sentences about your career path or a job you would like to have. Use at least four words from this lesson.',
+      sampleAnswer: 'I would like to build a career path in education technology. At the moment, my workload is manageable, but I want to take on responsibility gradually. A good performance review would help me understand my strengths. I also need to develop leadership skills because I may manage a small team in the future.'
+    },
+    {
+      id: 'b2-vocabulary-02-meetings-and-business',
+      order: 2,
+      stage: 'B2.1',
+      title: 'Meetings and business',
+      topic: 'meetings, proposals and business decisions',
+      description: 'Students learn vocabulary for participating in meetings and discussing business outcomes.',
+      focus: ['meetings', 'business communication', 'decisions'],
+      words: [
+        { word: 'agenda', meaning: 'a list of topics to discuss in a meeting', sentence: 'Please send the ___ before the meeting so we can prepare.', hint: 'meeting topics' },
+        { word: 'proposal', meaning: 'a formal suggestion or plan', sentence: 'The team presented a ___ for improving customer support.', hint: 'formal plan' },
+        { word: 'stakeholder', meaning: 'a person or group affected by a decision or project', sentence: 'Every major ___ should be informed before the launch.', hint: 'affected person or group' },
+        { word: 'outcome', meaning: 'the final result of a process or discussion', sentence: 'The ___ of the meeting was better than expected.', hint: 'final result' },
+        { word: 'follow-up', meaning: 'an action or message after a meeting or event', sentence: 'I will send a ___ email with the key decisions.', hint: 'next message or action' }
+      ],
+      productionQuestion: 'Write a short meeting summary. Mention the agenda, proposal, stakeholders, outcome and follow-up.',
+      sampleAnswer: 'The agenda focused on improving our website. Anna presented a proposal for a simpler checkout page. The main stakeholders were the sales team and current customers. The outcome was positive, and we agreed to test the idea next month. I will send a follow-up email today.'
+    },
+    {
+      id: 'b2-vocabulary-03-education-lifelong-learning',
+      order: 3,
+      stage: 'B2.1',
+      title: 'Education and lifelong learning',
+      topic: 'courses, skills and independent study',
+      description: 'Students practise B2 vocabulary for discussing education, learning strategies and skill development.',
+      focus: ['education', 'learning', 'skills'],
+      words: [
+        { word: 'curriculum', meaning: 'the subjects and content included in a course', sentence: 'The new ___ includes more speaking practice and project work.', hint: 'course content' },
+        { word: 'assessment', meaning: 'a way of checking progress or ability', sentence: 'The final ___ includes a presentation and a written task.', hint: 'progress check' },
+        { word: 'critical thinking', meaning: 'the ability to judge information carefully and logically', sentence: 'Students need ___ when they read news online.', hint: 'careful judgement' },
+        { word: 'self-directed', meaning: 'organized and controlled by the learner, not only by a teacher', sentence: 'Online courses require a more ___ approach.', hint: 'learner controlled' },
+        { word: 'broaden', meaning: 'make knowledge, experience or skills wider', sentence: 'Reading different viewpoints can ___ your understanding.', hint: 'make wider' }
+      ],
+      productionQuestion: 'Write 7-9 sentences about a course or skill you are learning. Use at least four words from this lesson.',
+      sampleAnswer: 'I prefer courses with a clear curriculum and practical assessment. A good course should develop critical thinking, not only memory. Online learning can be effective, but it requires a self-directed approach. Reading widely helps me broaden my understanding.'
+    },
+    {
+      id: 'b2-vocabulary-04-technology-digital-life',
+      order: 4,
+      stage: 'B2.1',
+      title: 'Technology and digital life',
+      topic: 'privacy, algorithms and online tools',
+      description: 'Students learn vocabulary for discussing digital tools, online safety and technology problems.',
+      focus: ['technology', 'privacy', 'digital tools'],
+      words: [
+        { word: 'privacy settings', meaning: 'controls that decide who can see your information online', sentence: 'You should check your ___ before posting personal photos.', hint: 'online visibility controls' },
+        { word: 'data breach', meaning: 'a situation where private information is accessed without permission', sentence: 'The company apologized after a serious ___.', hint: 'private data leak' },
+        { word: 'algorithm', meaning: 'a set of rules a computer uses to make decisions or recommendations', sentence: 'The app uses an ___ to suggest videos.', hint: 'computer decision system' },
+        { word: 'user-friendly', meaning: 'easy for people to use', sentence: 'The new platform is more ___ than the old version.', hint: 'easy to use' },
+        { word: 'troubleshoot', meaning: 'find and fix the cause of a technical problem', sentence: 'The support team helped me ___ the login issue.', hint: 'solve a tech problem' }
+      ],
+      productionQuestion: 'Write about a digital tool or app you use. Discuss privacy, usability and one possible problem.',
+      sampleAnswer: 'I use a language app every day. It is user-friendly, and the algorithm suggests useful review activities. However, I always check privacy settings because I do not want to share too much data. If the app stops working, I try to troubleshoot the problem before contacting support.'
+    },
+    {
+      id: 'b2-vocabulary-05-media-and-misinformation',
+      order: 5,
+      stage: 'B2.2',
+      title: 'Media and misinformation',
+      topic: 'news, reliability and online content',
+      description: 'Students practise vocabulary for evaluating news, media coverage and unreliable information.',
+      focus: ['media', 'news', 'critical thinking'],
+      words: [
+        { word: 'headline', meaning: 'the title of a news article', sentence: 'The ___ was dramatic, but the article itself was more balanced.', hint: 'news title' },
+        { word: 'bias', meaning: 'an unfair preference for one side or opinion', sentence: 'Readers should notice possible ___ in political reporting.', hint: 'unfair preference' },
+        { word: 'reliable source', meaning: 'a person, website or organization that can be trusted for information', sentence: 'Before sharing the story, check whether it comes from a ___.', hint: 'trustworthy information place' },
+        { word: 'coverage', meaning: 'the way media reports a topic or event', sentence: 'The election received international ___.', hint: 'media reporting' },
+        { word: 'go viral', meaning: 'spread very quickly online', sentence: 'A short video can ___ in a few hours.', hint: 'spread online fast' }
+      ],
+      productionQuestion: 'Write 7-9 sentences about how people should read news online. Use at least four words from this lesson.',
+      sampleAnswer: 'A headline can make a story look more dramatic than it is. Before sharing news, people should check a reliable source. Media coverage can also contain bias, especially during elections. Sometimes false information can go viral quickly, so critical thinking is essential.'
+    },
+    {
+      id: 'b2-vocabulary-06-environment-sustainability',
+      order: 6,
+      stage: 'B2.2',
+      title: 'Environment and sustainability',
+      topic: 'climate, energy and responsible choices',
+      description: 'Students learn B2 vocabulary for discussing environmental problems and sustainable solutions.',
+      focus: ['environment', 'sustainability', 'climate'],
+      words: [
+        { word: 'sustainable', meaning: 'able to continue without damaging the environment or using too many resources', sentence: 'The city needs a more ___ transport system.', hint: 'environmentally responsible' },
+        { word: 'renewable energy', meaning: 'energy from sources that can naturally replace themselves', sentence: 'Solar and wind power are forms of ___.', hint: 'clean energy source' },
+        { word: 'carbon footprint', meaning: 'the amount of carbon dioxide produced by a person, activity or organization', sentence: 'Flying often increases your ___.', hint: 'climate impact amount' },
+        { word: 'conservation', meaning: 'protecting nature and natural resources', sentence: 'The national park supports wildlife ___.', hint: 'protecting nature' },
+        { word: 'wasteful', meaning: 'using more than necessary', sentence: 'Throwing away good food is extremely ___.', hint: 'using too much' }
+      ],
+      productionQuestion: 'Write about one environmental problem and two practical solutions. Use at least four words from this lesson.',
+      sampleAnswer: 'Transport is a major environmental issue in many cities. A sustainable transport system should include buses, bike lanes and safe walking areas. Renewable energy can also reduce a city\'s carbon footprint. Food waste is wasteful, so people should plan meals more carefully.'
+    },
+    {
+      id: 'b2-vocabulary-07-health-and-wellbeing',
+      order: 7,
+      stage: 'B2.2',
+      title: 'Health and wellbeing',
+      topic: 'stress, lifestyle and mental health',
+      description: 'Students practise vocabulary for discussing healthy habits, stress and long-term wellbeing.',
+      focus: ['wellbeing', 'health', 'lifestyle'],
+      words: [
+        { word: 'burnout', meaning: 'extreme tiredness and stress caused by working too much', sentence: 'Many employees experience ___ after months of pressure.', hint: 'work stress exhaustion' },
+        { word: 'balanced diet', meaning: 'a way of eating that includes different healthy foods', sentence: 'A ___ should include vegetables, protein and enough water.', hint: 'healthy eating pattern' },
+        { word: 'sedentary', meaning: 'involving a lot of sitting and not much movement', sentence: 'Office workers often have a ___ lifestyle.', hint: 'sitting too much' },
+        { word: 'mental wellbeing', meaning: 'the state of feeling emotionally healthy and able to cope', sentence: 'Sleep and social support are important for ___.', hint: 'emotional health' },
+        { word: 'recover', meaning: 'return to health or normal energy after illness or stress', sentence: 'It took her two weeks to ___ after the flu.', hint: 'get better' }
+      ],
+      productionQuestion: 'Write 7-9 sentences giving advice for avoiding burnout and improving wellbeing.',
+      sampleAnswer: 'To avoid burnout, people need realistic goals and regular rest. A balanced diet and short walks can help, especially if your job is sedentary. Mental wellbeing also depends on sleep and support from friends. When you get ill or stressed, you need time to recover.'
+    },
+    {
+      id: 'b2-vocabulary-08-society-and-community',
+      order: 8,
+      stage: 'B2.2',
+      title: 'Society and community',
+      topic: 'social issues, inclusion and public life',
+      description: 'Students learn vocabulary for discussing society, local communities and public services.',
+      focus: ['society', 'community', 'social issues'],
+      words: [
+        { word: 'inequality', meaning: 'an unfair situation where people do not have the same opportunities', sentence: 'Education can reduce ___ if everyone has access to good schools.', hint: 'unfair difference' },
+        { word: 'inclusion', meaning: 'making sure different people can take part and feel welcome', sentence: 'The company improved ___ by making offices more accessible.', hint: 'welcoming everyone' },
+        { word: 'public services', meaning: 'services provided for people by the government or local authorities', sentence: 'Good ___ include transport, healthcare and education.', hint: 'services for citizens' },
+        { word: 'volunteer', meaning: 'work without payment to help others', sentence: 'Many people ___ at local food banks on weekends.', hint: 'help without pay' },
+        { word: 'social issue', meaning: 'a problem that affects many people in society', sentence: 'Housing is a serious ___ in many large cities.', hint: 'society problem' }
+      ],
+      productionQuestion: 'Write about a social issue in a city or country. Explain the problem and suggest one solution.',
+      sampleAnswer: 'Inequality is a serious social issue in many cities. Some people have excellent public services, while others do not. Inclusion is important because everyone should be able to participate in society. Local people can volunteer, but governments also need long-term solutions.'
+    },
+    {
+      id: 'b2-vocabulary-09-money-consumer-choices',
+      order: 9,
+      stage: 'B2.3',
+      title: 'Money and consumer choices',
+      topic: 'shopping, budgeting and financial decisions',
+      description: 'Students practise vocabulary for discussing spending habits, value and financial pressure.',
+      focus: ['money', 'consumer choices', 'shopping'],
+      words: [
+        { word: 'budget-conscious', meaning: 'careful about spending money', sentence: 'Many students are ___ when they choose where to eat.', hint: 'careful with money' },
+        { word: 'impulse purchase', meaning: 'something bought suddenly without planning', sentence: 'The expensive headphones were an ___, and I regretted it later.', hint: 'unplanned buy' },
+        { word: 'value for money', meaning: 'good quality compared with the price', sentence: 'This phone is not cheap, but it offers excellent ___.', hint: 'worth the price' },
+        { word: 'refund policy', meaning: 'rules about getting money back after returning something', sentence: 'Always check the ___ before buying clothes online.', hint: 'money back rules' },
+        { word: 'financial pressure', meaning: 'stress caused by money problems', sentence: 'Rising rent creates ___ for many young people.', hint: 'money stress' }
+      ],
+      productionQuestion: 'Write about how you make buying decisions. Use at least four words from this lesson.',
+      sampleAnswer: 'I try to be budget-conscious, especially when buying technology. I avoid impulse purchases by waiting at least one day before ordering. Good value for money matters more to me than famous brands. I also check the refund policy, because returning items can be difficult.'
+    },
+    {
+      id: 'b2-vocabulary-10-travel-culture',
+      order: 10,
+      stage: 'B2.3',
+      title: 'Travel and culture',
+      topic: 'travel experiences and cultural awareness',
+      description: 'Students learn vocabulary for describing meaningful travel and cultural differences.',
+      focus: ['travel', 'culture', 'experience'],
+      words: [
+        { word: 'off the beaten track', meaning: 'away from places where most tourists go', sentence: 'We found a small village ___ and stayed there for two nights.', hint: 'away from tourist places' },
+        { word: 'local customs', meaning: 'traditional habits and ways of behaving in a place', sentence: 'Visitors should learn about ___ before travelling.', hint: 'traditional local behavior' },
+        { word: 'itinerary', meaning: 'a plan of places to visit and things to do on a trip', sentence: 'Our ___ included two museums and a walking tour.', hint: 'travel plan' },
+        { word: 'accommodation', meaning: 'a place to stay while travelling', sentence: 'Good ___ near the city center can be expensive.', hint: 'place to stay' },
+        { word: 'culture shock', meaning: 'confusion or stress when experiencing a very different culture', sentence: 'She experienced ___ when she first moved abroad.', hint: 'stress from cultural difference' }
+      ],
+      productionQuestion: 'Write about a trip you took or would like to take. Mention itinerary, accommodation and cultural awareness.',
+      sampleAnswer: 'I prefer travelling off the beaten track because it feels more authentic. Before a trip, I plan a simple itinerary but leave some free time. I also read about local customs to avoid mistakes. Good accommodation matters, especially if I stay for more than a week.'
+    },
+    {
+      id: 'b2-vocabulary-11-communication-relationships',
+      order: 11,
+      stage: 'B2.3',
+      title: 'Communication and relationships',
+      topic: 'misunderstandings, support and boundaries',
+      description: 'Students practise vocabulary for discussing communication problems and healthy relationships.',
+      focus: ['communication', 'relationships', 'emotional intelligence'],
+      words: [
+        { word: 'misunderstanding', meaning: 'a situation where people understand something incorrectly', sentence: 'The argument started because of a simple ___.', hint: 'wrong understanding' },
+        { word: 'compromise', meaning: 'an agreement where both sides accept less than they wanted', sentence: 'A healthy relationship often requires ___.', hint: 'middle agreement' },
+        { word: 'supportive', meaning: 'helpful and encouraging', sentence: 'Her friends were very ___ during a difficult period.', hint: 'encouraging and helpful' },
+        { word: 'set boundaries', meaning: 'make clear what behavior is acceptable or not acceptable', sentence: 'It is important to ___ at work and in personal life.', hint: 'define limits' },
+        { word: 'get along', meaning: 'have a friendly relationship', sentence: 'They disagree sometimes, but they usually ___ well.', hint: 'have a good relationship' }
+      ],
+      productionQuestion: 'Write about what makes communication healthy in friendships, families or teams.',
+      sampleAnswer: 'Healthy communication prevents many misunderstandings. People need to listen carefully and be ready to compromise. Supportive friends do not always agree with you, but they respect you. It is also important to set boundaries when something feels uncomfortable.'
+    },
+    {
+      id: 'b2-vocabulary-12-opinions-argumentation',
+      order: 12,
+      stage: 'B2.3',
+      title: 'Opinions and argumentation',
+      topic: 'building arguments and responding to ideas',
+      description: 'Students learn vocabulary for essays, discussions and balanced opinions.',
+      focus: ['argumentation', 'opinions', 'essay vocabulary'],
+      words: [
+        { word: 'drawback', meaning: 'a disadvantage or negative side', sentence: 'One major ___ of remote work is social isolation.', hint: 'negative side' },
+        { word: 'evidence', meaning: 'facts or information that support an idea', sentence: 'Strong arguments need clear ___.', hint: 'supporting facts' },
+        { word: 'claim', meaning: 'a statement that someone says is true', sentence: 'The article makes the ___ that exams are outdated.', hint: 'statement of belief' },
+        { word: 'counterargument', meaning: 'an argument against another argument', sentence: 'A good essay should include at least one ___.', hint: 'opposing argument' },
+        { word: 'perspective', meaning: 'a way of thinking about a situation', sentence: 'From my ___, the benefits are greater than the risks.', hint: 'point of view' }
+      ],
+      productionQuestion: 'Write a balanced opinion paragraph on online learning, remote work or social media. Use at least four words from this lesson.',
+      sampleAnswer: 'One drawback of remote work is that people can feel isolated. However, there is evidence that flexible work improves motivation for some employees. The claim that offices are always better is too simple. From my perspective, the best solution is a hybrid system.'
+    },
+    {
+      id: 'b2-vocabulary-13-b2-phrasal-verbs',
+      order: 13,
+      stage: 'B2.4',
+      title: 'B2 phrasal verbs',
+      topic: 'useful phrasal verbs for work and discussion',
+      description: 'Students practise common upper-intermediate phrasal verbs in professional and academic contexts.',
+      focus: ['phrasal verbs', 'work', 'discussion'],
+      words: [
+        { word: 'carry out', meaning: 'do or complete a task, study or plan', sentence: 'The researchers will ___ a survey next month.', hint: 'do a task' },
+        { word: 'come up with', meaning: 'think of an idea or solution', sentence: 'The team needs to ___ a better strategy.', hint: 'think of' },
+        { word: 'put forward', meaning: 'suggest an idea for discussion', sentence: 'She ___ a proposal during the meeting.', answers: ['put forward', 'put'], hint: 'suggest formally' },
+        { word: 'look into', meaning: 'investigate or examine something', sentence: 'We need to ___ the cause of the delay.', hint: 'investigate' },
+        { word: 'point out', meaning: 'tell someone an important fact or detail', sentence: 'He forgot to ___ the risks in his presentation.', hint: 'mention clearly' }
+      ],
+      productionQuestion: 'Write 7-9 sentences about solving a problem at work or school. Use at least four phrasal verbs from this lesson.',
+      sampleAnswer: 'Our team had to carry out a survey before changing the course. We looked into the main complaints and came up with three ideas. During the meeting, Anna put forward a practical solution. I also pointed out that students needed clearer instructions.'
+    },
+    {
+      id: 'b2-vocabulary-14-idioms-fixed-expressions',
+      order: 14,
+      stage: 'B2.4',
+      title: 'Idioms and fixed expressions',
+      topic: 'natural B2 expressions for work and learning',
+      description: 'Students learn useful idioms and fixed expressions for describing progress, teamwork and change.',
+      focus: ['idioms', 'fixed expressions', 'natural English'],
+      words: [
+        { word: 'a turning point', meaning: 'a moment when an important change begins', sentence: 'Starting that course was ___ in my career.', hint: 'important change moment' },
+        { word: 'on the same page', meaning: 'understanding and agreeing about the same plan', sentence: 'Before we continue, we need to make sure everyone is ___.', hint: 'shared understanding' },
+        { word: 'a learning curve', meaning: 'a period of learning something difficult or new', sentence: 'The first month in the new job was ___ for me.', hint: 'difficult learning period' },
+        { word: 'the bigger picture', meaning: 'the whole situation, not only one small detail', sentence: 'Try not to focus only on small errors; look at ___.', hint: 'whole situation' },
+        { word: 'a matter of time', meaning: 'something that will almost certainly happen eventually', sentence: 'With enough practice, success is ___ for her.', hint: 'will happen eventually' }
+      ],
+      productionQuestion: 'Write about a learning or work experience using at least four expressions from this lesson.',
+      sampleAnswer: 'My first serious project was a turning point. At first, the tools had a steep learning curve, but our team stayed on the same page. When small problems appeared, my manager reminded us to look at the bigger picture. After that, progress was a matter of time.'
+    },
+    {
+      id: 'b2-vocabulary-15-change-and-trends',
+      order: 15,
+      stage: 'B2.4',
+      title: 'Change and trends',
+      topic: 'describing data, movement and long-term change',
+      description: 'Students practise vocabulary for describing trends in reports, presentations and discussions.',
+      focus: ['trends', 'data', 'change'],
+      words: [
+        { word: 'rise sharply', meaning: 'increase quickly and by a large amount', sentence: 'Online sales began to ___ during the holiday season.', hint: 'increase fast' },
+        { word: 'gradual decline', meaning: 'a slow decrease over time', sentence: 'The chart shows a ___ in newspaper sales.', hint: 'slow fall' },
+        { word: 'remain stable', meaning: 'stay at the same level without major change', sentence: 'Prices are expected to ___ for the next six months.', hint: 'stay the same' },
+        { word: 'shift toward', meaning: 'move or change in the direction of something', sentence: 'Many companies now ___ hybrid work.', hint: 'move toward' },
+        { word: 'long-term trend', meaning: 'a pattern that continues for a long period', sentence: 'Remote learning may be a ___, not just a temporary change.', hint: 'lasting pattern' }
+      ],
+      productionQuestion: 'Describe a trend in technology, work, education or lifestyle. Use at least four expressions from this lesson.',
+      sampleAnswer: 'The use of online learning rose sharply during the pandemic. After that, some numbers showed a gradual decline, but interest did not disappear. Many schools shifted toward blended courses. I think flexible learning is a long-term trend.'
+    },
+    {
+      id: 'b2-vocabulary-16-problem-solving-decisions',
+      order: 16,
+      stage: 'B2.5',
+      title: 'Problem solving and decisions',
+      topic: 'analyzing problems and choosing solutions',
+      description: 'Students learn vocabulary for identifying problems, comparing options and explaining decisions.',
+      focus: ['problem solving', 'decision making', 'analysis'],
+      words: [
+        { word: 'identify', meaning: 'find or recognize something clearly', sentence: 'The first step is to ___ the real cause of the problem.', hint: 'find clearly' },
+        { word: 'evaluate', meaning: 'judge the value, quality or usefulness of something', sentence: 'We need to ___ each option before deciding.', hint: 'judge carefully' },
+        { word: 'alternative', meaning: 'another possible choice or solution', sentence: 'If this plan is too expensive, we need an ___.', hint: 'another option' },
+        { word: 'priority', meaning: 'something more important than other things', sentence: 'Customer safety must be our main ___.', hint: 'most important thing' },
+        { word: 'outcome', meaning: 'the final result of an action or process', sentence: 'The ___ depends on how quickly we respond.', hint: 'final result' }
+      ],
+      productionQuestion: 'Write about a problem and explain how you would make a decision. Use at least four words from this lesson.',
+      sampleAnswer: 'To solve a problem, we first need to identify the real cause. Then we should evaluate several options and choose the best alternative. If time is limited, our priority should be the solution with the lowest risk. The outcome will depend on clear communication.'
+    },
+    {
+      id: 'b2-vocabulary-17-personality-behaviour',
+      order: 17,
+      stage: 'B2.5',
+      title: 'Personality and behaviour',
+      topic: 'describing people with nuance',
+      description: 'Students practise precise adjectives for describing character, behavior and teamwork.',
+      focus: ['personality', 'describing people', 'teamwork'],
+      words: [
+        { word: 'reliable', meaning: 'able to be trusted to do what is expected', sentence: 'She is a ___ colleague who always meets deadlines.', hint: 'trustworthy' },
+        { word: 'self-aware', meaning: 'able to understand your own emotions, strengths and weaknesses', sentence: 'A good leader should be ___ and open to feedback.', hint: 'understands self' },
+        { word: 'open-minded', meaning: 'willing to consider new ideas or different opinions', sentence: 'The best teams are ___ when discussing changes.', hint: 'accepting new ideas' },
+        { word: 'stubborn', meaning: 'not willing to change your opinion or behavior', sentence: 'He can be ___ when someone challenges his ideas.', hint: 'refuses to change' },
+        { word: 'considerate', meaning: 'kind and careful about other people\'s feelings or needs', sentence: 'It was ___ of her to ask before changing the schedule.', hint: 'thoughtful toward others' }
+      ],
+      productionQuestion: 'Describe a person you know well. Use at least four adjectives from this lesson and give examples.',
+      sampleAnswer: 'My friend is reliable because she always keeps her promises. She is also self-aware and admits when she makes a mistake. I like that she is open-minded when people disagree with her. She can be stubborn sometimes, but she is usually considerate.'
+    },
+    {
+      id: 'b2-vocabulary-18-b2-vocabulary-review',
+      order: 18,
+      stage: 'B2 review',
+      title: 'B2 vocabulary review',
+      topic: 'mixed upper-intermediate vocabulary',
+      description: 'Students review useful B2 vocabulary for impact, decisions, communication, society and change.',
+      focus: ['B2 review', 'mixed vocabulary', 'accurate production'],
+      words: [
+        { word: 'significant', meaning: 'important or large enough to notice', sentence: 'The new policy had a ___ effect on student motivation.', hint: 'important or noticeable' },
+        { word: 'approach', meaning: 'a way of dealing with a task or problem', sentence: 'We need a more flexible ___ to online learning.', hint: 'method' },
+        { word: 'impact', meaning: 'a strong effect or influence', sentence: 'The project had a positive ___ on the local community.', hint: 'effect' },
+        { word: 'challenge', meaning: 'a difficult task or problem', sentence: 'The biggest ___ was keeping everyone informed.', hint: 'difficult problem' },
+        { word: 'effective', meaning: 'successful in producing the result you want', sentence: 'Short daily practice can be more ___ than one long session.', hint: 'works well' }
+      ],
+      productionPrompt: 'Write a B2 paragraph using all five review words.',
+      productionQuestion: 'Write about a change, project, course or decision. Use significant, approach, impact, challenge and effective.',
+      sampleAnswer: 'Changing our study approach had a significant impact on the group. The biggest challenge was building a regular routine, but short daily tasks were effective. After a month, everyone felt more confident and better prepared.'
+    }
+  ].map(buildVocabularyReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2 = {
     grammar: READY_GRAMMAR_LESSONS_B2,
-    vocabulary: root.lessons.B2?.vocabulary || [],
+    vocabulary: READY_VOCABULARY_LESSONS_B2,
     reading: root.lessons.B2?.reading || [],
     writing: root.lessons.B2?.writing || [],
     listening: root.lessons.B2?.listening || []
