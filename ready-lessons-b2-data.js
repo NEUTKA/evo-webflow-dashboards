@@ -56,7 +56,7 @@
     },
     writing: {
       description: 'B2 writing pathway space for essays, reports, proposals, reviews, formal emails and discursive texts.',
-      plannedTopics: []
+      plannedTopics: ['Formal email', 'Complaint and reply', 'Opinion essay', 'For-and-against essay', 'Report', 'Proposal', 'Review', 'Article', 'Cover letter', 'B2 writing review']
     },
     listening: {
       description: 'B2 listening pathway space for interviews, discussions, lectures, opinions and longer narratives.',
@@ -257,6 +257,133 @@
             options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
             answer: item.answer ? 'a' : 'b',
             explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const WRITING_DEFAULT_CHECKLIST_B2 = [
+    ['Answer all task points and stay relevant.', true],
+    ['Use clear paragraphing and logical linking.', true],
+    ['Use the same informal tone for every text type.', false],
+    ['Support opinions with reasons and examples.', true],
+    ['Check register, grammar, punctuation and spelling.', true]
+  ];
+
+  function buildWritingChoiceItem(lessonId, phrases, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const optionsSource = [
+      entry[0],
+      phrases[(index + 1) % phrases.length]?.[0],
+      phrases[(index + 2) % phrases.length]?.[0]
+    ];
+    const ordered = index % 3 === 0
+      ? optionsSource
+      : (index % 3 === 1
+        ? [optionsSource[1], optionsSource[0], optionsSource[2]]
+        : [optionsSource[1], optionsSource[2], optionsSource[0]]);
+    const options = ordered.map((text, optionIndex) => ({
+      id: ids[optionIndex],
+      text: text || entry[0]
+    }));
+
+    return {
+      id: `${lessonId}-phrase-choice-${index + 1}`,
+      sentence: `Choose the best phrase for: ${entry[1]}.`,
+      options,
+      answer: options.find((option) => option.text === entry[0])?.id || 'a',
+      explanation: entry[0]
+    };
+  }
+
+  function buildWritingReadyLesson(config) {
+    const phrases = config.phrases || [];
+    const gaps = config.gaps || [];
+    const checklist = config.checklist || WRITING_DEFAULT_CHECKLIST_B2;
+    const supportText = [
+      'Model text:',
+      config.modelText,
+      '',
+      'Useful B2 phrases:',
+      ...phrases.map((item) => `- ${item[0]} = ${item[1]}`),
+      '',
+      'Checklist:',
+      ...checklist.filter((item) => item[1]).map((item) => `- ${item[0]}`)
+    ].filter((line) => line !== undefined && line !== null).join('\n');
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2',
+      skill: 'writing',
+      stage: config.stage || 'B2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 45,
+      description: config.description,
+      supportTitle: config.supportTitle || 'Model and writing help',
+      supportText,
+      focus: config.focus || ['B2 writing', 'paragraph structure', 'register and linking'],
+      teacherNotes: config.teacherNotes || 'Ask the student to analyze purpose, register, structure and useful phrases before writing a complete B2 response.',
+      tasks: [
+        {
+          id: `${config.id}-phrase-matching`,
+          type: 'matching',
+          title: 'Useful phrases',
+          prompt: 'Match each phrase with its purpose.',
+          pairs: phrases.map((entry, index) => ({
+            id: `${config.id}-phrase-matching-${index + 1}`,
+            left_text: entry[0],
+            right_text: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-phrase-choice`,
+          type: 'choice',
+          title: 'Choose the best phrase',
+          prompt: 'Choose a useful phrase for each situation.',
+          items: phrases.map((entry, index) => buildWritingChoiceItem(config.id, phrases, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the model sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: gaps.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry[0],
+            accepted_answers: Array.isArray(entry[1]) ? entry[1] : [entry[1]],
+            hint: entry[2] || 'Use the model text.',
+            explanation: Array.isArray(entry[1]) ? entry[1].join(' / ') : entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Write your text',
+          prompt: config.productionPrompt || 'Write a complete B2 text of 140-190 words. Use the model, useful phrases and checklist.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-checklist-extra`,
+          type: 'choice',
+          title: 'Writing checklist',
+          prompt: 'Choose True or False.',
+          items: checklist.map((entry, index) => ({
+            id: `${config.id}-checklist-extra-${index + 1}`,
+            sentence: entry[0],
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: entry[1] ? 'a' : 'b',
+            explanation: entry[1] ? 'This is good B2 writing advice.' : 'This is not good B2 writing advice.'
           }))
         }
       ]
@@ -2246,13 +2373,485 @@
     }
   ].map(buildReadingReadyLesson);
 
+  const READY_WRITING_LESSONS_B2 = [
+    {
+      id: 'b2-writing-01-formal-email-information',
+      order: 1,
+      stage: 'B2.1',
+      title: 'Formal email: requesting information',
+      topic: 'asking for detailed information politely',
+      description: 'Students write a formal email requesting information with polite questions and a clear purpose.',
+      focus: ['formal email', 'polite requests', 'register'],
+      modelText: 'Dear Admissions Team,\nI am writing to enquire about your intensive English course for adult learners. I would be grateful if you could send me further information about the course timetable, class size and assessment process. In addition, I would like to know whether students receive individual feedback after each module. As I am planning to study while working full-time, I would also appreciate details about online attendance options. Thank you in advance for your help. I look forward to hearing from you.\nYours faithfully,\nDaniel Smith',
+      phrases: [
+        ['I am writing to enquire about...', 'state the purpose formally'],
+        ['I would be grateful if you could...', 'make a polite request'],
+        ['In addition, I would like to know...', 'add another question'],
+        ['I would also appreciate details about...', 'request specific details'],
+        ['I look forward to hearing from you.', 'close a formal email']
+      ],
+      gaps: [
+        ['I am writing to ___ about your course.', 'enquire', 'formal purpose'],
+        ['I would be ___ if you could send further information.', 'grateful', 'polite request'],
+        ['In ___, I would like to know about feedback.', 'addition', 'adding question'],
+        ['I would also ___ details about online options.', 'appreciate', 'formal request'],
+        ['I look forward to ___ from you.', 'hearing', 'formal closing']
+      ],
+      productionQuestion: 'Write a formal email asking for information about a course, job opportunity, conference or service. Ask at least three detailed questions.',
+      sampleAnswer: 'Dear Sir or Madam, I am writing to enquire about your weekend business English course. I would be grateful if you could send me further information about the timetable, course content and fees. In addition, I would like to know whether students receive individual feedback. I would also appreciate details about online attendance options. I look forward to hearing from you. Yours faithfully, Anna Petrova'
+    },
+    {
+      id: 'b2-writing-02-formal-complaint',
+      order: 2,
+      stage: 'B2.1',
+      title: 'Formal complaint',
+      topic: 'complaining about poor service',
+      description: 'Students write a formal complaint explaining the problem, impact and expected solution.',
+      focus: ['complaint', 'formal register', 'problem and solution'],
+      modelText: 'Dear Customer Service Manager,\nI am writing to express my dissatisfaction with the service I received at your hotel last weekend. Although the room was advertised as quiet, it faced a busy road and the windows did not close properly. As a result, I slept very badly throughout my stay. I reported the issue to reception, but no alternative room was offered. Considering the price of the booking, I expected a higher standard of service. I would therefore like to request a partial refund. I hope this matter can be resolved promptly.\nKind regards,\nMaria Lopez',
+      phrases: [
+        ['I am writing to express my dissatisfaction with...', 'open a formal complaint'],
+        ['Although the room was advertised as...', 'contrast promise and reality'],
+        ['As a result,...', 'explain the effect'],
+        ['Considering the price of the booking,...', 'justify the complaint'],
+        ['I would therefore like to request...', 'ask for a solution']
+      ],
+      gaps: [
+        ['I am writing to express my ___ with the service.', 'dissatisfaction', 'formal complaint noun'],
+        ['Although the room was ___ as quiet, it was noisy.', 'advertised', 'contrast promise and reality'],
+        ['As a ___, I slept very badly.', 'result', 'effect phrase'],
+        ['___ the price, I expected better service.', 'Considering', 'justification'],
+        ['I would ___ like to request a partial refund.', 'therefore', 'formal result linker']
+      ],
+      productionQuestion: 'Write a formal complaint about a hotel, course, delivery, restaurant or online service. Explain two problems and request a fair solution.',
+      sampleAnswer: 'Dear Customer Service Manager, I am writing to express my dissatisfaction with my recent order. Although delivery was promised within three days, the package arrived two weeks late. In addition, one item was damaged. As a result, I could not use it for the event I had planned. Considering the price, I expected better service. I would therefore like to request a replacement or a full refund. Kind regards, Alex Brown'
+    },
+    {
+      id: 'b2-writing-03-reply-to-complaint',
+      order: 3,
+      stage: 'B2.1',
+      title: 'Reply to a complaint',
+      topic: 'apologizing and solving a customer problem',
+      description: 'Students write a professional reply to a complaint with empathy, explanation and solution.',
+      focus: ['customer service', 'apology', 'professional tone'],
+      modelText: 'Dear Ms Lopez,\nThank you for contacting us about your recent stay. I am very sorry to hear that the room did not meet your expectations and that the issue was not dealt with at reception. We understand how disappointing it must have been to experience noise throughout the weekend. I have spoken to the hotel manager, and we would like to offer you a 30 percent refund as a gesture of goodwill. We are also reviewing our room descriptions to avoid similar problems in the future. Please accept our sincere apologies for the inconvenience caused.\nKind regards,\nCustomer Relations Team',
+      phrases: [
+        ['Thank you for contacting us about...', 'acknowledge the complaint'],
+        ['I am very sorry to hear that...', 'apologize with empathy'],
+        ['We understand how disappointing it must have been...', 'show understanding'],
+        ['As a gesture of goodwill,...', 'introduce compensation'],
+        ['Please accept our sincere apologies...', 'close with a formal apology']
+      ],
+      gaps: [
+        ['Thank you for ___ us about your recent stay.', 'contacting', 'acknowledgement'],
+        ['I am very sorry to ___ that the room was noisy.', 'hear', 'apology phrase'],
+        ['We understand how ___ it must have been.', 'disappointing', 'empathy'],
+        ['As a gesture of ___, we offer a refund.', 'goodwill', 'compensation phrase'],
+        ['Please accept our ___ apologies.', 'sincere', 'formal apology']
+      ],
+      productionQuestion: 'Write a professional reply to a customer complaint. Apologize, explain the next step and offer a solution.',
+      sampleAnswer: 'Dear Mr Green, Thank you for contacting us about your damaged order. I am very sorry to hear that the item arrived in poor condition. We understand how disappointing this must have been, especially as it was needed for an event. As a gesture of goodwill, we would like to offer a replacement and free delivery. Please accept our sincere apologies for the inconvenience caused. Kind regards, Customer Support'
+    },
+    {
+      id: 'b2-writing-04-opinion-essay-remote-work',
+      order: 4,
+      stage: 'B2.1',
+      title: 'Opinion essay',
+      topic: 'remote work and productivity',
+      description: 'Students write a B2 opinion essay with a clear position, reasons and examples.',
+      focus: ['opinion essay', 'argument', 'examples'],
+      modelText: 'Remote work has become a normal part of modern employment, and in my view it should remain an option for many workers. The main advantage is that it gives people more control over their working environment. For tasks that require concentration, this can lead to better results. Another important point is that employees save commuting time, which can improve their work-life balance. However, remote work is not suitable for every situation. Creative discussions and team decisions are often easier in person. Overall, I believe the best approach is a flexible system that combines home working with regular office collaboration.',
+      phrases: [
+        ['In my view,...', 'state your opinion'],
+        ['The main advantage is that...', 'introduce the strongest reason'],
+        ['Another important point is that...', 'add a second reason'],
+        ['However,...', 'introduce contrast'],
+        ['Overall, I believe...', 'give a final position']
+      ],
+      gaps: [
+        ['In my ___, remote work should remain an option.', 'view', 'opinion phrase'],
+        ['The main ___ is that people have more control.', 'advantage', 'main reason'],
+        ['Another important ___ is that commuting time is saved.', 'point', 'adding reason'],
+        ['___, remote work is not suitable for every situation.', 'However', 'contrast'],
+        ['___, I believe flexibility is best.', 'Overall', 'conclusion']
+      ],
+      productionQuestion: 'Write an opinion essay about remote work, online learning, public transport or social media. Give your opinion and at least two reasons.',
+      sampleAnswer: 'In my view, online learning should be part of modern education. The main advantage is that it gives students more flexibility. Another important point is that learners can review recorded material several times. However, online learning can feel lonely if there is no real interaction. Overall, I believe the best approach is a mix of online practice and live lessons.'
+    },
+    {
+      id: 'b2-writing-05-for-and-against-essay-social-media',
+      order: 5,
+      stage: 'B2.2',
+      title: 'For-and-against essay',
+      topic: 'social media and society',
+      description: 'Students write a balanced essay presenting advantages, disadvantages and a final judgement.',
+      focus: ['for-and-against essay', 'balanced argument', 'conclusion'],
+      modelText: 'Social media has changed the way people communicate, and it has both clear benefits and serious drawbacks. On the one hand, it allows people to stay connected across long distances and share important information quickly. It can also help small businesses reach new customers without large advertising budgets. On the other hand, social media can encourage comparison, distraction and the spread of misinformation. Some users spend hours online without feeling genuinely connected. On balance, I would argue that social media is valuable when people use it intentionally, but harmful when it replaces real communication.',
+      phrases: [
+        ['It has both clear benefits and serious drawbacks.', 'introduce a balanced topic'],
+        ['On the one hand,...', 'introduce advantages'],
+        ['It can also help...', 'add another advantage'],
+        ['On the other hand,...', 'introduce disadvantages'],
+        ['On balance, I would argue that...', 'give a balanced conclusion']
+      ],
+      gaps: [
+        ['It has both clear benefits and serious ___.', 'drawbacks', 'balanced opening'],
+        ['On the one ___, it connects people.', 'hand', 'advantage side'],
+        ['It can ___ help small businesses.', 'also', 'adding point'],
+        ['On the ___ hand, it can spread misinformation.', 'other', 'disadvantage side'],
+        ['On ___, I would argue that careful use is best.', 'balance', 'balanced conclusion']
+      ],
+      productionQuestion: 'Write a for-and-against essay about social media, exams, tourism or online shopping. Include both sides and your conclusion.',
+      sampleAnswer: 'Online shopping has both clear benefits and serious drawbacks. On the one hand, it is convenient and often cheaper than shopping in person. It can also help people compare products quickly. On the other hand, customers cannot try items before buying them, and delivery creates waste. On balance, I would argue that online shopping is useful if people buy carefully.'
+    },
+    {
+      id: 'b2-writing-06-problem-solution-essay-food-waste',
+      order: 6,
+      stage: 'B2.2',
+      title: 'Problem-solution essay',
+      topic: 'food waste',
+      description: 'Students write a problem-solution essay explaining causes and practical solutions.',
+      focus: ['problem-solution essay', 'cause and effect', 'recommendations'],
+      modelText: 'Food waste is a serious problem in many countries, partly because modern shopping encourages people to buy more than they need. Large packages and special offers can seem economical, but they often lead to unused food being thrown away. Another cause is poor planning at home: people forget what they already have or misunderstand date labels. One practical solution is to plan meals before shopping and freeze extra portions. Supermarkets could also sell imperfect fruit and vegetables at lower prices. If households and businesses both take action, food waste can be reduced significantly.',
+      phrases: [
+        ['A serious problem in many countries is...', 'introduce the problem'],
+        ['One cause is...', 'explain a cause'],
+        ['Another cause is...', 'add another cause'],
+        ['One practical solution is to...', 'suggest a solution'],
+        ['If both sides take action,...', 'summarize shared responsibility']
+      ],
+      gaps: [
+        ['A serious ___ in many countries is food waste.', 'problem', 'problem opening'],
+        ['One ___ is modern shopping habits.', 'cause', 'cause phrase'],
+        ['Another cause is poor ___ at home.', 'planning', 'cause detail'],
+        ['One practical ___ is to plan meals.', 'solution', 'solution phrase'],
+        ['Food waste can be reduced ___.', 'significantly', 'result']
+      ],
+      productionQuestion: 'Write a problem-solution essay about food waste, traffic, screen time or plastic pollution. Explain causes and solutions.',
+      sampleAnswer: 'Traffic is a serious problem in many cities. One cause is that public transport is not reliable enough. Another cause is that people often drive short distances out of habit. One practical solution is to improve bus routes and make cycling safer. If both governments and residents take action, traffic can be reduced significantly.'
+    },
+    {
+      id: 'b2-writing-07-report-survey-results',
+      order: 7,
+      stage: 'B2.2',
+      title: 'Report: survey results',
+      topic: 'summarizing findings and recommendations',
+      description: 'Students write a B2 report based on survey results with clear findings and recommendations.',
+      focus: ['report writing', 'survey results', 'recommendations'],
+      modelText: 'The aim of this report is to summarize students\' opinions about the new study room and suggest improvements. Overall, the response was positive. Most respondents said the room was quiet, bright and useful for independent study. However, several students mentioned that there were not enough sockets, especially during busy periods. A smaller number complained about the booking system, which they found confusing. Based on these findings, I recommend adding more charging points and simplifying the online booking form. These changes would make the room more convenient without requiring major investment.',
+      phrases: [
+        ['The aim of this report is to...', 'state the report purpose'],
+        ['Overall, the response was positive.', 'summarize the general result'],
+        ['Most respondents said that...', 'report the main finding'],
+        ['A smaller number complained about...', 'report a less common issue'],
+        ['Based on these findings, I recommend...', 'make recommendations']
+      ],
+      gaps: [
+        ['The ___ of this report is to summarize opinions.', 'aim', 'report purpose'],
+        ['Overall, the ___ was positive.', 'response', 'general result'],
+        ['Most ___ said the room was useful.', 'respondents', 'survey participants'],
+        ['A smaller ___ complained about the booking system.', 'number', 'minority finding'],
+        ['Based on these ___, I recommend improvements.', 'findings', 'recommendation phrase']
+      ],
+      productionQuestion: 'Write a report about survey results for a study room, course, app, club or workplace. Include findings and two recommendations.',
+      sampleAnswer: 'The aim of this report is to summarize employee opinions about the new lunch area. Overall, the response was positive. Most respondents said the space was clean and comfortable. However, several people mentioned that there were not enough tables during lunch. Based on these findings, I recommend adding more seats and improving the booking system for events.'
+    },
+    {
+      id: 'b2-writing-08-proposal-course-improvement',
+      order: 8,
+      stage: 'B2.2',
+      title: 'Proposal: course improvement',
+      topic: 'suggesting improvements formally',
+      description: 'Students write a proposal with current situation, suggestions and expected benefits.',
+      focus: ['proposal', 'formal suggestions', 'benefits'],
+      modelText: 'The purpose of this proposal is to suggest ways of improving the advanced English course. At present, students receive useful grammar practice, but there are limited opportunities for extended speaking. I therefore propose adding a short discussion task to every lesson. In addition, students could record one speaking answer per week and receive brief feedback. This would help learners develop fluency and notice repeated mistakes. The changes would not require major changes to the timetable, but they would make the course more practical and communicative.',
+      phrases: [
+        ['The purpose of this proposal is to...', 'state proposal purpose'],
+        ['At present,...', 'describe current situation'],
+        ['I therefore propose...', 'make the main suggestion'],
+        ['In addition,...', 'add another suggestion'],
+        ['This would help learners...', 'explain the benefit']
+      ],
+      gaps: [
+        ['The ___ of this proposal is to suggest improvements.', 'purpose', 'proposal opening'],
+        ['At ___, speaking practice is limited.', 'present', 'current situation'],
+        ['I ___ propose adding discussions.', 'therefore', 'main suggestion'],
+        ['In ___, students could record answers.', 'addition', 'extra suggestion'],
+        ['This would ___ learners develop fluency.', 'help', 'benefit']
+      ],
+      productionQuestion: 'Write a proposal suggesting improvements to a course, website, workplace, gym or community space. Include benefits.',
+      sampleAnswer: 'The purpose of this proposal is to improve the student website. At present, useful information is available, but it is difficult to find quickly. I therefore propose adding a clearer menu and a search bar. In addition, students could receive weekly update emails. This would help learners save time and avoid missing important deadlines.'
+    },
+    {
+      id: 'b2-writing-09-review-documentary-app',
+      order: 9,
+      stage: 'B2.3',
+      title: 'Review: documentary, app or book',
+      topic: 'evaluating content and audience',
+      description: 'Students write a B2 review with description, strengths, weaknesses and recommendation.',
+      focus: ['review', 'evaluation', 'recommendation'],
+      modelText: 'I recently watched a documentary called Connected Lives, which explores how social media affects relationships. The strongest aspect of the film is its balance: it includes both experts and ordinary users, so the topic never feels one-sided. The interviews are thoughtful, and the visual style is simple but effective. However, the documentary tries to cover too many stories in ninety minutes, which means some sections feel rushed. Despite this weakness, I would recommend it to viewers interested in technology, psychology and modern communication.',
+      phrases: [
+        ['The strongest aspect of...', 'introduce the main strength'],
+        ['The topic never feels one-sided.', 'praise balance'],
+        ['The visual style is simple but effective.', 'evaluate style'],
+        ['However,...', 'introduce weakness'],
+        ['Despite this weakness, I would recommend it to...', 'recommend with balance']
+      ],
+      gaps: [
+        ['The strongest ___ of the film is its balance.', 'aspect', 'main strength'],
+        ['The topic never feels one-___.', 'sided', 'balanced review'],
+        ['The visual ___ is simple but effective.', 'style', 'style evaluation'],
+        ['___, some sections feel rushed.', 'However', 'contrast'],
+        ['Despite this ___, I would recommend it.', 'weakness', 'balanced recommendation']
+      ],
+      productionQuestion: 'Write a review of a documentary, app, book, course or film. Include strengths, weaknesses and who you would recommend it to.',
+      sampleAnswer: 'I recently tried a language-learning app that focuses on speaking practice. The strongest aspect of the app is its clear feedback, which helps learners notice repeated mistakes. The design is simple but effective. However, some exercises become repetitive after a week. Despite this weakness, I would recommend it to learners who need short daily practice.'
+    },
+    {
+      id: 'b2-writing-10-article-digital-habits',
+      order: 10,
+      stage: 'B2.3',
+      title: 'Article: digital habits',
+      topic: 'writing an engaging article',
+      description: 'Students write an article with a reader-focused opening, clear advice and a memorable ending.',
+      focus: ['article', 'reader engagement', 'advice'],
+      modelText: 'Have you ever opened your phone for one quick message and lost twenty minutes? You are not alone. Many of us use technology automatically, especially when we are tired or bored. The good news is that better digital habits do not require extreme rules. First, decide when you actually want to be online. For example, you might check messages three times a day instead of every ten minutes. Second, keep your phone away from your bed so your day does not begin and end with a screen. Small changes like these can help you feel more focused and more present.',
+      phrases: [
+        ['Have you ever...?', 'open with a reader question'],
+        ['You are not alone.', 'connect with the reader'],
+        ['The good news is that...', 'introduce positive advice'],
+        ['First,... Second,...', 'organize advice'],
+        ['Small changes like these can...', 'finish with a memorable message']
+      ],
+      gaps: [
+        ['Have you ___ opened your phone for one message?', 'ever', 'reader question'],
+        ['You are not ___.', 'alone', 'reader connection'],
+        ['The good ___ is that change can be simple.', 'news', 'positive turn'],
+        ['___, decide when you want to be online.', 'First', 'advice organization'],
+        ['Small changes like ___ can help.', 'these', 'closing message']
+      ],
+      productionQuestion: 'Write an article giving advice about digital habits, healthy routines, learning English or saving money.',
+      sampleAnswer: 'Have you ever promised to study for ten minutes and then checked your phone for half an hour? You are not alone. The good news is that better study habits can start small. First, put your phone in another room. Second, choose one short task before you begin. Small changes like these can make learning feel easier.'
+    },
+    {
+      id: 'b2-writing-11-discursive-essay-city-life',
+      order: 11,
+      stage: 'B2.3',
+      title: 'Discursive essay: city life',
+      topic: 'discussing two sides of a broad issue',
+      description: 'Students write a discursive essay discussing different perspectives before giving a view.',
+      focus: ['discursive essay', 'perspectives', 'balanced conclusion'],
+      modelText: 'City life offers opportunities that are difficult to find elsewhere. Large cities often provide better public transport, more varied jobs and a richer cultural life. For young professionals, this can be extremely attractive. Nevertheless, city life also creates pressure. Rent is often high, green spaces may be limited and long journeys can make people feel tired before the working day begins. The issue is not whether cities are good or bad, but how they are planned. In my opinion, a successful city should combine economic opportunity with affordable housing, reliable transport and access to nature.',
+      phrases: [
+        ['...offers opportunities that are difficult to find elsewhere.', 'introduce a broad advantage'],
+        ['Nevertheless,...', 'introduce contrast'],
+        ['The issue is not whether..., but how...', 'reframe the question'],
+        ['In my opinion,...', 'give your view'],
+        ['A successful city should combine...', 'state a balanced solution']
+      ],
+      gaps: [
+        ['City life offers ___ that are difficult to find elsewhere.', 'opportunities', 'broad advantage'],
+        ['___, city life also creates pressure.', 'Nevertheless', 'contrast'],
+        ['The issue is not whether cities are good or bad, but how they are ___.', 'planned', 'reframe'],
+        ['In my ___, cities need affordable housing.', 'opinion', 'view phrase'],
+        ['A successful city should ___ opportunity with nature.', 'combine', 'balanced solution']
+      ],
+      productionQuestion: 'Write a discursive essay about city life, modern education, tourism or technology. Discuss both sides and give your view.',
+      sampleAnswer: 'Modern education offers opportunities that were not available in the past. Students can study online, access free materials and learn from international teachers. Nevertheless, too much technology can reduce face-to-face communication. The issue is not whether technology is good or bad, but how it is used. In my opinion, successful education should combine digital tools with human support.'
+    },
+    {
+      id: 'b2-writing-12-cover-letter',
+      order: 12,
+      stage: 'B2.3',
+      title: 'Cover letter',
+      topic: 'applying for a job or internship',
+      description: 'Students write a concise cover letter highlighting experience, skills and motivation.',
+      focus: ['cover letter', 'professional experience', 'motivation'],
+      modelText: 'Dear Hiring Manager,\nI am writing to apply for the position of customer support assistant advertised on your website. I believe I would be a strong candidate because I have two years of experience in hospitality, where I developed excellent communication and problem-solving skills. In my current role, I deal with customer questions, handle complaints and work closely with a small team. I am particularly interested in your company because it focuses on educational technology, an area I would like to develop in. I would welcome the opportunity to discuss my application in an interview.\nKind regards,\nEmma Wilson',
+      phrases: [
+        ['I am writing to apply for...', 'state the position'],
+        ['I believe I would be a strong candidate because...', 'connect yourself to the role'],
+        ['In my current role,...', 'describe relevant experience'],
+        ['I am particularly interested in your company because...', 'explain motivation'],
+        ['I would welcome the opportunity to...', 'close professionally']
+      ],
+      gaps: [
+        ['I am writing to ___ for the position.', 'apply', 'cover letter opening'],
+        ['I believe I would be a strong ___ because...', 'candidate', 'suitability'],
+        ['In my current ___, I deal with customers.', 'role', 'experience'],
+        ['I am particularly ___ in your company.', 'interested', 'motivation'],
+        ['I would welcome the ___ to discuss my application.', 'opportunity', 'closing']
+      ],
+      productionQuestion: 'Write a cover letter for a job, internship or volunteer role. Mention experience, skills and motivation.',
+      sampleAnswer: 'Dear Hiring Manager, I am writing to apply for the position of junior content assistant. I believe I would be a strong candidate because I have experience creating educational materials and communicating with students. In my current role, I organize lessons, answer questions and solve small technical problems. I am particularly interested in your company because it focuses on online learning. I would welcome the opportunity to discuss my application in an interview. Kind regards, Daniel Smith'
+    },
+    {
+      id: 'b2-writing-13-story-turning-point',
+      order: 13,
+      stage: 'B2.4',
+      title: 'Story: a turning point',
+      topic: 'narrative writing with reflection',
+      description: 'Students write a B2 story with setting, conflict, turning point and reflection.',
+      focus: ['story', 'narrative tenses', 'reflection'],
+      modelText: 'I was about to leave the building when I noticed a small notebook on the stairs. At first, I almost walked past it, but something made me pick it up. Inside were sketches, addresses and a name written on the first page. I had been planning to go straight home, but instead I decided to call the number. The owner sounded relieved; she had been looking for it all afternoon. When we met, she explained that the notebook contained ideas for her first exhibition. That small decision changed my evening, and it reminded me that kindness often begins with noticing what others miss.',
+      phrases: [
+        ['I was about to...', 'create an immediate opening'],
+        ['At first,...', 'show the initial situation'],
+        ['Something made me...', 'introduce a turning point'],
+        ['The owner sounded relieved.', 'show emotion through reaction'],
+        ['It reminded me that...', 'add reflection']
+      ],
+      gaps: [
+        ['I was about ___ leave the building.', 'to', 'immediate opening'],
+        ['At ___, I almost walked past it.', 'first', 'initial situation'],
+        ['Something ___ me pick it up.', 'made', 'turning point'],
+        ['The owner sounded ___.', 'relieved', 'emotion'],
+        ['It ___ me that kindness begins with noticing.', 'reminded', 'reflection']
+      ],
+      productionQuestion: 'Write a story about a small decision that changed a day or taught someone a lesson. Use narrative tenses and reflection.',
+      sampleAnswer: 'I was about to leave the station when I saw an elderly man looking confused. At first, I thought someone else would help, but something made me stop. He had been trying to find the right platform for ten minutes. I walked with him to the information desk, and he looked relieved. It reminded me that a small action can matter.'
+    },
+    {
+      id: 'b2-writing-14-letter-to-editor',
+      order: 14,
+      stage: 'B2.4',
+      title: 'Letter to the editor',
+      topic: 'responding to a public issue',
+      description: 'Students write a formal opinion letter responding to an article or local issue.',
+      focus: ['formal opinion', 'public issue', 'persuasive writing'],
+      modelText: 'Dear Editor,\nI am writing in response to your recent article about plans to remove several trees from the town square. While I understand the need to improve pedestrian access, I believe the current proposal is short-sighted. The trees provide shade, reduce heat and make the square a more pleasant place to spend time. Removing them would damage the character of the area. A better solution would be to redesign the paths while keeping the healthiest trees. I hope the council will consider alternatives before making a final decision.\nYours faithfully,\nNina Parker',
+      phrases: [
+        ['I am writing in response to...', 'refer to an article or issue'],
+        ['While I understand the need to...', 'acknowledge another view'],
+        ['I believe the current proposal is...', 'state your position'],
+        ['A better solution would be to...', 'suggest an alternative'],
+        ['I hope the council will consider...', 'close persuasively']
+      ],
+      gaps: [
+        ['I am writing in ___ to your article.', 'response', 'opening'],
+        ['___ I understand the need to improve access, I disagree.', 'While', 'acknowledging view'],
+        ['I believe the current ___ is short-sighted.', 'proposal', 'position'],
+        ['A better ___ would be to redesign the paths.', 'solution', 'alternative'],
+        ['I hope the council will ___ alternatives.', 'consider', 'persuasive closing']
+      ],
+      productionQuestion: 'Write a letter to the editor about a local issue: trees, transport, noise, housing, parks or tourism. State your view and suggest an alternative.',
+      sampleAnswer: 'Dear Editor, I am writing in response to your article about reducing bus services in the evening. While I understand the need to save money, I believe the proposal is unfair to workers and students. A better solution would be to reduce frequency only on the quietest routes. I hope the council will consider alternatives before making a final decision. Yours faithfully, Maria Green'
+    },
+    {
+      id: 'b2-writing-15-summary-and-feedback',
+      order: 15,
+      stage: 'B2.4',
+      title: 'Summary and feedback',
+      topic: 'summarizing ideas and giving constructive feedback',
+      description: 'Students write a concise summary and constructive feedback on a proposal or text.',
+      focus: ['summary', 'feedback', 'clarity'],
+      modelText: 'Your proposal argues that the school should create a weekly conversation club to help students practise speaking more regularly. The main strength is that the idea is practical and low-cost. You also explain clearly how the club could improve confidence. However, the proposal would be stronger if you included details about who would organize the sessions and how students would sign up. I suggest adding a short section on scheduling and responsibilities. Overall, this is a promising proposal with a clear benefit for learners.',
+      phrases: [
+        ['Your proposal argues that...', 'summarize the main idea'],
+        ['The main strength is that...', 'give positive feedback'],
+        ['However, the proposal would be stronger if...', 'suggest improvement politely'],
+        ['I suggest adding...', 'make a specific recommendation'],
+        ['Overall, this is a promising...', 'finish constructively']
+      ],
+      gaps: [
+        ['Your proposal ___ that the school needs a club.', 'argues', 'summary verb'],
+        ['The main ___ is that the idea is practical.', 'strength', 'positive feedback'],
+        ['The proposal would be ___ if you added details.', 'stronger', 'improvement phrase'],
+        ['I suggest ___ a short section.', 'adding', 'recommendation'],
+        ['___, this is a promising proposal.', 'Overall', 'constructive closing']
+      ],
+      productionQuestion: 'Write feedback on a proposal, essay plan or project idea. Summarize the idea, give one strength and suggest two improvements.',
+      sampleAnswer: 'Your proposal argues that the company should introduce flexible working hours. The main strength is that the idea could improve motivation and reduce stress. However, the proposal would be stronger if you explained how teams would coordinate meetings. I suggest adding examples from other companies and a short trial period. Overall, this is a promising proposal.'
+    },
+    {
+      id: 'b2-writing-16-compare-and-contrast',
+      order: 16,
+      stage: 'B2.5',
+      title: 'Compare and contrast',
+      topic: 'comparing two options or methods',
+      description: 'Students write a structured comparison with similarities, differences and a final judgement.',
+      focus: ['comparison', 'contrast', 'evaluation'],
+      modelText: 'Both private lessons and group classes can help language learners make progress, but they suit different needs. Private lessons are more flexible because the teacher can focus on one student\'s goals and weaknesses. They are also easier to adapt at short notice. Group classes, on the other hand, provide more opportunities for interaction and can be more motivating. They are usually more affordable as well. The best choice depends on the learner. Someone preparing for a specific exam may benefit from private lessons, whereas someone who needs confidence in conversation may prefer a group.',
+      phrases: [
+        ['Both... and... can...', 'introduce similarity'],
+        ['...suit different needs.', 'show difference in purpose'],
+        ['On the other hand,...', 'introduce contrast'],
+        ['The best choice depends on...', 'avoid overgeneralizing'],
+        ['whereas...', 'contrast two cases']
+      ],
+      gaps: [
+        ['Both private lessons ___ group classes can help.', 'and', 'both...and'],
+        ['They suit different ___.', 'needs', 'purpose difference'],
+        ['On the other ___, groups offer interaction.', 'hand', 'contrast'],
+        ['The best choice ___ on the learner.', 'depends', 'balanced judgement'],
+        ['Exam students may prefer private lessons, ___ conversation learners may prefer groups.', 'whereas', 'contrast']
+      ],
+      productionQuestion: 'Compare two options: online vs face-to-face learning, city vs countryside, private lessons vs group classes, or remote work vs office work.',
+      sampleAnswer: 'Both online and face-to-face learning can be effective, but they suit different needs. Online learning is more flexible and saves travel time. Face-to-face classes, on the other hand, offer more natural interaction. The best choice depends on the learner. Someone with a busy schedule may prefer online lessons, whereas someone who needs social contact may prefer a classroom.'
+    },
+    {
+      id: 'b2-writing-17-cause-effect-paragraph',
+      order: 17,
+      stage: 'B2.5',
+      title: 'Cause and effect paragraph',
+      topic: 'explaining reasons and consequences',
+      description: 'Students write a B2 paragraph explaining causes, effects and wider implications.',
+      focus: ['cause and effect', 'academic style', 'cohesion'],
+      modelText: 'One reason many people feel constantly distracted is that digital tools are designed to compete for attention. Notifications, recommendations and endless feeds encourage users to move from one piece of content to another without pausing. As a result, deep concentration can become more difficult, especially for tasks that require patience. This has wider implications for studying and work, where complex problems often need uninterrupted time. For this reason, individuals and organizations should create environments that protect focus rather than simply expecting people to control every distraction alone.',
+      phrases: [
+        ['One reason... is that...', 'introduce a cause'],
+        ['As a result,...', 'introduce an effect'],
+        ['This has wider implications for...', 'explain broader importance'],
+        ['For this reason,...', 'connect effect to recommendation'],
+        ['rather than simply...', 'contrast with a weaker approach']
+      ],
+      gaps: [
+        ['One ___ people feel distracted is that tools compete for attention.', 'reason', 'cause phrase'],
+        ['As a ___, concentration becomes harder.', 'result', 'effect phrase'],
+        ['This has wider ___ for studying and work.', 'implications', 'broader importance'],
+        ['For this ___, environments should protect focus.', 'reason', 'recommendation link'],
+        ['Organizations should protect focus rather ___ blame individuals.', 'than', 'contrast']
+      ],
+      productionQuestion: 'Write a cause-and-effect paragraph about screen time, traffic, stress, food waste or poor sleep. Include causes, effects and a recommendation.',
+      sampleAnswer: 'One reason people sleep badly is that they use screens late at night. Bright light and constant messages keep the brain active. As a result, people may feel tired the next day and work less efficiently. This has wider implications for health and productivity. For this reason, people should create evening routines that protect sleep rather than simply trying harder to relax.'
+    },
+    {
+      id: 'b2-writing-18-b2-writing-review',
+      order: 18,
+      stage: 'B2 review',
+      title: 'B2 writing review',
+      topic: 'mixed upper-intermediate writing practice',
+      description: 'Students review key B2 writing types, register, linking and supported opinions.',
+      focus: ['B2 review', 'mixed writing', 'editing'],
+      modelText: 'Strong B2 writing is not only about using advanced words. The most important skill is choosing language that fits the task. A formal email needs polite requests and a clear purpose, while an article should engage the reader more directly. Essays and reports require logical paragraphs, supported ideas and accurate linking. Whatever the task, the writer should answer every point, avoid unnecessary repetition and check the final text carefully. Range is useful, but clarity is essential.',
+      phrases: [
+        ['The most important skill is...', 'identify a key principle'],
+        ['...needs polite requests and a clear purpose.', 'describe register'],
+        ['...should engage the reader more directly.', 'describe article style'],
+        ['Whatever the task,...', 'give general advice'],
+        ['Range is useful, but clarity is essential.', 'finish with a memorable contrast']
+      ],
+      gaps: [
+        ['The most important ___ is choosing suitable language.', 'skill', 'key principle'],
+        ['A formal email needs polite ___ and a clear purpose.', 'requests', 'register'],
+        ['An article should ___ the reader.', 'engage', 'article style'],
+        ['___ the task, answer every point.', 'Whatever', 'general advice'],
+        ['Range is useful, but clarity is ___.', 'essential', 'memorable contrast']
+      ],
+      productionPrompt: 'Choose one B2 writing task and write a complete answer of 140-190 words. Then check it with the checklist.',
+      productionQuestion: 'Choose one: formal email, complaint, opinion essay, report, proposal, review, article, cover letter or letter to the editor.',
+      sampleAnswer: 'Dear Sir or Madam, I am writing to enquire about your online business English course. I would be grateful if you could send me further information about the timetable, fees and assessment process. In addition, I would like to know whether students receive individual feedback after speaking tasks. As I work full-time, I would also appreciate details about flexible attendance options. I look forward to hearing from you. Yours faithfully, Alex Green'
+    }
+  ].map(buildWritingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2 = {
     grammar: READY_GRAMMAR_LESSONS_B2,
     vocabulary: READY_VOCABULARY_LESSONS_B2,
     reading: READY_READING_LESSONS_B2,
-    writing: root.lessons.B2?.writing || [],
+    writing: READY_WRITING_LESSONS_B2,
     listening: root.lessons.B2?.listening || []
   };
 })();
