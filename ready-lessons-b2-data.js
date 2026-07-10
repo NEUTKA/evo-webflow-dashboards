@@ -52,7 +52,7 @@
     },
     reading: {
       description: 'B2 reading pathway space for longer articles, viewpoints, reports, reviews and inference-based comprehension.',
-      plannedTopics: []
+      plannedTopics: ['Remote work', 'Public transport', 'AI and learning', 'Food waste', 'Workplace change', 'Reviews', 'Assessment', 'Surveys', 'Digital habits', 'Responsible travel', 'Science article', 'Media literacy']
     },
     writing: {
       description: 'B2 writing pathway space for essays, reports, proposals, reviews, formal emails and discursive texts.',
@@ -167,6 +167,96 @@
             accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
             hint: entry.sentence,
             explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        }
+      ]
+    };
+  }
+
+  function buildReadingReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2',
+      skill: 'reading',
+      stage: config.stage || 'B2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 40,
+      description: config.description,
+      readingTitle: config.readingTitle || config.title,
+      readingText: config.readingText,
+      focus: config.focus || ['reading for gist', 'reading for detail', 'inference and attitude'],
+      teacherNotes: config.teacherNotes || 'Ask the student to read once for gist, then again for evidence, inference, attitude and vocabulary in context.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before reading: useful words',
+          prompt: 'Match the words from the text with their meanings.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Reading comprehension',
+          prompt: 'Read the text and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Find details in the text',
+          prompt: 'Type the missing word, number or phrase from the text.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Read the text again and find the exact detail.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 6-8 sentences responding to the text. Include one opinion and one reason.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Choose True or False and check the evidence in the text.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
           }))
         }
       ]
@@ -1433,12 +1523,735 @@
     }
   ].map(buildVocabularyReadyLesson);
 
+  const READY_READING_LESSONS_B2 = [
+    {
+      id: 'b2-reading-01-remote-work-productivity',
+      order: 1,
+      stage: 'B2.1',
+      title: 'Remote work and productivity',
+      topic: 'work habits and flexible schedules',
+      description: 'Students read an article about remote work, productivity and the limits of flexibility.',
+      readingText: 'When remote work first became common, many companies expected productivity to fall. In fact, several teams discovered the opposite: employees completed focused tasks faster when they were not interrupted by office noise. However, the picture is more complicated than simply saying that home is better than the office.\nRemote work suits tasks that require concentration, such as writing, coding or planning. It can also reduce commuting time and give people more control over their day. Yet it may weaken informal communication. In an office, a quick question can be answered in thirty seconds. Online, the same question can become a long chain of messages.\nThe most successful companies seem to treat remote work as a tool, not an ideology. They set clear expectations, protect time for deep work and bring people together when collaboration matters. In other words, productivity depends less on location and more on how carefully work is designed.',
+      focus: ['workplace article', 'main idea', 'inference'],
+      words: [
+        { word: 'productivity', meaning: 'how much useful work is completed' },
+        { word: 'interrupted', meaning: 'stopped while doing something' },
+        { word: 'commuting', meaning: 'travelling between home and work' },
+        { word: 'informal communication', meaning: 'casual conversation that helps people share information' },
+        { word: 'ideology', meaning: 'a fixed set of beliefs or principles' }
+      ],
+      questions: [
+        { question: 'What is the writer\'s main point?', options: ['Remote work can help, but only if work is well designed', 'Remote work is always better than office work', 'Companies should stop remote work completely'], answer: 'Remote work can help, but only if work is well designed' },
+        { question: 'Which tasks does remote work suit best?', options: ['Tasks requiring concentration', 'Only customer meetings', 'Tasks that need constant interruptions'], answer: 'Tasks requiring concentration' },
+        { question: 'What possible weakness of remote work is mentioned?', options: ['Weaker informal communication', 'More commuting time', 'Less control over the day'], answer: 'Weaker informal communication' },
+        { question: 'What can happen to a simple online question?', options: ['It can become a long chain of messages', 'It always disappears', 'It is answered faster than in person'], answer: 'It can become a long chain of messages' },
+        { question: 'What does the writer imply about successful companies?', options: ['They choose flexibility with clear systems', 'They let everyone do anything', 'They avoid collaboration'], answer: 'They choose flexibility with clear systems' }
+      ],
+      details: [
+        { sentence: 'Some employees completed focused tasks faster without office ___.', answer: 'noise' },
+        { sentence: 'Remote work can reduce ___ time.', answer: 'commuting' },
+        { sentence: 'In an office, a quick question can be answered in thirty ___.', answer: 'seconds' },
+        { sentence: 'Successful companies protect time for deep ___.', answer: 'work' },
+        { sentence: 'Productivity depends less on location and more on how work is ___.', answer: 'designed' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says remote work always reduces productivity.', answer: false },
+        { sentence: 'Remote work can help people control their day.', answer: true },
+        { sentence: 'The writer says informal communication is stronger online.', answer: false },
+        { sentence: 'Successful companies bring people together when collaboration matters.', answer: true },
+        { sentence: 'The article presents a balanced view.', answer: true }
+      ],
+      productionQuestion: 'Write 6-8 sentences about remote work or studying from home. What helps productivity, and what causes problems?',
+      sampleAnswer: 'Remote work can be productive when people have clear goals and quiet time. It saves commuting time and helps with focused tasks. However, communication can become slower online. I think hybrid work is best because it combines concentration at home with collaboration in person.'
+    },
+    {
+      id: 'b2-reading-02-public-transport-future',
+      order: 2,
+      stage: 'B2.1',
+      title: 'The future of public transport',
+      topic: 'cities, transport and planning',
+      description: 'Students read about why cities need reliable, affordable and connected public transport.',
+      readingText: 'Many cities are trying to persuade people to drive less, but the message often fails because the alternative is not attractive enough. A bus that arrives late, takes twice as long as a car and feels uncomfortable will not change habits simply because it is better for the environment.\nTransport experts argue that the future of public transport depends on reliability and connection. People need to trust that a train or bus will arrive when the timetable says it will. They also need routes that connect homes, workplaces, schools and hospitals without requiring three separate tickets and a long walk in the rain.\nTechnology can help, but it is not a complete solution. Apps can show delays and suggest routes, yet they cannot replace regular investment in vehicles, drivers and safe stations. The real challenge is political: cities must treat public transport as essential infrastructure, not as a service only for people who cannot afford cars.',
+      focus: ['urban planning', 'argument', 'specific details'],
+      words: [
+        { word: 'alternative', meaning: 'another possible choice' },
+        { word: 'reliability', meaning: 'the quality of being dependable' },
+        { word: 'timetable', meaning: 'a schedule showing when transport arrives and leaves' },
+        { word: 'investment', meaning: 'money spent to improve or develop something' },
+        { word: 'infrastructure', meaning: 'basic systems a society needs, such as transport and power' }
+      ],
+      questions: [
+        { question: 'Why does the message to drive less often fail?', options: ['The alternative is not attractive enough', 'People never care about comfort', 'Apps are too accurate'], answer: 'The alternative is not attractive enough' },
+        { question: 'What do people need to trust?', options: ['That transport will arrive as scheduled', 'That cars will disappear', 'That tickets will be free everywhere'], answer: 'That transport will arrive as scheduled' },
+        { question: 'What can apps do?', options: ['Show delays and suggest routes', 'Replace drivers', 'Build stations'], answer: 'Show delays and suggest routes' },
+        { question: 'What can technology not replace?', options: ['Regular investment', 'Maps', 'Passenger opinions'], answer: 'Regular investment' },
+        { question: 'What is the writer\'s attitude?', options: ['Practical and critical', 'Completely anti-technology', 'Uninterested in city planning'], answer: 'Practical and critical' }
+      ],
+      details: [
+        { sentence: 'A poor bus may arrive ___.', answer: 'late' },
+        { sentence: 'Good routes should connect homes, workplaces, schools and ___.', answer: 'hospitals' },
+        { sentence: 'The text mentions three separate ___ as a problem.', answer: 'tickets' },
+        { sentence: 'Apps can suggest ___.', answer: 'routes' },
+        { sentence: 'Cities should treat public transport as essential ___.', answer: 'infrastructure' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks environmental arguments alone may not change habits.', answer: true },
+        { sentence: 'The text says technology is a complete solution.', answer: false },
+        { sentence: 'Safe stations are mentioned as part of investment.', answer: true },
+        { sentence: 'The writer says public transport should only serve people without cars.', answer: false },
+        { sentence: 'Reliability is presented as very important.', answer: true }
+      ],
+      productionQuestion: 'Write about public transport in your city. What works well, and what should be improved?',
+      sampleAnswer: 'Public transport in my city is useful, but it is not always reliable. Buses are cheap, yet they can be late during rush hour. I think the city should invest in better routes and cleaner stations. If public transport is comfortable, more people will use it.'
+    },
+    {
+      id: 'b2-reading-03-ai-language-learning',
+      order: 3,
+      stage: 'B2.1',
+      title: 'AI and language learning',
+      topic: 'education technology and independent study',
+      description: 'Students read a balanced article about how AI can support language learners.',
+      readingText: 'Artificial intelligence has quickly become part of language learning. Students use it to correct sentences, explain grammar and create practice dialogues. For independent learners, this can be extremely useful. Instead of waiting for the next lesson, they can ask for examples immediately and repeat the practice as often as they need.\nHowever, AI is not the same as a teacher. It may give answers that sound confident but are not always accurate. It also cannot fully understand a learner as a person: their motivation, fears, habits and cultural background. A good teacher notices when a student is confused, bored or avoiding a difficult skill.\nThe best use of AI may be as a practice partner. It can provide variety, instant feedback and extra exposure to English. Teachers can then focus on deeper work: pronunciation, confidence, meaningful communication and correction that fits the student. Used wisely, AI does not replace teaching; it gives teachers and learners more options.',
+      focus: ['education technology', 'balanced argument', 'writer attitude'],
+      words: [
+        { word: 'independent learner', meaning: 'a learner who studies without constant teacher direction' },
+        { word: 'accurate', meaning: 'correct and free from mistakes' },
+        { word: 'motivation', meaning: 'the reason or desire to do something' },
+        { word: 'exposure', meaning: 'contact with something that helps learning' },
+        { word: 'replace', meaning: 'take the place of something or someone' }
+      ],
+      questions: [
+        { question: 'What can AI help language learners do?', options: ['Correct sentences and create practice', 'Guarantee perfect fluency', 'Avoid all human communication'], answer: 'Correct sentences and create practice' },
+        { question: 'What is one risk of AI?', options: ['It may give confident but inaccurate answers', 'It never gives examples', 'It cannot create dialogues'], answer: 'It may give confident but inaccurate answers' },
+        { question: 'What can a teacher notice?', options: ['Confusion, boredom or avoidance', 'Only spelling mistakes', 'Only internet speed'], answer: 'Confusion, boredom or avoidance' },
+        { question: 'How does the writer think AI is best used?', options: ['As a practice partner', 'As a full replacement for teaching', 'As a test only'], answer: 'As a practice partner' },
+        { question: 'What is the overall tone?', options: ['Balanced and optimistic', 'Angry and dismissive', 'Completely negative'], answer: 'Balanced and optimistic' }
+      ],
+      details: [
+        { sentence: 'Students use AI to explain ___.', answer: 'grammar' },
+        { sentence: 'Independent learners can ask for examples ___.', answer: 'immediately' },
+        { sentence: 'AI cannot fully understand a learner\'s cultural ___.', answer: 'background' },
+        { sentence: 'AI can provide instant ___.', answer: 'feedback' },
+        { sentence: 'Teachers can focus on pronunciation, confidence and meaningful ___.', answer: 'communication' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says AI is useless for independent learners.', answer: false },
+        { sentence: 'The writer says AI answers are always accurate.', answer: false },
+        { sentence: 'Teachers can understand personal factors better than AI.', answer: true },
+        { sentence: 'AI can give learners more practice options.', answer: true },
+        { sentence: 'The article argues that AI should replace all teachers.', answer: false }
+      ],
+      productionQuestion: 'Write your opinion about using AI for language learning. Mention one benefit and one risk.',
+      sampleAnswer: 'AI can be very useful for language learning because it gives fast examples and extra practice. It is helpful when a student wants to repeat grammar or vocabulary. However, it can make mistakes, and it does not always understand the learner. I think it should support teachers, not replace them.'
+    },
+    {
+      id: 'b2-reading-04-food-waste-consumer-habits',
+      order: 4,
+      stage: 'B2.1',
+      title: 'Food waste and consumer habits',
+      topic: 'sustainability and shopping choices',
+      description: 'Students read about the causes of food waste and practical solutions for households.',
+      readingText: 'Food waste is often described as an environmental problem, but it is also a problem of habits. Many households throw food away not because they are careless, but because modern shopping encourages people to buy more than they can use. Special offers, large packages and attractive displays make extra food look like a bargain.\nThe problem continues at home. People forget what is already in the fridge, misunderstand date labels or avoid leftovers because they seem less appealing than a new meal. Small decisions, repeated every week, create a surprisingly large amount of waste.\nExperts suggest that the solution does not have to be dramatic. Planning three or four meals before shopping, checking cupboards first and freezing extra portions can make a real difference. Shops can help too by selling imperfect fruit and vegetables at lower prices. Reducing food waste is not only about personal discipline; it also depends on making better choices easier.',
+      focus: ['environment', 'cause and effect', 'practical solutions'],
+      words: [
+        { word: 'household', meaning: 'all the people living in one home' },
+        { word: 'bargain', meaning: 'something bought for a good price' },
+        { word: 'leftovers', meaning: 'food remaining after a meal' },
+        { word: 'portion', meaning: 'an amount of food for one person or meal' },
+        { word: 'discipline', meaning: 'the ability to control habits and behavior' }
+      ],
+      questions: [
+        { question: 'What does the writer say food waste is also a problem of?', options: ['Habits', 'Only farming', 'Only restaurants'], answer: 'Habits' },
+        { question: 'Why do people often buy too much?', options: ['Shopping encourages extra purchases', 'They always plan carefully', 'Food is never packaged attractively'], answer: 'Shopping encourages extra purchases' },
+        { question: 'What happens at home?', options: ['People forget what is in the fridge', 'People never misunderstand labels', 'Leftovers are always used'], answer: 'People forget what is in the fridge' },
+        { question: 'Which solution is suggested?', options: ['Planning meals before shopping', 'Buying only large packages', 'Avoiding cupboards'], answer: 'Planning meals before shopping' },
+        { question: 'What can shops do?', options: ['Sell imperfect produce at lower prices', 'Hide all vegetables', 'Stop selling fruit'], answer: 'Sell imperfect produce at lower prices' }
+      ],
+      details: [
+        { sentence: 'Special offers and large packages can make extra food look like a ___.', answer: 'bargain' },
+        { sentence: 'People sometimes misunderstand date ___.', answer: 'labels' },
+        { sentence: 'Small decisions repeated every week create a large amount of ___.', answer: 'waste' },
+        { sentence: 'Experts suggest planning three or four ___ before shopping.', answer: 'meals' },
+        { sentence: 'Freezing extra ___ can make a difference.', answer: 'portions' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says people waste food only because they are careless.', answer: false },
+        { sentence: 'Modern shopping can encourage people to buy too much.', answer: true },
+        { sentence: 'The article says solutions must always be dramatic.', answer: false },
+        { sentence: 'Checking cupboards before shopping is suggested.', answer: true },
+        { sentence: 'The writer says systems should make better choices easier.', answer: true }
+      ],
+      productionQuestion: 'Write about how people can reduce food waste at home. Include at least two practical ideas.',
+      sampleAnswer: 'People can reduce food waste by planning meals before they shop. They should check the fridge and cupboards first, so they do not buy the same things again. Freezing extra portions is also useful. Shops can help by selling imperfect vegetables more cheaply.'
+    },
+    {
+      id: 'b2-reading-05-workplace-change-email',
+      order: 5,
+      stage: 'B2.2',
+      title: 'Workplace change email',
+      topic: 'internal communication and change management',
+      description: 'Students read an internal email about a new workplace system and staff concerns.',
+      readingText: 'Subject: New project management system\nDear team,\nFrom next Monday, we will begin using TaskFlow to manage deadlines, documents and team updates. The aim is not to monitor every minute of your day, but to reduce confusion about who is responsible for each task.\nI understand that new systems can feel frustrating at first, especially when people are already busy. For this reason, we will introduce TaskFlow gradually. During the first two weeks, you only need to add your main weekly tasks and update their status twice a week. After that, we will add file sharing and client notes.\nTraining sessions will be held on Tuesday and Thursday, and short video guides will be available afterwards. Please send questions before Friday so we can include them in the training. If we use the system consistently, it should reduce duplicated work and make handovers much smoother.\nBest,\nEmma',
+      focus: ['work email', 'purpose and tone', 'detail'],
+      words: [
+        { word: 'monitor', meaning: 'watch or check something regularly' },
+        { word: 'gradually', meaning: 'slowly, step by step' },
+        { word: 'status', meaning: 'the current state or progress of something' },
+        { word: 'duplicated work', meaning: 'work done twice unnecessarily' },
+        { word: 'handover', meaning: 'passing responsibility or information to another person' }
+      ],
+      questions: [
+        { question: 'What is the purpose of TaskFlow?', options: ['To manage deadlines, documents and updates', 'To record every minute of the day', 'To replace all meetings immediately'], answer: 'To manage deadlines, documents and updates' },
+        { question: 'What concern does Emma address?', options: ['New systems can feel frustrating', 'No one is busy', 'Training is impossible'], answer: 'New systems can feel frustrating' },
+        { question: 'What must staff do in the first two weeks?', options: ['Add main weekly tasks and update status twice a week', 'Upload every document immediately', 'Contact all clients daily'], answer: 'Add main weekly tasks and update status twice a week' },
+        { question: 'When will training sessions be held?', options: ['Tuesday and Thursday', 'Monday and Friday', 'Every morning'], answer: 'Tuesday and Thursday' },
+        { question: 'What benefit does Emma expect?', options: ['Less duplicated work and smoother handovers', 'Longer meetings', 'More confusion'], answer: 'Less duplicated work and smoother handovers' }
+      ],
+      details: [
+        { sentence: 'TaskFlow starts from next ___.', answer: 'Monday' },
+        { sentence: 'Staff should update task status twice a ___.', answer: 'week' },
+        { sentence: 'File sharing and client notes will be added ___.', answer: 'after that' },
+        { sentence: 'Short video ___ will be available.', answer: 'guides' },
+        { sentence: 'Questions should be sent before ___.', answer: 'Friday' }
+      ],
+      trueFalse: [
+        { sentence: 'The system is intended to monitor every minute of work.', answer: false },
+        { sentence: 'The system will be introduced gradually.', answer: true },
+        { sentence: 'Staff must add every small task in the first week.', answer: false },
+        { sentence: 'Training will include questions sent by staff.', answer: true },
+        { sentence: 'Emma uses a reassuring tone.', answer: true }
+      ],
+      productionQuestion: 'Write a short internal email announcing a change at work or school. Explain the purpose, timeline and support available.',
+      sampleAnswer: 'Dear team, From next month, we will use a new booking system. The aim is to reduce confusion and make schedules clearer. We will introduce it gradually, and training will be available next week. Please send any questions before Friday.'
+    },
+    {
+      id: 'b2-reading-06-coworking-space-review',
+      order: 6,
+      stage: 'B2.2',
+      title: 'Review: a coworking space',
+      topic: 'reviewing places and services',
+      description: 'Students read a review that evaluates facilities, atmosphere and value for money.',
+      readingText: 'I tried WorkNest for a week because working from home had started to feel isolating. The space is bright, modern and surprisingly calm, considering it is only five minutes from the central station. The best feature is the quiet zone, where phone calls are not allowed and people genuinely respect the rules.\nThe facilities are generally strong. There are plenty of sockets, fast Wi-Fi and several small rooms for video meetings. The coffee is decent rather than amazing, but it is included in the day pass, which makes the price easier to accept.\nThere are two drawbacks. First, the desks are quite close together, so it can feel crowded after lunch. Second, the booking app is not as user-friendly as it should be. Still, I would recommend WorkNest to freelancers who need structure and occasional company. It is not cheap, but it offers good value for money if you use the quiet zone and meeting rooms.',
+      focus: ['review', 'evaluating services', 'opinion and evidence'],
+      words: [
+        { word: 'isolating', meaning: 'making someone feel alone or separated from others' },
+        { word: 'quiet zone', meaning: 'an area where noise is limited' },
+        { word: 'facilities', meaning: 'services, rooms or equipment provided for use' },
+        { word: 'drawback', meaning: 'a disadvantage or problem' },
+        { word: 'value for money', meaning: 'good quality compared with the price' }
+      ],
+      questions: [
+        { question: 'Why did the writer try WorkNest?', options: ['Working from home felt isolating', 'It was next to home', 'Coffee was famous'], answer: 'Working from home felt isolating' },
+        { question: 'What is the best feature?', options: ['The quiet zone', 'The lunch menu', 'The station'], answer: 'The quiet zone' },
+        { question: 'What is included in the day pass?', options: ['Coffee', 'Lunch', 'A private office'], answer: 'Coffee' },
+        { question: 'What is one drawback?', options: ['Desks are close together', 'Wi-Fi is slow', 'No meeting rooms exist'], answer: 'Desks are close together' },
+        { question: 'Who would the writer recommend it to?', options: ['Freelancers needing structure and company', 'People who hate quiet spaces', 'Only large companies'], answer: 'Freelancers needing structure and company' }
+      ],
+      details: [
+        { sentence: 'WorkNest is five minutes from the central ___.', answer: 'station' },
+        { sentence: 'Phone calls are not allowed in the quiet ___.', answer: 'zone' },
+        { sentence: 'The Wi-Fi is described as ___.', answer: 'fast' },
+        { sentence: 'The space can feel crowded after ___.', answer: 'lunch' },
+        { sentence: 'The booking app is not very user-___.', answer: 'friendly' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says the space is noisy because of the station.', answer: false },
+        { sentence: 'People respect the rules in the quiet zone.', answer: true },
+        { sentence: 'The coffee is described as excellent.', answer: false },
+        { sentence: 'The writer thinks WorkNest can be worth the price.', answer: true },
+        { sentence: 'The review is completely negative.', answer: false }
+      ],
+      productionQuestion: 'Write a short review of a place where people can study or work. Include facilities, atmosphere, drawbacks and recommendation.',
+      sampleAnswer: 'I sometimes study in a local library. The atmosphere is calm, and the facilities are good, especially the desks and Wi-Fi. The main drawback is that it closes early on weekends. I would recommend it to students who need a quiet place to focus.'
+    },
+    {
+      id: 'b2-reading-07-exams-and-assessment',
+      order: 7,
+      stage: 'B2.2',
+      title: 'Are exams the best form of assessment?',
+      topic: 'education and evaluation',
+      description: 'Students read a balanced opinion article about exams, projects and assessment fairness.',
+      readingText: 'Exams are often criticized for creating stress, but they remain popular because they offer something schools need: a clear, comparable result. If hundreds of students study the same course, an exam can show whether they have understood the key material. It also gives students a deadline, which can encourage focused revision.\nHowever, exams measure only part of learning. A student may understand a subject deeply but perform poorly under pressure. Another student may memorize facts successfully but be unable to apply them in real situations. For this reason, many teachers argue for mixed assessment.\nProjects, presentations and portfolios can show creativity, research skills and long-term effort. They also reflect tasks people perform outside school. The challenge is fairness: coursework can be influenced by support at home, access to technology or even how confident a student feels when presenting. The fairest system may not be exam-free, but balanced.',
+      focus: ['education article', 'balanced argument', 'inference'],
+      words: [
+        { word: 'comparable', meaning: 'able to be compared fairly' },
+        { word: 'revision', meaning: 'study before a test or exam' },
+        { word: 'under pressure', meaning: 'in a stressful situation' },
+        { word: 'portfolio', meaning: 'a collection of work showing progress or ability' },
+        { word: 'coursework', meaning: 'work done during a course and assessed as part of the final mark' }
+      ],
+      questions: [
+        { question: 'Why do exams remain popular?', options: ['They provide clear, comparable results', 'They remove all stress', 'They test every skill perfectly'], answer: 'They provide clear, comparable results' },
+        { question: 'What can exams encourage?', options: ['Focused revision', 'Less studying', 'Creative portfolios'], answer: 'Focused revision' },
+        { question: 'What is one limitation of exams?', options: ['They measure only part of learning', 'They always reward creativity', 'They are never comparable'], answer: 'They measure only part of learning' },
+        { question: 'What can portfolios show?', options: ['Progress or ability over time', 'Only memory', 'Only exam stress'], answer: 'Progress or ability over time' },
+        { question: 'What system does the writer seem to prefer?', options: ['A balanced assessment system', 'Only exams', 'No assessment at all'], answer: 'A balanced assessment system' }
+      ],
+      details: [
+        { sentence: 'Exams can show whether students understood the key ___.', answer: 'material' },
+        { sentence: 'Some students perform poorly under ___.', answer: 'pressure' },
+        { sentence: 'Mixed assessment may include projects and ___.', answer: 'presentations' },
+        { sentence: 'Coursework can be influenced by support at ___.', answer: 'home' },
+        { sentence: 'The fairest system may be ___.', answer: 'balanced' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says exams have no advantages.', answer: false },
+        { sentence: 'A student can understand a subject but perform badly in an exam.', answer: true },
+        { sentence: 'Projects can show long-term effort.', answer: true },
+        { sentence: 'Coursework is always perfectly fair.', answer: false },
+        { sentence: 'The article discusses both sides of the issue.', answer: true }
+      ],
+      productionQuestion: 'Give your opinion about exams and coursework. What is the fairest way to assess students?',
+      sampleAnswer: 'I think exams are useful because they give a clear result, but they should not be the only form of assessment. Projects and presentations show skills that exams cannot measure. The fairest system should include several task types, so students can show different strengths.'
+    },
+    {
+      id: 'b2-reading-08-community-survey-report',
+      order: 8,
+      stage: 'B2.2',
+      title: 'Report: community survey',
+      topic: 'survey results and recommendations',
+      description: 'Students read a short report summarizing residents opinions about a local park.',
+      readingText: 'Report: Local park survey\nThe aim of this report is to summarize residents opinions about Northfield Park and recommend possible improvements. Fifty-eight residents completed the survey, and most of them visit the park at least once a week.\nOverall, the results were positive. Seventy-two percent of respondents said the park was clean, safe and important for the community. Families especially valued the playground, while older residents appreciated the benches and shaded areas. However, several problems were mentioned repeatedly. The most common complaint was poor lighting in the evening. Some respondents also said the paths were uneven and difficult for people with wheelchairs or pushchairs.\nBased on these findings, I recommend installing additional lights near the main path and repairing the damaged surfaces before winter. A small community notice board could also encourage local events. These changes would be relatively low-cost but would make the park more accessible and welcoming.',
+      focus: ['report', 'survey results', 'recommendations'],
+      words: [
+        { word: 'respondent', meaning: 'a person who answers a survey' },
+        { word: 'repeatedly', meaning: 'again and again' },
+        { word: 'uneven', meaning: 'not smooth or level' },
+        { word: 'accessible', meaning: 'easy for people to enter or use' },
+        { word: 'low-cost', meaning: 'not expensive' }
+      ],
+      questions: [
+        { question: 'What is the report mainly about?', options: ['Residents opinions about a park', 'A new shopping center', 'A school timetable'], answer: 'Residents opinions about a park' },
+        { question: 'How many residents completed the survey?', options: ['Fifty-eight', 'Seventy-two', 'Once a week'], answer: 'Fifty-eight' },
+        { question: 'What did families especially value?', options: ['The playground', 'The notice board', 'The damaged paths'], answer: 'The playground' },
+        { question: 'What was the most common complaint?', options: ['Poor lighting in the evening', 'Too many benches', 'No families'], answer: 'Poor lighting in the evening' },
+        { question: 'What does the writer recommend?', options: ['More lights and path repairs', 'Closing the park', 'Removing shaded areas'], answer: 'More lights and path repairs' }
+      ],
+      details: [
+        { sentence: 'Most residents visit the park at least once a ___.', answer: 'week' },
+        { sentence: 'Seventy-two percent said the park was clean, safe and important for the ___.', answer: 'community' },
+        { sentence: 'Older residents appreciated benches and shaded ___.', answer: 'areas' },
+        { sentence: 'Some paths were difficult for people with wheelchairs or ___.', answer: 'pushchairs' },
+        { sentence: 'A community notice board could encourage local ___.', answer: 'events' }
+      ],
+      trueFalse: [
+        { sentence: 'Most survey results were negative.', answer: false },
+        { sentence: 'The park is important for the community according to many respondents.', answer: true },
+        { sentence: 'Lighting was mentioned as a problem.', answer: true },
+        { sentence: 'The report recommends expensive major construction.', answer: false },
+        { sentence: 'The suggested changes would make the park more welcoming.', answer: true }
+      ],
+      productionQuestion: 'Write a short report about a place in your area. Summarize opinions and recommend two improvements.',
+      sampleAnswer: 'The aim of this report is to summarize opinions about our local library. Most people value the quiet study area, but some complain about limited opening hours. I recommend adding evening hours twice a week and improving the Wi-Fi. These changes would make the library more useful.'
+    },
+    {
+      id: 'b2-reading-09-digital-detox',
+      order: 9,
+      stage: 'B2.3',
+      title: 'Digital detox',
+      topic: 'screen time and attention',
+      description: 'Students read an article about reducing screen time without rejecting technology completely.',
+      readingText: 'The phrase digital detox can sound extreme, as if the only healthy choice is to disappear from the internet for a month. For most people, that is neither realistic nor necessary. A better goal is to use technology more intentionally.\nMany people check their phones whenever they feel bored, tired or slightly uncomfortable. This habit trains the brain to expect constant stimulation. The result is not only wasted time, but also weaker attention. Reading a long article, finishing a difficult task or simply sitting quietly can begin to feel unusually hard.\nA practical digital detox does not require dramatic rules. Some people start by keeping the phone out of the bedroom. Others remove social media apps during the working week or set specific times for checking messages. The point is not to hate technology. It is to create enough space to choose when to be online and when to be present in the physical world.',
+      focus: ['lifestyle article', 'argument', 'implied meaning'],
+      words: [
+        { word: 'digital detox', meaning: 'a period of reducing or stopping digital device use' },
+        { word: 'intentionally', meaning: 'with a clear purpose' },
+        { word: 'stimulation', meaning: 'activity or excitement that keeps the brain interested' },
+        { word: 'dramatic', meaning: 'sudden, extreme or noticeable' },
+        { word: 'physical world', meaning: 'real life away from screens and online spaces' }
+      ],
+      questions: [
+        { question: 'What does the writer think about disappearing from the internet for a month?', options: ['It is usually unrealistic and unnecessary', 'It is the only healthy option', 'It is easy for everyone'], answer: 'It is usually unrealistic and unnecessary' },
+        { question: 'What better goal does the writer suggest?', options: ['Using technology more intentionally', 'Buying a new phone', 'Checking messages constantly'], answer: 'Using technology more intentionally' },
+        { question: 'What can constant phone checking weaken?', options: ['Attention', 'Battery life only', 'Typing speed'], answer: 'Attention' },
+        { question: 'Which practical step is mentioned?', options: ['Keeping the phone out of the bedroom', 'Throwing away all devices', 'Never answering messages'], answer: 'Keeping the phone out of the bedroom' },
+        { question: 'What is the point of a practical digital detox?', options: ['Creating space to choose', 'Hating technology', 'Being offline forever'], answer: 'Creating space to choose' }
+      ],
+      details: [
+        { sentence: 'People often check phones when they feel bored, tired or slightly ___.', answer: 'uncomfortable' },
+        { sentence: 'The habit trains the brain to expect constant ___.', answer: 'stimulation' },
+        { sentence: 'Reading a long ___ can begin to feel hard.', answer: 'article' },
+        { sentence: 'Some people remove social media apps during the working ___.', answer: 'week' },
+        { sentence: 'The writer mentions being present in the physical ___.', answer: 'world' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer recommends rejecting all technology.', answer: false },
+        { sentence: 'Phone checking can be connected to discomfort.', answer: true },
+        { sentence: 'A practical digital detox must have dramatic rules.', answer: false },
+        { sentence: 'The writer suggests setting times for messages.', answer: true },
+        { sentence: 'The article is mainly about using technology with more control.', answer: true }
+      ],
+      productionQuestion: 'Write about your screen habits. What would you change, and why?',
+      sampleAnswer: 'I check my phone too often when I am bored. I do not want to stop using technology, but I want to use it more intentionally. I could keep my phone away from my bed and check messages at fixed times. This would help my attention.'
+    },
+    {
+      id: 'b2-reading-10-responsible-tourism',
+      order: 10,
+      stage: 'B2.3',
+      title: 'Responsible tourism',
+      topic: 'travel choices and local communities',
+      description: 'Students read about how tourism can support or damage local communities.',
+      readingText: 'Tourism can bring jobs, investment and cultural exchange, but it can also damage the places people travel to see. In popular cities, short-term rentals may push up housing prices, while crowded streets can make daily life difficult for residents. In natural areas, visitors may leave rubbish, disturb wildlife or use too much water.\nResponsible tourism does not mean staying at home. It means noticing the impact of travel choices. Visitors can stay in locally owned accommodation, eat in independent restaurants and respect local customs. They can also travel outside the busiest season, when businesses still need income but streets and attractions are less crowded.\nGovernments and companies have responsibilities too. Clear rules, fair taxes and limits on visitor numbers can protect communities from being overwhelmed. The aim is not to make travel less enjoyable. It is to make sure that tourism benefits both visitors and the people who live in the destination all year round.',
+      focus: ['travel article', 'cause and effect', 'balanced view'],
+      words: [
+        { word: 'cultural exchange', meaning: 'sharing ideas, habits and experiences between cultures' },
+        { word: 'short-term rental', meaning: 'a home rented to visitors for a short stay' },
+        { word: 'resident', meaning: 'a person who lives in a place' },
+        { word: 'locally owned', meaning: 'owned by people from the local area' },
+        { word: 'overwhelmed', meaning: 'affected by too much of something' }
+      ],
+      questions: [
+        { question: 'What positive effects of tourism are mentioned?', options: ['Jobs, investment and cultural exchange', 'Only higher rents', 'Less income for businesses'], answer: 'Jobs, investment and cultural exchange' },
+        { question: 'How can short-term rentals affect cities?', options: ['They may push up housing prices', 'They always reduce rent', 'They remove all visitors'], answer: 'They may push up housing prices' },
+        { question: 'What does responsible tourism mean?', options: ['Noticing the impact of travel choices', 'Never travelling', 'Only visiting famous places'], answer: 'Noticing the impact of travel choices' },
+        { question: 'Why travel outside the busiest season?', options: ['Businesses need income and places are less crowded', 'Everything is closed', 'Residents leave town'], answer: 'Businesses need income and places are less crowded' },
+        { question: 'What is the final aim?', options: ['Tourism benefits visitors and local people', 'Travel becomes less enjoyable', 'Companies avoid rules'], answer: 'Tourism benefits visitors and local people' }
+      ],
+      details: [
+        { sentence: 'Crowded streets can make daily life difficult for ___.', answer: 'residents' },
+        { sentence: 'Visitors in natural areas may disturb ___.', answer: 'wildlife' },
+        { sentence: 'Responsible visitors can respect local ___.', answer: 'customs' },
+        { sentence: 'Governments can use fair taxes and limits on visitor ___.', answer: 'numbers' },
+        { sentence: 'Tourism should benefit people who live in the destination all year ___.', answer: 'round' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says tourism has only negative effects.', answer: false },
+        { sentence: 'Responsible tourism can include eating in independent restaurants.', answer: true },
+        { sentence: 'The text says only visitors have responsibility.', answer: false },
+        { sentence: 'Limits on visitor numbers may protect communities.', answer: true },
+        { sentence: 'The writer wants tourism to be fairer, not less enjoyable.', answer: true }
+      ],
+      productionQuestion: 'Write about responsible tourism. What should visitors, companies or governments do?',
+      sampleAnswer: 'Responsible tourism means thinking about local people, not only about photos. Visitors can choose locally owned accommodation and respect local customs. Governments should protect housing and natural places from too many visitors. Tourism should benefit the community as well as travelers.'
+    },
+    {
+      id: 'b2-reading-11-sleep-and-memory',
+      order: 11,
+      stage: 'B2.3',
+      title: 'Sleep and memory',
+      topic: 'science and learning',
+      description: 'Students read a science-style article about how sleep supports memory and learning.',
+      readingText: 'Students often treat sleep as the first thing to sacrifice before an exam, but research suggests this is a poor strategy. Sleep is not simply a break from learning. During sleep, the brain processes information, strengthens useful memories and removes details that are less important.\nThis does not mean that studying is unnecessary. Memory improves when attention, practice and rest work together. A student who reads notes once and then sleeps will not magically master the subject. However, a student who studies regularly and sleeps well is more likely to remember information accurately and use it flexibly.\nOne reason sleep matters is that tired brains are less efficient. Lack of sleep affects concentration, decision-making and emotional control. It may also make students overconfident: they feel they have worked hard because they stayed awake for hours, but the quality of that work is low. In learning, recovery is not a reward after effort; it is part of the effort.',
+      focus: ['science article', 'main idea', 'inference'],
+      words: [
+        { word: 'sacrifice', meaning: 'give something up for another purpose' },
+        { word: 'process information', meaning: 'work with and organize information mentally' },
+        { word: 'accurately', meaning: 'correctly and without mistakes' },
+        { word: 'efficient', meaning: 'working well without wasting energy or time' },
+        { word: 'recovery', meaning: 'return to normal strength or energy' }
+      ],
+      questions: [
+        { question: 'What poor strategy is mentioned?', options: ['Sacrificing sleep before an exam', 'Studying regularly', 'Resting after practice'], answer: 'Sacrificing sleep before an exam' },
+        { question: 'What does the brain do during sleep?', options: ['Processes information and strengthens memories', 'Stops all learning permanently', 'Deletes all notes'], answer: 'Processes information and strengthens memories' },
+        { question: 'What combination improves memory?', options: ['Attention, practice and rest', 'Only reading once', 'Only staying awake'], answer: 'Attention, practice and rest' },
+        { question: 'What can lack of sleep affect?', options: ['Concentration and decision-making', 'Only handwriting', 'The exam timetable'], answer: 'Concentration and decision-making' },
+        { question: 'What does the writer imply about recovery?', options: ['It is part of effective learning', 'It is a waste of time', 'It replaces studying'], answer: 'It is part of effective learning' }
+      ],
+      details: [
+        { sentence: 'During sleep, the brain removes details that are less ___.', answer: 'important' },
+        { sentence: 'A student who reads notes once will not magically ___ the subject.', answer: 'master' },
+        { sentence: 'A rested student may use information more ___.', answer: 'flexibly' },
+        { sentence: 'Lack of sleep affects emotional ___.', answer: 'control' },
+        { sentence: 'Tired students may feel they worked hard because they stayed awake for ___.', answer: 'hours' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says sleep is just a break from learning.', answer: false },
+        { sentence: 'Studying is still necessary.', answer: true },
+        { sentence: 'Tired brains are less efficient.', answer: true },
+        { sentence: 'Staying awake for many hours always means high-quality work.', answer: false },
+        { sentence: 'The article connects sleep with better learning.', answer: true }
+      ],
+      productionQuestion: 'Write about your study habits. How do sleep, breaks and practice affect your learning?',
+      sampleAnswer: 'I learn better when I study regularly and sleep enough. If I stay awake too late, I read more slowly and remember less. Short breaks also help me concentrate. I think recovery is part of studying, not the opposite of it.'
+    },
+    {
+      id: 'b2-reading-12-small-company-growth',
+      order: 12,
+      stage: 'B2.3',
+      title: 'How a small company grew',
+      topic: 'business growth and customer trust',
+      description: 'Students read a business profile about slow growth, customer loyalty and careful decisions.',
+      readingText: 'When Lina opened her online stationery shop, she did not expect rapid success. She had a small budget, no employees and only twenty products. Instead of trying to compete with large retailers, she focused on a specific audience: people who enjoyed beautifully designed notebooks and wanted sustainable materials.\nFor the first year, growth was slow. Lina packed every order herself and wrote short thank-you notes by hand. This took time, but customers noticed. Many shared photos online, not because the company asked them to, but because the packages felt personal.\nThe turning point came when a popular study blogger reviewed one of the notebooks. Orders doubled in a week. Lina could have expanded immediately, but she decided to protect quality first. She found a reliable supplier, improved the website and hired one part-time assistant. Five years later, the company is still small, but it is profitable and trusted. Lina believes that growth is only useful if the business can keep its promises.',
+      focus: ['business profile', 'sequence', 'inference'],
+      words: [
+        { word: 'retailer', meaning: 'a business that sells products to customers' },
+        { word: 'audience', meaning: 'the group of people a product or message is aimed at' },
+        { word: 'sustainable materials', meaning: 'materials that can be used with less harm to the environment' },
+        { word: 'turning point', meaning: 'a moment when an important change begins' },
+        { word: 'profitable', meaning: 'making more money than it costs to run' }
+      ],
+      questions: [
+        { question: 'What was Lina\'s original situation?', options: ['Small budget, no employees and twenty products', 'Large budget and many staff', 'A famous brand already'], answer: 'Small budget, no employees and twenty products' },
+        { question: 'Who was her specific audience?', options: ['People who liked designed notebooks and sustainable materials', 'Only large retailers', 'People looking for cheap plastic pens'], answer: 'People who liked designed notebooks and sustainable materials' },
+        { question: 'Why did customers share photos?', options: ['The packages felt personal', 'They were paid to do it', 'The company forced them'], answer: 'The packages felt personal' },
+        { question: 'What caused the turning point?', options: ['A study blogger reviewed a notebook', 'Lina closed the website', 'A supplier left'], answer: 'A study blogger reviewed a notebook' },
+        { question: 'What does Lina believe?', options: ['Growth matters only if promises can be kept', 'Growth should always be immediate', 'Quality is not important'], answer: 'Growth matters only if promises can be kept' }
+      ],
+      details: [
+        { sentence: 'Lina wrote thank-you notes by ___.', answer: 'hand' },
+        { sentence: 'Orders doubled in a ___.', answer: 'week' },
+        { sentence: 'Before expanding, Lina wanted to protect ___.', answer: 'quality' },
+        { sentence: 'She hired one part-time ___.', answer: 'assistant' },
+        { sentence: 'Five years later, the company is profitable and ___.', answer: 'trusted' }
+      ],
+      trueFalse: [
+        { sentence: 'Lina tried to compete directly with large retailers.', answer: false },
+        { sentence: 'The personal packaging helped customers connect with the brand.', answer: true },
+        { sentence: 'Lina expanded immediately without planning.', answer: false },
+        { sentence: 'The company stayed small but successful.', answer: true },
+        { sentence: 'The writer presents careful growth positively.', answer: true }
+      ],
+      productionQuestion: 'Write about a small business idea. Who is the audience, and how could the business build trust?',
+      sampleAnswer: 'A small language-learning shop could focus on adult beginners who need simple materials. It could build trust by offering clear examples, honest prices and personal support. Growth should be slow enough to protect quality. Customers return when a business keeps its promises.'
+    },
+    {
+      id: 'b2-reading-13-burnout-advice-column',
+      order: 13,
+      stage: 'B2.4',
+      title: 'Advice column: burnout',
+      topic: 'work pressure and personal boundaries',
+      description: 'Students read an advice column response about burnout, boundaries and practical recovery.',
+      readingText: 'Dear Mira,\nYou say you feel exhausted even after a weekend, and that work messages make you anxious before you open them. These are warning signs that should not be ignored. Burnout is not simply being busy; it is what happens when pressure continues for too long without enough recovery.\nThe first step is to speak to your manager, but prepare before the conversation. Instead of saying only, "I am stressed," give specific examples: the number of tasks, repeated late messages or unclear priorities. This makes the problem easier to discuss.\nYou also need boundaries that are visible to other people. For example, you could stop checking messages after 7 p.m. and put this in your calendar. Finally, do not expect one free weekend to fix months of pressure. Recovery is gradual. If your symptoms continue, consider professional support. Asking for help is not weakness; it is responsible.',
+      focus: ['advice text', 'tone', 'specific recommendations'],
+      words: [
+        { word: 'exhausted', meaning: 'extremely tired' },
+        { word: 'warning sign', meaning: 'something that shows a possible problem' },
+        { word: 'recovery', meaning: 'returning to health, energy or balance' },
+        { word: 'boundary', meaning: 'a limit that protects your time, energy or feelings' },
+        { word: 'professional support', meaning: 'help from a trained specialist' }
+      ],
+      questions: [
+        { question: 'What warning sign does Mira describe?', options: ['Feeling exhausted even after a weekend', 'Having too much holiday', 'Enjoying all messages'], answer: 'Feeling exhausted even after a weekend' },
+        { question: 'How does the text define burnout?', options: ['Long pressure without enough recovery', 'A single busy day', 'A normal weekend feeling'], answer: 'Long pressure without enough recovery' },
+        { question: 'What should Mira prepare?', options: ['Specific examples of the problem', 'A resignation letter only', 'A list of holidays'], answer: 'Specific examples of the problem' },
+        { question: 'What boundary is suggested?', options: ['Stop checking messages after 7 p.m.', 'Never speak to the manager', 'Work every evening'], answer: 'Stop checking messages after 7 p.m.' },
+        { question: 'What is the tone of the advice?', options: ['Supportive and practical', 'Judgmental and cold', 'Careless and vague'], answer: 'Supportive and practical' }
+      ],
+      details: [
+        { sentence: 'Work messages make Mira anxious before she ___ them.', answer: 'opens' },
+        { sentence: 'The advice says to speak to the ___.', answer: 'manager' },
+        { sentence: 'Mira should mention unclear ___.', answer: 'priorities' },
+        { sentence: 'A boundary can be put in her ___.', answer: 'calendar' },
+        { sentence: 'Asking for help is described as ___.', answer: 'responsible' }
+      ],
+      trueFalse: [
+        { sentence: 'The text says burnout is just being busy.', answer: false },
+        { sentence: 'The writer suggests giving specific examples.', answer: true },
+        { sentence: 'Boundaries should be visible to other people.', answer: true },
+        { sentence: 'One free weekend always fixes burnout.', answer: false },
+        { sentence: 'Professional support may be useful if symptoms continue.', answer: true }
+      ],
+      productionQuestion: 'Write advice to someone who feels overwhelmed by work or study. Include boundaries and one practical first step.',
+      sampleAnswer: 'If someone feels overwhelmed, they should first identify the main causes of stress. Then they can speak to a manager or teacher with specific examples. Setting boundaries is also important, such as not answering messages late at night. If the problem continues, professional support may help.'
+    },
+    {
+      id: 'b2-reading-14-misinformation-online',
+      order: 14,
+      stage: 'B2.4',
+      title: 'Misinformation online',
+      topic: 'media literacy and social networks',
+      description: 'Students read about why misinformation spreads and how readers can respond critically.',
+      readingText: 'False information does not spread only because people are careless. It often spreads because it is designed to be attractive. A shocking headline, an emotional image or a simple explanation of a complicated problem can make a post feel true before the reader has checked it.\nSocial media platforms reward content that receives quick reactions. Unfortunately, anger and fear often produce faster reactions than careful analysis. This means misleading stories can travel widely before reliable sources have time to respond.\nMedia literacy is not about trusting nothing. It is about slowing down. Before sharing a post, readers can ask: Who created this? What evidence is provided? Is another reliable source reporting the same story? These questions do not take long, but they create a useful pause. In that pause, people are less likely to become part of the problem. Online responsibility begins with the decision not to share too quickly.',
+      focus: ['media literacy', 'cause and effect', 'critical reading'],
+      words: [
+        { word: 'misinformation', meaning: 'false or incorrect information' },
+        { word: 'misleading', meaning: 'making people believe something that is not true' },
+        { word: 'platform', meaning: 'a website or app used for communication or sharing content' },
+        { word: 'media literacy', meaning: 'the ability to understand and evaluate media messages' },
+        { word: 'evidence', meaning: 'facts or information that support a claim' }
+      ],
+      questions: [
+        { question: 'Why does false information often spread?', options: ['It is designed to be attractive', 'Readers always research carefully', 'Reliable sources share it first'], answer: 'It is designed to be attractive' },
+        { question: 'What do platforms reward?', options: ['Content that receives quick reactions', 'Only careful analysis', 'Posts with no emotion'], answer: 'Content that receives quick reactions' },
+        { question: 'What emotions often produce fast reactions?', options: ['Anger and fear', 'Calm and patience', 'Boredom and sleepiness'], answer: 'Anger and fear' },
+        { question: 'What is media literacy about according to the text?', options: ['Slowing down and evaluating', 'Trusting nothing', 'Sharing quickly'], answer: 'Slowing down and evaluating' },
+        { question: 'What decision begins online responsibility?', options: ['Not sharing too quickly', 'Reacting immediately', 'Ignoring all news'], answer: 'Not sharing too quickly' }
+      ],
+      details: [
+        { sentence: 'A simple explanation of a complicated ___ can feel true.', answer: 'problem' },
+        { sentence: 'Misleading stories can travel widely before reliable sources ___.', answer: 'respond' },
+        { sentence: 'Readers should ask who ___ the post.', answer: 'created' },
+        { sentence: 'Readers should check whether another reliable source reports the same ___.', answer: 'story' },
+        { sentence: 'A useful pause makes people less likely to become part of the ___.', answer: 'problem' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says people share false information only because they are careless.', answer: false },
+        { sentence: 'Emotional content can feel true before it is checked.', answer: true },
+        { sentence: 'Careful analysis usually creates faster reactions than fear.', answer: false },
+        { sentence: 'Media literacy means checking evidence.', answer: true },
+        { sentence: 'The article encourages slower sharing.', answer: true }
+      ],
+      productionQuestion: 'Write about how people can avoid spreading misinformation online.',
+      sampleAnswer: 'People can avoid spreading misinformation by slowing down before they share. They should check who created the post and whether a reliable source reports the same story. Emotional headlines are not enough evidence. A short pause can prevent a lot of damage.'
+    },
+    {
+      id: 'b2-reading-15-urban-green-spaces',
+      order: 15,
+      stage: 'B2.4',
+      title: 'Urban green spaces',
+      topic: 'city planning and public health',
+      description: 'Students read about the role of parks, trees and community gardens in modern cities.',
+      readingText: 'Urban green spaces are sometimes treated as decoration, but research increasingly shows that they are part of public health. Parks, trees and community gardens can reduce heat, improve air quality and give residents a place to recover from noise and stress.\nThe benefits are not shared equally. Wealthier neighborhoods often have more trees, safer parks and better-maintained paths. In poorer areas, green spaces may be smaller, neglected or located beside busy roads. This matters because people who experience the most stress may have the least access to places that could help them recover.\nCity planners are beginning to view green spaces as essential infrastructure. A small park will not solve housing problems or air pollution alone, but it can improve everyday life. The most successful projects involve local residents from the beginning. When people help design a space, they are more likely to use it, protect it and feel that it belongs to them.',
+      focus: ['environment', 'public health', 'social equality'],
+      words: [
+        { word: 'decoration', meaning: 'something added to make a place look nicer' },
+        { word: 'public health', meaning: 'the health of people in a community' },
+        { word: 'neglected', meaning: 'not cared for properly' },
+        { word: 'access', meaning: 'the ability or right to use something' },
+        { word: 'belong', meaning: 'feel connected to a place or group' }
+      ],
+      questions: [
+        { question: 'How are green spaces sometimes wrongly treated?', options: ['As decoration', 'As transport systems', 'As private offices'], answer: 'As decoration' },
+        { question: 'What can green spaces reduce?', options: ['Heat, noise and stress', 'All housing prices', 'Every city problem'], answer: 'Heat, noise and stress' },
+        { question: 'What inequality is mentioned?', options: ['Wealthier neighborhoods often have better green spaces', 'Poorer areas always have bigger parks', 'All areas have equal access'], answer: 'Wealthier neighborhoods often have better green spaces' },
+        { question: 'How do planners increasingly view green spaces?', options: ['As essential infrastructure', 'As useless decoration', 'As temporary events'], answer: 'As essential infrastructure' },
+        { question: 'What helps projects succeed?', options: ['Involving local residents early', 'Ignoring local people', 'Building only beside busy roads'], answer: 'Involving local residents early' }
+      ],
+      details: [
+        { sentence: 'Green spaces can improve air ___.', answer: 'quality' },
+        { sentence: 'Poorer green spaces may be located beside busy ___.', answer: 'roads' },
+        { sentence: 'People with the most stress may have the least ___ to helpful places.', answer: 'access' },
+        { sentence: 'A small park will not solve housing problems ___.', answer: 'alone' },
+        { sentence: 'When residents help design a space, they may feel it ___ to them.', answer: 'belongs' }
+      ],
+      trueFalse: [
+        { sentence: 'The text says green spaces are only decorative.', answer: false },
+        { sentence: 'Green spaces can support public health.', answer: true },
+        { sentence: 'The benefits of green spaces are always shared equally.', answer: false },
+        { sentence: 'A small park can improve everyday life.', answer: true },
+        { sentence: 'Local involvement can make projects more successful.', answer: true }
+      ],
+      productionQuestion: 'Write about a green space in your city or a green space your city needs.',
+      sampleAnswer: 'My city needs more small parks near apartment buildings. Green spaces are not only decoration; they help people relax and reduce heat. It is important that all neighborhoods have access to safe parks. Local residents should help design them.'
+    },
+    {
+      id: 'b2-reading-16-museums-changing',
+      order: 16,
+      stage: 'B2.5',
+      title: 'How museums are changing',
+      topic: 'culture, technology and public engagement',
+      description: 'Students read about how museums are becoming more interactive and community-focused.',
+      readingText: 'Museums used to be seen as quiet buildings where visitors looked at objects behind glass. Many still protect and display valuable collections, but their role is changing. Modern museums increasingly want visitors to ask questions, make connections and see history as something that affects the present.\nTechnology is part of this change. Interactive screens, audio guides and virtual tours can make exhibitions more accessible, especially for visitors who cannot travel or who need information in different formats. However, technology is only useful when it supports a clear story. A room full of screens can be just as boring as a room full of labels.\nAnother shift is community involvement. Some museums invite local people to share memories, photographs or objects connected to an exhibition. This can make the museum feel less like an authority speaking to the public and more like a conversation. The challenge is to balance expert knowledge with public participation.',
+      focus: ['culture article', 'change over time', 'balanced view'],
+      words: [
+        { word: 'collection', meaning: 'a group of valuable or interesting objects' },
+        { word: 'interactive', meaning: 'allowing people to take part or respond' },
+        { word: 'accessible', meaning: 'easy for different people to use or understand' },
+        { word: 'authority', meaning: 'a person or institution with expert power or official knowledge' },
+        { word: 'participation', meaning: 'taking part in an activity' }
+      ],
+      questions: [
+        { question: 'How were museums often seen in the past?', options: ['Quiet buildings with objects behind glass', 'Only online platforms', 'Shopping centers'], answer: 'Quiet buildings with objects behind glass' },
+        { question: 'What do modern museums want visitors to do?', options: ['Ask questions and make connections', 'Stay silent only', 'Ignore history'], answer: 'Ask questions and make connections' },
+        { question: 'When is technology useful?', options: ['When it supports a clear story', 'Whenever there are many screens', 'Only when there are no objects'], answer: 'When it supports a clear story' },
+        { question: 'What do some museums invite local people to share?', options: ['Memories, photos or objects', 'Only money', 'Building plans'], answer: 'Memories, photos or objects' },
+        { question: 'What is the challenge?', options: ['Balancing expert knowledge with public participation', 'Removing all experts', 'Avoiding visitors'], answer: 'Balancing expert knowledge with public participation' }
+      ],
+      details: [
+        { sentence: 'Museums still protect and display valuable ___.', answer: 'collections' },
+        { sentence: 'Virtual tours can help visitors who cannot ___.', answer: 'travel' },
+        { sentence: 'Technology can provide information in different ___.', answer: 'formats' },
+        { sentence: 'A room full of screens can be as boring as a room full of ___.', answer: 'labels' },
+        { sentence: 'Community involvement can make the museum feel like a ___.', answer: 'conversation' }
+      ],
+      trueFalse: [
+        { sentence: 'The article says museums no longer protect collections.', answer: false },
+        { sentence: 'Technology alone always makes exhibitions interesting.', answer: false },
+        { sentence: 'Virtual tours may improve accessibility.', answer: true },
+        { sentence: 'Local memories can be part of exhibitions.', answer: true },
+        { sentence: 'The writer supports change but notes challenges.', answer: true }
+      ],
+      productionQuestion: 'Write about a museum, exhibition or cultural place. How could it attract more visitors?',
+      sampleAnswer: 'A museum can attract more visitors by telling clearer stories and using technology carefully. Interactive screens are useful only if they help people understand the exhibition. Museums could also invite local people to share memories or photos. This would make the visit feel more personal.'
+    },
+    {
+      id: 'b2-reading-17-changing-careers',
+      order: 17,
+      stage: 'B2.5',
+      title: 'Changing careers',
+      topic: 'personal essay and professional identity',
+      description: 'Students read a personal essay about moving from a stable job to a new career path.',
+      readingText: 'For almost ten years, I worked in a bank. The job was stable, the salary was reliable and my family thought I was lucky. The problem was that I felt increasingly disconnected from the work. I was good at it, but I did not feel curious about it anymore.\nAt first, I felt guilty for wanting a change. Many people would be grateful for the security I had. But security is not the same as satisfaction. I began taking evening courses in graphic design, not because I was ready to quit, but because I wanted to test a different direction.\nThe transition took two years. I saved money, built a small portfolio and accepted freelance projects at weekends. Some were badly paid, but they taught me how to speak to clients and manage deadlines. When I finally left the bank, I was nervous, but not unprepared. Changing careers was not a sudden escape. It was a careful decision built step by step.',
+      focus: ['personal essay', 'tone', 'sequence and inference'],
+      words: [
+        { word: 'stable', meaning: 'steady and unlikely to change suddenly' },
+        { word: 'disconnected', meaning: 'not emotionally involved or interested' },
+        { word: 'security', meaning: 'safety and protection from risk' },
+        { word: 'transition', meaning: 'the process of changing from one state to another' },
+        { word: 'portfolio', meaning: 'a collection of work showing ability' }
+      ],
+      questions: [
+        { question: 'Why did the writer want a change?', options: ['They felt disconnected from the work', 'They lost the job suddenly', 'The salary was unreliable'], answer: 'They felt disconnected from the work' },
+        { question: 'Why did the writer feel guilty?', options: ['Many people would value that security', 'The bank was illegal', 'The courses were free'], answer: 'Many people would value that security' },
+        { question: 'Why did the writer take evening courses?', options: ['To test a different direction', 'To quit immediately', 'To please family'], answer: 'To test a different direction' },
+        { question: 'How long did the transition take?', options: ['Two years', 'Two weeks', 'Ten years'], answer: 'Two years' },
+        { question: 'How does the writer present the career change?', options: ['As a careful step-by-step decision', 'As a sudden escape', 'As a mistake'], answer: 'As a careful step-by-step decision' }
+      ],
+      details: [
+        { sentence: 'The writer worked in a bank for almost ten ___.', answer: 'years' },
+        { sentence: 'The family thought the writer was ___.', answer: 'lucky' },
+        { sentence: 'The writer studied graphic ___.', answer: 'design' },
+        { sentence: 'Weekend projects taught the writer to manage ___.', answer: 'deadlines' },
+        { sentence: 'When leaving the bank, the writer was nervous but not ___.', answer: 'unprepared' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer was bad at the bank job.', answer: false },
+        { sentence: 'The writer believes security and satisfaction are identical.', answer: false },
+        { sentence: 'The writer saved money before leaving.', answer: true },
+        { sentence: 'Some freelance projects were badly paid.', answer: true },
+        { sentence: 'The text suggests career change can be planned carefully.', answer: true }
+      ],
+      productionQuestion: 'Write about a career change, study change or life change. What made the change difficult, and how could someone prepare?',
+      sampleAnswer: 'Changing careers can be difficult because people may lose security. I think it is better to test a new direction before making a big decision. A person can take a course, save money and build a portfolio. Then the change feels less risky.'
+    },
+    {
+      id: 'b2-reading-18-b2-reading-review',
+      order: 18,
+      stage: 'B2 review',
+      title: 'B2 reading review',
+      topic: 'mixed short texts and inference',
+      description: 'Students review B2 reading skills across a message, review and opinion extract.',
+      readingText: 'Text 1: Message\nHi Daniel, I read your draft proposal. The idea is strong, but the introduction needs to be clearer. At the moment, it explains the solution before the problem, so the reader may feel lost. Could you revise the first paragraph before Thursday?\nText 2: Review\nThe new documentary is beautifully filmed and raises important questions about social media. However, it tries to cover too many stories in ninety minutes. As a result, some interviews feel rushed. I would still recommend it, but mainly to viewers already interested in technology and society.\nText 3: Opinion extract\nPeople often say that young employees lack loyalty, but this is too simple. Many are loyal to meaningful work, fair treatment and opportunities to grow. If companies want commitment, they need to offer more than a job title and a monthly salary.',
+      focus: ['mixed reading', 'inference', 'purpose and attitude'],
+      words: [
+        { word: 'draft proposal', meaning: 'an early version of a formal plan' },
+        { word: 'revise', meaning: 'change and improve a text' },
+        { word: 'rushed', meaning: 'done too quickly' },
+        { word: 'loyalty', meaning: 'support or commitment to someone or something' },
+        { word: 'commitment', meaning: 'a strong promise or willingness to continue' }
+      ],
+      questions: [
+        { question: 'What is the problem with Daniel\'s proposal?', options: ['The introduction explains the solution before the problem', 'The idea is weak', 'It is already perfect'], answer: 'The introduction explains the solution before the problem' },
+        { question: 'What does the documentary review criticize?', options: ['It covers too many stories', 'It is badly filmed', 'It avoids social media'], answer: 'It covers too many stories' },
+        { question: 'Who would the reviewer mainly recommend the documentary to?', options: ['People interested in technology and society', 'Only children', 'People who dislike documentaries'], answer: 'People interested in technology and society' },
+        { question: 'What does the opinion extract challenge?', options: ['The simple idea that young employees lack loyalty', 'The value of meaningful work', 'The need for fair treatment'], answer: 'The simple idea that young employees lack loyalty' },
+        { question: 'What do the three texts all require the reader to understand?', options: ['Purpose and attitude', 'Only dates', 'Only prices'], answer: 'Purpose and attitude' }
+      ],
+      details: [
+        { sentence: 'Daniel should revise the first paragraph before ___.', answer: 'Thursday' },
+        { sentence: 'The documentary is beautifully ___.', answer: 'filmed' },
+        { sentence: 'The documentary lasts ___ minutes.', answer: 'ninety' },
+        { sentence: 'Young employees may be loyal to meaningful ___.', answer: 'work' },
+        { sentence: 'Companies need to offer more than a job title and a monthly ___.', answer: 'salary' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel\'s proposal has a strong idea.', answer: true },
+        { sentence: 'The reviewer completely rejects the documentary.', answer: false },
+        { sentence: 'Some interviews in the documentary feel rushed.', answer: true },
+        { sentence: 'The opinion extract says all young employees are disloyal.', answer: false },
+        { sentence: 'Fair treatment is mentioned as important for commitment.', answer: true }
+      ],
+      productionQuestion: 'Write three short B2 texts: feedback on a proposal, a short review and a short opinion about work or study.',
+      sampleAnswer: 'Feedback: Your idea is useful, but the problem should be clearer at the start. Review: The film is well made, although some scenes feel rushed. Opinion: Students need more than grades; they need feedback, support and opportunities to improve.'
+    }
+  ].map(buildReadingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2 = {
     grammar: READY_GRAMMAR_LESSONS_B2,
     vocabulary: READY_VOCABULARY_LESSONS_B2,
-    reading: root.lessons.B2?.reading || [],
+    reading: READY_READING_LESSONS_B2,
     writing: root.lessons.B2?.writing || [],
     listening: root.lessons.B2?.listening || []
   };
