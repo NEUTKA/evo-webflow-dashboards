@@ -2843,6 +2843,968 @@
     }
   ].map(buildWritingReadyLesson);
 
+  function buildListeningReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B1',
+      skill: 'listening',
+      stage: config.stage || 'B1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 35,
+      description: config.description,
+      audioUrl: config.audioUrl,
+      supportTitle: 'Audio and transcript',
+      supportText: `Transcript:\n${config.transcriptText}`,
+      focus: config.focus || ['listening for gist', 'listening for detail', 'B1 transcript support'],
+      teacherNotes: config.teacherNotes || 'Ask the student to listen once for general meaning, complete the tasks, then listen again with the transcript to notice details, linking words and useful B1 phrases.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before listening: useful words',
+          prompt: 'Match each useful word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Listening comprehension',
+          prompt: 'Listen and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Listen for details',
+          prompt: 'Type the missing word, number or phrase from the audio.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Listen again and check the transcript.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 6-8 sentences responding to the listening topic.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Listen again and choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_LISTENING_LESSONS_B1 = [
+    {
+      id: 'b1-listening-01-where-did-you-stay',
+      order: 1,
+      stage: 'B1.1',
+      title: 'Where did you stay?',
+      topic: 'travel accommodation and describing a stay',
+      description: 'Students listen to Liam describing a guesthouse in Lisbon, including location, problems and overall opinion.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f27572805207d9d7a5c5e_B1%20Where%20did%20you%20stay_%20(Liam).mp3',
+      transcriptText: `Hi, I'm Liam. Last autumn I went to Lisbon for nine days, and I stayed in a small guesthouse in the old part of the city. It wasn't a big hotel with a gym and a pool, but it had character. The building was old, with narrow stairs and high ceilings, and my room had wooden floors and a small balcony. I could see a bit of the river if I leaned over the railing.
+
+I chose that place because of the location. I wanted to be able to walk everywhere, and I really could. In the mornings I walked to cafes for coffee and pastries, then I took the tram to different neighbourhoods. In the evening I didn't need to worry about transport because I could always walk back, even if it was late.
+
+The guesthouse was comfortable, but not perfect. The room was clean and the bed was fine, yet the sound insulation was weak. On my first night I could hear people talking in the corridor, and I woke up early because someone slammed a door. After that, I used earplugs and it was much better. Another small issue was the shower: the water pressure changed sometimes, especially when other guests were using water.
+
+The good part was the staff. They were friendly and gave me great tips, like which viewpoint was less crowded and where to eat seafood without paying tourist prices. They also arranged a taxi to the airport on my last day, so it was stress-free. Overall, it was a great stay: simple, central, and full of atmosphere. Next time I would still choose a guesthouse, but I might pick a room that faces the inner courtyard for more quiet.`,
+      focus: ['travel accommodation', 'listening for pros and cons', 'past narrative'],
+      words: [
+        { word: 'guesthouse', meaning: 'a small place where travelers can stay' },
+        { word: 'location', meaning: 'the place where something is' },
+        { word: 'sound insulation', meaning: 'materials or design that stop noise passing through walls' },
+        { word: 'water pressure', meaning: 'how strong the water flow is' },
+        { word: 'courtyard', meaning: 'an open area inside or beside a building' }
+      ],
+      questions: [
+        { question: 'Where did Liam stay in Lisbon?', options: ['In a small guesthouse', 'In a luxury hotel', 'In a rented apartment'], answer: 'In a small guesthouse' },
+        { question: 'Why did he choose the place?', options: ['Because of the location', 'Because it had a pool', 'Because it was new'], answer: 'Because of the location' },
+        { question: 'What was one problem with the room?', options: ['Weak sound insulation', 'No bed', 'No balcony'], answer: 'Weak sound insulation' },
+        { question: 'What did the staff help with?', options: ['Local tips and a taxi', 'Changing money', 'Buying a tram ticket'], answer: 'Local tips and a taxi' },
+        { question: 'What would Liam choose next time?', options: ['A quieter room facing the courtyard', 'A room on a busy street', 'A hotel outside the city'], answer: 'A quieter room facing the courtyard' }
+      ],
+      details: [
+        { sentence: 'Liam stayed in Lisbon for ___ days.', answer: 'nine' },
+        { sentence: 'His room had wooden floors and a small ___.', answer: 'balcony' },
+        { sentence: 'He took the ___ to different neighbourhoods.', answer: 'tram' },
+        { sentence: 'After the first night, he used ___.', answer: 'earplugs' },
+        { sentence: 'The staff arranged a taxi to the ___.', answer: 'airport' }
+      ],
+      trueFalse: [
+        { sentence: 'The guesthouse had a gym and a pool.', answer: false },
+        { sentence: 'Liam wanted to walk around the city easily.', answer: true },
+        { sentence: 'The shower was perfect all the time.', answer: false },
+        { sentence: 'The staff gave him useful local advice.', answer: true },
+        { sentence: 'Overall, Liam was unhappy with the stay.', answer: false }
+      ],
+      productionQuestion: 'Describe a place where you stayed on holiday. Mention location, comfort, one problem and whether you would stay there again.',
+      sampleAnswer: 'I stayed in a small hotel near the city center. The location was excellent because I could walk everywhere. The room was comfortable, but the street was noisy at night. The staff were helpful and gave me good restaurant tips. I would stay there again, but I would ask for a quieter room.'
+    },
+    {
+      id: 'b1-listening-02-college-experience',
+      order: 2,
+      stage: 'B1.1',
+      title: 'My college experience',
+      topic: 'education, independence and student life',
+      description: 'Students listen to Ryan describing college, study strategies, friendships and pressure.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f3792729243672263f240_SCRIPT%201%20(Male%20speaker%20%E2%80%94%20Ryan)_%20My%20college%20experience.mp3',
+      transcriptText: `Hi, I'm Ryan. I started college when I was nineteen, and honestly, the first month was a shock. In high school, teachers reminded us about everything. In college, no one chased me. I had to plan my time, remember deadlines, and figure out my own routine. At the beginning I missed two small assignments because I didn't check the online system properly. It wasn't a disaster, but it was a good lesson.
+
+I studied Business Administration at a big public university. The campus was like a small city: libraries, cafes, sports halls, and buildings for every department. My first-year classes were huge. In one lecture there were more than two hundred students. The professor spoke fast, the slides changed quickly, and if you didn't take notes, you were lost. After a few weeks I learned a simple strategy: I always read a little before class, and I wrote down questions. That way, the lecture made more sense.
+
+The best part of college for me was meeting people from different places. My roommate was from a small town, and my best friend was an international student. We had very different backgrounds, but we helped each other. We studied together before exams, shared food, and talked late at night about our plans. I also joined a student club connected to marketing. We organised small events, invited guest speakers, and worked on real projects for local businesses. That experience helped me a lot later when I applied for internships.
+
+Of course, it wasn't always fun. There were stressful weeks with exams and presentations. I remember one semester when I worked part-time and studied full-time. I slept too little and drank too much coffee. Now, when I look back, I understand that college taught me more than business theory. It taught me independence, communication, and how to keep going when things are hard.`,
+      focus: ['education', 'student life', 'listening for experience and reflection'],
+      words: [
+        { word: 'deadline', meaning: 'the final time or date to finish something' },
+        { word: 'routine', meaning: 'a regular way of doing things' },
+        { word: 'lecture', meaning: 'a formal talk in a university class' },
+        { word: 'background', meaning: 'a person\'s family, culture or past experience' },
+        { word: 'internship', meaning: 'temporary work experience, often for students' }
+      ],
+      questions: [
+        { question: 'Why was the first month a shock for Ryan?', options: ['He had to manage himself', 'The campus was too small', 'He disliked business'], answer: 'He had to manage himself' },
+        { question: 'What did he study?', options: ['Business Administration', 'Computer Science', 'Marketing only'], answer: 'Business Administration' },
+        { question: 'What strategy helped him in lectures?', options: ['Reading before class and writing questions', 'Skipping slides', 'Sitting at the back'], answer: 'Reading before class and writing questions' },
+        { question: 'What student club did he join?', options: ['A marketing club', 'A sports club', 'A music club'], answer: 'A marketing club' },
+        { question: 'What did college teach him besides theory?', options: ['Independence and communication', 'How to cook', 'Only exam skills'], answer: 'Independence and communication' }
+      ],
+      details: [
+        { sentence: 'Ryan started college when he was ___.', answer: 'nineteen' },
+        { sentence: 'He missed two small ___ at the beginning.', answer: 'assignments' },
+        { sentence: 'One lecture had more than ___ students.', answer: 'two hundred' },
+        { sentence: 'The student club invited guest ___.', answer: 'speakers' },
+        { sentence: 'During one semester, he worked part-time and studied ___.', answer: 'full-time' }
+      ],
+      trueFalse: [
+        { sentence: 'Ryan says college was the same as high school.', answer: false },
+        { sentence: 'His campus had many facilities.', answer: true },
+        { sentence: 'He never made friends at college.', answer: false },
+        { sentence: 'The marketing club helped him later.', answer: true },
+        { sentence: 'Ryan says college was always easy and fun.', answer: false }
+      ],
+      productionQuestion: 'Write about your school, college or course experience. Mention one challenge, one useful strategy and one thing you learned.',
+      sampleAnswer: 'My first month at university was difficult because I had to organize my own time. I learned to check deadlines every Sunday and prepare before class. The best part was meeting people from different places. The experience taught me independence and confidence.'
+    },
+    {
+      id: 'b1-listening-03-work-experience',
+      order: 3,
+      stage: 'B1.1',
+      title: 'My work experience',
+      topic: 'jobs, customer service and communication',
+      description: 'Students listen to Sofia explaining what she learned from cafe and receptionist jobs.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f4a0577fc6f4866a67971_SCRIPT%202%20(Female%20speaker%20%E2%80%94%20Sofia)_%20My%20work%20experience.mp3',
+      transcriptText: `Hello, I'm Sofia. My work experience started in a cafe, and I will always remember it because it taught me more than any school lesson. I worked as a barista while studying, and my shifts began early in the morning. At 6 a.m. we already had a line of customers. Some people needed coffee to survive, and they were not very patient. I learned to work fast, listen carefully, and smile even when I was tired.
+
+The hardest part was dealing with mistakes. One time I gave a customer the wrong order, and he got angry. I felt terrible, but my supervisor told me: "Fix it, apologise, and move on." I realised that in service jobs, mistakes happen, and you can't freeze. You have to solve the issue and keep the line moving. Over time, I became confident. I knew the menu by heart, I could handle difficult customers, and I helped new employees learn the basics.
+
+Later, I got a job as a receptionist in a small medical clinic. The environment was calmer, but the responsibility was bigger. Patients were sometimes nervous or in pain, and I had to speak gently and clearly. I answered phone calls, booked appointments, and managed paperwork. I also had to protect privacy, which was very important. At the beginning I was worried I would say the wrong thing, but I learned the routines quickly.
+
+What surprised me was how much communication matters in every job. In the cafe, communication meant speed and clarity. In the clinic, it meant empathy and patience. And in both places, teamwork was everything. If one person had a bad day, the whole system suffered. These jobs helped me understand what kind of work I enjoy: I like working with people, but I also need a structured environment. Now I'm studying for a career in healthcare administration, and my past jobs give me a strong base.`,
+      focus: ['work experience', 'customer service', 'communication skills'],
+      words: [
+        { word: 'barista', meaning: 'a person who makes coffee in a cafe' },
+        { word: 'shift', meaning: 'a period of time when someone works' },
+        { word: 'supervisor', meaning: 'a person who manages workers' },
+        { word: 'privacy', meaning: 'keeping personal information protected' },
+        { word: 'empathy', meaning: 'understanding how another person feels' }
+      ],
+      questions: [
+        { question: 'Where did Sofia first work?', options: ['In a cafe', 'In a hospital', 'In a school'], answer: 'In a cafe' },
+        { question: 'What did her supervisor tell her to do after a mistake?', options: ['Fix it, apologise and move on', 'Leave the job', 'Argue with the customer'], answer: 'Fix it, apologise and move on' },
+        { question: 'Where did Sofia work later?', options: ['In a small medical clinic', 'In a bank', 'In a supermarket'], answer: 'In a small medical clinic' },
+        { question: 'What was very important in the clinic?', options: ['Protecting privacy', 'Making coffee quickly', 'Selling products'], answer: 'Protecting privacy' },
+        { question: 'What kind of environment does Sofia need?', options: ['A structured environment', 'A noisy environment', 'A completely free schedule'], answer: 'A structured environment' }
+      ],
+      details: [
+        { sentence: 'Sofia worked as a ___ while studying.', answer: 'barista' },
+        { sentence: 'Her shifts began early in the ___.', answer: 'morning' },
+        { sentence: 'She once gave a customer the wrong ___.', answer: 'order' },
+        { sentence: 'At the clinic, she booked ___.', answer: 'appointments' },
+        { sentence: 'Now Sofia is studying healthcare ___.', answer: 'administration' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia says the cafe job taught her a lot.', answer: true },
+        { sentence: 'She never had to deal with mistakes.', answer: false },
+        { sentence: 'The clinic was calmer but more responsible.', answer: true },
+        { sentence: 'Communication meant exactly the same thing in both jobs.', answer: false },
+        { sentence: 'Sofia learned that teamwork matters.', answer: true }
+      ],
+      productionQuestion: 'Write about a job or responsibility you had. What skills did it teach you?',
+      sampleAnswer: 'I worked in a small shop during the summer. I learned to speak politely to customers and solve small problems quickly. The hardest part was staying calm when the shop was busy. The experience taught me patience and teamwork.'
+    },
+    {
+      id: 'b1-listening-04-money-mistake',
+      order: 4,
+      stage: 'B1.1',
+      title: 'A mistake I made with money',
+      topic: 'money habits, saving and spending',
+      description: 'Students listen to Ethan explaining how he changed his spending habits.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f5d6cefd9e406c6222b80_SCRIPT%203%20(Male%20speaker%20%E2%80%94%20Ethan)_%20A%20mistake%20I%20made%20with%20money.mp3',
+      transcriptText: `Hi, I'm Ethan, and my relationship with money has changed a lot over the years. When I was a teenager, I didn't really think about it. If I had some cash, I spent it. I bought snacks, games, and things I didn't need. I didn't save because I felt like saving was only for "older people."
+
+My first real job changed that. I worked part-time and got paid every two weeks. At first, it felt amazing. I finally had my own income, so I treated myself all the time. But then I had a month where everything happened at once: my phone broke, my friend had a birthday, and I had to pay for a course. I realised I had no safety net. I wasn't in debt, but I felt stressed because I couldn't cover everything comfortably.
+
+After that, I started doing something simple. I divided my money into three parts: essentials, savings, and "fun." Essentials were transport, food, and phone bills. Savings were small at first - maybe 10%. Fun was whatever was left. The system was not perfect, but it gave me control. I stopped feeling guilty about spending because I knew I had already saved something.
+
+One of the biggest lessons I learned was about subscriptions and small daily spending. I used to think, "It's only a coffee," or "It's only a small fee," but those small costs add up. When I checked my bank app, I was shocked. I had multiple subscriptions I didn't even use, and they were quietly taking money every month. I cancelled most of them, and the difference was real.
+
+Now, I still enjoy life, but I try to be intentional. I don't buy things just because they are on sale. I ask myself, "Would I buy this at full price?" If the answer is no, I usually skip it. I also try to save for experiences, not only for objects. For me, money is not only about having more. It's about having less stress and more freedom.`,
+      focus: ['money habits', 'listening for lessons learned', 'spending and saving'],
+      words: [
+        { word: 'income', meaning: 'money you earn' },
+        { word: 'safety net', meaning: 'money or support for difficult situations' },
+        { word: 'essentials', meaning: 'things you really need' },
+        { word: 'subscription', meaning: 'a regular payment for a service' },
+        { word: 'intentional', meaning: 'done with a clear reason or purpose' }
+      ],
+      questions: [
+        { question: 'What did Ethan do with money as a teenager?', options: ['He spent it quickly', 'He saved most of it', 'He invested it'], answer: 'He spent it quickly' },
+        { question: 'What made him feel stressed?', options: ['Several expenses happened at once', 'He lost his job', 'He bought a house'], answer: 'Several expenses happened at once' },
+        { question: 'What three parts did he divide money into?', options: ['Essentials, savings and fun', 'Rent, travel and clothes', 'Food, games and coffee'], answer: 'Essentials, savings and fun' },
+        { question: 'What surprised him in his bank app?', options: ['Unused subscriptions', 'A large salary', 'A bank error'], answer: 'Unused subscriptions' },
+        { question: 'What does money mean to him now?', options: ['Less stress and more freedom', 'Only buying more things', 'Avoiding all fun'], answer: 'Less stress and more freedom' }
+      ],
+      details: [
+        { sentence: 'Ethan got paid every ___ weeks.', answer: 'two' },
+        { sentence: 'His phone broke, his friend had a birthday, and he had to pay for a ___.', answer: 'course' },
+        { sentence: 'At first, savings were maybe ___ percent.', answer: '10' },
+        { sentence: 'Small daily costs can add ___.', answer: 'up' },
+        { sentence: 'He asks himself if he would buy something at full ___.', answer: 'price' }
+      ],
+      trueFalse: [
+        { sentence: 'Ethan always saved money as a teenager.', answer: false },
+        { sentence: 'He was not in debt, but he felt stressed.', answer: true },
+        { sentence: 'His money system gave him more control.', answer: true },
+        { sentence: 'He kept all of his unused subscriptions.', answer: false },
+        { sentence: 'He now tries to spend with purpose.', answer: true }
+      ],
+      productionQuestion: 'Write about a money lesson you learned or a spending habit you want to improve.',
+      sampleAnswer: 'I learned that small purchases can become expensive over time. I used to buy snacks and coffee every day without thinking. Now I check my spending and save a small amount each week. It helps me feel more relaxed.'
+    },
+    {
+      id: 'b1-listening-05-cooking-at-home',
+      order: 5,
+      stage: 'B1.2',
+      title: 'I changed my opinion about cooking',
+      topic: 'habits, cooking and lifestyle change',
+      description: 'Students listen to Sofia explaining how cooking at home changed her spending, health and mood.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f6fb7a1d79eaa6afb5f0f_SCRIPT%202%20(Female%20speaker%20%E2%80%94%20Sofia)_%20I%20changed%20my%20opinion%20about%20cooking%20at%20home.mp3',
+      transcriptText: `Hello, I'm Sofia. A few years ago, I honestly believed I was "not a cooking person." I could make basic food, but I didn't enjoy it. After work, I felt tired, and cooking felt like another job. So I ordered food very often. It was convenient, and I told myself it saved time.
+
+But then I moved to a new apartment and started watching my spending more carefully. At the end of the month, I checked my bank app and saw that food delivery was a huge part of my expenses. I was shocked because I hadn't felt like I was spending that much. It was always "just one meal," but it added up.
+
+So I decided to try cooking at home for two weeks, just as an experiment. I didn't want to become a chef. I just wanted simple meals. I made a shopping list, bought basic ingredients, and chose easy recipes like pasta, rice, salads, and soup.
+
+The first few days were hard because I made small mistakes. I overcooked rice, and once I burned chicken. But then I started learning. I realised cooking is a skill, not a talent. You get better with practice, like anything else.
+
+What surprised me the most was how calm it felt. When I cooked, I wasn't only preparing food. I was taking care of myself. I played music, chopped vegetables slowly, and felt more present. It became a kind of routine that helped me relax. And the food tasted better than I expected, because I could control the ingredients.
+
+Now I still eat out sometimes, and I still order delivery when I have a very busy day. But I don't see cooking as a boring task anymore. I see it as a useful life skill that saves money, improves health, and even improves mood. I didn't expect such a simple habit to change my life, but it really did.`,
+      focus: ['changing opinions', 'habits', 'lifestyle'],
+      words: [
+        { word: 'convenient', meaning: 'easy and useful for a situation' },
+        { word: 'expenses', meaning: 'money that you spend' },
+        { word: 'experiment', meaning: 'trying something to see what happens' },
+        { word: 'ingredient', meaning: 'food used to make a dish' },
+        { word: 'routine', meaning: 'a regular habit or activity' }
+      ],
+      questions: [
+        { question: 'What did Sofia think about cooking before?', options: ['She was not a cooking person', 'She wanted to be a chef', 'She loved cooking every day'], answer: 'She was not a cooking person' },
+        { question: 'What shocked her in the bank app?', options: ['Food delivery cost a lot', 'Rent was cheaper', 'She had no expenses'], answer: 'Food delivery cost a lot' },
+        { question: 'How long was her cooking experiment?', options: ['Two weeks', 'Two days', 'Two months'], answer: 'Two weeks' },
+        { question: 'What did she realise about cooking?', options: ['It is a skill', 'It is only a talent', 'It is impossible'], answer: 'It is a skill' },
+        { question: 'How does she see cooking now?', options: ['As a useful life skill', 'As a boring task only', 'As a waste of time'], answer: 'As a useful life skill' }
+      ],
+      details: [
+        { sentence: 'Sofia moved to a new ___.', answer: 'apartment' },
+        { sentence: 'She chose easy recipes like pasta, rice, salads and ___.', answer: 'soup' },
+        { sentence: 'She overcooked ___ at first.', answer: 'rice' },
+        { sentence: 'She played music and chopped ___ slowly.', answer: 'vegetables' },
+        { sentence: 'Cooking saves money, improves health and improves ___.', answer: 'mood' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia ordered food often because it felt convenient.', answer: true },
+        { sentence: 'She wanted to become a professional chef immediately.', answer: false },
+        { sentence: 'Her first few days of cooking were perfect.', answer: false },
+        { sentence: 'Cooking helped her feel calmer.', answer: true },
+        { sentence: 'She never orders delivery now.', answer: false }
+      ],
+      productionQuestion: 'Write about a habit you changed or want to change. Why did you change it, and what was the result?',
+      sampleAnswer: 'I changed my opinion about walking. I used to think it was boring, but now I walk after work. At first, it was difficult to make time, but after a week I felt calmer. It is a simple habit, but it improves my mood.'
+    },
+    {
+      id: 'b1-listening-06-first-week-office',
+      order: 6,
+      stage: 'B1.2',
+      title: 'First week in the office',
+      topic: 'office etiquette and rules',
+      description: 'Students listen to Ethan describing written and unwritten rules in a new office.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/696f77d424888b9201e07369_SCRIPT%201%20(Male%20speaker%20%E2%80%94%20Ethan)_%20First%20week%20in%20the%20office.mp3',
+      transcriptText: `Hi, I'm Ethan. When I started my current job, I learned something quickly: in an office, you don't only work - you also follow a lot of small rules. Some rules are written, and some are not, but they still matter.
+
+On my first day, my manager said, "You must wear your badge at all times." That was clear. But there were other things I had to discover myself. For example, we have shared meeting rooms. You must book them before you use them, and you must leave the room clean. You can't just walk in and take it if another team has reserved it. I didn't know this, and once I almost interrupted a meeting. It was embarrassing, but it taught me a lesson.
+
+Another thing is communication. In my team, you should reply to messages within a reasonable time, even if it's just "I'll check and get back to you." People don't expect you to answer instantly, so you don't have to be online every second. But you shouldn't disappear for hours without warning, especially during work time.
+
+There are also unwritten rules about noise. You can talk, of course, but you shouldn't speak loudly near people who are concentrating. If you need a long call, you should use a meeting room or a quiet area. And you definitely can't play videos without headphones. That one is a big "no."
+
+I also learned about timing. You must join meetings on time. If you are late, you should send a quick message. It sounds simple, but it shows respect. And if you don't understand something, you should ask. You don't have to pretend you know everything. In fact, it's better to ask early than to make a bigger mistake later.
+
+Now I feel much more comfortable at work. I still make small mistakes sometimes, but I know the basics. Office etiquette is not about being perfect. It's about helping everyone work together in a smooth way.`,
+      focus: ['office rules', 'modals of obligation', 'workplace communication'],
+      words: [
+        { word: 'badge', meaning: 'a small card or object showing who you are' },
+        { word: 'reserved', meaning: 'kept for a particular person or group' },
+        { word: 'reasonable', meaning: 'fair and sensible' },
+        { word: 'unwritten rules', meaning: 'rules people follow even if they are not official' },
+        { word: 'etiquette', meaning: 'polite behavior in a particular situation' }
+      ],
+      questions: [
+        { question: 'What clear rule did Ethan learn on the first day?', options: ['Wear a badge at all times', 'Never use meeting rooms', 'Always work from home'], answer: 'Wear a badge at all times' },
+        { question: 'What mistake did he almost make?', options: ['Interrupting a meeting', 'Losing his badge', 'Missing his train'], answer: 'Interrupting a meeting' },
+        { question: 'What should team members do with messages?', options: ['Reply within a reasonable time', 'Ignore them all day', 'Answer instantly every time'], answer: 'Reply within a reasonable time' },
+        { question: 'Where should people take long calls?', options: ['In a meeting room or quiet area', 'Next to people concentrating', 'In the kitchen only'], answer: 'In a meeting room or quiet area' },
+        { question: 'What is office etiquette about?', options: ['Helping people work together smoothly', 'Being perfect', 'Following only written rules'], answer: 'Helping people work together smoothly' }
+      ],
+      details: [
+        { sentence: 'Ethan says some rules are written and some are ___.', answer: 'not' },
+        { sentence: 'Shared meeting rooms must be ___ before use.', answer: 'booked' },
+        { sentence: 'You should not disappear for hours without ___.', answer: 'warning' },
+        { sentence: 'You cannot play videos without ___.', answer: 'headphones' },
+        { sentence: 'If you are late to a meeting, you should send a quick ___.', answer: 'message' }
+      ],
+      trueFalse: [
+        { sentence: 'Ethan says only written rules matter.', answer: false },
+        { sentence: 'Meeting rooms should be left clean.', answer: true },
+        { sentence: 'People expect Ethan to answer every message instantly.', answer: false },
+        { sentence: 'Asking questions early can prevent bigger mistakes.', answer: true },
+        { sentence: 'Ethan now feels more comfortable at work.', answer: true }
+      ],
+      productionQuestion: 'Write about rules or etiquette in a workplace, classroom or shared space. Use must, should and do not have to.',
+      sampleAnswer: 'In my classroom, students must arrive on time and should turn off loud notifications. We do not have to be silent all the time, but we should listen when someone is speaking. If we do not understand something, we should ask early.'
+    },
+    {
+      id: 'b1-listening-07-weekend-hike',
+      order: 7,
+      stage: 'B1.2',
+      title: 'My weekend hike',
+      topic: 'outdoor activities and stress reduction',
+      description: 'Students listen to Alex describing a weekend hike, preparation, route and benefits.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6972475e6fffe2f71b511e75_B1%20Intermediate)%20%E2%80%94%20%E2%80%9CMy%20Weekend%20Hike%E2%80%9D%20Alex.mp3',
+      transcriptText: `Hi, I'm Alex. Last weekend I went on a hike not far from my city, and it was exactly what I needed. I spend most of my week indoors, so on Saturday morning I decided to get some fresh air and move my body a little.
+
+I didn't plan anything complicated. The night before, I checked the weather, charged my phone, and packed a small backpack. I took a bottle of water, a sandwich, some nuts, and a light jacket. I also wore comfortable shoes because I knew the path could be muddy after rain.
+
+I left home early, around eight, and took a bus to the edge of the city. From there, I walked for about twenty minutes until I reached the start of the trail. At first the hike was easy. The road was wide, and I could walk fast. But after a while it became narrower and steeper. I had to slow down and watch my steps. I met a few people on the way - some were jogging, some were walking dogs, and others were taking photos.
+
+My favorite part was the view near the top. There was a quiet spot with rocks and tall trees, and I could see the city in the distance. I sat there for a while, ate my sandwich, and just listened to the wind. It felt peaceful, like my mind finally had space.
+
+On the way down, I took a different route. It was a bit longer, but it was more interesting because it went next to a small river. I almost slipped once, but luckily I caught myself. When I got back home in the afternoon, I was tired, but in a good way. My legs hurt a little, but my mood was much better.
+
+Now I want to do this more often. It doesn't cost much, it reduces stress, and it helps me feel more active. Next time, I'm going to invite a friend, but I'm also fine going alone.`,
+      focus: ['outdoor activities', 'sequence of events', 'benefits'],
+      words: [
+        { word: 'hike', meaning: 'a long walk in nature' },
+        { word: 'trail', meaning: 'a path through nature' },
+        { word: 'steep', meaning: 'rising or falling sharply' },
+        { word: 'route', meaning: 'the way you go from one place to another' },
+        { word: 'reduce stress', meaning: 'make stress lower' }
+      ],
+      questions: [
+        { question: 'Why did Alex go hiking?', options: ['To get fresh air and move his body', 'To train for a race', 'To meet a tour group'], answer: 'To get fresh air and move his body' },
+        { question: 'What did he do the night before?', options: ['Checked weather and packed a backpack', 'Booked a hotel', 'Bought new shoes'], answer: 'Checked weather and packed a backpack' },
+        { question: 'How did the path change?', options: ['It became narrower and steeper', 'It became flat and sandy', 'It disappeared completely'], answer: 'It became narrower and steeper' },
+        { question: 'What was his favorite part?', options: ['The view near the top', 'The bus ride', 'The muddy path'], answer: 'The view near the top' },
+        { question: 'How did he feel after the hike?', options: ['Tired but in a good mood', 'Angry and bored', 'Too sick to walk'], answer: 'Tired but in a good mood' }
+      ],
+      details: [
+        { sentence: 'Alex left home around ___.', answer: 'eight' },
+        { sentence: 'He took water, a sandwich, nuts and a light ___.', answer: 'jacket' },
+        { sentence: 'He walked about twenty minutes to the start of the ___.', answer: 'trail' },
+        { sentence: 'On the way down, the route went next to a small ___.', answer: 'river' },
+        { sentence: 'Next time, he is going to invite a ___.', answer: 'friend' }
+      ],
+      trueFalse: [
+        { sentence: 'Alex spends most of his week indoors.', answer: true },
+        { sentence: 'He forgot to charge his phone.', answer: false },
+        { sentence: 'The hike was exactly the same from start to finish.', answer: false },
+        { sentence: 'He almost slipped on the way down.', answer: true },
+        { sentence: 'He thinks hiking is expensive.', answer: false }
+      ],
+      productionQuestion: 'Write about an outdoor activity you enjoyed or would like to try. Include preparation, what happened and how you felt.',
+      sampleAnswer: 'I would like to go hiking near my city. I would check the weather, take water and wear comfortable shoes. I think the best part would be the view from the top. It would help me relax and feel more active.'
+    },
+    {
+      id: 'b1-listening-08-day-trip-washington',
+      order: 8,
+      stage: 'B1.2',
+      title: 'A day trip to Washington, D.C.',
+      topic: 'city trip, landmarks and museums',
+      description: 'Students listen to Chris describing a short city trip with transport, sights and impressions.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69724d77ac5a1d06ea9e5c9c_%E2%80%9CA%20Day%20Trip%20to%20Washington%2C%20D.C.%E2%80%9D.mp3',
+      transcriptText: `Hi, I'm Chris. Today I want to tell you about a day trip I took to Washington, D.C. I went there for the first time recently, and I was surprised by how much you can do in one day, even with a simple plan.
+
+I arrived in the morning by train. The first thing I noticed was how clean and organized the city felt, especially around the main streets. I didn't rent a car because traffic can be stressful, and the metro in D.C. is easy to use. I bought a ticket, checked the map, and within minutes I was on my way.
+
+My main goal was to see the National Mall area. It's a long open space with famous monuments and museums, so I started walking and just followed the crowd. I saw the Washington Monument from far away, and it looked huge in real life. After that, I walked toward the Lincoln Memorial. The steps were full of people taking photos, but the atmosphere was still respectful and quiet.
+
+One of the best parts of the trip was visiting a museum. I chose a Smithsonian museum because many of them are free, which is amazing. I spent about an hour inside, but honestly, you could stay there all day. I liked how the exhibits were clear and interactive, not boring like some old museums.
+
+Around lunchtime I got hungry, so I grabbed something simple - just a sandwich and coffee from a small cafe. Prices were a bit higher than in my city, but the service was quick, and I didn't want to waste time sitting too long.
+
+In the afternoon I walked more, and I also stopped near the White House. You can't get very close, of course, but it was still interesting to see it with my own eyes. Before I left, I sat on a bench for a few minutes and watched people: tourists, office workers, families, and students. The city felt busy but not chaotic.
+
+By the evening, I was tired from walking, but I felt happy. D.C. is a great place for a short visit because it's full of history, culture, and landmarks. Next time, I want to explore more neighborhoods and try local food, not just the tourist spots.`,
+      focus: ['travel narrative', 'city landmarks', 'listening for route and impressions'],
+      words: [
+        { word: 'day trip', meaning: 'a trip that starts and ends on the same day' },
+        { word: 'landmark', meaning: 'a famous or important place' },
+        { word: 'monument', meaning: 'a structure built to remember a person or event' },
+        { word: 'exhibit', meaning: 'something shown in a museum' },
+        { word: 'chaotic', meaning: 'very disorganized or confusing' }
+      ],
+      questions: [
+        { question: 'How did Chris arrive in Washington, D.C.?', options: ['By train', 'By car', 'By plane'], answer: 'By train' },
+        { question: 'Why did he not rent a car?', options: ['Traffic can be stressful', 'Cars are not allowed', 'He dislikes maps'], answer: 'Traffic can be stressful' },
+        { question: 'What was his main goal?', options: ['To see the National Mall area', 'To go shopping', 'To visit a friend'], answer: 'To see the National Mall area' },
+        { question: 'Why did he choose a Smithsonian museum?', options: ['Many are free', 'It was empty', 'It served lunch'], answer: 'Many are free' },
+        { question: 'What does he want to do next time?', options: ['Explore neighborhoods and try local food', 'Avoid museums', 'Rent a car all day'], answer: 'Explore neighborhoods and try local food' }
+      ],
+      details: [
+        { sentence: 'Chris bought a ticket and checked the ___.', answer: 'map' },
+        { sentence: 'He walked toward the Lincoln ___.', answer: 'Memorial' },
+        { sentence: 'He spent about an ___ inside the museum.', answer: 'hour' },
+        { sentence: 'For lunch, he grabbed a sandwich and ___.', answer: 'coffee' },
+        { sentence: 'Before he left, he sat on a ___.', answer: 'bench' }
+      ],
+      trueFalse: [
+        { sentence: 'Chris thought a simple plan could still work well.', answer: true },
+        { sentence: 'He thought the metro was difficult to use.', answer: false },
+        { sentence: 'The Lincoln Memorial atmosphere was respectful and quiet.', answer: true },
+        { sentence: 'He thought the museum exhibits were boring.', answer: false },
+        { sentence: 'He felt tired but happy by the evening.', answer: true }
+      ],
+      productionQuestion: 'Write about a day trip you took or would like to take. Mention transport, main sights, food and your overall impression.',
+      sampleAnswer: 'I would like to take a day trip to a nearby city by train. I would visit the old town, a museum and a famous square. For lunch, I would try local food in a small cafe. I think I would feel tired but happy at the end.'
+    },
+    {
+      id: 'b1-listening-09-travel-to-work',
+      order: 9,
+      stage: 'B1.3',
+      title: 'How do you travel to work?',
+      topic: 'commuting and transport choices',
+      description: 'Students listen to Chris describing his daily commute and transport choices.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/697252fa88db469ca8def031_SCRIPT%201%20(Male%20speaker%20%E2%80%94%20Chris)_%20How%20do%20you%20travel%20to%20work_%20(B1).mp3',
+      transcriptText: `Hi, I'm Chris. I live in the suburbs, so I travel to work every day. On weekdays I usually take the train. I leave home at about 7:20, walk to the station, and catch the 7:40 train. The ride takes around 30 minutes. I like the train because it's predictable, and I don't have to sit in traffic. I often listen to a podcast or read the news on my phone.
+
+Sometimes there are delays, especially in winter, and that can be stressful. On those days I try to stay calm and use the time to plan my tasks for the day. I don't drive to work often because parking is expensive in the city center. But if I have an early meeting, I might take a taxi or ask a colleague for a lift. Overall, the train works best for me. It saves time, and it makes my mornings easier.`,
+      focus: ['commuting', 'transport reasons', 'daily routine'],
+      words: [
+        { word: 'suburbs', meaning: 'areas outside the center of a city' },
+        { word: 'predictable', meaning: 'happening in a way you can expect' },
+        { word: 'traffic', meaning: 'cars and other vehicles on the road' },
+        { word: 'delay', meaning: 'a situation when something is late' },
+        { word: 'lift', meaning: 'a ride in someone else\'s car' }
+      ],
+      questions: [
+        { question: 'Where does Chris live?', options: ['In the suburbs', 'In the city center', 'Next to his office'], answer: 'In the suburbs' },
+        { question: 'What transport does he usually take?', options: ['The train', 'A taxi', 'A bike'], answer: 'The train' },
+        { question: 'Why does he like the train?', options: ['It is predictable', 'It is always empty', 'It is free'], answer: 'It is predictable' },
+        { question: 'When are delays more common?', options: ['In winter', 'In summer only', 'At lunchtime'], answer: 'In winter' },
+        { question: 'Why does he not drive often?', options: ['Parking is expensive', 'He cannot drive', 'The office has no roads'], answer: 'Parking is expensive' }
+      ],
+      details: [
+        { sentence: 'Chris leaves home at about ___.', answer: '7:20' },
+        { sentence: 'He catches the ___ train.', answer: '7:40' },
+        { sentence: 'The ride takes around ___ minutes.', answer: '30' },
+        { sentence: 'He often listens to a ___.', answer: 'podcast' },
+        { sentence: 'If he has an early meeting, he might ask a colleague for a ___.', answer: 'lift' }
+      ],
+      trueFalse: [
+        { sentence: 'Chris travels to work every day on weekdays.', answer: true },
+        { sentence: 'He enjoys sitting in traffic.', answer: false },
+        { sentence: 'Delays can be stressful for him.', answer: true },
+        { sentence: 'He drives to work every day.', answer: false },
+        { sentence: 'Overall, the train works best for him.', answer: true }
+      ],
+      productionQuestion: 'Describe how you travel to work, school or another regular place. Explain the advantages and problems.',
+      sampleAnswer: 'I usually take the bus to work. It is cheap and the stop is near my home. Sometimes it is crowded, especially in the morning. If I am late, I take a taxi, but I try not to because it is expensive.'
+    },
+    {
+      id: 'b1-listening-10-relationships',
+      order: 10,
+      stage: 'B1.3',
+      title: 'Stories of relationships',
+      topic: 'friendship and keeping in touch',
+      description: 'Students listen to Anna describing a long friendship and how she keeps it strong.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69725882dec7cc54bc5c82aa_SCRIPT%202%20(Female%20speaker%20%E2%80%94%20Anna)_%20Stories%20of%20relationships%20(B1).mp3',
+      transcriptText: `Hello, I'm Anna. I'd like to talk about a friendship that has lasted many years. I met my best friend when we were teenagers. We were very different - she was confident and outgoing, and I was quiet and careful. But she always supported me, especially when I felt insecure. We shared secrets, studied together, and helped each other through stressful times.
+
+When we grew older, life became busier. She moved to another city, and we didn't see each other often. At one point we almost lost contact. I realized that relationships don't stay strong automatically - you need to make an effort. So we started calling every Sunday. It's not a long call, maybe 20 minutes, but it keeps us close. Sometimes we disagree, of course, but we don't attack each other. We listen, we apologize when necessary, and we move on. For me, this friendship feels like family.`,
+      focus: ['relationships', 'friendship', 'feelings and effort'],
+      words: [
+        { word: 'outgoing', meaning: 'friendly and confident with other people' },
+        { word: 'insecure', meaning: 'not confident about yourself' },
+        { word: 'lose contact', meaning: 'stop communicating with someone' },
+        { word: 'make an effort', meaning: 'try hard to do something' },
+        { word: 'move on', meaning: 'continue after a problem' }
+      ],
+      questions: [
+        { question: 'When did Anna meet her best friend?', options: ['When they were teenagers', 'At work last year', 'In another country'], answer: 'When they were teenagers' },
+        { question: 'How were they different?', options: ['Her friend was outgoing and Anna was quiet', 'They had the same personality', 'Anna was louder than her friend'], answer: 'Her friend was outgoing and Anna was quiet' },
+        { question: 'What happened when they grew older?', options: ['Life became busier', 'They lived together', 'They stopped caring'], answer: 'Life became busier' },
+        { question: 'How do they keep close now?', options: ['They call every Sunday', 'They travel every week', 'They work together'], answer: 'They call every Sunday' },
+        { question: 'What do they do when they disagree?', options: ['Listen, apologize and move on', 'Attack each other', 'Never speak again'], answer: 'Listen, apologize and move on' }
+      ],
+      details: [
+        { sentence: 'Anna\'s friend was confident and ___.', answer: 'outgoing' },
+        { sentence: 'Anna was quiet and ___.', answer: 'careful' },
+        { sentence: 'At one point, they almost lost ___.', answer: 'contact' },
+        { sentence: 'Their Sunday call is maybe ___ minutes.', answer: '20' },
+        { sentence: 'For Anna, the friendship feels like ___.', answer: 'family' }
+      ],
+      trueFalse: [
+        { sentence: 'Anna and her friend were very similar as teenagers.', answer: false },
+        { sentence: 'Her friend supported her during difficult times.', answer: true },
+        { sentence: 'Anna thinks relationships stay strong automatically.', answer: false },
+        { sentence: 'They sometimes disagree.', answer: true },
+        { sentence: 'Anna values this friendship deeply.', answer: true }
+      ],
+      productionQuestion: 'Write about an important friendship or relationship. How did it start, and how do you keep it strong?',
+      sampleAnswer: 'I met my close friend at language school. At first, we were shy, but we helped each other with homework. Now we are both busy, so we send messages every week. We sometimes disagree, but we listen and respect each other.'
+    },
+    {
+      id: 'b1-listening-11-keep-fit',
+      order: 11,
+      stage: 'B1.3',
+      title: 'How do you keep fit?',
+      topic: 'fitness habits and motivation',
+      description: 'Students listen to Chris describing simple ways to keep fit without a strict gym routine.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975cb76b0ff80ea782e87a7_SCRIPT%201%20(Male%20speaker%20%E2%80%94%20Chris)_%20How%20do%20you%20keep%20fit_%20(B1).mp3',
+      transcriptText: `Hi, I'm Chris. I try to keep fit in simple ways because I don't love strict gym routines. On weekdays, I walk a lot - usually 8,000 to 10,000 steps - because I get off the bus two stops early and walk the rest. Two evenings a week, I do a short workout at home: push-ups, squats, and planks. It's only about 20 minutes, but I do it regularly, and that's what matters. On Saturdays, I go cycling with a friend in a park near my apartment. The hardest part for me is motivation after a long day, so I keep everything easy and realistic. When I feel stressed, even a quick walk helps me clear my head and sleep better.
+
+Anna: How do you keep fit?`,
+      focus: ['health and fitness', 'habits', 'motivation'],
+      words: [
+        { word: 'keep fit', meaning: 'stay healthy and physically active' },
+        { word: 'strict routine', meaning: 'a very fixed and demanding plan' },
+        { word: 'workout', meaning: 'exercise session' },
+        { word: 'motivation', meaning: 'the reason or energy to do something' },
+        { word: 'clear my head', meaning: 'feel calmer and think more clearly' }
+      ],
+      questions: [
+        { question: 'Why does Chris keep fitness simple?', options: ['He does not love strict gym routines', 'He trains for competitions', 'He has a personal trainer'], answer: 'He does not love strict gym routines' },
+        { question: 'How many steps does he usually walk?', options: ['8,000 to 10,000', '1,000 to 2,000', '20,000 to 30,000'], answer: '8,000 to 10,000' },
+        { question: 'How often does he work out at home?', options: ['Two evenings a week', 'Every morning', 'Once a month'], answer: 'Two evenings a week' },
+        { question: 'What does he do on Saturdays?', options: ['Goes cycling with a friend', 'Runs a marathon', 'Sleeps all day'], answer: 'Goes cycling with a friend' },
+        { question: 'What is the hardest part for him?', options: ['Motivation after a long day', 'Finding a park', 'Buying equipment'], answer: 'Motivation after a long day' }
+      ],
+      details: [
+        { sentence: 'Chris gets off the bus two stops ___.', answer: 'early' },
+        { sentence: 'His home workout includes push-ups, squats and ___.', answer: 'planks' },
+        { sentence: 'The workout is about ___ minutes.', answer: '20' },
+        { sentence: 'He cycles in a park near his ___.', answer: 'apartment' },
+        { sentence: 'A quick walk helps him sleep ___.', answer: 'better' }
+      ],
+      trueFalse: [
+        { sentence: 'Chris loves strict gym routines.', answer: false },
+        { sentence: 'He tries to exercise regularly.', answer: true },
+        { sentence: 'He goes cycling alone every Saturday.', answer: false },
+        { sentence: 'He keeps his fitness habits realistic.', answer: true },
+        { sentence: 'Walking helps him when he is stressed.', answer: true }
+      ],
+      productionQuestion: 'Write about how you keep fit or how you would like to be more active. Mention routine, motivation and problems.',
+      sampleAnswer: 'I try to keep fit by walking every evening. I do not like strict routines, so I keep it simple. Sometimes motivation is difficult after work, but I feel better after moving. I would like to add short workouts twice a week.'
+    },
+    {
+      id: 'b1-listening-12-moving-apartment',
+      order: 12,
+      stage: 'B1.3',
+      title: 'Moving to a new apartment',
+      topic: 'fresh starts and changing habits',
+      description: 'Students listen to Elena describing a move, decluttering and creating a calmer routine.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975d3adafd5a9c2c43b0346_SCRIPT%20(Female%20speaker%20%E2%80%94%20Elena)_%20Moving%20to%20a%20new%20apartment%20and%20starting%20over%20(B1).mp3',
+      transcriptText: `Hi, I'm Elena. Recently, I moved to a new apartment, and it felt like a fresh start for me. I didn't move to a different city, but even changing neighborhoods made a big difference. My old place was small and noisy. The street was busy, and at night I could hear cars and people outside. I got used to it, but I was always tired in the morning.
+
+When I found the new apartment, it wasn't perfect, but it had two things I really wanted: more light and more quiet. The first week was stressful. I had boxes everywhere, and I couldn't find simple things like my phone charger or a clean towel. I also realized I had too many unnecessary items. So I started sorting my stuff. I donated some clothes, threw away broken things, and kept only what I actually use.
+
+Now I'm slowly making the space feel like home. I bought a small desk because I sometimes work online, and I put a plant near the window. I also made a simple routine: I wake up, open the curtains, and drink coffee while I plan my day. It sounds small, but it helps me feel calm and organized.
+
+The best part is that this move pushed me to change other habits too. I started walking more, cooking at home more often, and spending less time on my phone in the evening. I still have a lot to do - like hanging pictures and choosing a lamp - but I enjoy the process. For me, moving wasn't only about a new apartment. It was about creating a better daily life, step by step.`,
+      focus: ['life changes', 'home', 'habits'],
+      words: [
+        { word: 'fresh start', meaning: 'a new beginning' },
+        { word: 'neighborhood', meaning: 'an area of a town or city' },
+        { word: 'unnecessary', meaning: 'not needed' },
+        { word: 'donate', meaning: 'give something to help others' },
+        { word: 'step by step', meaning: 'gradually, one action at a time' }
+      ],
+      questions: [
+        { question: 'What did the move feel like for Elena?', options: ['A fresh start', 'A complete disaster', 'A holiday'], answer: 'A fresh start' },
+        { question: 'What were two problems in her old place?', options: ['Small and noisy', 'Too bright and quiet', 'Too expensive and empty'], answer: 'Small and noisy' },
+        { question: 'What did she do with unnecessary items?', options: ['Sorted them, donated some and threw away broken things', 'Moved them all', 'Bought more boxes'], answer: 'Sorted them, donated some and threw away broken things' },
+        { question: 'What routine helps her feel calm?', options: ['Opening curtains and planning her day with coffee', 'Checking her phone all morning', 'Sleeping late'], answer: 'Opening curtains and planning her day with coffee' },
+        { question: 'What did the move push her to change?', options: ['Other habits', 'Her job immediately', 'Her city'], answer: 'Other habits' }
+      ],
+      details: [
+        { sentence: 'Elena\'s old street was ___.', answer: 'busy' },
+        { sentence: 'The new apartment had more light and more ___.', answer: 'quiet' },
+        { sentence: 'She could not find her phone charger or a clean ___.', answer: 'towel' },
+        { sentence: 'She put a plant near the ___.', answer: 'window' },
+        { sentence: 'She still needs to hang pictures and choose a ___.', answer: 'lamp' }
+      ],
+      trueFalse: [
+        { sentence: 'Elena moved to a different city.', answer: false },
+        { sentence: 'The first week in the new apartment was stressful.', answer: true },
+        { sentence: 'She kept every unnecessary item.', answer: false },
+        { sentence: 'A small morning routine helps her feel organized.', answer: true },
+        { sentence: 'For Elena, the move was also about daily life.', answer: true }
+      ],
+      productionQuestion: 'Write about a time you moved, changed your room or started a new routine. What changed in your daily life?',
+      sampleAnswer: 'When I changed my room, it felt like a fresh start. I threw away old papers and made a small desk for studying. Now I open the window every morning and plan my day. It helps me feel calmer and more organized.'
+    },
+    {
+      id: 'b1-listening-13-are-exams-necessary',
+      order: 13,
+      stage: 'B1.4',
+      title: 'Are exams necessary?',
+      topic: 'education opinion and balanced arguments',
+      description: 'Students listen to Ryan giving a balanced opinion about exams, pressure and fairness.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975e60d5bf60318198f54c3_SCRIPT%201%20(Male%20speaker%20%E2%80%94%20Ryan).mp3',
+      transcriptText: `Hi, I'm Ryan. I think exams are necessary, but only in a smart way. In school and university, we need some method to check progress. Without exams, it can be hard to know if students really understand the material or if they are just present in class. Exams create a clear deadline, and deadlines can help people focus. When I was a student, I didn't always feel motivated, but before an exam I studied seriously. That pressure helped me build discipline.
+
+At the same time, I don't believe exams should be the only measure. Some people are good at tests, but they don't use the knowledge well in real life. Others understand a subject deeply, but they feel anxious, forget everything, and perform badly for two hours. That doesn't mean they are "bad students." It means the method is limited.
+
+So for me, exams are useful if they are balanced with other things: projects, presentations, and regular homework. Also, exams should test understanding, not memorization. If an exam only asks you to repeat facts, you will forget them quickly. But if it asks you to explain ideas, solve problems, or apply knowledge, then it becomes meaningful. In short, yes - exams are necessary, but the system needs variety and fairness.`,
+      focus: ['opinion listening', 'education', 'balanced arguments'],
+      words: [
+        { word: 'method', meaning: 'a way of doing something' },
+        { word: 'deadline', meaning: 'the final time or date to do something' },
+        { word: 'discipline', meaning: 'the ability to control yourself and work regularly' },
+        { word: 'measure', meaning: 'a way to judge or check something' },
+        { word: 'memorization', meaning: 'learning something by repeating it until you remember it' }
+      ],
+      questions: [
+        { question: 'What is Ryan main opinion?', options: ['Exams are necessary if used smartly', 'Exams should disappear completely', 'Only exams matter'], answer: 'Exams are necessary if used smartly' },
+        { question: 'What do exams create?', options: ['A clear deadline', 'No pressure at all', 'More holidays'], answer: 'A clear deadline' },
+        { question: 'Why can exams be limited?', options: ['Some anxious students perform badly', 'Everyone loves exams', 'They never test knowledge'], answer: 'Some anxious students perform badly' },
+        { question: 'What should exams be balanced with?', options: ['Projects, presentations and homework', 'More exams', 'Only attendance'], answer: 'Projects, presentations and homework' },
+        { question: 'What should exams test?', options: ['Understanding', 'Only memorization', 'Only handwriting'], answer: 'Understanding' }
+      ],
+      details: [
+        { sentence: 'Exams can help people ___.', answer: 'focus' },
+        { sentence: 'Pressure helped Ryan build ___.', answer: 'discipline' },
+        { sentence: 'Some people feel anxious and ___ everything.', answer: 'forget' },
+        { sentence: 'Exams should not only ask students to repeat ___.', answer: 'facts' },
+        { sentence: 'Ryan says the system needs variety and ___.', answer: 'fairness' }
+      ],
+      trueFalse: [
+        { sentence: 'Ryan thinks exams are always perfect.', answer: false },
+        { sentence: 'Ryan studied seriously before exams.', answer: true },
+        { sentence: 'He thinks exams should be the only measure.', answer: false },
+        { sentence: 'He thinks projects and presentations can help balance assessment.', answer: true },
+        { sentence: 'He says exams should test understanding.', answer: true }
+      ],
+      productionQuestion: 'Give your opinion about exams. Are they necessary? Give two reasons and one possible problem.',
+      sampleAnswer: 'I think exams are necessary, but they should not be the only measure. They help students focus and show what they understand. However, some students feel very anxious in exams. Schools should also use projects and presentations.'
+    },
+    {
+      id: 'b1-listening-14-coffee-shops',
+      order: 14,
+      stage: 'B1.4',
+      title: 'Why coffee shops became popular',
+      topic: 'modern lifestyle and city life',
+      description: 'Students listen to Natalie explaining why coffee shops are popular worldwide.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975ed1d4e7be7358d249eae_Why%20Coffee%20Shops%20Became%20So%20Popular%20Worldwide.mp3',
+      transcriptText: `Hi, I'm Natalie. Today I want to talk about something we see almost everywhere: coffee shops. In many cities, it feels like there is a cafe on every corner. In my opinion, coffee shops became so popular worldwide not only because of coffee, but because of the experience and the lifestyle they offer.
+
+First, coffee shops are comfortable "third places." Home is the first place, work or school is the second, and a cafe becomes the third. People go there to relax, meet friends, or simply sit alone with a book. The atmosphere is usually warm: soft music, nice smells, and a calm feeling. Even if you are busy, you can take a short break and feel better in ten minutes.
+
+Second, coffee shops are useful for modern life. Many people work remotely now, so they need a place with Wi-Fi, a table, and a bit of background noise. A cafe gives you that without the pressure of an office. You can answer emails, study, or prepare for an exam. Some cafes even design their space for this: they have sockets, bigger tables, and quiet corners.
+
+Another reason is social media. Coffee drinks look beautiful. People love taking photos of cappuccino foam, colorful lattes, and desserts. Cafes often understand this and create "Instagram-friendly" spaces. This makes the cafe popular online, and then more people want to visit it in real life.
+
+Finally, coffee culture has become international. Years ago, many people drank simple instant coffee at home. Now we have espresso, latte, flat white, cold brew, and many other options. People like to try new tastes and feel a little "modern" and global.
+
+So, I think coffee shops went global because they are more than a place to drink coffee. They are places to rest, work, connect, and feel part of city life.`,
+      focus: ['opinion explanation', 'city life', 'modern habits'],
+      words: [
+        { word: 'worldwide', meaning: 'in many countries around the world' },
+        { word: 'third place', meaning: 'a social place that is not home or work' },
+        { word: 'remote work', meaning: 'working away from an office' },
+        { word: 'background noise', meaning: 'sound around you that is not the main focus' },
+        { word: 'global', meaning: 'connected with the whole world' }
+      ],
+      questions: [
+        { question: 'What is Natalie main idea?', options: ['Coffee shops offer experience and lifestyle', 'Coffee shops are only about cheap coffee', 'Coffee shops are disappearing'], answer: 'Coffee shops offer experience and lifestyle' },
+        { question: 'What is a cafe as a third place?', options: ['A place besides home and work or school', 'A kitchen at home', 'A private office'], answer: 'A place besides home and work or school' },
+        { question: 'Why are cafes useful for remote workers?', options: ['They offer Wi-Fi, tables and background noise', 'They ban laptops', 'They are always silent'], answer: 'They offer Wi-Fi, tables and background noise' },
+        { question: 'How does social media help cafes?', options: ['Photos make cafes popular online', 'It stops people visiting', 'It makes coffee cheaper'], answer: 'Photos make cafes popular online' },
+        { question: 'What does Natalie say coffee shops are places to do?', options: ['Rest, work and connect', 'Only drink instant coffee', 'Avoid city life'], answer: 'Rest, work and connect' }
+      ],
+      details: [
+        { sentence: 'In many cities, it feels like there is a cafe on every ___.', answer: 'corner' },
+        { sentence: 'The atmosphere often has soft music and nice ___.', answer: 'smells' },
+        { sentence: 'Some cafes have sockets, bigger tables and quiet ___.', answer: 'corners' },
+        { sentence: 'People take photos of cappuccino foam, colorful lattes and ___.', answer: 'desserts' },
+        { sentence: 'Natalie mentions espresso, latte, flat white and cold ___.', answer: 'brew' }
+      ],
+      trueFalse: [
+        { sentence: 'Natalie says coffee shops are popular only because of coffee.', answer: false },
+        { sentence: 'Cafes can be useful for people who study or work remotely.', answer: true },
+        { sentence: 'Social media can make cafes more popular.', answer: true },
+        { sentence: 'Coffee culture has stayed local and has not become international.', answer: false },
+        { sentence: 'Natalie sees cafes as part of city life.', answer: true }
+      ],
+      productionQuestion: 'Explain why a place or habit has become popular. Give at least three reasons.',
+      sampleAnswer: 'I think coworking spaces became popular because many people work remotely. They offer tables, internet and a professional atmosphere. They also help people meet others instead of working alone at home. For me, they are useful if you need focus.'
+    },
+    {
+      id: 'b1-listening-15-grand-canyon',
+      order: 15,
+      stage: 'B1.4',
+      title: 'The Grand Canyon',
+      topic: 'natural places and travel safety',
+      description: 'Students listen to Mark describing the Grand Canyon, visitor options and safety advice.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975f2ec5259031cc0e372e6_Grand%20Canyon.mp3',
+      transcriptText: `Hi, I'm Mark. Today I want to talk about the Grand Canyon in the USA. It is one of the most famous natural places in the world, and it really feels unreal when you see it for the first time.
+
+The Grand Canyon is in Arizona, and it was made by the Colorado River over a very long time. The canyon is huge. It is deep, wide, and full of different colors. The rocks can look red, orange, brown, and even purple, depending on the light. In the morning and at sunset, the view is especially beautiful because the colors change every minute.
+
+Many visitors go to the South Rim because it is easier to reach and it has lots of viewpoints. You can walk along the rim, stop at different places, and take photos. There are also short hiking trails if you want to go a little lower and feel the size of the canyon more directly. But you need to be careful. The weather can change quickly, and the heat can be strong, especially in summer. It's important to bring water, wear good shoes, and not take risks.
+
+Some people also visit the Skywalk, a glass bridge where you can stand above the canyon. Others choose a helicopter tour to see the canyon from the air. If you like adventure, you can even hike down toward the river, but that needs planning and good fitness.
+
+For me, the Grand Canyon is not just a tourist spot. It makes you feel small in a good way. It reminds you how powerful nature is, and how much time it takes to create something so amazing. If you ever travel in the USA, I think it's a place worth seeing at least once.`,
+      focus: ['travel description', 'nature', 'safety advice'],
+      words: [
+        { word: 'canyon', meaning: 'a deep valley with steep sides' },
+        { word: 'viewpoint', meaning: 'a place where you can see a good view' },
+        { word: 'rim', meaning: 'the edge of something round or deep' },
+        { word: 'take risks', meaning: 'do something dangerous' },
+        { word: 'tourist spot', meaning: 'a place popular with visitors' }
+      ],
+      questions: [
+        { question: 'Where is the Grand Canyon?', options: ['In Arizona', 'In California', 'In Canada'], answer: 'In Arizona' },
+        { question: 'What made the Grand Canyon over time?', options: ['The Colorado River', 'A city project', 'A forest fire'], answer: 'The Colorado River' },
+        { question: 'Why do many visitors go to the South Rim?', options: ['It is easier to reach', 'It is empty', 'It has no viewpoints'], answer: 'It is easier to reach' },
+        { question: 'What safety advice does Mark give?', options: ['Bring water, wear good shoes and avoid risks', 'Go without planning', 'Visit only at night'], answer: 'Bring water, wear good shoes and avoid risks' },
+        { question: 'How does the Grand Canyon make Mark feel?', options: ['Small in a good way', 'Bored', 'Angry'], answer: 'Small in a good way' }
+      ],
+      details: [
+        { sentence: 'The rocks can look red, orange, brown and even ___.', answer: 'purple' },
+        { sentence: 'The view is especially beautiful in the morning and at ___.', answer: 'sunset' },
+        { sentence: 'Visitors can walk along the ___.', answer: 'rim' },
+        { sentence: 'The Skywalk is a glass ___.', answer: 'bridge' },
+        { sentence: 'A hike down toward the river needs planning and good ___.', answer: 'fitness' }
+      ],
+      trueFalse: [
+        { sentence: 'The Grand Canyon is a famous natural place.', answer: true },
+        { sentence: 'The canyon is small and has only one color.', answer: false },
+        { sentence: 'The weather and heat can be dangerous.', answer: true },
+        { sentence: 'A helicopter tour lets visitors see the canyon from the air.', answer: true },
+        { sentence: 'Mark thinks the Grand Canyon is not worth visiting.', answer: false }
+      ],
+      productionQuestion: 'Describe a natural place you have visited or want to visit. Mention what it looks like, what people can do there and any safety advice.',
+      sampleAnswer: 'I would like to visit a mountain lake. The water is clear, and the view looks peaceful. People can walk around the lake and take photos. They should bring warm clothes because the weather can change quickly.'
+    },
+    {
+      id: 'b1-listening-16-learning-new-skill',
+      order: 16,
+      stage: 'B1.5',
+      title: 'Learning a new skill for the future',
+      topic: 'digital skills, AI tools and personal growth',
+      description: 'Students listen to Sofia explaining why and how she is learning future-ready digital skills.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6975f90657c0ac11f0f2fe11_SCRIPT%20(Female%20speaker%20%E2%80%94%20Sofia)_%20%E2%80%9CLearning%20a%20New%20Skill%20for%20the%20Future%E2%80%9D_.mp3',
+      transcriptText: `Hi, I'm Sofia. Today I want to talk about learning a new skill, because I'm trying to change my life step by step. This year I decided to learn digital skills for the future, not just for fun. I want to feel more confident at work and have more options later.
+
+A few months ago, I noticed something simple: many jobs are changing. People use online tools, automation, and AI more and more. At first, it sounded scary, because I thought, "This is not for me." But then I realized that I don't need to be a genius. I just need a clear plan and a little practice every day.
+
+So I started small. I chose one topic: how to organize tasks and save time. I learned how to use calendars, reminders, and simple templates. Then I tried basic automation - like sending messages automatically or moving information from one place to another. It felt difficult in the beginning, but after a week I could already see results. I wasted less time, and I felt calmer.
+
+Now I'm learning how to write better prompts for AI tools. I use them to check my English, create short texts, and explain words in a simple way. I don't copy everything. I read the result, change it, and learn from it. It's like having a patient tutor.
+
+My next goal is to build a small project. I want to create a simple learning page with short listening texts and exercises. I will improve it every month. I know it won't be perfect at first, but that's okay. The important thing is progress.
+
+For me, learning a new skill is not only about technology. It's about preparing for the future, being flexible, and believing that I can grow.`,
+      focus: ['learning skills', 'future work', 'technology vocabulary'],
+      words: [
+        { word: 'digital skills', meaning: 'abilities connected with computers and online tools' },
+        { word: 'automation', meaning: 'using technology to do tasks automatically' },
+        { word: 'template', meaning: 'a ready structure you can reuse' },
+        { word: 'prompt', meaning: 'an instruction or question for an AI tool' },
+        { word: 'flexible', meaning: 'able to change or adapt' }
+      ],
+      questions: [
+        { question: 'Why is Sofia learning digital skills?', options: ['To feel confident and have more options', 'Only for fun', 'Because her friends forced her'], answer: 'To feel confident and have more options' },
+        { question: 'What first sounded scary to her?', options: ['Online tools, automation and AI', 'Learning English', 'Making coffee'], answer: 'Online tools, automation and AI' },
+        { question: 'What topic did she start with?', options: ['Organizing tasks and saving time', 'Designing video games', 'Repairing phones'], answer: 'Organizing tasks and saving time' },
+        { question: 'How does she use AI tools?', options: ['To check English and create short texts', 'To copy everything', 'To avoid learning'], answer: 'To check English and create short texts' },
+        { question: 'What is her next goal?', options: ['Build a small learning project', 'Stop studying', 'Change countries'], answer: 'Build a small learning project' }
+      ],
+      details: [
+        { sentence: 'Sofia wants to change her life step by ___.', answer: 'step' },
+        { sentence: 'She learned to use calendars, reminders and simple ___.', answer: 'templates' },
+        { sentence: 'After a week, she wasted less time and felt ___.', answer: 'calmer' },
+        { sentence: 'She says AI feels like a patient ___.', answer: 'tutor' },
+        { sentence: 'The important thing is ___.', answer: 'progress' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia believes she needs to be a genius to learn digital skills.', answer: false },
+        { sentence: 'She started with small practical tools.', answer: true },
+        { sentence: 'She copies everything AI produces.', answer: false },
+        { sentence: 'She wants to improve her project every month.', answer: true },
+        { sentence: 'For Sofia, learning is also about confidence and growth.', answer: true }
+      ],
+      productionQuestion: 'Write about a new skill you want to learn. Why is it useful, and how will you start?',
+      sampleAnswer: 'I want to learn basic design skills because they can help me at work. I will start with simple videos and practise a little every day. I do not need to be perfect at first. The most important thing is progress.'
+    },
+    {
+      id: 'b1-listening-17-social-media-billionaires',
+      order: 17,
+      stage: 'B1.5',
+      title: 'Social media billionaires',
+      topic: 'technology companies and online communities',
+      description: 'Students listen to Alex describing how social media founders built large companies and what problems social networks create.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69760de39b53bdf7dbf45b9b_Social%20Media%20Billionaires_.mp3',
+      transcriptText: `Hi, I'm Alex. When people talk about new, modern billionaires, many of them made their fortune from social networks and online communities.
+
+A good example is Mark Zuckerberg. He started Facebook as a small project, and it later grew into a huge company with different apps and services. Another example is Evan Spiegel, one of the creators of Snapchat. His idea was simple: people wanted quick photos and messages that feel private and fun.
+
+There are other stories too. Jack Dorsey helped build Twitter, and later he worked on payment technology as well. And in recent years, TikTok became a global trend. Its parent company is ByteDance, founded by Zhang Yiming. A product like that can grow very fast because people share videos every day.
+
+What do these stories have in common? First, they built something people use daily. Second, they grew through sharing and strong communities. And third, they earned money through ads, partnerships, and sometimes subscriptions.
+
+But it's not only success. Social networks also bring big problems: privacy, fake news, addiction, and pressure from governments. In the future, new billionaires may come from creator tools, short video, and AI features inside social apps. The main lesson is simple: build something useful, and protect trust - because trust is the real long-term value.`,
+      focus: ['technology', 'business listening', 'advantages and problems'],
+      words: [
+        { word: 'fortune', meaning: 'a very large amount of money' },
+        { word: 'founder', meaning: 'a person who starts a company or organization' },
+        { word: 'global trend', meaning: 'something popular around the world' },
+        { word: 'partnership', meaning: 'working together with another person or company' },
+        { word: 'trust', meaning: 'belief that someone or something is honest and reliable' }
+      ],
+      questions: [
+        { question: 'Where did many modern billionaires make their fortune?', options: ['Social networks and online communities', 'Traditional farms', 'Local libraries'], answer: 'Social networks and online communities' },
+        { question: 'What did Facebook become?', options: ['A huge company with different apps and services', 'A small private school project only', 'A video game'], answer: 'A huge company with different apps and services' },
+        { question: 'Why can a product like TikTok grow fast?', options: ['People share videos every day', 'Nobody uses videos', 'It works only offline'], answer: 'People share videos every day' },
+        { question: 'How do these companies often earn money?', options: ['Ads, partnerships and subscriptions', 'Only donations', 'Selling buildings'], answer: 'Ads, partnerships and subscriptions' },
+        { question: 'What is the long-term value according to Alex?', options: ['Trust', 'Noise', 'Speed only'], answer: 'Trust' }
+      ],
+      details: [
+        { sentence: 'Evan Spiegel was one of the creators of ___.', answer: 'Snapchat' },
+        { sentence: 'Jack Dorsey helped build ___.', answer: 'Twitter' },
+        { sentence: 'TikTok parent company is ___.', answer: 'ByteDance' },
+        { sentence: 'Social networks can bring problems like privacy and fake ___.', answer: 'news' },
+        { sentence: 'Future billionaires may come from creator tools, short video and ___ features.', answer: 'AI' }
+      ],
+      trueFalse: [
+        { sentence: 'All social media success stories are exactly the same.', answer: false },
+        { sentence: 'Many successful apps are used daily by people.', answer: true },
+        { sentence: 'Social networks have no problems at all.', answer: false },
+        { sentence: 'Trust is important for long-term value.', answer: true },
+        { sentence: 'Alex mentions ads and partnerships as income sources.', answer: true }
+      ],
+      productionQuestion: 'Write about a popular app, website or technology. Why do people use it, and what problems can it create?',
+      sampleAnswer: 'Many people use video apps because they are entertaining and easy to share. They can help creators reach an audience quickly. However, they can also waste time and create privacy problems. I think useful technology should protect trust.'
+    },
+    {
+      id: 'b1-listening-18-community-gardens',
+      order: 18,
+      stage: 'B1 review',
+      title: 'Community gardens in the city',
+      topic: 'community, nature and city life',
+      description: 'Students listen to Sophie describing how community gardens help people connect and feel calmer in big cities.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/69763a21cb59e12ed442e2e7_Community%20Gardens%20in%20the%20City_.mp3',
+      transcriptText: `Hi, I'm Sophie. Today I want to talk about something I really like in big cities: community gardens.
+
+A community garden is a small green space where people grow vegetables, herbs, and flowers together. It can be in a quiet corner of a park, behind apartment buildings, or even on a rooftop. At first, I thought it was only for people who already knew a lot about plants. But then I joined one near my home, and I learned that beginners are welcome too.
+
+In our garden, everyone has a small job. Some people water the plants, others pull weeds, and someone checks if the soil is dry. We grow tomatoes, cucumbers, mint, basil, and sometimes strawberries. It's not a perfect system - sometimes we forget to water, and sometimes insects eat the leaves. But we help each other, and the garden still grows.
+
+For me, the best part is not only the food. It's the feeling of community. I meet neighbors I never talked to before. We share seeds, we share advice, and sometimes we share simple recipes. It also changes the way I think about shopping. When you grow even a little food, you understand how much work is behind it.
+
+Another thing I like is how it helps the city feel calmer. After a stressful day, I can spend thirty minutes in the garden, and my mind slows down. I don't look at my phone so much, and I feel more present.
+
+In the future, I think community gardens will become even more important. Cities are getting bigger, and people want more nature, cleaner air, and healthier habits. A small garden won't solve every problem, but it can make everyday life better - one green corner at a time.`,
+      focus: ['community', 'environment', 'B1 listening review'],
+      words: [
+        { word: 'community garden', meaning: 'a shared place where people grow plants together' },
+        { word: 'herbs', meaning: 'plants used to add flavor to food' },
+        { word: 'soil', meaning: 'the earth where plants grow' },
+        { word: 'weeds', meaning: 'unwanted plants' },
+        { word: 'present', meaning: 'focused on the current moment' }
+      ],
+      questions: [
+        { question: 'What is a community garden?', options: ['A shared green space for growing plants', 'A private supermarket', 'A school building'], answer: 'A shared green space for growing plants' },
+        { question: 'What did Sophie learn after joining?', options: ['Beginners are welcome', 'Only experts can join', 'Plants are not allowed'], answer: 'Beginners are welcome' },
+        { question: 'What jobs do people do in the garden?', options: ['Water plants, pull weeds and check soil', 'Sell cars', 'Paint apartments'], answer: 'Water plants, pull weeds and check soil' },
+        { question: 'What is the best part for Sophie?', options: ['The feeling of community', 'Only the free food', 'Avoiding all neighbors'], answer: 'The feeling of community' },
+        { question: 'Why might gardens become more important?', options: ['People want more nature and healthier habits', 'Cities are getting smaller', 'No one likes green spaces'], answer: 'People want more nature and healthier habits' }
+      ],
+      details: [
+        { sentence: 'A community garden can be on a ___.', answer: 'rooftop' },
+        { sentence: 'They grow tomatoes, cucumbers, mint, basil and sometimes ___.', answer: 'strawberries' },
+        { sentence: 'Sometimes insects eat the ___.', answer: 'leaves' },
+        { sentence: 'Sophie can spend ___ minutes in the garden after a stressful day.', answer: 'thirty' },
+        { sentence: 'A small garden can make everyday life better one green ___ at a time.', answer: 'corner' }
+      ],
+      trueFalse: [
+        { sentence: 'Sophie likes community gardens in big cities.', answer: true },
+        { sentence: 'Community gardens are only for plant experts.', answer: false },
+        { sentence: 'The garden system is perfect all the time.', answer: false },
+        { sentence: 'The garden helps Sophie feel more present.', answer: true },
+        { sentence: 'Sophie thinks community gardens can solve every problem.', answer: false }
+      ],
+      productionQuestion: 'Write about a community project or green space. How does it help people and the city?',
+      sampleAnswer: 'A small park near my home helps people relax and meet neighbors. Families walk there, children play, and older people sit on benches. It does not solve every city problem, but it makes the area calmer and friendlier.'
+    }
+  ].map(buildListeningReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B1 = {
@@ -2850,6 +3812,6 @@
     vocabulary: READY_VOCABULARY_LESSONS_B1,
     reading: READY_READING_LESSONS_B1,
     writing: READY_WRITING_LESSONS_B1,
-    listening: root.lessons.B1?.listening || []
+    listening: READY_LISTENING_LESSONS_B1
   };
 })();
