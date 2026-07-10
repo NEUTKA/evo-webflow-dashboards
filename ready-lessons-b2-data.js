@@ -60,7 +60,7 @@
     },
     listening: {
       description: 'B2 listening pathway space for interviews, discussions, lectures, opinions and longer narratives.',
-      plannedTopics: []
+      plannedTopics: ['Travel problems', 'Small businesses', 'Traditional skills', 'Workplace systems', 'Air travel', 'Delivery work', 'Routines', 'Community spaces', 'Music and mood', 'Decision fatigue', 'Local shops', 'Remote work', 'Music and memory', 'Volunteering', 'Travel surprises', 'Fast fashion', 'Quiet cities', 'Career change']
     }
   };
 
@@ -2845,6 +2845,1052 @@
     }
   ].map(buildWritingReadyLesson);
 
+  function buildListeningReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2',
+      skill: 'listening',
+      stage: config.stage || 'B2',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 40,
+      description: config.description,
+      audioUrl: config.audioUrl,
+      supportTitle: 'Audio and transcript',
+      supportText: `Transcript:\n${config.transcriptText}`,
+      focus: config.focus || ['listening for gist', 'listening for detail', 'inference and speaker attitude'],
+      teacherNotes: config.teacherNotes || 'Ask the student to listen once for gist, complete the main tasks, then listen again with the transcript to notice attitude, implied meaning, discourse markers and useful B2 phrases.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before listening: useful words',
+          prompt: 'Match each useful word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Listening comprehension',
+          prompt: 'Listen and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Listen for details',
+          prompt: 'Type the missing word, number or phrase from the audio.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Listen again and check the transcript.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 7-9 sentences responding to the listening topic.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Listen again and choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_LISTENING_LESSONS_B2 = [
+    {
+      id: 'b2-listening-01-train-cancelled',
+      order: 1,
+      stage: 'B2.1',
+      title: 'When the train was cancelled',
+      topic: 'travel problems and calm decision-making',
+      description: 'Students listen to Daniel describing a cancelled connection, a low phone battery and how he solved the problem calmly.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a26f3bbb006a5f1b5ca8574_ElevenLabs_2026-06-08T16_43_15_Jarnathan%20-%20warm%2C%20confident%2C%20versatile_pvc_sp92_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Daniel. Last spring, I was travelling alone from Prague to a small town in Austria for a friend's wedding. I had planned everything carefully: the train times, the hotel address, even the short walk from the station. I felt organised, maybe too organised.
+
+The first part of the journey was easy. I found my seat, bought a coffee, and watched the countryside through the window. Then, about forty minutes before my connection, my phone showed a tiny red notification: "Your next train has been cancelled." At first, I thought it was a mistake. I refreshed the app twice, but the message stayed there.
+
+I looked around the carriage. Some people were sleeping, and others were listening to music. Nobody seemed worried, which made me feel even more confused. The announcement on the train was in German, and I only understood a few words. I opened my translation app and typed the sentence I had heard: "replacement bus from Platform 14." Suddenly, the situation made more sense.
+
+The problem was my phone battery. It was already at twelve percent, and I still needed it for tickets, maps, and messages. I turned off everything except the train app and lowered the screen brightness. When we arrived, I followed a small group of passengers who also looked uncertain. They led me to the bus stop near Platform 14.
+
+On the bus, I checked the route again. The new arrival time was only twenty-five minutes later than my original plan. I sent my friend a quick message and finally felt relieved. Without my phone, I probably would have missed the connection completely, or at least panicked at the station.
+
+That day taught me something simple: technology is useful, but only if you stay calm enough to use it well. My phone did not magically solve everything. It gave me information. The real difference was making one calm decision after another. Since then, I always carry a small power bank, and I try not to trust the first plan too much.`,
+      focus: ['travel disruption', 'sequence of events', 'speaker reflection'],
+      words: [
+        { word: 'connection', meaning: 'a train, bus or flight you take after another one' },
+        { word: 'replacement bus', meaning: 'a bus used instead of a cancelled train' },
+        { word: 'carriage', meaning: 'one section of a train where passengers sit' },
+        { word: 'relieved', meaning: 'feeling less worried after a problem improves' },
+        { word: 'power bank', meaning: 'a portable battery for charging a phone' }
+      ],
+      questions: [
+        { question: 'Why was Daniel travelling to Austria?', options: ['For a wedding', 'For a job interview', 'For a language course'], answer: 'For a wedding' },
+        { question: 'What notification did he receive?', options: ['His next train was cancelled', 'His hotel was closed', 'His ticket had expired'], answer: 'His next train was cancelled' },
+        { question: 'What helped him understand the announcement?', options: ['A translation app', 'A passenger next to him', 'A printed timetable'], answer: 'A translation app' },
+        { question: 'Why was his phone battery a serious problem?', options: ['He needed it for tickets, maps and messages', 'He wanted to watch a film', 'He had to make a video call'], answer: 'He needed it for tickets, maps and messages' },
+        { question: 'What lesson did Daniel learn?', options: ['Stay calm and use information well', 'Never travel by train again', 'Always travel with friends'], answer: 'Stay calm and use information well' }
+      ],
+      details: [
+        { sentence: 'Daniel was travelling from Prague to a small town in ___.', answer: 'Austria' },
+        { sentence: 'The notification appeared about ___ minutes before his connection.', answer: 'forty' },
+        { sentence: 'The replacement bus left from Platform ___.', answer: '14' },
+        { sentence: 'His phone battery was at ___ percent.', answer: 'twelve' },
+        { sentence: 'The new arrival time was only ___ minutes later than planned.', answer: 'twenty-five' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel had planned the journey carefully.', answer: true },
+        { sentence: 'Everyone in the carriage looked worried.', answer: false },
+        { sentence: 'The announcement was in German.', answer: true },
+        { sentence: 'Daniel missed the replacement bus.', answer: false },
+        { sentence: 'He now carries a small power bank.', answer: true }
+      ],
+      productionQuestion: 'Write about a time when a travel plan changed. What happened, how did you react, and what did you learn?',
+      sampleAnswer: 'Once my bus was delayed during a trip to another city. At first I felt annoyed, but then I checked another route and messaged the person who was waiting for me. The problem was not pleasant, but staying calm helped me make better decisions.'
+    },
+    {
+      id: 'b2-listening-02-small-cafes-feel-personal',
+      order: 2,
+      stage: 'B2.1',
+      title: 'Why small cafes feel personal',
+      topic: 'community, routines and local businesses',
+      description: 'Students listen to Emma explaining how a small cafe became part of her routine and helped her feel noticed.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2824d1e4f37cc2ce4b672b_ElevenLabs_2026-06-09T14_28_40_Arabella_pvc_sp100_s63_sb100_v3.mp3',
+      transcriptText: `Hi, I'm Emma. I used to think coffee was the main reason people went to cafes. Now I think coffee is only part of the story. A cafe can also be a place where people feel noticed, relaxed, and a little less alone.
+
+When I moved to a new neighbourhood a few years ago, I did not know anyone there. Near my flat, there was a small cafe called The Blue Door. It had only six tables, a narrow counter, and a window full of plants. At first, I went there because it was close. Later, I went there because it felt familiar.
+
+The owner remembered my name after my third visit. She also remembered that I preferred tea in the afternoon and coffee in the morning. That sounds like a small detail, but small details can make a place feel personal. I was not just another customer in a queue. I was a regular customer, and that changed the atmosphere.
+
+Large chain cafes can be convenient. They are fast, predictable, and usually easy to find. If you are in a hurry, that can be perfect. But sometimes they feel anonymous. You order, pay, take your drink, and leave. Nothing is wrong with that, but it does not always create a connection.
+
+In a small cafe, the experience is often slower. You might hear quiet background music, see local art on the wall, or have a short conversation with the person making your drink. The chairs may not match, and the menu may be simple, but these imperfections often make the place warmer.
+
+Of course, not every small cafe is special, and not every chain cafe is cold. The difference is not only about size. It is about attention. A personal cafe pays attention to people, not just orders.
+
+For me, The Blue Door became more than a place to buy coffee. It became part of my routine and, in a small way, part of my community. That is why small cafes can feel more personal: they give people a feeling that someone has noticed them.`,
+      focus: ['opinion development', 'contrast', 'community vocabulary'],
+      words: [
+        { word: 'noticed', meaning: 'seen and remembered by other people' },
+        { word: 'regular customer', meaning: 'someone who visits a place often' },
+        { word: 'anonymous', meaning: 'not known personally by other people' },
+        { word: 'imperfections', meaning: 'small things that are not perfect' },
+        { word: 'community', meaning: 'people connected by a place or shared life' }
+      ],
+      questions: [
+        { question: 'What did Emma use to believe about cafes?', options: ['People mainly went for coffee', 'They were only for work', 'They were too expensive'], answer: 'People mainly went for coffee' },
+        { question: 'Why did she first visit The Blue Door?', options: ['It was close to her flat', 'A friend worked there', 'It had free lessons'], answer: 'It was close to her flat' },
+        { question: 'What did the owner remember?', options: ['Her name and drink preferences', 'Her birthday', 'Her phone number'], answer: 'Her name and drink preferences' },
+        { question: 'How does Emma describe large chain cafes?', options: ['Convenient but sometimes anonymous', 'Always unfriendly and noisy', 'Slow but personal'], answer: 'Convenient but sometimes anonymous' },
+        { question: 'What does Emma say makes a cafe personal?', options: ['Attention to people', 'Expensive furniture', 'A large menu'], answer: 'Attention to people' }
+      ],
+      details: [
+        { sentence: 'The Blue Door had only ___ tables.', answer: 'six' },
+        { sentence: 'The window was full of ___.', answer: 'plants' },
+        { sentence: 'Emma preferred tea in the ___.', answer: 'afternoon' },
+        { sentence: 'Small cafes may have local ___ on the wall.', answer: 'art' },
+        { sentence: 'The Blue Door became part of Emma\'s ___.', answer: 'routine' }
+      ],
+      trueFalse: [
+        { sentence: 'Emma knew many people when she moved to the neighbourhood.', answer: false },
+        { sentence: 'The cafe owner remembered her after her third visit.', answer: true },
+        { sentence: 'Emma thinks all chain cafes are cold.', answer: false },
+        { sentence: 'Small imperfections can make a place feel warmer.', answer: true },
+        { sentence: 'For Emma, The Blue Door was only a place to buy coffee.', answer: false }
+      ],
+      productionQuestion: 'Describe a local place that feels personal to you. What makes it different from bigger or more anonymous places?',
+      sampleAnswer: 'A small bakery near my home feels personal because the staff remember regular customers. It is not the cheapest place, but it feels warm and familiar. For me, the atmosphere matters as much as the food.'
+    },
+    {
+      id: 'b2-listening-03-clock-repair-workshop',
+      order: 3,
+      stage: 'B2.1',
+      title: 'The clock repair workshop',
+      topic: 'traditional skills and valuing old things',
+      description: 'Students listen to Sophie describing a clock repairer and reflect on skills that may disappear.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2933af35f7347a564f315e_ElevenLabs_2026-06-10T09_49_08_Arabella_pvc_sp100_s63_sb100_v3.mp3',
+      transcriptText: `Hi, I'm Sophie. Last winter, I discovered a small workshop in the oldest part of the city. I was not looking for anything special. I was walking home after work when I heard a quiet ticking sound coming from a narrow street. There was a wooden sign above a door that said: "Clock Repairs."
+
+Inside, the shop looked as if time had stopped. There were clocks on every wall: large clocks, tiny clocks, round clocks, and a few that looked older than the building itself. Behind the counter stood an elderly man called Adrian. He was wearing small glasses and holding a tiny metal wheel between his fingers.
+
+Adrian told me he had been repairing clocks for more than forty years. His father had taught him the skill, and before that, his grandfather had done the same work. He said that old clocks were different from modern devices because you could not simply replace them. Each one had a history, a sound, and sometimes a family story behind it.
+
+While I was there, a woman came in with a clock that had belonged to her grandmother. It had not worked for ten years, but she did not want to throw it away. Adrian opened the back carefully and showed us the problem. One small part was broken, but the rest of the mechanism was still alive, as he put it.
+
+What surprised me most was his patience. He did not rush. He cleaned each part slowly, listened to the rhythm, and adjusted the mechanism again and again. He said a good repairer must have steady hands, good ears, and respect for old things.
+
+Before I left, I asked him if he was worried that his job might disappear. He smiled and said, "Maybe the world needs fewer clocks, but it still needs people who know how to care for things."
+
+I kept thinking about that sentence. In a world where many objects are replaced instead of repaired, Adrian's workshop felt important. It was not only a place for broken clocks. It was a quiet reminder that some skills are worth keeping.`,
+      focus: ['descriptive listening', 'reported ideas', 'attitude and implication'],
+      words: [
+        { word: 'workshop', meaning: 'a place where practical work or repairs are done' },
+        { word: 'mechanism', meaning: 'the moving parts inside a machine' },
+        { word: 'steady hands', meaning: 'hands that move carefully and do not shake' },
+        { word: 'replace', meaning: 'to put a new thing in the place of an old one' },
+        { word: 'worth keeping', meaning: 'valuable enough to protect or continue' }
+      ],
+      questions: [
+        { question: 'How did Sophie find the workshop?', options: ['She heard a ticking sound', 'She saw an online advert', 'A friend took her there'], answer: 'She heard a ticking sound' },
+        { question: 'How long had Adrian been repairing clocks?', options: ['More than forty years', 'About ten years', 'Since last winter'], answer: 'More than forty years' },
+        { question: 'Why did the woman bring in the clock?', options: ['It had belonged to her grandmother', 'She wanted to sell it', 'She needed a new battery'], answer: 'It had belonged to her grandmother' },
+        { question: 'What surprised Sophie most about Adrian?', options: ['His patience', 'His prices', 'His modern tools'], answer: 'His patience' },
+        { question: 'What is the main message of the listening?', options: ['Some traditional skills are worth preserving', 'Old clocks should always be sold', 'Modern devices are better than old objects'], answer: 'Some traditional skills are worth preserving' }
+      ],
+      details: [
+        { sentence: 'The sign above the door said "Clock ___."', answer: 'Repairs' },
+        { sentence: 'Adrian was holding a tiny metal ___.', answer: 'wheel' },
+        { sentence: 'The clock had not worked for ___ years.', answer: 'ten' },
+        { sentence: 'Adrian listened to the ___ of the clock.', answer: 'rhythm' },
+        { sentence: 'He said the world still needs people who know how to ___ for things.', answer: 'care' }
+      ],
+      trueFalse: [
+        { sentence: 'Sophie was looking for a clock repair shop on purpose.', answer: false },
+        { sentence: 'Adrian learned the skill from his family.', answer: true },
+        { sentence: 'The woman\'s clock was completely dead and useless.', answer: false },
+        { sentence: 'Adrian worked quickly and impatiently.', answer: false },
+        { sentence: 'Sophie saw the workshop as a reminder to value repair skills.', answer: true }
+      ],
+      productionQuestion: 'What old skill, job or tradition do you think is worth keeping? Explain why.',
+      sampleAnswer: 'I think repairing clothes is worth keeping. Many people throw clothes away when a small problem appears, but a simple repair can save money and reduce waste. It also helps us value the things we own.'
+    },
+    {
+      id: 'b2-listening-04-work-mistake-better-system',
+      order: 4,
+      stage: 'B2.2',
+      title: 'A mistake that improved a system',
+      topic: 'workplace mistakes and process improvement',
+      description: 'Students listen to Mark explaining how a reporting mistake led to a better team process.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a294c35847e7557879a66ae_ElevenLabs_2026-06-10T11_34_07_Brian%20-%20Deep%2C%20Resonant%20and%20Comforting_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Mark. A few years ago, I worked for a small marketing team. Every Friday, we had to send a short report to our manager. It included the number of new clients, the results of our online campaigns, and a few comments about what had worked well that week.
+
+The report was not difficult, but it was boring. We copied numbers from three different files, pasted them into a document, and wrote almost the same sentences again and again. Everyone knew it took too much time, but nobody changed the process because it had always been done that way.
+
+One Thursday evening, I was tired and in a hurry. I opened the wrong spreadsheet and copied last month's numbers instead of the current week's results. I noticed the mistake only after I had already sent the report to my manager. My first feeling was panic. I imagined an angry email and an uncomfortable meeting the next morning.
+
+Instead, my manager called me and asked a surprising question: "Why do we still do this manually?" At first, I thought she was trying to make the mistake sound less serious. But then she explained that the mistake showed a bigger problem. If one tired person could copy the wrong numbers, then the process was not reliable enough.
+
+The next week, our team spent one afternoon building a simple template. The numbers were pulled from the original files automatically, and each person only had to add a short comment. The report became faster, clearer, and less stressful. What used to take almost two hours now took about twenty minutes.
+
+Of course, I was still responsible for my mistake. I apologised and checked my work more carefully after that. But the mistake also helped us see something we had ignored for months.
+
+That experience changed the way I think about problems at work. A mistake is not always just a failure. Sometimes it is a signal. It can show that a system is confusing, too slow, or too easy to break. If people react with curiosity instead of blame, a mistake can become the beginning of a better idea.`,
+      focus: ['workplace narrative', 'cause and result', 'problem-solving attitude'],
+      words: [
+        { word: 'campaigns', meaning: 'planned activities to promote or achieve something' },
+        { word: 'spreadsheet', meaning: 'a computer file with rows and columns for data' },
+        { word: 'manually', meaning: 'done by a person rather than automatically' },
+        { word: 'reliable', meaning: 'able to be trusted to work correctly' },
+        { word: 'blame', meaning: 'criticism that says someone is responsible for a problem' }
+      ],
+      questions: [
+        { question: 'What did Mark\'s team send every Friday?', options: ['A short report', 'A client invoice', 'A product design'], answer: 'A short report' },
+        { question: 'What mistake did Mark make?', options: ['He copied last month\'s numbers', 'He deleted the report', 'He sent it to a client'], answer: 'He copied last month\'s numbers' },
+        { question: 'How did his manager react?', options: ['She asked why the process was manual', 'She cancelled the project', 'She ignored the mistake'], answer: 'She asked why the process was manual' },
+        { question: 'What did the team build?', options: ['A simple template', 'A new website', 'A training course'], answer: 'A simple template' },
+        { question: 'What is Mark\'s final point?', options: ['Mistakes can signal a system problem', 'Mistakes should always be hidden', 'Manual work is always best'], answer: 'Mistakes can signal a system problem' }
+      ],
+      details: [
+        { sentence: 'The report included the number of new ___.', answer: 'clients' },
+        { sentence: 'Mark opened the wrong ___.', answer: 'spreadsheet' },
+        { sentence: 'The manager asked why they still did the report ___.', answer: 'manually' },
+        { sentence: 'The improved report took about ___ minutes.', answer: 'twenty' },
+        { sentence: 'Mark says people should react with curiosity instead of ___.', answer: 'blame' }
+      ],
+      trueFalse: [
+        { sentence: 'The old report process was exciting and creative.', answer: false },
+        { sentence: 'Mark noticed the mistake before sending the report.', answer: false },
+        { sentence: 'The manager saw the mistake as part of a bigger problem.', answer: true },
+        { sentence: 'The new template made the report slower.', answer: false },
+        { sentence: 'Mark still accepted responsibility for his mistake.', answer: true }
+      ],
+      productionQuestion: 'Describe a mistake that helped someone improve a system, habit or process.',
+      sampleAnswer: 'At my old job, someone forgot to reply to a customer because messages were stored in different places. After that, the team created one shared list for customer questions. The mistake was embarrassing, but it made the process clearer.'
+    },
+    {
+      id: 'b2-listening-05-lost-luggage',
+      order: 5,
+      stage: 'B2.2',
+      title: 'What happens to lost luggage?',
+      topic: 'air travel and practical problem-solving',
+      description: 'Students listen to Olivia explaining why luggage is delayed and what passengers should do.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a295c7c69c925be4b6bbe42_ElevenLabs_2026-06-10T12_42_59_Vanessa%20-%20Beach%20Girl_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Olivia. If you travel by plane often enough, there is one situation you probably worry about: standing next to the baggage belt and realising your suitcase has not arrived. It feels stressful, especially when you are tired, far from home, or on your way to an important meeting. But lost luggage is usually not as mysterious as it seems.
+
+Most bags are not truly lost. They are delayed. When you check in a suitcase, the airline attaches a baggage tag to it. That tag has a code which helps the airport tracking system follow the bag through different stages of the journey. If everything works well, the suitcase travels from check-in to the aircraft, then from the aircraft to the arrival belt.
+
+Problems usually happen when the connection between flights is too short, when a tag is damaged, or when a bag is placed on the wrong trolley. Sometimes the passenger runs to the next gate and makes the flight, but the suitcase does not have enough time to follow.
+
+If your luggage does not arrive, the first thing to do is go to the airline's claim desk before leaving the airport. The staff will ask for your baggage receipt, your flight number, and a description of the suitcase. They may ask about the colour, size, brand, and anything special that makes it easy to recognise.
+
+After that, the airline creates a report. This report goes into a tracking system used by airports and airlines. If your bag is found in another airport, the system can match it with your report. In many cases, the suitcase is returned within one or two days and delivered to your hotel or home address.
+
+Of course, this does not make the experience pleasant. That is why experienced travellers often keep important things in their hand luggage: medicine, chargers, documents, and one extra set of clothes. It is also useful to take a quick photo of your suitcase before you travel.
+
+So, what really happens to lost luggage? Usually, it is not gone forever. It is simply in the wrong place, waiting for the system and the staff to connect it with the right passenger again.`,
+      focus: ['explanation structure', 'travel advice', 'listening for process'],
+      words: [
+        { word: 'baggage belt', meaning: 'the moving belt where passengers collect suitcases' },
+        { word: 'baggage tag', meaning: 'a label with a code attached to a suitcase' },
+        { word: 'trolley', meaning: 'a small vehicle or cart used to move luggage' },
+        { word: 'claim desk', meaning: 'the airport desk where passengers report missing luggage' },
+        { word: 'hand luggage', meaning: 'bags passengers take into the plane cabin' }
+      ],
+      questions: [
+        { question: 'What does Olivia say about most lost bags?', options: ['They are delayed, not truly lost', 'They are usually stolen', 'They are sent back immediately'], answer: 'They are delayed, not truly lost' },
+        { question: 'What helps airports track a suitcase?', options: ['A baggage tag with a code', 'The passenger\'s passport', 'The colour of the wheels'], answer: 'A baggage tag with a code' },
+        { question: 'What can cause luggage problems?', options: ['A short connection between flights', 'Too many empty seats', 'A passenger reading a book'], answer: 'A short connection between flights' },
+        { question: 'What should passengers do before leaving the airport?', options: ['Go to the airline claim desk', 'Buy a new suitcase', 'Call a hotel immediately'], answer: 'Go to the airline claim desk' },
+        { question: 'What does Olivia recommend keeping in hand luggage?', options: ['Medicine, chargers, documents and clothes', 'Heavy shoes and souvenirs', 'All checked luggage receipts from past trips'], answer: 'Medicine, chargers, documents and clothes' }
+      ],
+      details: [
+        { sentence: 'A baggage tag has a ___.', answer: 'code' },
+        { sentence: 'A bag may be placed on the wrong ___.', answer: 'trolley' },
+        { sentence: 'The staff will ask for your baggage ___.', answer: 'receipt' },
+        { sentence: 'In many cases, luggage is returned within one or two ___.', answer: 'days' },
+        { sentence: 'Olivia says it is useful to take a quick ___ of your suitcase.', answer: 'photo' }
+      ],
+      trueFalse: [
+        { sentence: 'Olivia says lost luggage is usually mysterious and impossible to solve.', answer: false },
+        { sentence: 'A damaged tag can create a problem.', answer: true },
+        { sentence: 'Passengers should leave the airport before reporting lost luggage.', answer: false },
+        { sentence: 'A report helps the tracking system match the bag with the passenger.', answer: true },
+        { sentence: 'Olivia suggests putting all important things in checked luggage.', answer: false }
+      ],
+      productionQuestion: 'What advice would you give someone before a flight to avoid stress if their luggage is delayed?',
+      sampleAnswer: 'I would tell them to keep medicine, documents, chargers and one extra set of clothes in hand luggage. I would also suggest taking a photo of the suitcase. These small actions can reduce stress if the bag arrives late.'
+    },
+    {
+      id: 'b2-listening-06-delivery-driver',
+      order: 6,
+      stage: 'B2.2',
+      title: 'What delivery drivers really do',
+      topic: 'service work, communication and city life',
+      description: 'Students listen to James explaining why delivery work is more complicated than many customers imagine.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a295f41db2e66801871f7c1_ElevenLabs_2026-06-10T12_54_07_Josh%20-%20Teacher%20for%20Kids_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm James. I worked as a delivery driver for almost two years while I was studying. Before I started the job, I thought it would be simple: pick up an order, follow the map, give the food to the customer, and move on to the next address. In reality, the job was much more complicated.
+
+The hardest part was not carrying bags or cycling through the city. It was managing time. A delivery app shows the customer an estimated arrival time, but the city does not always follow the app's plan. Traffic lights, closed roads, rain, broken lifts, and confusing apartment blocks can turn a ten-minute delivery into a stressful journey.
+
+Addresses were another challenge. Some buildings had three entrances, but only one of them was open. Some customers forgot to add the apartment number. Others wrote instructions like "come to the side door," but there were two side doors. When you are standing outside in the rain with hot food in your bag, small details suddenly become very important.
+
+Most customers were polite, especially when you explained the problem. But some people only saw the delay, not the situation behind it. They did not know that the restaurant had prepared the order late, or that the road was blocked, or that the driver had already called twice.
+
+One thing I learned quickly was that delivery drivers need more than speed. They need patience, local knowledge, and good communication. A good driver learns which streets are busy at certain times, which buildings are difficult to enter, and when it is better to call instead of sending another message.
+
+The job also changed the way I see the city. I noticed hidden courtyards, tiny cafes, quiet streets, and people working late in offices. I saw the city from a different angle, not as a tourist or a customer, but as someone moving through it all day.
+
+So when I order food now, I try to be clear with my address and patient with the driver. Behind every delivery, there is usually more effort than people imagine.`,
+      focus: ['work experience', 'hidden effort', 'listening for examples'],
+      words: [
+        { word: 'estimated arrival time', meaning: 'the time something is expected to arrive' },
+        { word: 'apartment block', meaning: 'a building with many apartments' },
+        { word: 'blocked', meaning: 'closed or impossible to pass through' },
+        { word: 'local knowledge', meaning: 'practical understanding of an area' },
+        { word: 'from a different angle', meaning: 'in a new or different way' }
+      ],
+      questions: [
+        { question: 'What did James first think about delivery work?', options: ['It would be simple', 'It would be impossible', 'It would be boring office work'], answer: 'It would be simple' },
+        { question: 'What was the hardest part of the job?', options: ['Managing time', 'Carrying bags', 'Talking to restaurants'], answer: 'Managing time' },
+        { question: 'Why were addresses difficult?', options: ['Buildings could have unclear entrances', 'The city had no maps', 'Customers never answered calls'], answer: 'Buildings could have unclear entrances' },
+        { question: 'What do some customers fail to see?', options: ['The situation behind the delay', 'The price of the food', 'The colour of the delivery bag'], answer: 'The situation behind the delay' },
+        { question: 'How has the job changed James as a customer?', options: ['He gives clearer addresses and is more patient', 'He never orders food now', 'He complains about every delay'], answer: 'He gives clearer addresses and is more patient' }
+      ],
+      details: [
+        { sentence: 'James worked as a delivery driver for almost ___ years.', answer: 'two' },
+        { sentence: 'A ten-minute delivery can become a stressful ___.', answer: 'journey' },
+        { sentence: 'Some buildings had three ___.', answer: 'entrances' },
+        { sentence: 'A good driver knows which streets are ___ at certain times.', answer: 'busy' },
+        { sentence: 'James noticed hidden courtyards, tiny cafes and quiet ___.', answer: 'streets' }
+      ],
+      trueFalse: [
+        { sentence: 'James worked as a delivery driver while studying.', answer: true },
+        { sentence: 'He says carrying bags was the hardest part.', answer: false },
+        { sentence: 'Some customers forgot to add the apartment number.', answer: true },
+        { sentence: 'Delivery drivers only need speed.', answer: false },
+        { sentence: 'The job made James see the city differently.', answer: true }
+      ],
+      productionQuestion: 'What job looks simple from the outside but is actually complicated? Explain the hidden skills it requires.',
+      sampleAnswer: 'Working in a cafe can look simple, but it requires speed, memory, patience and communication. Customers only see the drink, but the worker is also managing orders, cleaning, solving problems and staying polite under pressure.'
+    },
+    {
+      id: 'b2-listening-07-waking-up-at-five',
+      order: 7,
+      stage: 'B2.3',
+      title: 'Waking up at five',
+      topic: 'routines, productivity and sleep',
+      description: 'Students listen to Mia reflecting on a one-month experiment with waking up early.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2961aa18f0048bc8d3b996_ElevenLabs_2026-06-10T13_05_22_Samantha%20-%20Emotional%2C%20Soft%20and%20Intimate_pvc_sp120_s23_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Mia. For a long time, I thought people who woke up at five in the morning were either extremely disciplined or slightly crazy. I could not understand why anyone would choose to leave a warm bed when the world outside was still dark. Then I tried it for one month, and my opinion became more balanced.
+
+The first thing I noticed was the quiet. At five in the morning, my phone was not full of messages, the streets were almost empty, and nobody expected me to answer emails. That quiet made it easier to focus. I could read, plan my day, or exercise without feeling that I was already late for something.
+
+Another advantage was the feeling of control. When I woke up early, the day did not seem to start suddenly. I had time to make coffee, write a short list, and think about what mattered most. Even if the rest of the day became busy, I had already done something useful for myself.
+
+But waking up at five is not magic. It only works if you also go to bed early. During the first week, I made the mistake of sleeping at my usual time and waking up much earlier. By the fourth day, I was tired, impatient, and less productive than before. A morning routine cannot fix a lack of sleep.
+
+I also realised that early mornings are not suitable for everyone. Some people work late shifts, study at night, or simply think better in the evening. For them, waking up at five may create more pressure than progress. The goal should not be to copy someone else's routine. The goal should be to find a schedule that gives you energy.
+
+After my one-month experiment, I did not become a perfect 5 a.m. person. I still wake up later on some days. But I understand why some people love early mornings. It is not really about the time on the clock. It is about having a quiet space before the world becomes noisy.`,
+      focus: ['balanced opinion', 'routine vocabulary', 'contrast and evaluation'],
+      words: [
+        { word: 'disciplined', meaning: 'able to control habits and do difficult things regularly' },
+        { word: 'balanced', meaning: 'fair and considering both sides' },
+        { word: 'productive', meaning: 'able to do useful work effectively' },
+        { word: 'suitable', meaning: 'right or appropriate for someone or something' },
+        { word: 'routine', meaning: 'a regular way of doing things' }
+      ],
+      questions: [
+        { question: 'What did Mia first think about people who woke up at five?', options: ['They were disciplined or slightly crazy', 'They were lazy', 'They were always healthier'], answer: 'They were disciplined or slightly crazy' },
+        { question: 'What was the first thing she noticed?', options: ['The quiet', 'The traffic', 'The cold weather'], answer: 'The quiet' },
+        { question: 'What feeling did early mornings give her?', options: ['A feeling of control', 'A feeling of panic', 'A feeling of loneliness'], answer: 'A feeling of control' },
+        { question: 'What mistake did she make in the first week?', options: ['She went to bed at her usual time', 'She stopped drinking coffee', 'She worked late shifts'], answer: 'She went to bed at her usual time' },
+        { question: 'What is Mia\'s final opinion?', options: ['People need a schedule that gives them energy', 'Everyone should wake up at five', 'Morning routines are useless'], answer: 'People need a schedule that gives them energy' }
+      ],
+      details: [
+        { sentence: 'Mia tried waking up early for one ___.', answer: 'month' },
+        { sentence: 'At five, her phone was not full of ___.', answer: 'messages' },
+        { sentence: 'She had time to write a short ___.', answer: 'list' },
+        { sentence: 'By the fourth day, she was tired and ___.', answer: 'impatient' },
+        { sentence: 'She says it is about having a quiet ___ before the world becomes noisy.', answer: 'space' }
+      ],
+      trueFalse: [
+        { sentence: 'Mia says waking up at five is magic.', answer: false },
+        { sentence: 'Early mornings helped her focus.', answer: true },
+        { sentence: 'The routine worked even without enough sleep.', answer: false },
+        { sentence: 'Mia thinks early mornings suit everyone.', answer: false },
+        { sentence: 'She still wakes up later on some days.', answer: true }
+      ],
+      productionQuestion: 'Do you prefer mornings or evenings for focused work? Explain your routine and its advantages.',
+      sampleAnswer: 'I focus better in the evening because the day is quieter and I feel less rushed. However, I need to set limits, because working too late affects my sleep. The best routine for me is a calm evening session and a realistic bedtime.'
+    },
+    {
+      id: 'b2-listening-08-modern-libraries',
+      order: 8,
+      stage: 'B2.3',
+      title: 'How libraries are changing',
+      topic: 'community spaces, learning and digital services',
+      description: 'Students listen to Noah explaining how a local library became active again by serving the community differently.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a29689207eb5c81cfacb0ab_ElevenLabs_2026-06-10T13_33_29_Mark%20-%20Natural%20Conversations_pvc_sp86_s39_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Noah. When I was a teenager, the library in my town was a quiet place where almost nobody my age went. People used it before exams or when they needed a specific book, but it did not feel like part of everyday life. The building was beautiful, but it also felt old-fashioned and a little too silent.
+
+A few years later, I came back to my hometown and noticed something surprising. The library was busy again. There were students at large tables, parents with young children, older people using computers, and a small group of teenagers recording a podcast in a glass room near the entrance. It felt like the same building, but with a completely different energy.
+
+I asked one of the librarians what had changed. She said the library had decided not to compete with the internet. Instead, it tried to offer what the internet could not always give: a calm space, helpful people, and a real local community. That idea changed everything.
+
+First, they created different areas for different needs. There was a quiet study room, a children's corner, a digital resources area, and a small space for local events. Then they started organising practical workshops: how to write a CV, how to use online services, how to research family history, and even how to record audio.
+
+The library also invited local people to take part. Artists displayed their work on the walls. Retired teachers helped students with homework. Small clubs met there once a week: a book club, a chess group, and a language exchange group. Suddenly, the library was not only a place to borrow books. It was a place to meet people and learn something useful.
+
+What I liked most was that the library did not lose its original purpose. You could still find books, read quietly, and ask for help. But now there were more reasons to enter the building. It had become flexible without becoming noisy.
+
+That visit changed the way I think about libraries. They are not disappearing because people read online. They are changing because communities need spaces where learning feels human, local, and shared.`,
+      focus: ['community development', 'contrast over time', 'main idea and supporting examples'],
+      words: [
+        { word: 'old-fashioned', meaning: 'not modern or not suited to current life' },
+        { word: 'compete with', meaning: 'try to be better or more successful than something else' },
+        { word: 'resources', meaning: 'useful materials, tools or sources of information' },
+        { word: 'workshops', meaning: 'practical classes where people learn by doing' },
+        { word: 'flexible', meaning: 'able to change for different needs' }
+      ],
+      questions: [
+        { question: 'How did Noah remember the library as a teenager?', options: ['Quiet and old-fashioned', 'Noisy and modern', 'Closed most days'], answer: 'Quiet and old-fashioned' },
+        { question: 'What surprised him when he returned?', options: ['The library was busy again', 'The building had disappeared', 'Books were not allowed'], answer: 'The library was busy again' },
+        { question: 'What did the librarian say the library decided not to do?', options: ['Compete with the internet', 'Help students', 'Organise events'], answer: 'Compete with the internet' },
+        { question: 'Which workshop is mentioned?', options: ['How to write a CV', 'How to cook pasta', 'How to repair cars'], answer: 'How to write a CV' },
+        { question: 'What is Noah\'s conclusion?', options: ['Libraries are changing to serve communities', 'Libraries should become silent museums', 'Online reading has destroyed libraries'], answer: 'Libraries are changing to serve communities' }
+      ],
+      details: [
+        { sentence: 'Teenagers were recording a podcast in a ___ room.', answer: 'glass' },
+        { sentence: 'The library created a quiet study ___.', answer: 'room' },
+        { sentence: 'Artists displayed their work on the ___.', answer: 'walls' },
+        { sentence: 'Small clubs met there once a ___.', answer: 'week' },
+        { sentence: 'Noah says learning can feel human, local and ___.', answer: 'shared' }
+      ],
+      trueFalse: [
+        { sentence: 'As a teenager, Noah felt the library was part of everyday life.', answer: false },
+        { sentence: 'The library offered a calm space and helpful people.', answer: true },
+        { sentence: 'The library removed all books to become modern.', answer: false },
+        { sentence: 'Retired teachers helped students with homework.', answer: true },
+        { sentence: 'Noah thinks libraries are disappearing because people read online.', answer: false }
+      ],
+      productionQuestion: 'How could a public space in your city become more useful for the community?',
+      sampleAnswer: 'A local park could become more useful if it had quiet reading areas, free weekend workshops and safe lighting in the evening. It would still be a park, but it would give people more reasons to spend time there.'
+    },
+    {
+      id: 'b2-listening-09-street-musician',
+      order: 9,
+      stage: 'B2.3',
+      title: 'A street musician changed my day',
+      topic: 'mood, public spaces and small human moments',
+      description: 'Students listen to Clara describing how a violinist softened a difficult day.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a296c9465b3203c940ccc1f_ElevenLabs_2026-06-10T13_51_34_Rachel%20-%20Social%20Media%20Narrator_pvc_sp95_s38_sb62_v3.mp3',
+      transcriptText: `Hi, I'm Clara. One Tuesday morning, I was having one of those days when every small thing feels heavier than usual. I had missed my bus, spilled coffee on my notebook, and arrived late for a meeting that did not go well. By lunchtime, I just wanted to get through the rest of the day without speaking to anyone.
+
+After work, I decided to walk home instead of taking the metro. The city centre was crowded, and people were moving quickly in every direction. Everyone seemed busy, tired, or lost in their own thoughts. I probably looked the same. I was walking fast, looking down, and thinking about everything that had gone wrong.
+
+Then I heard music. At first, it was only a few notes above the noise of traffic. Near the entrance to a small square, a street musician was playing the violin. He was not playing loudly, but the sound was clear and warm. I slowed down without planning to.
+
+A few people had stopped to listen. A mother with a child, two office workers, and an old man with a shopping bag were standing nearby. Nobody was filming or talking much. They were just listening. For a moment, the square felt calmer, as if the music had created a small island in the middle of the busy city.
+
+The musician finished one song and began another. I did not know the melody, but it made me feel strangely hopeful. It did not solve any of my problems, of course. My meeting had still gone badly, and my notebook still had a coffee stain on it. But something inside me changed. I felt less trapped inside my own bad mood.
+
+Before I left, I put a few coins in the violin case. The musician smiled and nodded, and I smiled back. It was the first real smile I had given anyone that day.
+
+On the way home, I noticed the evening light on the buildings and the smell of bread from a bakery. The day had not become perfect, but it had become softer. That is what surprised me most: a stranger playing music in a public space had reminded me to look up again.`,
+      focus: ['narrative mood', 'emotional change', 'descriptive detail'],
+      words: [
+        { word: 'crowded', meaning: 'full of people' },
+        { word: 'lost in their own thoughts', meaning: 'thinking deeply and not noticing much around them' },
+        { word: 'square', meaning: 'an open public area in a town or city' },
+        { word: 'hopeful', meaning: 'feeling that something good may happen' },
+        { word: 'softer', meaning: 'less hard, painful or stressful' }
+      ],
+      questions: [
+        { question: 'What kind of day was Clara having?', options: ['A difficult day with several small problems', 'A relaxing holiday', 'A day full of good news'], answer: 'A difficult day with several small problems' },
+        { question: 'Why did she walk home?', options: ['Instead of taking the metro', 'Because the metro was closed', 'Because she wanted to meet friends'], answer: 'Instead of taking the metro' },
+        { question: 'What instrument was the musician playing?', options: ['The violin', 'The guitar', 'The piano'], answer: 'The violin' },
+        { question: 'How did the square feel for a moment?', options: ['Like a calm island in the busy city', 'Like a noisy market', 'Like an empty station'], answer: 'Like a calm island in the busy city' },
+        { question: 'What did the music help Clara do?', options: ['Look up again and feel less trapped', 'Forget the whole day completely', 'Solve her meeting problem'], answer: 'Look up again and feel less trapped' }
+      ],
+      details: [
+        { sentence: 'Clara had spilled coffee on her ___.', answer: 'notebook' },
+        { sentence: 'The musician was near the entrance to a small ___.', answer: 'square' },
+        { sentence: 'An old man was holding a shopping ___.', answer: 'bag' },
+        { sentence: 'Clara put a few coins in the violin ___.', answer: 'case' },
+        { sentence: 'On the way home, she noticed the smell of bread from a ___.', answer: 'bakery' }
+      ],
+      trueFalse: [
+        { sentence: 'Clara wanted to speak to many people at lunchtime.', answer: false },
+        { sentence: 'The musician was playing loudly.', answer: false },
+        { sentence: 'Several people stopped and simply listened.', answer: true },
+        { sentence: 'The music solved all of Clara\'s problems.', answer: false },
+        { sentence: 'The day became softer, not perfect.', answer: true }
+      ],
+      productionQuestion: 'Describe a small moment in a public place that changed your mood.',
+      sampleAnswer: 'Once I was tired after work, but a stranger held the door and smiled kindly. It was a very small moment, but it made me feel less invisible. Sometimes public kindness can change the feeling of a whole day.'
+    },
+    {
+      id: 'b2-listening-10-too-many-choices',
+      order: 10,
+      stage: 'B2.4',
+      title: 'When choice becomes tiring',
+      topic: 'decision fatigue and everyday choices',
+      description: 'Students listen to Lena explaining why too many options can make simple decisions feel heavy.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2988fa378cae8bb7b75fa6_ElevenLabs_2026-06-10T15_49_16_Rachel%20-%20Social%20Media%20Narrator_pvc_sp95_s38_sb62_v3.mp3',
+      transcriptText: `Hi, I'm Lena. Last Saturday, I went to a large supermarket to buy a few simple things: bread, yoghurt, and something for breakfast. I expected to be there for ten minutes. Instead, I spent almost half an hour standing in front of the same shelves, comparing products I did not really care about.
+
+The breakfast section was the worst. There were so many kinds of cereal: high-fibre, low-sugar, extra protein, chocolate, fruit, organic, and several brands that looked almost the same. At first, having many options felt useful. I thought, "Great, I can choose exactly what I want." But after a few minutes, I stopped feeling free and started feeling tired.
+
+This happens in many parts of daily life. We choose what to watch, what to buy, where to eat, which app to use, and even which message to answer first. Choice is usually a good thing, of course. Nobody wants to live in a world with only one option. But too many choices can make simple decisions feel strangely heavy.
+
+One reason is that every option creates a small question. Is this one healthier? Is that one cheaper? Will I regret not choosing the other one? The more options we see, the more possible mistakes we imagine. Instead of feeling satisfied, we start worrying that there might be a better choice somewhere else.
+
+Another problem is time. We often spend energy on tiny decisions that do not matter very much. Later, when we need to make an important decision, we may feel mentally tired. That is why some people try to simplify parts of their routine. They eat the same breakfast, wear similar clothes, or keep only a few apps on their phone.
+
+I do not think the answer is to remove choice completely. Choice gives us freedom, personality, and comfort. But we can learn to choose more calmly. For small decisions, I now give myself a short time limit. If I cannot decide in two minutes, I choose something good enough and move on.
+
+That day in the supermarket, I finally bought a plain box of cereal. It was not perfect, but it was fine. And sometimes "fine" is exactly what we need.`,
+      focus: ['argument listening', 'examples and reasoning', 'abstract vocabulary'],
+      words: [
+        { word: 'options', meaning: 'things you can choose from' },
+        { word: 'regret', meaning: 'feel bad about a choice later' },
+        { word: 'mentally tired', meaning: 'tired from thinking or deciding too much' },
+        { word: 'time limit', meaning: 'a fixed amount of time allowed for something' },
+        { word: 'good enough', meaning: 'acceptable, even if not perfect' }
+      ],
+      questions: [
+        { question: 'What did Lena expect at the supermarket?', options: ['A quick ten-minute visit', 'A long shopping trip', 'A meeting with a friend'], answer: 'A quick ten-minute visit' },
+        { question: 'Which section was the worst for her?', options: ['The breakfast section', 'The drinks section', 'The checkout area'], answer: 'The breakfast section' },
+        { question: 'Why can too many options feel heavy?', options: ['They make us imagine possible mistakes', 'They remove all freedom', 'They make products cheaper'], answer: 'They make us imagine possible mistakes' },
+        { question: 'Why do some people simplify routines?', options: ['To save mental energy', 'To avoid all responsibility', 'To impress other people'], answer: 'To save mental energy' },
+        { question: 'What is Lena\'s strategy for small decisions?', options: ['Use a short time limit', 'Compare every option carefully', 'Ask a shop assistant every time'], answer: 'Use a short time limit' }
+      ],
+      details: [
+        { sentence: 'Lena went to buy bread, yoghurt and something for ___.', answer: 'breakfast' },
+        { sentence: 'She spent almost half an ___ in front of the shelves.', answer: 'hour' },
+        { sentence: 'Some cereals were high-fibre and low-___.', answer: 'sugar' },
+        { sentence: 'She gives herself ___ minutes for small decisions.', answer: 'two' },
+        { sentence: 'She finally bought a plain box of ___.', answer: 'cereal' }
+      ],
+      trueFalse: [
+        { sentence: 'Lena says choice is always a bad thing.', answer: false },
+        { sentence: 'Many cereal brands looked almost the same.', answer: true },
+        { sentence: 'Too many small decisions can make people mentally tired.', answer: true },
+        { sentence: 'Lena thinks people should remove choice completely.', answer: false },
+        { sentence: 'She says sometimes fine is enough.', answer: true }
+      ],
+      productionQuestion: 'Do you ever feel tired by too many choices? Give examples and explain how you handle it.',
+      sampleAnswer: 'I feel tired when choosing what to watch online because there are too many options. I usually set a short time limit and choose something good enough. It helps me avoid wasting the whole evening comparing possibilities.'
+    },
+    {
+      id: 'b2-listening-11-small-shop-supermarkets',
+      order: 11,
+      stage: 'B2.4',
+      title: 'How a small shop survived',
+      topic: 'local business, competition and community identity',
+      description: 'Students listen to Daniel explaining how Green Corner survived after two large supermarkets opened nearby.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2997d498f1fe087dc852d8_ElevenLabs_2026-06-10T16_56_14_Brian%20-%20Deep%2C%20Resonant%20and%20Comforting_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Daniel. In my neighbourhood, there is a small shop called Green Corner. It sells fruit, vegetables, bread, and a few local products. For years, it was the kind of place where people stopped on their way home, not because it was the cheapest option, but because it felt friendly and familiar.
+
+Then two large supermarkets opened nearby. At first, everyone said Green Corner would close within a few months. The supermarkets were bigger, brighter, and full of discounts. They had long opening hours, self-checkout machines, and shelves with hundreds of products. A small shop with one narrow entrance and three employees did not seem able to compete.
+
+The owner, Maya, understood the problem quickly. She knew she could not beat big companies on price or variety. If she tried to sell everything, she would lose. So instead of copying the supermarkets, she decided to become more local and more personal.
+
+First, she changed the products. She started buying more fruit and vegetables from farmers in the region. She added homemade bread from a nearby bakery and honey from a family business outside the city. Then she wrote small signs explaining where the products came from. Customers liked knowing the story behind what they were buying.
+
+Next, she improved the service. If an older customer could not carry heavy bags, someone from the shop helped them home. If a customer wanted a product that was not available, Maya wrote it down and tried to order it the next week. She also remembered what regular customers usually bought. That kind of attention was something the big supermarkets could not easily offer.
+
+Green Corner also became active in the community. Once a month, Maya invited a local producer to show their products in the shop. People came not only to buy food, but also to talk, taste, and ask questions. Slowly, the shop became more than a place to spend money. It became part of the neighbourhood's identity.
+
+Of course, Green Corner did not become rich. It still had difficult months, and some customers chose the cheaper supermarket. But the shop survived because it stopped trying to be big. It became useful in a different way: smaller, warmer, and closer to the people around it.`,
+      focus: ['business strategy', 'contrast', 'main idea and supporting evidence'],
+      words: [
+        { word: 'discounts', meaning: 'lower prices than usual' },
+        { word: 'self-checkout machines', meaning: 'machines customers use to pay without a cashier' },
+        { word: 'compete', meaning: 'try to be successful against another business' },
+        { word: 'producer', meaning: 'a person or company that makes or grows products' },
+        { word: 'identity', meaning: 'the qualities that make a place or group recognisable' }
+      ],
+      questions: [
+        { question: 'Why did people originally like Green Corner?', options: ['It felt friendly and familiar', 'It was the largest shop nearby', 'It was open all night'], answer: 'It felt friendly and familiar' },
+        { question: 'Why did people think Green Corner might close?', options: ['Two large supermarkets opened nearby', 'Maya moved away', 'The shop stopped selling food'], answer: 'Two large supermarkets opened nearby' },
+        { question: 'What strategy did Maya choose?', options: ['Become more local and personal', 'Copy the supermarkets exactly', 'Sell only cheap imported goods'], answer: 'Become more local and personal' },
+        { question: 'How did the shop improve service?', options: ['It helped older customers and remembered regulars', 'It removed all personal contact', 'It closed earlier every day'], answer: 'It helped older customers and remembered regulars' },
+        { question: 'Why did the shop survive?', options: ['It became useful in a different way', 'It became bigger than the supermarkets', 'It sold everything at the lowest price'], answer: 'It became useful in a different way' }
+      ],
+      details: [
+        { sentence: 'Green Corner had one narrow entrance and ___ employees.', answer: 'three' },
+        { sentence: 'Maya bought fruit and vegetables from farmers in the ___.', answer: 'region' },
+        { sentence: 'She added homemade bread from a nearby ___.', answer: 'bakery' },
+        { sentence: 'Once a month, she invited a local ___.', answer: 'producer' },
+        { sentence: 'The shop became part of the neighbourhood\'s ___.', answer: 'identity' }
+      ],
+      trueFalse: [
+        { sentence: 'Green Corner was popular only because it was the cheapest option.', answer: false },
+        { sentence: 'The supermarkets had long opening hours.', answer: true },
+        { sentence: 'Maya tried to sell everything like the supermarkets.', answer: false },
+        { sentence: 'Customers liked knowing the story behind local products.', answer: true },
+        { sentence: 'Green Corner became rich very quickly.', answer: false }
+      ],
+      productionQuestion: 'How can a small local business compete with a large company? Give two or three practical ideas.',
+      sampleAnswer: 'A small business can compete by offering personal service, local products and a stronger connection with customers. It may not be able to offer the lowest prices, but it can give people a reason to choose it for quality and trust.'
+    },
+    {
+      id: 'b2-listening-12-working-from-home',
+      order: 12,
+      stage: 'B2.4',
+      title: 'The truth about working from home',
+      topic: 'remote work, boundaries and communication',
+      description: 'Students listen to Rachel giving a balanced view of working from home after experiencing both benefits and problems.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a299ad8be82e748b171ca49_ElevenLabs_2026-06-10T17_08_28_Ember%20-%20Energetic%2C%20Confident%20Protagonist_pvc_sp100_s32_sb100_v3.mp3',
+      transcriptText: `Hi, I'm Rachel. Before I started working from home, I imagined it would solve almost every problem in my work life. No crowded buses, no office noise, no long walks in the rain, and no one interrupting me every five minutes. I thought I would become calmer, healthier, and much more productive.
+
+At first, working from home really did feel like freedom. I could start the day without rushing, make coffee in my own kitchen, and choose a quiet place to sit. I liked being able to focus on difficult tasks without hearing other people's phone calls or conversations. For deep work, home was sometimes much better than the office.
+
+But after a few weeks, I began to notice the other side. The line between work and personal life became less clear. When my laptop was on the table, it was easy to check one more email after dinner. A quick message at seven in the evening could turn into another hour of work. I was at home, but I was not always resting.
+
+Communication also became more complicated. In the office, you can ask a quick question and understand someone's mood from their face or voice. Online, the same question may become a long chat, a meeting, or a message that sounds colder than it was meant to be. Small misunderstandings can grow when people only communicate through screens.
+
+Another problem was loneliness. I did not miss every part of office life, but I did miss small human moments: saying good morning, laughing about something silly, or walking to lunch with a colleague. These moments do not look important on a calendar, but they make the workday feel more human.
+
+Now I think the truth about working from home is simple: it is not automatically better or worse. It depends on the person, the job, and the routine. Some people need the quiet of home. Others need the structure of an office. Many people, including me, do best with a mix of both.
+
+Working from home taught me that flexibility is useful, but it also needs boundaries. A comfortable home office is not enough. You also need clear working hours, real breaks, and a way to stay connected with people.`,
+      focus: ['balanced argument', 'workplace vocabulary', 'speaker attitude'],
+      words: [
+        { word: 'productive', meaning: 'able to complete useful work effectively' },
+        { word: 'deep work', meaning: 'focused work that requires concentration' },
+        { word: 'boundaries', meaning: 'limits that protect time, energy or roles' },
+        { word: 'misunderstandings', meaning: 'situations where people interpret something wrongly' },
+        { word: 'flexibility', meaning: 'the ability to adapt or choose different arrangements' }
+      ],
+      questions: [
+        { question: 'What did Rachel expect before working from home?', options: ['That it would solve almost every work problem', 'That it would be impossible', 'That it would be exactly like the office'], answer: 'That it would solve almost every work problem' },
+        { question: 'What was one early advantage?', options: ['She could focus on difficult tasks', 'She had more office meetings', 'She stopped using a computer'], answer: 'She could focus on difficult tasks' },
+        { question: 'What problem appeared after a few weeks?', options: ['The line between work and personal life became unclear', 'She could not find coffee', 'Her office closed permanently'], answer: 'The line between work and personal life became unclear' },
+        { question: 'Why can online communication be difficult?', options: ['Messages can sound colder than intended', 'People never write messages', 'Screens always show emotions clearly'], answer: 'Messages can sound colder than intended' },
+        { question: 'What is Rachel\'s conclusion?', options: ['Working from home needs boundaries and connection', 'Working from home is always better', 'Everyone should return to offices'], answer: 'Working from home needs boundaries and connection' }
+      ],
+      details: [
+        { sentence: 'Rachel imagined no crowded buses and no office ___.', answer: 'noise' },
+        { sentence: 'At home, she could make coffee in her own ___.', answer: 'kitchen' },
+        { sentence: 'A quick message at ___ in the evening could become more work.', answer: 'seven' },
+        { sentence: 'She missed walking to lunch with a ___.', answer: 'colleague' },
+        { sentence: 'She says people need clear working hours and real ___.', answer: 'breaks' }
+      ],
+      trueFalse: [
+        { sentence: 'At first, working from home felt like freedom to Rachel.', answer: true },
+        { sentence: 'She found it impossible to focus at home.', answer: false },
+        { sentence: 'Online messages can create misunderstandings.', answer: true },
+        { sentence: 'Rachel missed every part of office life.', answer: false },
+        { sentence: 'She thinks many people do best with a mix of home and office.', answer: true }
+      ],
+      productionQuestion: 'What are the main advantages and disadvantages of working from home for you or people you know?',
+      sampleAnswer: 'Working from home can be useful because it saves travel time and gives people a quieter space. However, it can also create loneliness and unclear boundaries. I think a hybrid routine is often the healthiest solution.'
+    },
+    {
+      id: 'b2-listening-13-songs-and-memory',
+      order: 13,
+      stage: 'B2.5',
+      title: 'Why songs bring back memories',
+      topic: 'music, memory and emotion',
+      description: 'Students listen to Oliver explaining why songs can bring back powerful memories after many years.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a29a0ec64edf82726175c19_ElevenLabs_2026-06-10T17_36_48_Oliver%20Silk%20-%20Deep%20Gravel%20Narrative_pvc_sp100_s30_sb80_v3.mp3',
+      transcriptText: `Hi, I'm Oliver. There are some songs I can hear only once after many years and immediately remember where I was, who I was with, and even what the weather felt like. It is strange because I can forget a name, a password, or why I walked into a room, but a song from years ago can return in seconds.
+
+One reason is that music is strongly connected to emotion. We often hear songs during important moments: a first trip with friends, a family celebration, a difficult goodbye, or a summer when everything felt new. The song becomes attached to the feeling of that moment. Later, when we hear the same melody again, the feeling comes back too.
+
+Another reason is repetition. We do not usually hear a favourite song only once. We play it again and again, sometimes for weeks or months. Each time we hear it, the brain strengthens the connection. That is why we can remember not only the main melody, but also small details: the beginning, the rhythm, or the next line before the singer says it.
+
+Songs also have patterns that help memory. A clear chorus, a simple rhythm, or repeated words make a song easier to remember than a normal conversation. You may forget a long explanation from a meeting, but remember a short song line for twenty years. Music gives words a shape, and that shape helps them stay in the mind.
+
+What I find most interesting is that songs can bring back a version of ourselves. When I hear a song I loved at sixteen, I do not only remember the music. I remember what I worried about then, what I hoped for, and how I saw the world. For a few seconds, the past feels close.
+
+Of course, not every song becomes important. Some songs disappear from memory quickly. But the ones connected to strong feelings, repeated many times, or shared with other people can stay with us for a lifetime.
+
+Maybe that is why music feels so personal. A song is not only sound. It can become a small container for memory, emotion, and time.`,
+      focus: ['abstract explanation', 'memory vocabulary', 'examples and reasons'],
+      words: [
+        { word: 'melody', meaning: 'the tune of a piece of music' },
+        { word: 'repetition', meaning: 'doing or hearing something many times' },
+        { word: 'strengthens', meaning: 'makes something stronger' },
+        { word: 'patterns', meaning: 'repeated forms or arrangements' },
+        { word: 'container', meaning: 'something that holds or carries something else' }
+      ],
+      questions: [
+        { question: 'What can happen when Oliver hears an old song?', options: ['He remembers a place, people and feelings', 'He forgets the melody immediately', 'He always feels angry'], answer: 'He remembers a place, people and feelings' },
+        { question: 'What is music strongly connected to?', options: ['Emotion', 'Shopping', 'Weather forecasts'], answer: 'Emotion' },
+        { question: 'How does repetition affect memory?', options: ['It strengthens the connection in the brain', 'It makes songs harder to remember', 'It removes emotion from music'], answer: 'It strengthens the connection in the brain' },
+        { question: 'Why are songs easier to remember than many conversations?', options: ['They have patterns like rhythm and repeated words', 'They are always shorter', 'They contain no language'], answer: 'They have patterns like rhythm and repeated words' },
+        { question: 'What is Oliver\'s final image of a song?', options: ['A container for memory, emotion and time', 'A password for the brain', 'A type of conversation'], answer: 'A container for memory, emotion and time' }
+      ],
+      details: [
+        { sentence: 'Oliver says an old song can return in ___.', answer: 'seconds' },
+        { sentence: 'A song can become attached to the feeling of a ___.', answer: 'moment' },
+        { sentence: 'We may remember the next ___ before the singer says it.', answer: 'line' },
+        { sentence: 'Oliver mentions a song he loved at age ___.', answer: 'sixteen' },
+        { sentence: 'Some songs can stay with us for a ___.', answer: 'lifetime' }
+      ],
+      trueFalse: [
+        { sentence: 'Oliver says every song becomes important.', answer: false },
+        { sentence: 'Songs are often connected to important moments.', answer: true },
+        { sentence: 'Repetition can make musical memories stronger.', answer: true },
+        { sentence: 'Oliver says songs never bring back an old version of ourselves.', answer: false },
+        { sentence: 'Music can feel personal because it carries memory and emotion.', answer: true }
+      ],
+      productionQuestion: 'Choose a song that brings back a memory for you. Why is it connected to that time?',
+      sampleAnswer: 'One song reminds me of my first year at university because my friends and I played it constantly. When I hear it now, I remember the excitement and nervousness of that period. It feels like a small doorway to the past.'
+    },
+    {
+      id: 'b2-listening-14-volunteering-reading-children',
+      order: 14,
+      stage: 'B2.5',
+      title: 'Reading stories with children',
+      topic: 'volunteering, education and confidence',
+      description: 'Students listen to Hannah explaining how volunteering at a reading group changed her view of learning.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2a5a2b10226649e3c668af_ElevenLabs_2026-06-11T06_44_48_Eve%20-%20Authentic%2C%20Energetic%20and%20Happy_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Hannah. Every Wednesday afternoon, I volunteer at a small community centre near my home. My job sounds simple: I sit with a group of children and read stories to them. At first, I thought I was there only to help them practise reading. But after a few months, I understood that the work was about much more than books.
+
+The reading group started because some children in the area did not have many books at home. Their parents worked long hours, and the local school wanted to give them more chances to hear stories, ask questions, and enjoy language. The community centre asked for volunteers, and I joined because I loved reading when I was a child.
+
+On my first day, I was nervous. I brought three picture books and planned exactly what I wanted to do. But the children did not follow my plan. One boy wanted to talk about the dog on the cover. A girl asked why the moon looked different in every picture. Another child kept interrupting to guess what would happen next. I worried that the session was becoming messy.
+
+Then the centre manager smiled and said, "That is reading too." She explained that children do not only learn from sitting quietly. They learn by asking, imagining, reacting, and connecting the story to their own lives. After that, I stopped trying to control every minute.
+
+Now our reading sessions are lively. Sometimes we act out a scene. Sometimes we stop to draw a character. Sometimes a child chooses a word they like and we use it in new sentences. The room is not always quiet, but it is full of attention.
+
+One of my favourite moments happened with a shy girl named Lina. For weeks, she listened but never wanted to read aloud. One day, she asked if she could read one sentence. Her voice was very soft, but everyone listened. When she finished, the other children clapped. She smiled in a way I will never forget.
+
+Volunteering there has changed how I think about education. Progress is not always fast or easy to measure. Sometimes it is one question, one brave sentence, or one child discovering that stories can belong to them too.`,
+      focus: ['education vocabulary', 'speaker reflection', 'specific examples'],
+      words: [
+        { word: 'volunteer', meaning: 'work without being paid to help people or a cause' },
+        { word: 'session', meaning: 'a period of time for a planned activity' },
+        { word: 'interrupting', meaning: 'speaking while someone else is speaking' },
+        { word: 'lively', meaning: 'full of energy and activity' },
+        { word: 'progress', meaning: 'improvement or movement forward' }
+      ],
+      questions: [
+        { question: 'What does Hannah do every Wednesday afternoon?', options: ['Reads stories with children', 'Teaches adult grammar', 'Repairs books'], answer: 'Reads stories with children' },
+        { question: 'Why did the reading group start?', options: ['Some children did not have many books at home', 'The school library closed forever', 'Parents wanted a sports club'], answer: 'Some children did not have many books at home' },
+        { question: 'Why was Hannah worried on her first day?', options: ['The session felt messy', 'No children came', 'She lost all the books'], answer: 'The session felt messy' },
+        { question: 'What did the centre manager explain?', options: ['Asking and imagining are part of reading', 'Children must sit silently', 'Plans are more important than attention'], answer: 'Asking and imagining are part of reading' },
+        { question: 'What moment does Hannah remember with Lina?', options: ['Lina read one sentence aloud', 'Lina wrote a whole novel', 'Lina left the group'], answer: 'Lina read one sentence aloud' }
+      ],
+      details: [
+        { sentence: 'Hannah volunteers at a community ___.', answer: 'centre' },
+        { sentence: 'On her first day, she brought three picture ___.', answer: 'books' },
+        { sentence: 'A girl asked why the ___ looked different in every picture.', answer: 'moon' },
+        { sentence: 'Sometimes the children act out a ___.', answer: 'scene' },
+        { sentence: 'After Lina read, the other children ___.', answer: 'clapped' }
+      ],
+      trueFalse: [
+        { sentence: 'Hannah first thought the work was only about practising reading.', answer: true },
+        { sentence: 'The children followed her exact plan on the first day.', answer: false },
+        { sentence: 'The manager said children learn only by sitting quietly.', answer: false },
+        { sentence: 'The sessions are lively but full of attention.', answer: true },
+        { sentence: 'Hannah says progress is always easy to measure.', answer: false }
+      ],
+      productionQuestion: 'What kind of volunteering could help people learn or feel more confident? Explain how.',
+      sampleAnswer: 'A conversation club could help language learners feel more confident. Volunteers would not need to be perfect teachers; they could listen, ask questions and create a friendly space where learners are not afraid of mistakes.'
+    },
+    {
+      id: 'b2-listening-15-trip-without-plan',
+      order: 15,
+      stage: 'B2.5',
+      title: 'When the plan disappeared',
+      topic: 'travel surprises and flexibility',
+      description: 'Students listen to Ethan describing a weekend trip that went wrong but became a favourite memory.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2a5c7e2e2bced3db8eed1a_ElevenLabs_2026-06-11T06_55_23_Josh%20-%20Teacher%20for%20Kids_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Ethan. Last spring, my friend Leo and I planned a weekend trip to a small town by the sea. We wanted something simple: two train tickets, one cheap guesthouse, and two days of walking, eating seafood, and taking photos. I had planned almost every detail, so I felt completely prepared.
+
+The first problem appeared before we even left the city. Our train was cancelled because of a technical issue. The next train was not for three hours, and the station was crowded with annoyed passengers. Leo suggested going home and trying another weekend, but I did not want to waste the reservation. So we waited.
+
+When we finally arrived, it was already dark and raining heavily. I opened the map on my phone, but the battery was almost dead. We walked in the wrong direction for twenty minutes before realising the sea was behind us, not in front of us. By the time we found the guesthouse, our shoes were wet and we were both silent.
+
+Then came the worst surprise. The owner looked at my booking and said it was for the following weekend. I had chosen the wrong date. For a moment, I could not speak. I had been so proud of my careful planning, and now we had nowhere to stay.
+
+The owner could not give us a room, but she was kinder than I expected. She called her cousin, who owned a small cafe with two rooms upstairs. The cafe was not near the beach, and the room was very basic, but it was warm and dry. That felt like luxury after the rain.
+
+The next morning, our plan was already ruined, so we stopped trying to follow it. We had breakfast in the cafe, talked to the owner's cousin, and asked him what he would do with one free day in town. He sent us to a quiet fishing harbour, a hill with a beautiful view, and a tiny restaurant that was not on any travel website.
+
+That day became one of my favourite travel memories. Not because everything went well, but because it didn't. When the plan disappeared, we started paying attention to the place itself. Since then, I still plan trips, but I leave more space for surprises.`,
+      focus: ['travel narrative', 'unexpected problems', 'lesson learned'],
+      words: [
+        { word: 'technical issue', meaning: 'a problem with equipment or systems' },
+        { word: 'reservation', meaning: 'a booking for a room, seat or service' },
+        { word: 'basic', meaning: 'simple and without extra comfort' },
+        { word: 'ruined', meaning: 'spoiled or badly damaged' },
+        { word: 'harbour', meaning: 'a place where boats are kept safely' }
+      ],
+      questions: [
+        { question: 'Where did Ethan and Leo plan to go?', options: ['A small town by the sea', 'A mountain village', 'A capital city'], answer: 'A small town by the sea' },
+        { question: 'Why was their train cancelled?', options: ['Because of a technical issue', 'Because of bad weather', 'Because they missed it'], answer: 'Because of a technical issue' },
+        { question: 'What mistake had Ethan made?', options: ['He booked the guesthouse for the wrong weekend', 'He bought tickets to the wrong country', 'He forgot his passport'], answer: 'He booked the guesthouse for the wrong weekend' },
+        { question: 'Where did they finally stay?', options: ['In rooms above a small cafe', 'In the train station', 'In the original guesthouse'], answer: 'In rooms above a small cafe' },
+        { question: 'Why did the trip become a favourite memory?', options: ['They paid attention to the place after the plan failed', 'Everything went exactly as planned', 'They spent the whole day online'], answer: 'They paid attention to the place after the plan failed' }
+      ],
+      details: [
+        { sentence: 'Ethan travelled with his friend ___.', answer: 'Leo' },
+        { sentence: 'The next train was not for ___ hours.', answer: 'three' },
+        { sentence: 'They walked in the wrong direction for ___ minutes.', answer: 'twenty' },
+        { sentence: 'The cafe room was warm and ___.', answer: 'dry' },
+        { sentence: 'The cousin sent them to a quiet fishing ___.', answer: 'harbour' }
+      ],
+      trueFalse: [
+        { sentence: 'Ethan felt completely prepared before the trip.', answer: true },
+        { sentence: 'Leo wanted to go home and try another weekend.', answer: true },
+        { sentence: 'The original guesthouse booking was for the correct date.', answer: false },
+        { sentence: 'The cafe room was luxurious and near the beach.', answer: false },
+        { sentence: 'Ethan now leaves more space for surprises when he plans trips.', answer: true }
+      ],
+      productionQuestion: 'Tell the story of a plan that went wrong but still turned into a good memory.',
+      sampleAnswer: 'Once a picnic was ruined by rain, so my friends and I went to a tiny restaurant instead. We stayed there for hours, talked more than usual and discovered a new place. The failed plan became better than the original one.'
+    },
+    {
+      id: 'b2-listening-16-hidden-cost-fast-fashion',
+      order: 16,
+      stage: 'B2.6',
+      title: 'The hidden cost of fast fashion',
+      topic: 'consumer habits, ethics and the environment',
+      description: 'Students listen to Sofia explaining how her view of cheap clothes changed after learning about fast fashion.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2a5fab19f9f42de5ec2ff3_ElevenLabs_2026-06-11T07_07_25_Ember%20-%20Energetic%2C%20Confident%20Protagonist_pvc_sp100_s32_sb100_v3.mp3',
+      transcriptText: `Hi, I'm Sofia. I used to love buying cheap clothes. If I saw a T-shirt for five euros or a jacket with a big discount, I felt as if I had found a small victory. I could change my style often without spending much money. For a while, fast fashion seemed convenient, fun, and harmless.
+
+Then one weekend, I cleaned my wardrobe. I found clothes I had worn only once, clothes that had lost their shape after two washes, and clothes I did not even remember buying. Some still had labels on them. Looking at the pile on my bed, I realised that the low price had made it too easy to buy things I did not really need.
+
+That was when I started reading about fast fashion. I learned that the real cost of a cheap item is often paid somewhere else. It can be paid by workers who receive very low wages, by factories that have to produce huge amounts very quickly, or by the environment when clothes are made, transported, and thrown away.
+
+One problem is the speed of the system. New collections appear all the time, and customers are encouraged to feel that last month's clothes are already old. This creates pressure to buy more and use each item for a shorter time. When clothes become almost disposable, waste becomes a serious problem.
+
+Another issue is quality. Cheap clothes are not always badly made, but many items are designed to be worn only a limited number of times. If a sweater loses its shape quickly, the customer buys another one. The company sells more, but the planet receives more waste.
+
+I do not think everyone can simply buy expensive ethical brands. That is not realistic for many people. But we can change small habits. We can buy fewer items, choose clothes we will wear often, repair small problems, exchange clothes with friends, or buy second-hand when possible.
+
+Now, before I buy something, I ask myself three questions: Do I need it? Will I wear it many times? Do I already own something similar? These questions do not make me perfect, but they help me slow down.
+
+Fast fashion looks cheap at the checkout, but its hidden cost is bigger than the number on the price tag. The real question is not only how much we pay, but who and what pays the rest.`,
+      focus: ['critical listening', 'environment vocabulary', 'argument and examples'],
+      words: [
+        { word: 'fast fashion', meaning: 'cheap clothing produced quickly in large amounts' },
+        { word: 'harmless', meaning: 'not causing damage or problems' },
+        { word: 'disposable', meaning: 'intended to be used briefly and then thrown away' },
+        { word: 'ethical brands', meaning: 'companies that try to treat workers and the environment fairly' },
+        { word: 'second-hand', meaning: 'owned or used by someone else before' }
+      ],
+      questions: [
+        { question: 'How did cheap clothes first make Sofia feel?', options: ['As if she had found a small victory', 'Guilty every time', 'Completely indifferent'], answer: 'As if she had found a small victory' },
+        { question: 'What did she find when cleaning her wardrobe?', options: ['Clothes she had barely worn', 'Only expensive ethical brands', 'A missing suitcase'], answer: 'Clothes she had barely worn' },
+        { question: 'Who or what may pay the real cost of cheap clothes?', options: ['Workers, factories and the environment', 'Only the customer', 'Only fashion designers'], answer: 'Workers, factories and the environment' },
+        { question: 'What problem does the speed of fast fashion create?', options: ['Pressure to buy more and use items briefly', 'Better quality for everyone', 'Fewer collections'], answer: 'Pressure to buy more and use items briefly' },
+        { question: 'What does Sofia suggest?', options: ['Buy fewer items and choose more carefully', 'Only buy expensive clothes', 'Never wear old clothes again'], answer: 'Buy fewer items and choose more carefully' }
+      ],
+      details: [
+        { sentence: 'Sofia mentions a T-shirt for five ___.', answer: 'euros' },
+        { sentence: 'Some clothes lost their shape after two ___.', answer: 'washes' },
+        { sentence: 'Factories produce huge amounts very ___.', answer: 'quickly' },
+        { sentence: 'She suggests exchanging clothes with ___.', answer: 'friends' },
+        { sentence: 'The hidden cost is bigger than the number on the price ___.', answer: 'tag' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia always thought fast fashion was harmful.', answer: false },
+        { sentence: 'Some clothes in her wardrobe still had labels on them.', answer: true },
+        { sentence: 'Fast fashion can create a lot of waste.', answer: true },
+        { sentence: 'Sofia says everyone can easily buy expensive ethical brands.', answer: false },
+        { sentence: 'Her three questions help her slow down before buying.', answer: true }
+      ],
+      productionQuestion: 'What buying habit would you like to change? Explain the problem and a realistic solution.',
+      sampleAnswer: 'I would like to stop buying cheap things just because they are discounted. The realistic solution is to wait one day before buying and ask whether I will really use the item. This would save money and reduce waste.'
+    },
+    {
+      id: 'b2-listening-17-quiet-places-in-cities',
+      order: 17,
+      stage: 'B2.6',
+      title: 'Why cities need quiet places',
+      topic: 'urban design, wellbeing and public spaces',
+      description: 'Students listen to Emma arguing that quiet public spaces are necessary in busy cities.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2bb6f1aada4c77687476e3_ElevenLabs_2026-06-12T07_33_10_Ember%20-%20Energetic%2C%20Confident%20Protagonist_pvc_sp100_s32_sb100_v3.mp3',
+      transcriptText: `Hi, I'm Emma. I live in a big city, and most of the time I enjoy it. I like the cafes, the late buses, the small museums, and the feeling that something is always happening. But there is one thing I think many cities forget: people also need quiet places.
+
+City life can be exciting, but it can also be exhausting. There is noise from traffic, construction, music from shops, phones ringing, people talking, and messages arriving all day. Even when nothing terrible is happening, the body can stay alert for too long. After a while, constant noise becomes part of your stress.
+
+A quiet place does not have to be completely silent. It can be a small park behind a busy street, a bench under trees, a calm library room, or a simple square where cars are not allowed. What matters is that people can slow down there. They can sit without buying anything, breathe normally, and hear their own thoughts again.
+
+Some people think quiet spaces are a luxury, but I disagree. They are important for wellbeing. Parents with small children need places to rest. Older people need safe areas where they can walk slowly. Students need somewhere to read between classes. Workers need a few minutes away from screens and noise. A quiet place can help many different people, not just those who can pay for a private cafe or gym.
+
+Quiet spaces can also make a city feel kinder. When a neighbourhood has only roads, shops, and advertisements, people move through it quickly. But when there are places to pause, people notice each other more. They see children playing, neighbours talking, and someone reading alone in the sun. The city becomes not only a place to move through, but a place to live in.
+
+Of course, cities cannot remove all noise. They need transport, businesses, and busy streets. But good city design should include balance. A city should not only ask people to hurry, spend money, and keep moving. It should also give them permission to stop.
+
+For me, quiet places are not empty spaces. They are spaces that give people back a little energy. And in a noisy world, that is not a small thing.`,
+      focus: ['opinion listening', 'urban vocabulary', 'supporting arguments'],
+      words: [
+        { word: 'exhausting', meaning: 'making someone very tired' },
+        { word: 'alert', meaning: 'ready to notice or react to danger or activity' },
+        { word: 'wellbeing', meaning: 'physical and mental health and comfort' },
+        { word: 'luxury', meaning: 'something pleasant but not considered necessary' },
+        { word: 'balance', meaning: 'a healthy mix of different needs' }
+      ],
+      questions: [
+        { question: 'What does Emma enjoy about big city life?', options: ['Cafes, late buses, museums and activity', 'Only silence and empty streets', 'Expensive private gyms'], answer: 'Cafes, late buses, museums and activity' },
+        { question: 'What does she think many cities forget?', options: ['People need quiet places', 'People need more advertisements', 'People dislike public transport'], answer: 'People need quiet places' },
+        { question: 'What does a quiet place allow people to do?', options: ['Slow down and hear their thoughts', 'Spend more money', 'Move faster through traffic'], answer: 'Slow down and hear their thoughts' },
+        { question: 'Why are quiet spaces important?', options: ['They support wellbeing for many groups', 'They replace all businesses', 'They make cities completely silent'], answer: 'They support wellbeing for many groups' },
+        { question: 'What should good city design include?', options: ['Balance', 'Only busy streets', 'More pressure to hurry'], answer: 'Balance' }
+      ],
+      details: [
+        { sentence: 'Emma mentions noise from traffic, construction and music from ___.', answer: 'shops' },
+        { sentence: 'A quiet place can be a bench under ___.', answer: 'trees' },
+        { sentence: 'Students need somewhere to read between ___.', answer: 'classes' },
+        { sentence: 'A city should give people permission to ___.', answer: 'stop' },
+        { sentence: 'Quiet spaces give people back a little ___.', answer: 'energy' }
+      ],
+      trueFalse: [
+        { sentence: 'Emma dislikes everything about big city life.', answer: false },
+        { sentence: 'A quiet place must be completely silent.', answer: false },
+        { sentence: 'Quiet places can help parents, older people, students and workers.', answer: true },
+        { sentence: 'Emma thinks cities can remove all noise.', answer: false },
+        { sentence: 'She sees quiet places as useful, not empty.', answer: true }
+      ],
+      productionQuestion: 'Do you think your city has enough quiet public places? What would you improve?',
+      sampleAnswer: 'My city has parks, but many are close to noisy roads. I would create small car-free areas with benches, trees and reading spaces. People need places where they can pause without paying for a cafe.'
+    },
+    {
+      id: 'b2-listening-18-career-change-chef',
+      order: 18,
+      stage: 'B2.6',
+      title: 'Changing career without starting from zero',
+      topic: 'career change, identity and work-life balance',
+      description: 'Students listen to Marcus describing how his cousin Leo moved from restaurant work to teaching cooking.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2bbce5a8ae6adb6cc2abc0_ElevenLabs_2026-06-12T07_58_43_Josh%20-%20Teacher%20for%20Kids_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I'm Marcus. My cousin Leo worked as a chef for almost fifteen years. When people heard that, they usually imagined a creative life full of beautiful dishes, happy customers, and exciting restaurants. Some of that was true. Leo loved food, and he was proud when people enjoyed something he had made. But the job was also much harder than most people realised.
+
+He worked long evenings, weekends, and holidays. While other people were relaxing with their families, Leo was usually standing in a hot kitchen, checking orders, and trying to keep everything moving quickly. The pressure was constant. One small mistake could delay ten meals, and one unhappy customer could change the mood of the whole team.
+
+For years, Leo told himself that this was just part of the job. He believed that being tired meant he was working hard and that working hard meant he was successful. But after a while, he started to notice that he had less energy, less patience, and less time for the people he cared about.
+
+The turning point came on his daughter's birthday. He had promised to arrive before she blew out the candles, but the restaurant was busier than expected. He got home late and found a piece of cake waiting for him in the fridge. Nothing dramatic happened, but he said that quiet moment hurt more than any argument.
+
+At first, Leo did not know what else he could do. Cooking was his main skill and his identity. Then a friend asked him to teach a weekend cooking class for beginners. Leo was nervous, but he enjoyed it more than he expected. He liked explaining simple techniques, answering questions, and watching people become more confident.
+
+Over the next year, he slowly changed direction. He reduced his restaurant hours, taught more classes, and began creating simple recipes for people who were afraid of cooking. Today, Leo still works with food, but not in the same way. He runs small workshops and helps busy people cook at home.
+
+He says changing career did not mean throwing away his past. It meant using his experience differently. For Leo, success is no longer only about a full restaurant. It is also about having dinner with his family and helping other people enjoy food without fear.`,
+      focus: ['career narrative', 'turning point', 'identity and values'],
+      words: [
+        { word: 'chef', meaning: 'a professional cook, especially in a restaurant' },
+        { word: 'constant pressure', meaning: 'stress that continues without much break' },
+        { word: 'turning point', meaning: 'a moment when a situation starts to change' },
+        { word: 'identity', meaning: 'the way someone understands who they are' },
+        { word: 'workshops', meaning: 'practical classes where people learn by doing' }
+      ],
+      questions: [
+        { question: 'How long did Leo work as a chef?', options: ['Almost fifteen years', 'Two years', 'One summer'], answer: 'Almost fifteen years' },
+        { question: 'What was difficult about the restaurant job?', options: ['Long hours and constant pressure', 'Too much free time', 'No need for teamwork'], answer: 'Long hours and constant pressure' },
+        { question: 'What was the turning point?', options: ['Missing part of his daughter\'s birthday', 'Winning a cooking prize', 'Opening a new restaurant'], answer: 'Missing part of his daughter\'s birthday' },
+        { question: 'What did Leo enjoy about teaching beginners?', options: ['Explaining and watching people gain confidence', 'Avoiding all contact with people', 'Cooking only for famous customers'], answer: 'Explaining and watching people gain confidence' },
+        { question: 'What does career change mean for Leo?', options: ['Using past experience differently', 'Throwing away everything he learned', 'Never working with food again'], answer: 'Using past experience differently' }
+      ],
+      details: [
+        { sentence: 'Leo usually stood in a hot ___.', answer: 'kitchen' },
+        { sentence: 'One mistake could delay ten ___.', answer: 'meals' },
+        { sentence: 'A piece of cake was waiting in the ___.', answer: 'fridge' },
+        { sentence: 'A friend asked Leo to teach a weekend cooking ___.', answer: 'class' },
+        { sentence: 'Today Leo runs small ___.', answer: 'workshops' }
+      ],
+      trueFalse: [
+        { sentence: 'Leo loved food and felt proud when customers enjoyed his dishes.', answer: true },
+        { sentence: 'Restaurant work gave Leo every evening and holiday free.', answer: false },
+        { sentence: 'Leo immediately knew what career to choose next.', answer: false },
+        { sentence: 'He now helps busy people cook at home.', answer: true },
+        { sentence: 'For Leo, success now includes family time.', answer: true }
+      ],
+      productionQuestion: 'How can someone change career without wasting their previous experience?',
+      sampleAnswer: 'A person can look for the transferable part of their experience. For example, a chef can teach, write recipes or advise restaurants. The old skill does not disappear; it can be used in a new and healthier way.'
+    },
+  ].map(buildListeningReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2 = {
@@ -2852,6 +3898,6 @@
     vocabulary: READY_VOCABULARY_LESSONS_B2,
     reading: READY_READING_LESSONS_B2,
     writing: READY_WRITING_LESSONS_B2,
-    listening: root.lessons.B2?.listening || []
+    listening: READY_LISTENING_LESSONS_B2
   };
 })();
