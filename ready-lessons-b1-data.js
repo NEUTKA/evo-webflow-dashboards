@@ -46,8 +46,8 @@
       plannedTopics: ['Present perfect vs past simple', 'Used to', 'Future forms', 'Conditionals', 'Modals', 'Passive voice', 'Reported speech', 'Relative clauses']
     },
     vocabulary: {
-      description: 'B1 vocabulary pathway space for broader topic range, collocations, phrasal verbs and more precise opinions.',
-      plannedTopics: ['Work and career', 'Travel problems', 'Health and lifestyle', 'Media', 'Education', 'Environment']
+      description: 'B1 vocabulary pathway for broader topic range, collocations, everyday phrasal verbs and more precise opinions.',
+      plannedTopics: ['Work and career', 'Education', 'Travel problems', 'Health and lifestyle', 'Media', 'Environment', 'Money', 'Phrasal verbs']
     },
     reading: {
       description: 'B1 reading pathway space for longer articles, opinions, reviews, advice texts and practical information.',
@@ -68,6 +68,109 @@
     root.skills = Array.isArray(root.skills) && root.skills.length ? root.skills : READY_LESSON_SKILLS_FALLBACK;
     root.b1Pathways = { ...root.b1Pathways, ...READY_LESSON_B1_PATHWAYS };
     root.pathways = { ...root.pathways, B1: { ...(root.pathways?.B1 || {}), ...READY_LESSON_B1_PATHWAYS } };
+  }
+
+  function buildVocabularyChoiceItem(lessonId, entries, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const distractors = entries.filter((candidate) => candidate.word !== entry.word).slice(0, 2);
+    const orderedWords = index % 3 === 0
+      ? [entry.word, distractors[0]?.word, distractors[1]?.word]
+      : (index % 3 === 1
+        ? [distractors[0]?.word, entry.word, distractors[1]?.word]
+        : [distractors[0]?.word, distractors[1]?.word, entry.word]);
+    const options = orderedWords.map((word, optionIndex) => ({
+      id: ids[optionIndex],
+      text: word || entry.word
+    }));
+    const answer = options.find((option) => option.text === entry.word)?.id || 'a';
+
+    return {
+      id: `${lessonId}-choice-${index + 1}`,
+      sentence: entry.sentence,
+      options,
+      answer,
+      explanation: `${entry.word}: ${entry.meaning}`
+    };
+  }
+
+  function buildVocabularyReadyLesson(config) {
+    const words = config.words || [];
+    const extraWords = config.extraWords || words;
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B1',
+      skill: 'vocabulary',
+      stage: config.stage || 'B1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 30,
+      description: config.description,
+      focus: config.focus || [],
+      teacherNotes: config.teacherNotes || 'Use the final task to move from recognition to controlled B1 production with examples, reasons or short opinions.',
+      tasks: [
+        {
+          id: `${config.id}-matching`,
+          type: 'matching',
+          title: 'Match words and meanings',
+          prompt: 'Match each word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-choice`,
+          type: 'choice',
+          title: 'Choose the right word',
+          prompt: 'Choose the word or phrase that completes each sentence.',
+          items: words.map((entry, index) => buildVocabularyChoiceItem(config.id, words, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Type the missing word',
+          prompt: 'Type one word or phrase.',
+          items: words.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry.sentence,
+            accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
+            hint: entry.hint || entry.meaning,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Use the words',
+          prompt: config.productionPrompt || 'Write 6-8 sentences using words from this lesson.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-spelling-extra`,
+          type: 'gap_fill',
+          title: 'Extra spelling practice',
+          prompt: 'Read the meaning and type the word or phrase.',
+          items: extraWords.map((entry, index) => ({
+            id: `${config.id}-spelling-extra-${index + 1}`,
+            sentence: `Word or phrase for "${entry.meaning}": ___`,
+            accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
+            hint: entry.sentence,
+            explanation: `${entry.word}: ${entry.meaning}`
+          }))
+        }
+      ]
+    };
   }
 
   function buildB1GrammarReadyLesson(config) {
@@ -1001,11 +1104,338 @@
     }
   ].map(buildB1GrammarReadyLesson);
 
+  const READY_VOCABULARY_LESSONS_B1 = [
+    {
+      id: 'b1-vocabulary-01-work-career',
+      order: 1,
+      stage: 'B1.1',
+      title: 'Work and career',
+      topic: 'jobs, responsibilities and career development',
+      description: 'Students practise useful B1 vocabulary for talking about work, duties and career progress.',
+      focus: ['work', 'career', 'responsibilities'],
+      words: [
+        { word: 'responsibility', meaning: 'a duty or something you must take care of', sentence: 'Managing customer emails is one of my main ___.', hint: 'duty' },
+        { word: 'deadline', meaning: 'the latest time or date to finish something', sentence: 'The project ___ is Friday afternoon.', hint: 'finish date' },
+        { word: 'promotion', meaning: 'a move to a higher position at work', sentence: 'She got a ___ after two years in the company.', hint: 'better job position' },
+        { word: 'training', meaning: 'learning skills for a job', sentence: 'New employees receive two weeks of ___.', hint: 'job learning' },
+        { word: 'colleague', meaning: 'a person you work with', sentence: 'My ___ helped me prepare for the meeting.', hint: 'person at work' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a job you have, had or would like. Use at least four words from this lesson.',
+      sampleAnswer: 'I would like a job with clear responsibilities. I am good at working with colleagues and solving problems. I think training is important when you start a new job. I also like having deadlines because they help me organize my time. In the future, I would like to get a promotion.'
+    },
+    {
+      id: 'b1-vocabulary-02-education-learning',
+      order: 2,
+      stage: 'B1.1',
+      title: 'Education and learning',
+      topic: 'courses, progress and study habits',
+      description: 'Students learn vocabulary for describing learning goals, course work and progress.',
+      focus: ['education', 'study habits', 'progress'],
+      words: [
+        { word: 'assignment', meaning: 'a piece of work a student must complete', sentence: 'Our teacher gave us a writing ___ for Monday.', hint: 'student task' },
+        { word: 'revise', meaning: 'study again before a test', sentence: 'I need to ___ the grammar before the exam.', hint: 'study again' },
+        { word: 'progress', meaning: 'improvement over time', sentence: 'I can see real ___ in my speaking.', hint: 'improvement' },
+        { word: 'qualification', meaning: 'an official result showing you completed study or training', sentence: 'This ___ can help me find a better job.', hint: 'official study result' },
+        { word: 'skill', meaning: 'an ability to do something well', sentence: 'Listening is the ___ I want to improve most.', hint: 'ability' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about your learning goals. Use at least four words from this lesson.',
+      sampleAnswer: 'I want to improve my English skills this year. I try to revise new vocabulary after every lesson. Written assignments help me notice my mistakes. I can see progress when I speak more confidently. In the future, I would like to get an English qualification.'
+    },
+    {
+      id: 'b1-vocabulary-03-travel-problems',
+      order: 3,
+      stage: 'B1.1',
+      title: 'Travel problems',
+      topic: 'delays, cancellations and travel help',
+      description: 'Students practise B1 vocabulary for common travel problems and solutions.',
+      focus: ['travel', 'problems', 'customer service'],
+      words: [
+        { word: 'delay', meaning: 'a situation when something happens later than planned', sentence: 'There was a two-hour ___ at the airport.', hint: 'late situation' },
+        { word: 'cancellation', meaning: 'a decision that a planned event or journey will not happen', sentence: 'The flight ___ caused a lot of stress.', hint: 'not happening' },
+        { word: 'refund', meaning: 'money returned after a problem or cancellation', sentence: 'I asked for a ___ because the train was cancelled.', hint: 'money back' },
+        { word: 'accommodation', meaning: 'a place to stay, such as a hotel or apartment', sentence: 'We booked cheap ___ near the station.', hint: 'place to stay' },
+        { word: 'destination', meaning: 'the place you are travelling to', sentence: 'Our final ___ is a small town by the sea.', hint: 'place you go to' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a travel problem. Include what happened and how you solved it.',
+      sampleAnswer: 'Last summer, our flight had a long delay. Later, there was a cancellation, so we had to change our plans. The airline offered accommodation for one night. We asked for a refund for part of the ticket. Finally, we reached our destination the next day.'
+    },
+    {
+      id: 'b1-vocabulary-04-health-lifestyle',
+      order: 4,
+      stage: 'B1.1',
+      title: 'Health and lifestyle',
+      topic: 'symptoms, treatment and healthy habits',
+      description: 'Students learn vocabulary for describing health problems and lifestyle choices.',
+      focus: ['health', 'lifestyle', 'advice'],
+      words: [
+        { word: 'symptom', meaning: 'a sign that you may be ill', sentence: 'A high temperature can be a ___ of flu.', hint: 'sign of illness' },
+        { word: 'treatment', meaning: 'medical care or action to help an illness', sentence: 'The doctor explained the best ___ for my back pain.', hint: 'medical help' },
+        { word: 'recover', meaning: 'become well again after illness or injury', sentence: 'It took me a week to ___ after the flu.', hint: 'get well again' },
+        { word: 'balanced diet', meaning: 'a healthy mix of different types of food', sentence: 'A ___ gives your body the nutrients it needs.', hint: 'healthy food mix' },
+        { word: 'stress', meaning: 'worry or pressure that affects how you feel', sentence: 'Exercise helps me manage ___ after work.', hint: 'pressure or worry' }
+      ],
+      productionQuestion: 'Write 6-8 sentences giving health or lifestyle advice. Use at least four words from this lesson.',
+      sampleAnswer: 'If you have serious symptoms, you should talk to a doctor. The right treatment can help you recover faster. I think a balanced diet is important for energy. Exercise can reduce stress after a long day. Sleep is also part of a healthy lifestyle.'
+    },
+    {
+      id: 'b1-vocabulary-05-feelings-personality',
+      order: 5,
+      stage: 'B1.2',
+      title: 'Feelings and personality',
+      topic: 'describing people and emotions more precisely',
+      description: 'Students practise adjectives for personality, feelings and reactions.',
+      focus: ['feelings', 'personality', 'descriptions'],
+      words: [
+        { word: 'confident', meaning: 'sure that you can do something well', sentence: 'I feel more ___ when I practise speaking every day.', hint: 'sure about yourself' },
+        { word: 'disappointed', meaning: 'unhappy because something was not as good as expected', sentence: 'She was ___ when the concert was cancelled.', hint: 'unhappy about a result' },
+        { word: 'reliable', meaning: 'able to be trusted or depended on', sentence: 'A ___ friend arrives on time and keeps promises.', hint: 'can be trusted' },
+        { word: 'sensitive', meaning: 'easily affected by feelings or other people', sentence: 'He is quite ___, so choose your words carefully.', hint: 'easily hurt or affected' },
+        { word: 'ambitious', meaning: 'wanting to be successful or achieve a lot', sentence: 'My sister is ___ and wants to start her own business.', hint: 'wants success' }
+      ],
+      productionQuestion: 'Write 6-8 sentences describing yourself or someone you know. Use at least four adjectives from this lesson.',
+      sampleAnswer: 'My best friend is reliable and always helps me. She is also ambitious because she wants to build her own company. Sometimes she is sensitive when people criticize her work. I feel confident when I am with her because she supports me. I was disappointed when she moved to another city.'
+    },
+    {
+      id: 'b1-vocabulary-06-relationships-communication',
+      order: 6,
+      stage: 'B1.2',
+      title: 'Relationships and communication',
+      topic: 'friendship, arguments and staying connected',
+      description: 'Students learn vocabulary for discussing relationships and communication problems.',
+      focus: ['relationships', 'communication', 'conflict'],
+      words: [
+        { word: 'support', meaning: 'help and encouragement', sentence: 'Good friends give each other ___ in difficult times.', hint: 'help and encouragement' },
+        { word: 'argument', meaning: 'an angry disagreement', sentence: 'We had an ___ about money, but later we apologised.', hint: 'angry disagreement' },
+        { word: 'apologise', meaning: 'say sorry for something wrong', sentence: 'You should ___ if you hurt someone.', hint: 'say sorry' },
+        { word: 'trust', meaning: 'believe that someone is honest and reliable', sentence: 'It takes time to build ___ in a relationship.', hint: 'believe someone' },
+        { word: 'keep in touch', meaning: 'continue communicating with someone', sentence: 'We ___ by sending messages every week.', hint: 'continue contact' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a good relationship or friendship. Use at least four words or phrases from this lesson.',
+      sampleAnswer: 'A good friendship needs trust and support. Friends can have an argument, but they should apologise and talk honestly. I try to keep in touch with old classmates even when we are busy. Communication is easier when people listen carefully.'
+    },
+    {
+      id: 'b1-vocabulary-07-technology-online-life',
+      order: 7,
+      stage: 'B1.2',
+      title: 'Technology and online life',
+      topic: 'devices, privacy and online habits',
+      description: 'Students practise vocabulary for everyday technology, privacy and online safety.',
+      focus: ['technology', 'online safety', 'digital habits'],
+      words: [
+        { word: 'device', meaning: 'a piece of electronic equipment', sentence: 'I use more than one ___ for work and study.', hint: 'electronic equipment' },
+        { word: 'update', meaning: 'new software or information that improves something', sentence: 'The latest ___ fixed the problem with the app.', hint: 'new software version' },
+        { word: 'privacy', meaning: 'control over personal information', sentence: 'You should check your ___ settings on social media.', hint: 'personal information control' },
+        { word: 'password', meaning: 'a secret word or phrase used to enter an account', sentence: 'Never share your ___ with anyone.', hint: 'secret account word' },
+        { word: 'social media', meaning: 'websites and apps for sharing content and messages', sentence: 'Many people get news from ___.', hint: 'online sharing apps' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about your technology habits and online safety. Use at least four words from this lesson.',
+      sampleAnswer: 'I use my phone as my main device every day. I install updates because they make apps safer. I never share my password with other people. I also check my privacy settings on social media. Technology is useful, but it can waste time.'
+    },
+    {
+      id: 'b1-vocabulary-08-media-entertainment',
+      order: 8,
+      stage: 'B1.2',
+      title: 'Media and entertainment',
+      topic: 'films, news and online content',
+      description: 'Students learn vocabulary for discussing media, shows and entertainment choices.',
+      focus: ['media', 'films', 'entertainment'],
+      words: [
+        { word: 'headline', meaning: 'the title of a news story', sentence: 'The ___ made the story sound more dramatic than it was.', hint: 'news title' },
+        { word: 'review', meaning: 'an opinion text about a film, book or product', sentence: 'I read a positive ___ before watching the film.', hint: 'opinion text' },
+        { word: 'audience', meaning: 'the people watching or listening to something', sentence: 'The ___ laughed during the comedy show.', hint: 'watchers or listeners' },
+        { word: 'episode', meaning: 'one part of a TV or online series', sentence: 'The final ___ of the series was surprising.', hint: 'part of a series' },
+        { word: 'documentary', meaning: 'a film or programme about real facts or events', sentence: 'We watched a ___ about climate change.', hint: 'real facts film' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a film, series, video or news story. Use at least four words from this lesson.',
+      sampleAnswer: 'I watched a documentary about food waste. The headline was simple, but the story was powerful. Many people in the audience asked questions after the film. I read a review online, and it recommended the documentary. I would like to watch another episode next week.'
+    },
+    {
+      id: 'b1-vocabulary-09-environment',
+      order: 9,
+      stage: 'B1.3',
+      title: 'Environment',
+      topic: 'pollution, recycling and protecting nature',
+      description: 'Students practise vocabulary for common environmental problems and solutions.',
+      focus: ['environment', 'problems', 'solutions'],
+      words: [
+        { word: 'pollution', meaning: 'damage caused by dirty air, water or land', sentence: 'Air ___ is a serious problem in many big cities.', hint: 'dirty environment' },
+        { word: 'recycle', meaning: 'use materials again instead of throwing them away', sentence: 'We should ___ paper, glass and plastic.', hint: 'use again' },
+        { word: 'reduce', meaning: 'make something smaller or less', sentence: 'People can ___ waste by buying fewer plastic products.', hint: 'make less' },
+        { word: 'protect', meaning: 'keep someone or something safe from harm', sentence: 'National parks help ___ wild animals.', hint: 'keep safe' },
+        { word: 'climate', meaning: 'the usual weather conditions in a place', sentence: 'The ___ is changing in many parts of the world.', hint: 'usual weather' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about an environmental problem and possible solutions. Use at least four words from this lesson.',
+      sampleAnswer: 'Pollution is a serious problem in my city. People should recycle more and reduce plastic waste. The government should protect parks and rivers. Climate change also affects our weather. Small actions can make a difference if many people do them.'
+    },
+    {
+      id: 'b1-vocabulary-10-money-shopping',
+      order: 10,
+      stage: 'B1.3',
+      title: 'Money and shopping',
+      topic: 'prices, budgeting and shopping problems',
+      description: 'Students learn vocabulary for discussing money, purchases and customer problems.',
+      focus: ['money', 'shopping', 'budget'],
+      words: [
+        { word: 'budget', meaning: 'a plan for how to spend money', sentence: 'I have a weekly ___ for food and transport.', hint: 'money plan' },
+        { word: 'afford', meaning: 'have enough money to buy or do something', sentence: 'I cannot ___ a new laptop this month.', hint: 'have enough money' },
+        { word: 'bargain', meaning: 'something bought for a good low price', sentence: 'This coat was a real ___ in the sale.', hint: 'good low price' },
+        { word: 'receipt', meaning: 'a paper or digital record of payment', sentence: 'Keep the ___ in case you need to return the item.', hint: 'payment record' },
+        { word: 'purchase', meaning: 'something you buy or the act of buying', sentence: 'My last online ___ arrived late.', hint: 'buying or bought item' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about how you spend money or a shopping experience. Use at least four words from this lesson.',
+      sampleAnswer: 'I try to follow a monthly budget. I cannot afford expensive clothes very often, so I look for a bargain during sales. I always keep the receipt after a purchase. Last week, I bought shoes online, and they arrived quickly.'
+    },
+    {
+      id: 'b1-vocabulary-11-crime-safety',
+      order: 11,
+      stage: 'B1.3',
+      title: 'Crime and safety',
+      topic: 'reporting incidents and describing evidence',
+      description: 'Students practise vocabulary for describing crime, safety and reports.',
+      focus: ['crime', 'safety', 'reports'],
+      words: [
+        { word: 'steal', meaning: 'take something that belongs to another person', sentence: 'Someone tried to ___ my bag at the station.', hint: 'take illegally' },
+        { word: 'witness', meaning: 'a person who sees an event or crime happen', sentence: 'A ___ told the police what happened.', hint: 'person who saw it' },
+        { word: 'suspect', meaning: 'a person who may have done something wrong', sentence: 'The police spoke to a ___ near the shop.', hint: 'possible criminal' },
+        { word: 'report', meaning: 'tell an authority about a problem or crime', sentence: 'You should ___ a stolen phone as soon as possible.', hint: 'tell authorities' },
+        { word: 'evidence', meaning: 'information or objects that help prove what happened', sentence: 'The camera video was important ___.', hint: 'proof information' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a lost or stolen item, or a safety problem. Use at least four words from this lesson.',
+      sampleAnswer: 'Someone tried to steal my wallet on the bus. A witness saw the man and helped me. I reported the problem to the police. They asked if there was any evidence. Later, they checked the station cameras and found a suspect.'
+    },
+    {
+      id: 'b1-vocabulary-12-housing-neighbourhood',
+      order: 12,
+      stage: 'B1.3',
+      title: 'Housing and neighbourhood',
+      topic: 'homes, rent and local facilities',
+      description: 'Students learn vocabulary for describing homes, landlords and local areas.',
+      focus: ['housing', 'neighbourhood', 'facilities'],
+      words: [
+        { word: 'rent', meaning: 'money paid regularly to live in a home', sentence: 'The ___ is higher in the city center.', hint: 'monthly home payment' },
+        { word: 'landlord', meaning: 'a person who owns a home that someone else rents', sentence: 'I called the ___ because the heating stopped working.', hint: 'owner of rented home' },
+        { word: 'repair', meaning: 'fix something that is broken', sentence: 'The bathroom needs a ___ before winter.', hint: 'fixing' },
+        { word: 'neighbourhood', meaning: 'the area around where you live', sentence: 'My ___ is quiet and safe.', hint: 'local area' },
+        { word: 'facilities', meaning: 'useful places, services or equipment', sentence: 'The building has good ___, including a gym and parking.', hint: 'useful services' }
+      ],
+      productionQuestion: 'Write 6-8 sentences describing a home or neighbourhood. Use at least four words from this lesson.',
+      sampleAnswer: 'I live in a quiet neighbourhood near the park. The rent is not cheap, but the flat is comfortable. Our landlord is helpful when something needs repair. The building has good facilities, including parking. I like the area because it feels safe.'
+    },
+    {
+      id: 'b1-vocabulary-13-food-cooking',
+      order: 13,
+      stage: 'B1.4',
+      title: 'Food and cooking',
+      topic: 'recipes, taste and food preparation',
+      description: 'Students practise vocabulary for cooking, ingredients and describing food.',
+      focus: ['food', 'cooking', 'taste'],
+      words: [
+        { word: 'recipe', meaning: 'instructions for preparing food', sentence: 'I followed a simple ___ for vegetable soup.', hint: 'cooking instructions' },
+        { word: 'ingredient', meaning: 'one food item used to make a dish', sentence: 'Tomatoes are the main ___ in this sauce.', hint: 'part of a dish' },
+        { word: 'flavour', meaning: 'the taste of food or drink', sentence: 'The soup had a strong garlic ___.', hint: 'taste' },
+        { word: 'portion', meaning: 'an amount of food for one person', sentence: 'The restaurant gave me a huge ___ of pasta.', hint: 'serving amount' },
+        { word: 'homemade', meaning: 'made at home, not bought ready-made', sentence: 'I prefer ___ food because it is fresher.', hint: 'made at home' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a dish you like cooking or eating. Use at least four words from this lesson.',
+      sampleAnswer: 'I like making homemade pasta sauce. The recipe is simple and does not need many ingredients. Tomatoes are the main ingredient, and garlic gives it a strong flavour. I usually make a large portion for my family. It tastes better than ready-made sauce.'
+    },
+    {
+      id: 'b1-vocabulary-14-transport-commuting',
+      order: 14,
+      stage: 'B1.4',
+      title: 'Transport and commuting',
+      topic: 'daily travel and transport problems',
+      description: 'Students learn vocabulary for discussing commuting, fares, routes and traffic.',
+      focus: ['transport', 'commuting', 'travel problems'],
+      words: [
+        { word: 'commute', meaning: 'travel regularly between home and work or school', sentence: 'I ___ by metro because it is faster than the bus.', hint: 'travel to work' },
+        { word: 'traffic jam', meaning: 'a long line of vehicles that cannot move easily', sentence: 'We were late because of a huge ___.', hint: 'stuck cars' },
+        { word: 'route', meaning: 'the way from one place to another', sentence: 'This bus ___ goes past the university.', hint: 'way or path' },
+        { word: 'fare', meaning: 'the price of a journey by bus, train or taxi', sentence: 'The train ___ is cheaper if you book early.', hint: 'travel price' },
+        { word: 'platform', meaning: 'the place where passengers get on a train', sentence: 'The train to Oxford leaves from ___ 3.', hint: 'train boarding place' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about your commute or transport in your city. Use at least four words from this lesson.',
+      sampleAnswer: 'I commute by bus on weekdays. My route goes through the city center, so there is often a traffic jam. The fare is cheap, but the journey can be slow. When I travel by train, I always check the platform carefully.'
+    },
+    {
+      id: 'b1-vocabulary-15-culture-events',
+      order: 15,
+      stage: 'B1.4',
+      title: 'Culture and events',
+      topic: 'festivals, performances and traditions',
+      description: 'Students practise vocabulary for cultural events, performances and traditions.',
+      focus: ['culture', 'events', 'traditions'],
+      words: [
+        { word: 'exhibition', meaning: 'a public show of art, objects or information', sentence: 'We visited a photography ___ at the museum.', hint: 'public show' },
+        { word: 'performance', meaning: 'a show, concert or play done for an audience', sentence: 'The dance ___ lasted two hours.', hint: 'show' },
+        { word: 'tradition', meaning: 'a custom or belief passed from one generation to another', sentence: 'Cooking this dish is a family ___.', hint: 'old custom' },
+        { word: 'festival', meaning: 'a public event with music, food, art or celebration', sentence: 'The summer ___ brings many visitors to the city.', hint: 'public celebration' },
+        { word: 'audience', meaning: 'people watching or listening to a show', sentence: 'The ___ stood up and clapped at the end.', hint: 'people watching' }
+      ],
+      productionQuestion: 'Write 6-8 sentences about a cultural event, festival or performance. Use at least four words from this lesson.',
+      sampleAnswer: 'Last month, I went to a music festival in the city center. There was also an art exhibition in a small gallery nearby. The final performance was excellent, and the audience clapped for a long time. I like events that show local traditions.'
+    },
+    {
+      id: 'b1-vocabulary-16-opinions-discussion',
+      order: 16,
+      stage: 'B1.4',
+      title: 'Opinions and discussion',
+      topic: 'agreeing, disagreeing and giving balanced opinions',
+      description: 'Students learn vocabulary for expressing opinions and discussing advantages and disadvantages.',
+      focus: ['opinions', 'discussion', 'argument'],
+      words: [
+        { word: 'point of view', meaning: 'a personal opinion or way of thinking', sentence: 'From my ___, online learning is useful but not perfect.', hint: 'opinion' },
+        { word: 'advantage', meaning: 'a good or useful side of something', sentence: 'One ___ of living in a city is better public transport.', hint: 'positive side' },
+        { word: 'disadvantage', meaning: 'a bad or difficult side of something', sentence: 'The main ___ is that city life can be expensive.', hint: 'negative side' },
+        { word: 'agree', meaning: 'have the same opinion as someone else', sentence: 'I ___ with you that exercise is important.', hint: 'same opinion' },
+        { word: 'disagree', meaning: 'have a different opinion from someone else', sentence: 'I ___ because I think the plan is too risky.', hint: 'different opinion' }
+      ],
+      productionQuestion: 'Write 6-8 sentences giving your opinion about online learning, city life or social media. Use at least four words from this lesson.',
+      sampleAnswer: 'From my point of view, online learning has many advantages. It is flexible and saves travel time. However, one disadvantage is that students can feel lonely. I agree that technology is useful, but I disagree with people who say it can replace every classroom.'
+    },
+    {
+      id: 'b1-vocabulary-17-everyday-phrasal-verbs',
+      order: 17,
+      stage: 'B1.5',
+      title: 'Everyday phrasal verbs',
+      topic: 'common phrasal verbs for daily life',
+      description: 'Students practise high-frequency B1 phrasal verbs in everyday contexts.',
+      focus: ['phrasal verbs', 'daily life', 'spoken English'],
+      words: [
+        { word: 'give up', meaning: 'stop doing something', sentence: 'He wants to ___ smoking this year.', hint: 'stop doing' },
+        { word: 'look after', meaning: 'take care of someone or something', sentence: 'Can you ___ my dog this weekend?', hint: 'take care of' },
+        { word: 'run out of', meaning: 'have none left', sentence: 'We ___ milk, so I need to go shopping.', hint: 'have none left' },
+        { word: 'find out', meaning: 'learn information', sentence: 'I need to ___ what time the train leaves.', hint: 'learn information' },
+        { word: 'turn down', meaning: 'refuse an offer or make sound lower', sentence: 'She had to ___ the job offer because the salary was low.', hint: 'refuse' }
+      ],
+      productionQuestion: 'Write 6-8 sentences using at least four phrasal verbs from this lesson.',
+      sampleAnswer: 'I want to give up checking my phone late at night. On weekends, I look after my younger cousin. Yesterday, we ran out of bread, so I went to the shop. I need to find out when the next course starts. I would not turn down a good job offer.'
+    },
+    {
+      id: 'b1-vocabulary-18-b1-vocabulary-review',
+      order: 18,
+      stage: 'B1 review',
+      title: 'B1 vocabulary review',
+      topic: 'mixed useful B1 vocabulary',
+      description: 'Students review useful B1 words for progress, problems, choices and solutions.',
+      focus: ['B1 review', 'mixed vocabulary', 'personal production'],
+      words: [
+        { word: 'challenge', meaning: 'something difficult that tests your ability', sentence: 'Speaking in meetings is still a ___ for me.', hint: 'difficult task' },
+        { word: 'opportunity', meaning: 'a chance to do something useful or good', sentence: 'This course is a great ___ to improve my English.', hint: 'good chance' },
+        { word: 'improve', meaning: 'become better', sentence: 'I want to ___ my pronunciation this year.', hint: 'become better' },
+        { word: 'decision', meaning: 'a choice you make after thinking', sentence: 'Moving to another city was a big ___.', hint: 'choice' },
+        { word: 'solution', meaning: 'a way to fix a problem', sentence: 'We need to find a better ___ for traffic in the city.', hint: 'answer to a problem' }
+      ],
+      productionQuestion: 'Write a B1 paragraph of 8-10 sentences using at least five words from this review.',
+      sampleAnswer: 'Learning English is a challenge, but it is also a great opportunity. I want to improve my speaking because I need it for work. Last year, I made the decision to study every day. Sometimes I do not have enough time, so I need a better solution. I think small habits can help me make progress.'
+    }
+  ].map(buildVocabularyReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B1 = {
     grammar: READY_GRAMMAR_LESSONS_B1,
-    vocabulary: root.lessons.B1?.vocabulary || [],
+    vocabulary: READY_VOCABULARY_LESSONS_B1,
     reading: root.lessons.B1?.reading || [],
     writing: root.lessons.B1?.writing || [],
     listening: root.lessons.B1?.listening || []
