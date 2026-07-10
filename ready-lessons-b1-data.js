@@ -263,6 +263,133 @@
     };
   }
 
+  const WRITING_DEFAULT_CHECKLIST_B1 = [
+    ['Answer all parts of the task clearly.', true],
+    ['Use one long paragraph for every text type.', false],
+    ['Use linking words to connect ideas.', true],
+    ['Keep the same tone from beginning to end.', true],
+    ['Ignore grammar and punctuation if the meaning is clear.', false]
+  ];
+
+  function buildWritingChoiceItem(lessonId, phrases, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const optionsSource = [
+      entry[0],
+      phrases[(index + 1) % phrases.length]?.[0],
+      phrases[(index + 2) % phrases.length]?.[0]
+    ];
+    const ordered = index % 3 === 0
+      ? optionsSource
+      : (index % 3 === 1
+        ? [optionsSource[1], optionsSource[0], optionsSource[2]]
+        : [optionsSource[1], optionsSource[2], optionsSource[0]]);
+    const options = ordered.map((text, optionIndex) => ({
+      id: ids[optionIndex],
+      text: text || entry[0]
+    }));
+
+    return {
+      id: `${lessonId}-phrase-choice-${index + 1}`,
+      sentence: `Choose the best phrase for: ${entry[1]}.`,
+      options,
+      answer: options.find((option) => option.text === entry[0])?.id || 'a',
+      explanation: entry[0]
+    };
+  }
+
+  function buildWritingReadyLesson(config) {
+    const phrases = config.phrases || [];
+    const gaps = config.gaps || [];
+    const checklist = config.checklist || WRITING_DEFAULT_CHECKLIST_B1;
+    const supportText = [
+      'Model text:',
+      config.modelText,
+      '',
+      'Useful B1 phrases:',
+      ...phrases.map((item) => `- ${item[0]} = ${item[1]}`),
+      '',
+      'Checklist:',
+      ...checklist.filter((item) => item[1]).map((item) => `- ${item[0]}`)
+    ].filter((line) => line !== undefined && line !== null).join('\n');
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B1',
+      skill: 'writing',
+      stage: config.stage || 'B1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 40,
+      description: config.description,
+      supportTitle: config.supportTitle || 'Model and writing help',
+      supportText,
+      focus: config.focus || ['guided writing', 'paragraph structure', 'linking ideas'],
+      teacherNotes: config.teacherNotes || 'Ask the student to notice the structure, complete the controlled tasks, then write a B1 text with clear organization and linking language.',
+      tasks: [
+        {
+          id: `${config.id}-phrase-matching`,
+          type: 'matching',
+          title: 'Useful phrases',
+          prompt: 'Match each phrase with its purpose.',
+          pairs: phrases.map((entry, index) => ({
+            id: `${config.id}-phrase-matching-${index + 1}`,
+            left_text: entry[0],
+            right_text: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-phrase-choice`,
+          type: 'choice',
+          title: 'Choose the best phrase',
+          prompt: 'Choose a useful phrase for each situation.',
+          items: phrases.map((entry, index) => buildWritingChoiceItem(config.id, phrases, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the model sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: gaps.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry[0],
+            accepted_answers: Array.isArray(entry[1]) ? entry[1] : [entry[1]],
+            hint: entry[2] || 'Use the model text.',
+            explanation: Array.isArray(entry[1]) ? entry[1].join(' / ') : entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Write your text',
+          prompt: config.productionPrompt || 'Write a B1 text. Use the model, useful phrases and checklist.',
+          items: [
+            {
+              id: `${config.id}-writing-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-checklist-extra`,
+          type: 'choice',
+          title: 'Writing checklist',
+          prompt: 'Choose True or False.',
+          items: checklist.map((entry, index) => ({
+            id: `${config.id}-checklist-extra-${index + 1}`,
+            sentence: entry[0],
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: entry[1] ? 'a' : 'b',
+            explanation: entry[1] ? 'This is good B1 writing advice.' : 'This is not good B1 writing advice.'
+          }))
+        }
+      ]
+    };
+  }
+
   function buildB1GrammarReadyLesson(config) {
     const makeOptions = (options = []) => options.map((text, index) => ({
       id: ['a', 'b', 'c', 'd'][index] || String(index + 1),
@@ -2244,13 +2371,485 @@
     }
   ].map(buildReadingReadyLesson);
 
+  const READY_WRITING_LESSONS_B1 = [
+    {
+      id: 'b1-writing-01-informal-email-news',
+      order: 1,
+      stage: 'B1.1',
+      title: 'Informal email: catching up',
+      topic: 'writing to a friend and giving news',
+      description: 'Students write a friendly email with personal news, questions and a natural closing.',
+      focus: ['informal email', 'personal news', 'friendly tone'],
+      modelText: 'Hi Sam,\nIt was great to hear from you. I have been quite busy recently because I started a new course after work. The best news is that I have already met some friendly people there. At the weekend, I finally had time to relax and go for a walk by the river. How have things been with you? Write back when you have time.\nTake care,\nMaya',
+      phrases: [
+        ['It was great to hear from you.', 'open a friendly email'],
+        ['I have been quite busy recently.', 'give general news'],
+        ['The best news is that...', 'introduce positive news'],
+        ['How have things been with you?', 'ask about the other person'],
+        ['Write back when you have time.', 'close and ask for a reply']
+      ],
+      gaps: [
+        ['It was great to ___ from you.', 'hear', 'Use the opening phrase.'],
+        ['I have been quite ___ recently.', 'busy', 'Use the model.'],
+        ['The best ___ is that I started a new course.', 'news', 'Use the phrase for positive information.'],
+        ['How have things ___ with you?', 'been', 'Use the question from the model.'],
+        ['Write ___ when you have time.', 'back', 'Use the closing phrase.']
+      ],
+      productionQuestion: 'Write an informal email to a friend. Give two pieces of news, ask one question and close naturally.',
+      sampleAnswer: 'Hi Leo, It was great to hear from you. I have been quite busy recently because I changed my work schedule. The best news is that I joined a gym and I feel more energetic. How have things been with you? Write back when you have time. Take care, Anna'
+    },
+    {
+      id: 'b1-writing-02-formal-email-information',
+      order: 2,
+      stage: 'B1.1',
+      title: 'Formal email: asking for information',
+      topic: 'requesting course or service details',
+      description: 'Students write a polite formal email to ask for clear information.',
+      focus: ['formal email', 'polite requests', 'clear questions'],
+      modelText: 'Dear Sir or Madam,\nI am writing to ask about your evening photography course. Could you let me know when the next course starts and how much it costs? I would also like to find out whether beginners can join. I would be grateful if you could send me the full schedule. I look forward to hearing from you.\nYours faithfully,\nDaniel Green',
+      phrases: [
+        ['I am writing to ask about...', 'state the reason for writing'],
+        ['Could you let me know...?', 'ask for information politely'],
+        ['I would also like to find out...', 'ask an extra question'],
+        ['I would be grateful if...', 'make a formal request'],
+        ['I look forward to hearing from you.', 'close a formal email']
+      ],
+      gaps: [
+        ['I am writing to ask ___ your evening course.', 'about', 'Use the formal opening.'],
+        ['Could you let me ___ when the next course starts?', 'know', 'Use the polite question phrase.'],
+        ['I would also like to find ___ whether beginners can join.', 'out', 'Use the model phrase.'],
+        ['I would be grateful ___ you could send me the schedule.', 'if', 'Use the formal request phrase.'],
+        ['I look forward to ___ from you.', 'hearing', 'Use the closing phrase.']
+      ],
+      productionQuestion: 'Write a formal email asking for information about a course, hotel, gym or language school. Ask at least three questions.',
+      sampleAnswer: 'Dear Sir or Madam, I am writing to ask about your English conversation course. Could you let me know when it starts and how much it costs? I would also like to find out how many students are in each group. I would be grateful if you could send me the timetable. Yours faithfully, Maria Lopez'
+    },
+    {
+      id: 'b1-writing-03-complaint-email',
+      order: 3,
+      stage: 'B1.1',
+      title: 'Email of complaint',
+      topic: 'delivery and service problems',
+      description: 'Students write a clear complaint email explaining a problem and requesting action.',
+      focus: ['complaint email', 'problem description', 'requesting a solution'],
+      modelText: 'Dear Customer Service Team,\nI am writing to complain about an order I received yesterday. The main problem was that the jacket was the wrong size, although I ordered a medium. Unfortunately, the package also arrived three days late. I expected better service because I have bought from your shop before. I would like a replacement or a full refund. Please let me know what I should do next.\nKind regards,\nOlivia Brown',
+      phrases: [
+        ['I am writing to complain about...', 'start a complaint'],
+        ['The main problem was that...', 'explain the main issue'],
+        ['Unfortunately,...', 'introduce bad news'],
+        ['I expected better service because...', 'explain why you are disappointed'],
+        ['I would like a replacement or a full refund.', 'request a solution']
+      ],
+      gaps: [
+        ['I am writing to ___ about an order.', 'complain', 'Use the complaint opening.'],
+        ['The main ___ was that the jacket was the wrong size.', 'problem', 'Use the problem phrase.'],
+        ['___, the package arrived three days late.', 'Unfortunately', 'Use the linking word for bad news.'],
+        ['I expected ___ service because I have bought from you before.', 'better', 'Use the model phrase.'],
+        ['I would like a replacement or a full ___.', 'refund', 'Use the solution request.']
+      ],
+      productionQuestion: 'Write a complaint email about a product, hotel room, restaurant visit or online order. Explain two problems and ask for a solution.',
+      sampleAnswer: 'Dear Customer Service Team, I am writing to complain about my hotel room. The main problem was that the heating did not work. Unfortunately, the room was also very noisy at night. I expected better service because the hotel was expensive. I would like a partial refund. Kind regards, Alex Martin'
+    },
+    {
+      id: 'b1-writing-04-apology-email',
+      order: 4,
+      stage: 'B1.1',
+      title: 'Reply to a complaint',
+      topic: 'apologizing and offering a solution',
+      description: 'Students write a polite reply to a complaint with an apology and practical solution.',
+      focus: ['apology email', 'customer service', 'solutions'],
+      modelText: 'Dear Ms Brown,\nThank you for letting us know about the problem with your order. I am sorry that the jacket was the wrong size and that the delivery was late. We understand how disappointing this must be. We can offer you a replacement in the correct size, or we can give you a full refund. Please accept our apologies for the inconvenience. If you reply with your choice, we will arrange it today.\nKind regards,\nCustomer Service',
+      phrases: [
+        ['Thank you for letting us know.', 'acknowledge the complaint'],
+        ['I am sorry that...', 'apologize clearly'],
+        ['We understand how disappointing this must be.', 'show empathy'],
+        ['We can offer you...', 'offer a solution'],
+        ['Please accept our apologies for the inconvenience.', 'close with a formal apology']
+      ],
+      gaps: [
+        ['Thank you for ___ us know.', 'letting', 'Use the opening phrase.'],
+        ['I am ___ that the delivery was late.', 'sorry', 'Use the apology phrase.'],
+        ['We understand how ___ this must be.', 'disappointing', 'Show empathy.'],
+        ['We can ___ you a replacement.', 'offer', 'Use the solution phrase.'],
+        ['Please accept our apologies for the ___.', 'inconvenience', 'Use the formal closing.']
+      ],
+      productionQuestion: 'Write a reply to a customer complaint. Apologize, show empathy and offer two possible solutions.',
+      sampleAnswer: 'Dear Mr Green, Thank you for letting us know about your room. I am sorry that it was noisy and the heating did not work. We understand how disappointing this must be. We can offer you a different room or a partial refund. Please accept our apologies for the inconvenience. Kind regards, Hotel Manager'
+    },
+    {
+      id: 'b1-writing-05-opinion-paragraph-online-learning',
+      order: 5,
+      stage: 'B1.2',
+      title: 'Opinion paragraph',
+      topic: 'online learning',
+      description: 'Students write a balanced B1 opinion paragraph with reasons and examples.',
+      focus: ['opinion paragraph', 'reasons', 'examples'],
+      modelText: 'In my opinion, online learning is useful for many students, but it is not perfect. One reason is that people can study from home and save travel time. Another point is that recorded lessons are helpful if you want to review something. However, some students feel lonely when they study only online. It seems to me that the best solution is to mix online lessons with real classroom practice.',
+      phrases: [
+        ['In my opinion,...', 'introduce your opinion'],
+        ['One reason is that...', 'give the first reason'],
+        ['Another point is that...', 'add another reason'],
+        ['However,...', 'show contrast'],
+        ['It seems to me that...', 'give a final opinion']
+      ],
+      gaps: [
+        ['In my ___, online learning is useful.', 'opinion', 'Use the opinion phrase.'],
+        ['One ___ is that people can study from home.', 'reason', 'Use the reason phrase.'],
+        ['Another ___ is that recorded lessons are helpful.', 'point', 'Use the adding phrase.'],
+        ['___, some students feel lonely.', 'However', 'Use the contrast linker.'],
+        ['It ___ to me that mixed learning is best.', 'seems', 'Use the final opinion phrase.']
+      ],
+      productionQuestion: 'Write one B1 opinion paragraph about online learning, remote work, public transport or social media. Give at least two reasons.',
+      sampleAnswer: 'In my opinion, public transport is very important in big cities. One reason is that it is cheaper than driving. Another point is that it creates less traffic. However, buses can be crowded in the morning. It seems to me that cities should improve public transport.'
+    },
+    {
+      id: 'b1-writing-06-for-and-against-social-media',
+      order: 6,
+      stage: 'B1.2',
+      title: 'For and against paragraph',
+      topic: 'social media advantages and disadvantages',
+      description: 'Students write a short for-and-against text with a balanced conclusion.',
+      focus: ['for and against', 'advantages', 'disadvantages'],
+      modelText: 'Social media has both advantages and disadvantages. On the one hand, it helps people stay in touch with friends and family. One advantage is that you can share news quickly, especially if someone lives far away. On the other hand, social media can waste a lot of time. A clear disadvantage is that people sometimes compare their lives with others and feel unhappy. Overall, I think social media is useful if people use it carefully.',
+      phrases: [
+        ['On the one hand,...', 'introduce one side'],
+        ['One advantage is that...', 'describe a positive point'],
+        ['On the other hand,...', 'introduce the opposite side'],
+        ['A clear disadvantage is that...', 'describe a negative point'],
+        ['Overall,...', 'introduce a balanced conclusion']
+      ],
+      gaps: [
+        ['On the one ___, it helps people stay in touch.', 'hand', 'Use the first-side phrase.'],
+        ['One ___ is that you can share news quickly.', 'advantage', 'Use the positive phrase.'],
+        ['On the ___ hand, it can waste time.', 'other', 'Use the contrast phrase.'],
+        ['A clear ___ is that people compare their lives.', 'disadvantage', 'Use the negative phrase.'],
+        ['___, I think it is useful if people use it carefully.', 'Overall', 'Use the conclusion phrase.']
+      ],
+      productionQuestion: 'Write a for-and-against paragraph about social media, city life, online shopping or studying abroad.',
+      sampleAnswer: 'On the one hand, online shopping is very convenient. One advantage is that you can compare prices quickly. On the other hand, you cannot try things before buying them. A clear disadvantage is that delivery can be slow. Overall, I think it is useful for simple purchases.'
+    },
+    {
+      id: 'b1-writing-07-story-unexpected-problem',
+      order: 7,
+      stage: 'B1.2',
+      title: 'Story: an unexpected problem',
+      topic: 'narrating events in the past',
+      description: 'Students write a simple B1 story with sequence, problem and ending.',
+      focus: ['story writing', 'past tenses', 'sequencing'],
+      modelText: 'Last Saturday, I decided to visit my cousin in another town. At first, everything went well, and I arrived at the train station early. Suddenly, I realized that I had left my wallet at home. I felt nervous because my ticket was inside it. Luckily, a station worker helped me use the ticket on my phone. In the end, I caught the train and arrived only ten minutes late.',
+      phrases: [
+        ['Last Saturday,...', 'start a story with time'],
+        ['At first,...', 'describe the beginning'],
+        ['Suddenly,...', 'introduce a problem'],
+        ['Luckily,...', 'introduce a positive turn'],
+        ['In the end,...', 'finish the story']
+      ],
+      gaps: [
+        ['Last ___, I decided to visit my cousin.', 'Saturday', 'Use the time phrase from the model.'],
+        ['At ___, everything went well.', 'first', 'Use the beginning phrase.'],
+        ['___, I realized that I had left my wallet at home.', 'Suddenly', 'Use the problem phrase.'],
+        ['___, a station worker helped me.', 'Luckily', 'Use the positive turn phrase.'],
+        ['In the ___, I caught the train.', 'end', 'Use the ending phrase.']
+      ],
+      productionQuestion: 'Write a B1 story about an unexpected problem during a trip, at work, at school or in a shop.',
+      sampleAnswer: 'Last Friday, I went to an important meeting. At first, everything was fine, but suddenly my phone battery died and I did not know the address. Luckily, a woman in a cafe helped me find the building. In the end, I arrived on time and felt very relieved.'
+    },
+    {
+      id: 'b1-writing-08-story-helpful-stranger',
+      order: 8,
+      stage: 'B1.2',
+      title: 'Story: a helpful stranger',
+      topic: 'describing a memorable day',
+      description: 'Students write a B1 story about a person who helped them.',
+      focus: ['narrative', 'feelings', 'past events'],
+      modelText: 'I will never forget the day I got lost in a new city. While I was looking for my hotel, my phone stopped working and I started to panic. A stranger offered to help and walked with me to the nearest bus stop. Thanks to him, I found the right bus and arrived safely. Since then, I have tried to help other people when they look confused or worried.',
+      phrases: [
+        ['I will never forget...', 'open a memorable story'],
+        ['While I was...', 'describe a background action'],
+        ['A stranger offered to...', 'introduce help'],
+        ['Thanks to him/her,...', 'explain the result'],
+        ['Since then,...', 'connect the story to now']
+      ],
+      gaps: [
+        ['I will never ___ the day I got lost.', 'forget', 'Use the opening phrase.'],
+        ['___ I was looking for my hotel, my phone stopped working.', 'While', 'Use the background phrase.'],
+        ['A stranger ___ to help.', 'offered', 'Use the help phrase.'],
+        ['Thanks ___ him, I found the right bus.', 'to', 'Use the result phrase.'],
+        ['Since ___, I have tried to help other people.', 'then', 'Use the connection phrase.']
+      ],
+      productionQuestion: 'Write a story about a helpful person or a memorable day. Include the problem, the help and how you felt after.',
+      sampleAnswer: 'I will never forget the day I lost my bag at the airport. While I was checking the information screen, I left it on a chair. A stranger offered to help me find security. Thanks to her, I got my bag back quickly. Since then, I have been more careful.'
+    },
+    {
+      id: 'b1-writing-09-restaurant-review',
+      order: 9,
+      stage: 'B1.3',
+      title: 'Review: a restaurant or cafe',
+      topic: 'describing a place and giving a recommendation',
+      description: 'Students write a B1 review with atmosphere, positives, negatives and recommendation.',
+      focus: ['review', 'recommendation', 'descriptive language'],
+      modelText: 'I recently visited Green Table, a small restaurant near the park. The atmosphere was warm and relaxed, with soft music and friendly staff. What I liked most was the fresh food, especially the vegetable soup and homemade bread. The only problem was that the service was a little slow when the restaurant became busy. I would recommend it to people who want a quiet meal at a reasonable price.',
+      phrases: [
+        ['I recently visited...', 'introduce the place'],
+        ['The atmosphere was...', 'describe the feeling of the place'],
+        ['What I liked most was...', 'describe the best point'],
+        ['The only problem was that...', 'mention a negative point'],
+        ['I would recommend it to...', 'finish with a recommendation']
+      ],
+      gaps: [
+        ['I recently ___ Green Table.', 'visited', 'Use the review opening.'],
+        ['The ___ was warm and relaxed.', 'atmosphere', 'Use the description phrase.'],
+        ['What I liked ___ was the fresh food.', 'most', 'Use the positive phrase.'],
+        ['The only ___ was that the service was slow.', 'problem', 'Use the negative phrase.'],
+        ['I would ___ it to people who want a quiet meal.', 'recommend', 'Use the recommendation phrase.']
+      ],
+      productionQuestion: 'Write a review of a restaurant, cafe, hotel or local place. Include one negative point and a recommendation.',
+      sampleAnswer: 'I recently visited Blue Cafe near my office. The atmosphere was modern and friendly. What I liked most was the coffee and the comfortable seats. The only problem was that the music was too loud. I would recommend it to people who want to meet friends after work.'
+    },
+    {
+      id: 'b1-writing-10-film-book-review',
+      order: 10,
+      stage: 'B1.3',
+      title: 'Review: a film, book or series',
+      topic: 'describing entertainment and giving an opinion',
+      description: 'Students write a B1 review of a film, book, series or app.',
+      focus: ['review', 'plot', 'opinion'],
+      modelText: 'Last week, I watched a film called The Long Road. The story is about two friends who travel across the country to visit an old teacher. The main character is shy at the beginning, but he becomes braver during the journey. What makes it interesting is the mix of funny scenes and serious moments. Some scenes felt a little slow, but the ending was excellent. I would give it four stars out of five.',
+      phrases: [
+        ['The story is about...', 'describe the plot'],
+        ['The main character...', 'describe a person in the story'],
+        ['What makes it interesting is...', 'explain why it is good'],
+        ['Some scenes felt...', 'mention a weakness'],
+        ['I would give it...', 'give a final rating']
+      ],
+      gaps: [
+        ['The story is ___ two friends.', 'about', 'Use the plot phrase.'],
+        ['The main ___ is shy at the beginning.', 'character', 'Use the character phrase.'],
+        ['What ___ it interesting is the mix of funny and serious moments.', 'makes', 'Use the interest phrase.'],
+        ['Some scenes ___ a little slow.', 'felt', 'Use the weakness phrase.'],
+        ['I would ___ it four stars out of five.', 'give', 'Use the rating phrase.']
+      ],
+      productionQuestion: 'Write a review of a film, book, series, game or app. Describe what it is about, what is good and one weaker point.',
+      sampleAnswer: 'The story is about a young woman who starts a new job in another city. The main character is nervous at first, but she learns to trust herself. What makes it interesting is the realistic dialogue. Some scenes felt too long, but the ending was strong. I would give it four stars.'
+    },
+    {
+      id: 'b1-writing-11-short-report-survey',
+      order: 11,
+      stage: 'B1.3',
+      title: 'Short report: survey results',
+      topic: 'summarizing information and making recommendations',
+      description: 'Students write a short report based on simple class or workplace survey results.',
+      focus: ['report writing', 'summarizing results', 'recommendations'],
+      modelText: 'The aim of this report is to summarize student opinions about the school cafe. Most students said that the food was tasty and the prices were fair. A few people mentioned that the queue was too long at lunchtime. The results suggest that students are generally happy, but the cafe needs faster service. I recommend opening a second payment point during the busiest hours.',
+      phrases: [
+        ['The aim of this report is to...', 'state the purpose'],
+        ['Most students said that...', 'report the main result'],
+        ['A few people mentioned that...', 'report a smaller point'],
+        ['The results suggest that...', 'interpret the information'],
+        ['I recommend...', 'make a recommendation']
+      ],
+      gaps: [
+        ['The ___ of this report is to summarize opinions.', 'aim', 'Use the report opening.'],
+        ['Most students ___ that the food was tasty.', 'said', 'Use the main result phrase.'],
+        ['A few people ___ that the queue was too long.', 'mentioned', 'Use the smaller point phrase.'],
+        ['The results ___ that students are generally happy.', 'suggest', 'Use the interpretation phrase.'],
+        ['I ___ opening a second payment point.', 'recommend', 'Use the recommendation phrase.']
+      ],
+      productionQuestion: 'Write a short report about survey results. Use most, a few, results suggest and one recommendation.',
+      sampleAnswer: 'The aim of this report is to summarize opinions about our English club. Most students said that the meetings are useful and friendly. A few people mentioned that the room is too small. The results suggest that students enjoy the club, but we need more space. I recommend booking a larger room next month.'
+    },
+    {
+      id: 'b1-writing-12-article-healthy-habits',
+      order: 12,
+      stage: 'B1.3',
+      title: 'Article or blog post',
+      topic: 'healthy habits and lifestyle advice',
+      description: 'Students write a short article with an engaging opening, tips and conclusion.',
+      focus: ['article writing', 'advice', 'lifestyle'],
+      modelText: 'Have you ever wondered how to feel healthier without changing your whole life? The first thing you can do is sleep at a regular time, even at weekends. It is also important to move your body every day, for example by walking or stretching. As a result, you may feel calmer and have more energy. Small changes can make a big difference if you repeat them often.',
+      phrases: [
+        ['Have you ever wondered...?', 'open with a reader question'],
+        ['The first thing you can do is...', 'introduce the first tip'],
+        ['It is also important to...', 'add another tip'],
+        ['As a result,...', 'explain the result'],
+        ['Small changes can...', 'finish with a general message']
+      ],
+      gaps: [
+        ['Have you ever ___ how to feel healthier?', 'wondered', 'Use the reader question.'],
+        ['The first ___ you can do is sleep regularly.', 'thing', 'Use the first tip phrase.'],
+        ['It is also ___ to move your body every day.', 'important', 'Use the adding phrase.'],
+        ['As a ___, you may feel calmer.', 'result', 'Use the result phrase.'],
+        ['Small changes can ___ a big difference.', 'make', 'Use the closing message.']
+      ],
+      productionQuestion: 'Write a short article giving advice about healthy habits, saving money, studying English or reducing waste.',
+      sampleAnswer: 'Have you ever wondered how to study English every day without feeling tired? The first thing you can do is choose a short activity. It is also important to review new words often. As a result, you remember more and feel more confident. Small changes can make a big difference.'
+    },
+    {
+      id: 'b1-writing-13-advice-message',
+      order: 13,
+      stage: 'B1.4',
+      title: 'Advice message',
+      topic: 'replying to a problem on a forum',
+      description: 'Students write a supportive message giving practical advice.',
+      focus: ['advice', 'supportive tone', 'modal verbs'],
+      modelText: 'Hi Alex,\nI am sorry to hear that you feel nervous before presentations. If I were you, I would practise with one friend first instead of speaking to a big group. You should try to prepare a simple plan with three main points. It might help to record yourself and listen again. Make sure you breathe slowly before you start. I hope this advice helps, and good luck with your next presentation.',
+      phrases: [
+        ['If I were you,...', 'give personal advice'],
+        ['You should try to...', 'give a direct suggestion'],
+        ['It might help to...', 'give a softer suggestion'],
+        ['Make sure you...', 'give an important reminder'],
+        ['I hope this advice helps.', 'close supportively']
+      ],
+      gaps: [
+        ['If I ___ you, I would practise with a friend.', 'were', 'Use the advice phrase.'],
+        ['You should ___ to prepare a simple plan.', 'try', 'Use the direct suggestion.'],
+        ['It might ___ to record yourself.', 'help', 'Use the soft suggestion.'],
+        ['Make ___ you breathe slowly.', 'sure', 'Use the reminder phrase.'],
+        ['I hope this advice ___.', 'helps', 'Use the supportive closing.']
+      ],
+      productionQuestion: 'Write an advice message to someone who is nervous about an exam, presentation, job interview or moving to a new city.',
+      sampleAnswer: 'Hi Maya, If I were you, I would make a study plan for the week before the exam. You should try to practise a little every day. It might help to study with a friend and ask each other questions. Make sure you sleep well the night before. I hope this advice helps.'
+    },
+    {
+      id: 'b1-writing-14-job-application',
+      order: 14,
+      stage: 'B1.4',
+      title: 'Job application email',
+      topic: 'applying for a part-time or entry-level job',
+      description: 'Students write a simple B1 job application email with experience and strengths.',
+      focus: ['job application', 'experience', 'strengths'],
+      modelText: 'Dear Hiring Manager,\nI am applying for the part-time receptionist position advertised on your website. I have experience in customer service because I worked in a small hotel last summer. I am good at speaking to people, solving simple problems and organizing information. I believe I would be suitable for this role because I am polite, responsible and quick to learn. I am available for an interview next week. Thank you for considering my application.\nKind regards,\nEmma Wilson',
+      phrases: [
+        ['I am applying for...', 'state the job'],
+        ['I have experience in...', 'describe experience'],
+        ['I am good at...', 'describe strengths'],
+        ['I believe I would be suitable because...', 'explain why you fit the role'],
+        ['I am available for an interview...', 'offer interview availability']
+      ],
+      gaps: [
+        ['I am ___ for the receptionist position.', 'applying', 'Use the job application opening.'],
+        ['I have ___ in customer service.', 'experience', 'Use the experience phrase.'],
+        ['I am good ___ speaking to people.', 'at', 'Use the strengths phrase.'],
+        ['I believe I would be ___ for this role.', 'suitable', 'Use the suitability phrase.'],
+        ['I am available ___ an interview next week.', 'for', 'Use the interview phrase.']
+      ],
+      productionQuestion: 'Write a job application email for a part-time job, internship or volunteer position. Mention experience, strengths and interview availability.',
+      sampleAnswer: 'Dear Hiring Manager, I am applying for the part-time shop assistant position. I have experience in customer service because I worked in a cafe. I am good at helping people and staying calm when it is busy. I believe I would be suitable because I am responsible and friendly. I am available for an interview next week. Kind regards, Daniel Smith'
+    },
+    {
+      id: 'b1-writing-15-notice-announcement',
+      order: 15,
+      stage: 'B1.4',
+      title: 'Notice or announcement',
+      topic: 'inviting people to an event',
+      description: 'Students write a clear notice with event details and instructions.',
+      focus: ['notice', 'announcement', 'event details'],
+      modelText: 'Please note that the English conversation club will meet in Room 204 this Friday. The event will take place from 5:30 to 7:00 p.m. Everyone is welcome to join, but please bring a notebook and a pen. If you would like to join the group dinner after the meeting, write your name on the list by Thursday. For more information, contact Ms Carter at reception.',
+      phrases: [
+        ['Please note that...', 'introduce important information'],
+        ['The event will take place...', 'give event time or place'],
+        ['Everyone is welcome to...', 'invite people'],
+        ['If you would like to join...', 'give an instruction for interested people'],
+        ['For more information,...', 'give contact details']
+      ],
+      gaps: [
+        ['Please ___ that the club will meet in Room 204.', 'note', 'Use the notice opening.'],
+        ['The event will take ___ from 5:30 to 7:00.', 'place', 'Use the event details phrase.'],
+        ['Everyone is ___ to join.', 'welcome', 'Use the invitation phrase.'],
+        ['If you would like to ___, write your name on the list.', 'join', 'Use the instruction phrase.'],
+        ['For more ___, contact Ms Carter.', 'information', 'Use the contact phrase.']
+      ],
+      productionQuestion: 'Write a notice for a school, office or club event. Include time, place, who can join and what people should do.',
+      sampleAnswer: 'Please note that the photography club will meet in the library on Tuesday. The event will take place from 4:00 to 5:30 p.m. Everyone is welcome to join, but please bring your phone or camera. If you would like to join, write your name on the notice board. For more information, contact Mr Brown.'
+    },
+    {
+      id: 'b1-writing-16-proposal-email',
+      order: 16,
+      stage: 'B1.5',
+      title: 'Proposal email',
+      topic: 'suggesting improvements',
+      description: 'Students write a polite proposal email with a problem, suggestion and benefit.',
+      focus: ['proposal', 'suggestions', 'benefits'],
+      modelText: 'Dear Ms Lee,\nI would like to suggest a small improvement for the student lounge. At the moment, there are not enough quiet places to study between lessons. It would be helpful to add two small tables near the windows and create a quiet corner. This would allow students to review notes, read or work on laptops without disturbing others. Thank you for considering my suggestion.\nBest regards,\nNina Park',
+      phrases: [
+        ['I would like to suggest...', 'introduce a proposal'],
+        ['At the moment,...', 'describe the current situation'],
+        ['It would be helpful to...', 'make a suggestion'],
+        ['This would allow students to...', 'explain the benefit'],
+        ['Thank you for considering my suggestion.', 'close politely']
+      ],
+      gaps: [
+        ['I would like to ___ a small improvement.', 'suggest', 'Use the proposal opening.'],
+        ['At the ___, there are not enough quiet places.', 'moment', 'Use the current situation phrase.'],
+        ['It would be ___ to add two small tables.', 'helpful', 'Use the suggestion phrase.'],
+        ['This would ___ students to review notes.', 'allow', 'Use the benefit phrase.'],
+        ['Thank you for ___ my suggestion.', 'considering', 'Use the polite closing.']
+      ],
+      productionQuestion: 'Write a proposal email suggesting an improvement for a school, office, website, course or public place.',
+      sampleAnswer: 'Dear Mr Davis, I would like to suggest an improvement for our English course. At the moment, students do not have enough speaking practice. It would be helpful to add a short conversation activity to every lesson. This would allow students to feel more confident. Thank you for considering my suggestion. Best regards, Olga'
+    },
+    {
+      id: 'b1-writing-17-descriptive-profile',
+      order: 17,
+      stage: 'B1.5',
+      title: 'Descriptive profile',
+      topic: 'describing a person or place',
+      description: 'Students write a descriptive B1 text with details, opinion and reasons.',
+      focus: ['description', 'details', 'personal opinion'],
+      modelText: 'One of the most important people in my life is my older sister, Lena. What I admire most is her ability to stay calm when things are difficult. She is known for helping people and listening carefully before she gives advice. Over the years, she has changed a lot because she has become more confident and independent. For these reasons, I think she is a good example for me.',
+      phrases: [
+        ['One of the most important...', 'introduce the person or place'],
+        ['What I admire most is...', 'describe the best quality'],
+        ['She is known for...', 'describe a typical quality or action'],
+        ['Over the years, she has changed...', 'describe development'],
+        ['For these reasons,...', 'give a final opinion']
+      ],
+      gaps: [
+        ['One of the most ___ people in my life is Lena.', 'important', 'Use the introduction phrase.'],
+        ['What I ___ most is her calm personality.', 'admire', 'Use the best quality phrase.'],
+        ['She is known ___ helping people.', 'for', 'Use the typical quality phrase.'],
+        ['Over the years, she has ___ a lot.', 'changed', 'Use the development phrase.'],
+        ['For these ___, she is a good example for me.', 'reasons', 'Use the final opinion phrase.']
+      ],
+      productionQuestion: 'Write a descriptive profile of a person or place that is important to you. Include details, changes and your opinion.',
+      sampleAnswer: 'One of the most important places in my life is my family home. What I like most is the quiet garden behind the house. It is known for beautiful flowers and family dinners in summer. Over the years, it has changed, but it still feels warm. For these reasons, I always enjoy visiting it.'
+    },
+    {
+      id: 'b1-writing-18-b1-writing-review',
+      order: 18,
+      stage: 'B1 review',
+      title: 'B1 writing review',
+      topic: 'mixed writing task practice',
+      description: 'Students review key B1 writing skills across emails, opinions, stories, reviews and reports.',
+      focus: ['B1 review', 'mixed writing', 'editing'],
+      modelText: 'Good B1 writing depends on the task, but some habits are always useful. Use a clear opening so the reader understands your purpose. Give reasons and examples when you express an opinion or make a suggestion. Check the number of words and make sure you answered every point. Finish with a suitable closing, especially in emails and messages.',
+      phrases: [
+        ['It depends on the task.', 'show that writing changes by text type'],
+        ['Use a clear opening.', 'give general writing advice'],
+        ['Give reasons and examples.', 'develop ideas'],
+        ['Check the number of words.', 'edit for task requirements'],
+        ['Finish with a suitable closing.', 'end the text correctly']
+      ],
+      gaps: [
+        ['It ___ on the task.', 'depends', 'Use the review phrase.'],
+        ['Use a clear ___ so the reader understands your purpose.', 'opening', 'Use the organization phrase.'],
+        ['Give reasons and ___ when you express an opinion.', 'examples', 'Use the development phrase.'],
+        ['Check the number of ___.', 'words', 'Use the editing phrase.'],
+        ['Finish with a suitable ___.', 'closing', 'Use the ending phrase.']
+      ],
+      productionPrompt: 'Choose one B1 writing task and write a complete answer. Then check it with the checklist.',
+      productionQuestion: 'Choose one: an informal email, formal email, complaint, opinion paragraph, story, review, report or advice message. Write a complete B1 answer.',
+      sampleAnswer: 'Hi Tom, It was great to hear from you. I have been busy recently because I started a new job. The best news is that my team is friendly and helpful. At the weekend, I went to a small restaurant with my sister, and the food was excellent. How have things been with you? Write back when you have time. Take care, Maria'
+    }
+  ].map(buildWritingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B1 = {
     grammar: READY_GRAMMAR_LESSONS_B1,
     vocabulary: READY_VOCABULARY_LESSONS_B1,
     reading: READY_READING_LESSONS_B1,
-    writing: root.lessons.B1?.writing || [],
+    writing: READY_WRITING_LESSONS_B1,
     listening: root.lessons.B1?.listening || []
   };
 })();
