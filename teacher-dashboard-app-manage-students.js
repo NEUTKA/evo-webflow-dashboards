@@ -113,7 +113,7 @@
 
   const READY_LESSON_DATA = window.EVO_READY_LESSONS || null;
   if (!READY_LESSON_DATA) {
-    console.warn('[teacher-dashboard] Ready lesson data files are not loaded. Include ready-lessons-a1-data.js and ready-lessons-a2-data.js before teacher-dashboard-app-manage-students.js.');
+    console.warn('[teacher-dashboard] Ready lesson data files are not loaded. Include ready lesson data files before teacher-dashboard-app-manage-students.js.');
   }
 
   const READY_LESSON_LEVELS = Array.isArray(READY_LESSON_DATA?.levels) ? READY_LESSON_DATA.levels : [
@@ -127,7 +127,11 @@
     { id: 'writing', label: 'Writing', description: 'Writing ready lessons.', plannedTopics: [] },
     { id: 'listening', label: 'Listening', description: 'Listening ready lessons.', plannedTopics: [] }
   ];
-  const READY_LESSON_A2_PATHWAYS = READY_LESSON_DATA?.a2Pathways || {};
+  const READY_LESSON_LEVEL_PATHWAYS = {
+    A2: READY_LESSON_DATA?.a2Pathways || {},
+    B1: READY_LESSON_DATA?.b1Pathways || {},
+    ...(READY_LESSON_DATA?.pathways || {})
+  };
   const READY_LESSON_BANKS = READY_LESSON_DATA?.lessons || {};
   const READY_GRAMMAR_LESSONS_A1 = READY_LESSON_BANKS.A1?.grammar || [];
   const READY_VOCABULARY_LESSONS_A1 = READY_LESSON_BANKS.A1?.vocabulary || [];
@@ -487,36 +491,25 @@
   function getReadyLessonPathwayDescription(skillId, levelId) {
     const skill = getReadyLessonSkillConfig(skillId);
     const level = getReadyLessonLevelId(levelId);
-    if (level === 'A2') return READY_LESSON_A2_PATHWAYS[skill.id]?.description || `A2 ${skill.label} pathway space is ready to be filled next.`;
+    const pathway = READY_LESSON_LEVEL_PATHWAYS[level]?.[skill.id] || {};
+    if (pathway.description) return pathway.description;
+    if (level !== 'A1') return `${level} ${skill.label} pathway space is ready to be filled next.`;
     return skill.description || `${level} ${skill.label} ready lessons.`;
   }
 
   function getReadyLessonPlannedTopics(skillId, levelId) {
     const skill = getReadyLessonSkillConfig(skillId);
     const level = getReadyLessonLevelId(levelId);
-    if (level === 'A2') return READY_LESSON_A2_PATHWAYS[skill.id]?.plannedTopics || [];
+    const pathway = READY_LESSON_LEVEL_PATHWAYS[level]?.[skill.id] || {};
+    if (Array.isArray(pathway.plannedTopics)) return pathway.plannedTopics;
+    if (level !== 'A1') return [];
     return skill.plannedTopics || [];
   }
 
   function getReadyLessonsForSkill(value, levelValue = 'A1') {
     const skillId = getReadyLessonSkillId(value);
     const levelId = getReadyLessonLevelId(levelValue);
-
-    if (levelId === 'A2') {
-      if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A2;
-      if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A2;
-      if (skillId === 'reading') return READY_READING_LESSONS_A2;
-      if (skillId === 'writing') return READY_WRITING_LESSONS_A2;
-      if (skillId === 'listening') return READY_LISTENING_LESSONS_A2;
-      return [];
-    }
-
-    if (skillId === 'grammar') return READY_GRAMMAR_LESSONS_A1;
-    if (skillId === 'vocabulary') return READY_VOCABULARY_LESSONS_A1;
-    if (skillId === 'reading') return READY_READING_LESSONS_A1;
-    if (skillId === 'writing') return READY_WRITING_LESSONS_A1;
-    if (skillId === 'listening') return READY_LISTENING_LESSONS_A1;
-    return [];
+    return READY_LESSON_BANKS[levelId]?.[skillId] || [];
   }
 
   function getReadyLessonAssignmentType(skillId) {
