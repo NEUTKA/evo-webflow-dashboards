@@ -173,6 +173,96 @@
     };
   }
 
+  function buildReadingReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B1',
+      skill: 'reading',
+      stage: config.stage || 'B1',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 35,
+      description: config.description,
+      readingTitle: config.readingTitle || config.title,
+      readingText: config.readingText,
+      focus: config.focus || ['reading for gist', 'reading for detail', 'understanding opinion'],
+      teacherNotes: config.teacherNotes || 'Ask the student to read once for general meaning, then again for details, evidence and vocabulary in context.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before reading: useful words',
+          prompt: 'Match the words from the text with their meanings.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Reading comprehension',
+          prompt: 'Read the text and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Find details in the text',
+          prompt: 'Type the missing word, number or phrase from the text.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Read the text again.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 5-7 sentences responding to the text.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Choose True or False and check the evidence in the text.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
   function buildB1GrammarReadyLesson(config) {
     const makeOptions = (options = []) => options.map((text, index) => ({
       id: ['a', 'b', 'c', 'd'][index] || String(index + 1),
@@ -1431,12 +1521,735 @@
     }
   ].map(buildVocabularyReadyLesson);
 
+  const READY_READING_LESSONS_B1 = [
+    {
+      id: 'b1-reading-01-work-email-deadline',
+      order: 1,
+      stage: 'B1.1',
+      title: 'A work email about a deadline',
+      topic: 'work communication',
+      description: 'Students read a work email about a project deadline, responsibilities and next steps.',
+      readingText: 'Subject: Website update deadline\nHi team,\nThanks for your work on the website update. We are close to finishing, but there are still a few tasks to complete before Friday afternoon. Marta will check the product photos and send the final list by Wednesday. Daniel will update the prices and test the payment page. Please tell me by tomorrow morning if you need extra time or support.\nThe client wants to review the website on Monday, so we must avoid last-minute changes. If we finish early, we can spend Thursday checking links, spelling and mobile pages. I know everyone is busy, but this project is important for the company. Let us keep communication clear and ask questions early.\nBest,\nEmma',
+      focus: ['work email', 'deadlines', 'details'],
+      words: [
+        { word: 'deadline', meaning: 'the final time or date to finish something' },
+        { word: 'support', meaning: 'help with a task or problem' },
+        { word: 'client', meaning: 'a person or company that pays for a service' },
+        { word: 'last-minute', meaning: 'done just before the deadline' },
+        { word: 'review', meaning: 'check something carefully' }
+      ],
+      questions: [
+        { question: 'What is the email mainly about?', options: ['Finishing a website update', 'Planning a holiday', 'Hiring a new employee'], answer: 'Finishing a website update' },
+        { question: 'When must the remaining tasks be completed?', options: ['Before Friday afternoon', 'On Monday morning', 'By next month'], answer: 'Before Friday afternoon' },
+        { question: 'What will Marta do?', options: ['Check product photos', 'Test the payment page', 'Call the client'], answer: 'Check product photos' },
+        { question: 'Why is Monday important?', options: ['The client will review the website', 'The team starts a holiday', 'The prices will change'], answer: 'The client will review the website' },
+        { question: 'What should the team do if they need help?', options: ['Tell Emma by tomorrow morning', 'Wait until Friday', 'Contact the client directly'], answer: 'Tell Emma by tomorrow morning' }
+      ],
+      details: [
+        { sentence: 'Marta will send the final list by ___.', answer: 'Wednesday' },
+        { sentence: 'Daniel will update the prices and test the ___ page.', answer: 'payment' },
+        { sentence: 'The team can check links, spelling and ___ pages.', answer: 'mobile' },
+        { sentence: 'Emma says the project is important for the ___.', answer: 'company' },
+        { sentence: 'The team should ask questions ___.', answer: 'early' }
+      ],
+      trueFalse: [
+        { sentence: 'The website update is already completely finished.', answer: false },
+        { sentence: 'Daniel is responsible for checking the product photos.', answer: false },
+        { sentence: 'The client wants to review the website on Monday.', answer: true },
+        { sentence: 'Emma wants to avoid last-minute changes.', answer: true },
+        { sentence: 'The email asks people to keep communication clear.', answer: true }
+      ],
+      productionQuestion: 'Write a short work email about a deadline. Include tasks, dates and one request for help or communication.',
+      sampleAnswer: 'Hi team, Please finish the report by Thursday afternoon. Anna will check the numbers, and I will prepare the slides. Tell me by tomorrow if you need support. The manager will review everything on Friday, so please avoid last-minute changes.'
+    },
+    {
+      id: 'b1-reading-02-remote-work-opinion',
+      order: 2,
+      stage: 'B1.1',
+      title: 'Opinion article: remote work',
+      topic: 'working from home',
+      description: 'Students read a short opinion article about the advantages and disadvantages of remote work.',
+      readingText: 'Remote work has become normal for many office workers. Some people love it because they save time and money on commuting. They can start the day more calmly, cook lunch at home and work in a comfortable space. For people who need quiet time to focus, remote work can be very productive.\nHowever, it is not perfect. Some workers feel lonely because they do not see colleagues every day. Communication can also be slower online, especially when a problem needs a quick decision. Another disadvantage is that work and home life can mix together, so people answer emails late at night.\nIn my opinion, the best solution is a flexible system. Employees can work from home two or three days a week and come to the office for meetings, teamwork and training.',
+      focus: ['opinion text', 'advantages', 'disadvantages'],
+      words: [
+        { word: 'remote work', meaning: 'working away from the office, often at home' },
+        { word: 'commuting', meaning: 'travelling regularly between home and work' },
+        { word: 'productive', meaning: 'able to do a lot of useful work' },
+        { word: 'flexible', meaning: 'able to change according to needs' },
+        { word: 'teamwork', meaning: 'working together with other people' }
+      ],
+      questions: [
+        { question: 'What is one advantage of remote work?', options: ['Saving commuting time', 'More traffic', 'More office noise'], answer: 'Saving commuting time' },
+        { question: 'Who may find remote work productive?', options: ['People who need quiet time', 'People who hate cooking', 'People who need constant meetings'], answer: 'People who need quiet time' },
+        { question: 'What is one disadvantage mentioned?', options: ['Workers can feel lonely', 'Workers must travel more', 'Lunch is more expensive'], answer: 'Workers can feel lonely' },
+        { question: 'What can happen to work and home life?', options: ['They can mix together', 'They always stay separate', 'They disappear'], answer: 'They can mix together' },
+        { question: 'What solution does the writer prefer?', options: ['A flexible system', 'Only office work', 'No meetings'], answer: 'A flexible system' }
+      ],
+      details: [
+        { sentence: 'Remote workers can cook lunch at ___.', answer: 'home' },
+        { sentence: 'Communication can be slower ___.', answer: 'online' },
+        { sentence: 'People sometimes answer emails late at ___.', answer: 'night' },
+        { sentence: 'The writer suggests remote work two or ___ days a week.', answer: 'three' },
+        { sentence: 'The office is useful for meetings, teamwork and ___.', answer: 'training' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks remote work has no problems.', answer: false },
+        { sentence: 'Remote work can save money on commuting.', answer: true },
+        { sentence: 'Online communication is always faster.', answer: false },
+        { sentence: 'The writer prefers a mix of home and office work.', answer: true },
+        { sentence: 'Training is one reason to come to the office.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving your opinion about remote work or online study.',
+      sampleAnswer: 'I think remote work is useful because it saves travel time. People can focus better at home if they have a quiet room. However, some people feel lonely and miss teamwork. I prefer a flexible system with some office days and some home days.'
+    },
+    {
+      id: 'b1-reading-03-travel-blog-problem',
+      order: 3,
+      stage: 'B1.1',
+      title: 'Travel blog: a difficult journey',
+      topic: 'travel problems and solutions',
+      description: 'Students read a travel blog post about a journey with delays and changed plans.',
+      readingText: 'Last spring, I travelled from Prague to Vienna by train. I expected a simple journey, but it became more complicated than planned. First, my train was delayed for forty minutes because of a technical problem. Then, when we finally arrived at the next station, I discovered that I had missed my connection.\nAt first, I felt stressed because I had booked a hotel and wanted to arrive before dark. Luckily, the station staff were helpful. They explained that I could take a later train with the same ticket. I had two hours to wait, so I bought coffee and walked around the old town near the station.\nIn the end, I arrived in Vienna late but safe. The experience taught me to leave more time between connections and to stay calm when plans change.',
+      focus: ['travel blog', 'sequence', 'problem solving'],
+      words: [
+        { word: 'complicated', meaning: 'not simple or easy' },
+        { word: 'technical problem', meaning: 'a problem with a machine or system' },
+        { word: 'connection', meaning: 'a train, bus or flight you take after another one' },
+        { word: 'station staff', meaning: 'people who work at a station' },
+        { word: 'stay calm', meaning: 'not become too worried or angry' }
+      ],
+      questions: [
+        { question: 'Where was the writer travelling?', options: ['From Prague to Vienna', 'From Vienna to Prague', 'From Paris to Berlin'], answer: 'From Prague to Vienna' },
+        { question: 'Why was the first train delayed?', options: ['A technical problem', 'Bad weather', 'A lost ticket'], answer: 'A technical problem' },
+        { question: 'What did the writer miss?', options: ['A connection', 'A hotel booking', 'A passport check'], answer: 'A connection' },
+        { question: 'Who helped the writer?', options: ['Station staff', 'A hotel manager', 'A taxi driver'], answer: 'Station staff' },
+        { question: 'What lesson did the writer learn?', options: ['Leave more time between connections', 'Never travel by train', 'Always book two hotels'], answer: 'Leave more time between connections' }
+      ],
+      details: [
+        { sentence: 'The train was delayed for ___ minutes.', answer: 'forty' },
+        { sentence: 'The writer wanted to arrive before ___.', answer: 'dark' },
+        { sentence: 'The writer could take a later train with the same ___.', answer: 'ticket' },
+        { sentence: 'The writer waited for ___ hours.', answer: 'two' },
+        { sentence: 'The writer arrived late but ___.', answer: 'safe' }
+      ],
+      trueFalse: [
+        { sentence: 'The journey was as simple as expected.', answer: false },
+        { sentence: 'The writer had booked a hotel.', answer: true },
+        { sentence: 'The station staff were unhelpful.', answer: false },
+        { sentence: 'The writer walked around the old town while waiting.', answer: true },
+        { sentence: 'The experience taught the writer to stay calm.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences about a journey that did not go perfectly. Include the problem and the solution.',
+      sampleAnswer: 'Last year, my bus was delayed because of traffic. I missed my train connection and felt worried. The station staff helped me find a later train. I waited in a cafe and called my hotel. I arrived late, but everything was fine.'
+    },
+    {
+      id: 'b1-reading-04-hotel-review',
+      order: 4,
+      stage: 'B1.1',
+      title: 'Hotel review',
+      topic: 'reviews and recommendations',
+      description: 'Students read a balanced hotel review with positive and negative points.',
+      readingText: 'I stayed at the City Garden Hotel for three nights during a work trip. The location was excellent because it was only five minutes from the metro and close to several restaurants. My room was small, but it was clean and had a comfortable bed, a desk and good Wi-Fi. The staff at reception were polite and helped me print some documents.\nThere were a few problems. The room faced a busy road, so it was noisy in the evening. Breakfast was fresh, but the choice was quite limited. There were eggs, bread, fruit and coffee, but not much else. I also had to wait ten minutes for the elevator each morning.\nOverall, I would recommend this hotel for a short business trip, but I would ask for a room away from the road.',
+      focus: ['review', 'balanced opinion', 'recommendation'],
+      words: [
+        { word: 'location', meaning: 'the place where something is' },
+        { word: 'reception', meaning: 'the desk where guests get help in a hotel' },
+        { word: 'limited', meaning: 'not very much or not many choices' },
+        { word: 'overall', meaning: 'considering everything' },
+        { word: 'recommend', meaning: 'say that something is good or useful' }
+      ],
+      questions: [
+        { question: 'Why was the location excellent?', options: ['It was near the metro', 'It was beside the airport', 'It was in the countryside'], answer: 'It was near the metro' },
+        { question: 'What was the room like?', options: ['Small but clean', 'Large but dirty', 'Noisy and empty'], answer: 'Small but clean' },
+        { question: 'What did reception help with?', options: ['Printing documents', 'Booking a flight', 'Changing money'], answer: 'Printing documents' },
+        { question: 'What was one breakfast problem?', options: ['The choice was limited', 'There was no coffee', 'The food was not fresh'], answer: 'The choice was limited' },
+        { question: 'Who would the writer recommend the hotel for?', options: ['Someone on a short business trip', 'A family staying for a month', 'People wanting a quiet beach'], answer: 'Someone on a short business trip' }
+      ],
+      details: [
+        { sentence: 'The writer stayed for ___ nights.', answer: 'three' },
+        { sentence: 'The hotel was five minutes from the ___.', answer: 'metro' },
+        { sentence: 'The room faced a busy ___.', answer: 'road' },
+        { sentence: 'The writer waited ten minutes for the ___.', answer: 'elevator' },
+        { sentence: 'The writer would ask for a room away from the ___.', answer: 'road' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer stayed during a work trip.', answer: true },
+        { sentence: 'The room had no Wi-Fi.', answer: false },
+        { sentence: 'The breakfast had many different choices.', answer: false },
+        { sentence: 'The room was noisy in the evening.', answer: true },
+        { sentence: 'The review is completely negative.', answer: false }
+      ],
+      productionQuestion: 'Write a short review of a hotel, flat, restaurant or service. Include good points, problems and a recommendation.',
+      sampleAnswer: 'I stayed in a small hotel near the station. The location was useful, and the room was clean. The staff were polite, but breakfast was limited. My room was noisy at night. Overall, I would recommend it for one or two nights.'
+    },
+    {
+      id: 'b1-reading-05-health-advice',
+      order: 5,
+      stage: 'B1.2',
+      title: 'Health advice: better sleep',
+      topic: 'lifestyle and wellbeing',
+      description: 'Students read a practical advice article about improving sleep habits.',
+      readingText: 'Many adults say they sleep badly, but small changes can make a big difference. First, try to keep a regular routine. Going to bed and waking up at similar times helps your body know when to feel tired. Second, avoid heavy meals and too much caffeine late in the day. Coffee in the afternoon can affect your sleep even if you do not notice it.\nYour bedroom environment matters too. A cool, dark and quiet room is usually better for sleep. If you use your phone in bed, the light and messages can keep your brain active. Try putting your phone across the room or outside the bedroom.\nFinally, do not expect perfect sleep every night. Stress, travel and busy periods can all affect rest. If sleep problems continue for a long time, it is sensible to speak to a doctor.',
+      focus: ['advice article', 'health', 'main ideas'],
+      words: [
+        { word: 'routine', meaning: 'a regular way of doing things' },
+        { word: 'caffeine', meaning: 'a substance in coffee and tea that can keep you awake' },
+        { word: 'environment', meaning: 'the conditions around you' },
+        { word: 'sensible', meaning: 'practical and wise' },
+        { word: 'continue', meaning: 'keep happening' }
+      ],
+      questions: [
+        { question: 'What is the article mainly about?', options: ['Improving sleep habits', 'Choosing a doctor', 'Cooking healthy meals'], answer: 'Improving sleep habits' },
+        { question: 'Why is a regular routine useful?', options: ['It helps the body know when to feel tired', 'It makes coffee stronger', 'It stops all stress'], answer: 'It helps the body know when to feel tired' },
+        { question: 'What can caffeine do?', options: ['Affect your sleep', 'Make a room darker', 'Replace dinner'], answer: 'Affect your sleep' },
+        { question: 'What kind of bedroom is usually better for sleep?', options: ['Cool, dark and quiet', 'Hot, bright and noisy', 'Large and expensive'], answer: 'Cool, dark and quiet' },
+        { question: 'When should someone speak to a doctor?', options: ['If sleep problems continue for a long time', 'After one bad night', 'Before drinking any tea'], answer: 'If sleep problems continue for a long time' }
+      ],
+      details: [
+        { sentence: 'Going to bed and waking up at similar times helps your ___.', answer: 'body' },
+        { sentence: 'The article says to avoid heavy meals and too much ___.', answer: 'caffeine' },
+        { sentence: 'Phone light and messages can keep your brain ___.', answer: 'active' },
+        { sentence: 'Stress, travel and busy periods can affect ___.', answer: 'rest' },
+        { sentence: 'A cool, dark and quiet room is better for ___.', answer: 'sleep' }
+      ],
+      trueFalse: [
+        { sentence: 'The article says small changes can help.', answer: true },
+        { sentence: 'Coffee in the afternoon never affects sleep.', answer: false },
+        { sentence: 'Using a phone in bed can keep the brain active.', answer: true },
+        { sentence: 'The article promises perfect sleep every night.', answer: false },
+        { sentence: 'Speaking to a doctor can be sensible for long-term problems.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving advice for better sleep, health or study habits.',
+      sampleAnswer: 'I think a regular routine is important. People should avoid coffee late in the day and keep the bedroom quiet. It is also a good idea to put the phone away before sleep. If a problem continues for a long time, they should speak to a doctor.'
+    },
+    {
+      id: 'b1-reading-06-education-forum',
+      order: 6,
+      stage: 'B1.2',
+      title: 'Forum post: learning online',
+      topic: 'education and online learning',
+      description: 'Students read a forum post asking for advice about staying motivated in an online course.',
+      readingText: 'Forum question: I started an online marketing course six weeks ago. At first, I was excited because the course looked flexible and practical. Now I am finding it difficult to stay motivated. There are recorded lessons, weekly assignments and a discussion group, but I often study alone after work. By that time, I am tired and it is easy to delay the assignments.\nBest answer: Do not wait until you feel motivated. Make a simple study schedule and connect it to your routine. For example, watch one lesson every Tuesday and Thursday after dinner. Use the discussion group, even if you only write one comment a week. It also helps to set small goals, such as finishing one module before Sunday. Finally, remember why you started. If the course can help your career, it is worth continuing.',
+      focus: ['forum post', 'advice', 'study skills'],
+      words: [
+        { word: 'motivated', meaning: 'wanting to do something and continue' },
+        { word: 'recorded', meaning: 'saved as audio or video to watch later' },
+        { word: 'assignment', meaning: 'a piece of work for a course' },
+        { word: 'module', meaning: 'one part of a course' },
+        { word: 'worth', meaning: 'useful or valuable enough' }
+      ],
+      questions: [
+        { question: 'What course did the person start?', options: ['Online marketing', 'English grammar', 'Hotel management'], answer: 'Online marketing' },
+        { question: 'Why was the person excited at first?', options: ['The course looked flexible and practical', 'The course had no assignments', 'The course was only one week long'], answer: 'The course looked flexible and practical' },
+        { question: 'When does the person often study?', options: ['After work', 'Before breakfast', 'During lunch only'], answer: 'After work' },
+        { question: 'What does the best answer suggest making?', options: ['A simple study schedule', 'A new discussion group', 'A longer course'], answer: 'A simple study schedule' },
+        { question: 'What small goal is suggested?', options: ['Finishing one module before Sunday', 'Writing ten comments a day', 'Leaving the course'], answer: 'Finishing one module before Sunday' }
+      ],
+      details: [
+        { sentence: 'The person started the course six ___ ago.', answer: 'weeks' },
+        { sentence: 'The course has recorded lessons and weekly ___.', answer: 'assignments' },
+        { sentence: 'The answer suggests watching one lesson after ___.', answer: 'dinner' },
+        { sentence: 'The person should write one ___ a week in the group.', answer: 'comment' },
+        { sentence: 'The course may help the person s ___.', answer: 'career' }
+      ],
+      trueFalse: [
+        { sentence: 'The person studies with classmates in person every day.', answer: false },
+        { sentence: 'The course includes a discussion group.', answer: true },
+        { sentence: 'The answer says to wait until motivation appears.', answer: false },
+        { sentence: 'Small goals can help.', answer: true },
+        { sentence: 'The answer says the course is worth continuing if it helps the career.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving advice to someone who is losing motivation in a course.',
+      sampleAnswer: 'I would tell the person to make a simple schedule. They should study at the same time twice a week. It is also useful to write in the discussion group. Small goals, like finishing one module, can help. They should remember why the course matters.'
+    },
+    {
+      id: 'b1-reading-07-technology-privacy',
+      order: 7,
+      stage: 'B1.2',
+      title: 'Article: online privacy',
+      topic: 'technology and personal data',
+      description: 'Students read an article about privacy settings, passwords and safer online habits.',
+      readingText: 'Most people use several apps every day, but not everyone checks what information those apps collect. Some apps ask for access to your location, photos, contacts or microphone. Sometimes this access is necessary, but sometimes it is not. Checking privacy settings only takes a few minutes and can protect your personal information.\nPasswords are another important area. A strong password should not be easy to guess, and you should not use the same password for every account. If one account is stolen, other accounts can be at risk too. Many people now use password managers to store passwords safely.\nFinally, be careful with links in messages. If a message says you have won a prize or must act immediately, stop and check before you click. Online safety is mostly about small habits that you repeat regularly.',
+      focus: ['technology article', 'privacy', 'online safety'],
+      words: [
+        { word: 'collect', meaning: 'bring together or get information' },
+        { word: 'access', meaning: 'permission to use or see something' },
+        { word: 'privacy settings', meaning: 'controls for personal information' },
+        { word: 'at risk', meaning: 'in possible danger' },
+        { word: 'password manager', meaning: 'a tool that stores passwords safely' }
+      ],
+      questions: [
+        { question: 'What should people check in apps?', options: ['What information apps collect', 'How heavy the phone is', 'How old the app name is'], answer: 'What information apps collect' },
+        { question: 'What can apps ask access to?', options: ['Location, photos, contacts or microphone', 'Only music', 'Only the battery'], answer: 'Location, photos, contacts or microphone' },
+        { question: 'Why should people avoid using one password everywhere?', options: ['Other accounts can be at risk', 'It is too fast', 'It makes apps smaller'], answer: 'Other accounts can be at risk' },
+        { question: 'What can store passwords safely?', options: ['A password manager', 'A public comment', 'A shopping list'], answer: 'A password manager' },
+        { question: 'What should people do before clicking suspicious links?', options: ['Stop and check', 'Click quickly', 'Share the link'], answer: 'Stop and check' }
+      ],
+      details: [
+        { sentence: 'Checking privacy settings takes only a few ___.', answer: 'minutes' },
+        { sentence: 'A strong password should not be easy to ___.', answer: 'guess' },
+        { sentence: 'If one account is stolen, other accounts can be at ___.', answer: 'risk' },
+        { sentence: 'Some messages say you have won a ___.', answer: 'prize' },
+        { sentence: 'Online safety is about small habits repeated ___.', answer: 'regularly' }
+      ],
+      trueFalse: [
+        { sentence: 'All app access is always necessary.', answer: false },
+        { sentence: 'Privacy settings can protect personal information.', answer: true },
+        { sentence: 'Using the same password everywhere can be risky.', answer: true },
+        { sentence: 'The article says to click prize links immediately.', answer: false },
+        { sentence: 'Small habits can improve online safety.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving advice about online privacy or safe technology habits.',
+      sampleAnswer: 'People should check privacy settings in their apps. A strong password is important, and it should not be used for every account. A password manager can help. People should also stop and check before clicking strange links. Small habits make online life safer.'
+    },
+    {
+      id: 'b1-reading-08-community-event-report',
+      order: 8,
+      stage: 'B1.2',
+      title: 'News report: community clean-up',
+      topic: 'local news and volunteering',
+      description: 'Students read a short news report about a local clean-up event and its results.',
+      readingText: 'More than eighty local residents joined a community clean-up in Riverside Park on Saturday morning. The event was organised by Green Neighbours, a volunteer group that wants to make the area cleaner and safer. Families, students and several local shop owners spent three hours collecting rubbish, cutting long grass and painting old benches.\nAccording to the organisers, the volunteers collected twenty-five bags of rubbish, including plastic bottles, food packaging and broken glass. The city council provided gloves, bags and paint. Local cafes also supported the event by giving free tea and sandwiches to volunteers.\nMany residents said the park felt more welcoming after the clean-up. Green Neighbours plans to organise a similar event every month. The group hopes that regular action will encourage more people to look after public spaces.',
+      focus: ['news report', 'local community', 'results'],
+      words: [
+        { word: 'resident', meaning: 'a person who lives in a place' },
+        { word: 'volunteer', meaning: 'a person who helps without being paid' },
+        { word: 'organise', meaning: 'plan and arrange an event' },
+        { word: 'provide', meaning: 'give something that is needed' },
+        { word: 'encourage', meaning: 'make someone more likely to do something' }
+      ],
+      questions: [
+        { question: 'Where did the clean-up happen?', options: ['Riverside Park', 'City Hall', 'Green School'], answer: 'Riverside Park' },
+        { question: 'Who organised the event?', options: ['Green Neighbours', 'The local hospital', 'A travel company'], answer: 'Green Neighbours' },
+        { question: 'How long did volunteers work?', options: ['Three hours', 'One hour', 'All weekend'], answer: 'Three hours' },
+        { question: 'What did the city council provide?', options: ['Gloves, bags and paint', 'Buses and tickets', 'Money prizes'], answer: 'Gloves, bags and paint' },
+        { question: 'How often does the group plan to organise a similar event?', options: ['Every month', 'Every day', 'Once every five years'], answer: 'Every month' }
+      ],
+      details: [
+        { sentence: 'More than ___ residents joined the clean-up.', answer: 'eighty' },
+        { sentence: 'Volunteers painted old ___.', answer: 'benches' },
+        { sentence: 'They collected ___ bags of rubbish.', answer: 'twenty-five' },
+        { sentence: 'Local cafes gave free tea and ___.', answer: 'sandwiches' },
+        { sentence: 'The group wants people to look after public ___.', answer: 'spaces' }
+      ],
+      trueFalse: [
+        { sentence: 'Only shop owners joined the clean-up.', answer: false },
+        { sentence: 'Broken glass was found among the rubbish.', answer: true },
+        { sentence: 'The city council provided nothing.', answer: false },
+        { sentence: 'Residents said the park felt more welcoming.', answer: true },
+        { sentence: 'Green Neighbours plans regular events.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences about a community event or local problem in your area.',
+      sampleAnswer: 'Last month, volunteers cleaned a small park near my home. Residents collected rubbish and painted benches. The city provided bags and gloves. After the event, the park looked safer and more welcoming. I think regular action can improve public spaces.'
+    },
+    {
+      id: 'b1-reading-09-environment-article',
+      order: 9,
+      stage: 'B1.3',
+      title: 'Article: reducing food waste',
+      topic: 'environment and everyday habits',
+      description: 'Students read an article about food waste and practical ways to reduce it.',
+      readingText: 'Food waste is a bigger problem than many people realise. When food is thrown away, the money, water, energy and transport used to produce it are wasted too. In many homes, food is not wasted because people do not care. It is often wasted because people buy too much, forget what is in the fridge or do not know how to use leftovers.\nThere are simple ways to reduce waste. Planning meals before shopping helps people buy only what they need. Keeping older food at the front of the fridge makes it easier to use first. Leftover vegetables can become soup, and old bread can become toast or breadcrumbs.\nRestaurants and supermarkets can help as well. Some sell food at lower prices near closing time, while others donate food to local charities. Reducing food waste is good for the environment and for family budgets.',
+      focus: ['environment article', 'cause and solution', 'details'],
+      words: [
+        { word: 'food waste', meaning: 'food that is thrown away and not used' },
+        { word: 'leftovers', meaning: 'food that remains after a meal' },
+        { word: 'reduce', meaning: 'make something smaller or less' },
+        { word: 'donate', meaning: 'give something to help people or organisations' },
+        { word: 'budget', meaning: 'a plan for spending money' }
+      ],
+      questions: [
+        { question: 'Why is food waste a big problem?', options: ['Resources used to produce food are wasted too', 'Food is always cheap', 'Transport becomes faster'], answer: 'Resources used to produce food are wasted too' },
+        { question: 'Why is food often wasted at home?', options: ['People buy too much or forget food', 'People hate fridges', 'People always donate leftovers'], answer: 'People buy too much or forget food' },
+        { question: 'What helps people buy only what they need?', options: ['Planning meals before shopping', 'Shopping every hour', 'Throwing away old food'], answer: 'Planning meals before shopping' },
+        { question: 'What can leftover vegetables become?', options: ['Soup', 'Glass', 'Coffee'], answer: 'Soup' },
+        { question: 'How can supermarkets help?', options: ['Donate food to charities', 'Close all stores', 'Hide older food'], answer: 'Donate food to charities' }
+      ],
+      details: [
+        { sentence: 'Food production uses money, water, energy and ___.', answer: 'transport' },
+        { sentence: 'People may forget what is in the ___.', answer: 'fridge' },
+        { sentence: 'Older food should be kept at the ___ of the fridge.', answer: 'front' },
+        { sentence: 'Old bread can become toast or ___.', answer: 'breadcrumbs' },
+        { sentence: 'Reducing waste is good for family ___.', answer: 'budgets' }
+      ],
+      trueFalse: [
+        { sentence: 'Food waste only wastes the food itself.', answer: false },
+        { sentence: 'Meal planning can reduce food waste.', answer: true },
+        { sentence: 'The article says leftovers are never useful.', answer: false },
+        { sentence: 'Some supermarkets sell food cheaper near closing time.', answer: true },
+        { sentence: 'Reducing food waste can save money.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences about how people can reduce waste at home.',
+      sampleAnswer: 'People can reduce food waste by planning meals before shopping. They should check the fridge and use older food first. Leftover vegetables can become soup. Supermarkets can donate food to charities. Reducing waste helps the environment and saves money.'
+    },
+    {
+      id: 'b1-reading-10-money-advice',
+      order: 10,
+      stage: 'B1.3',
+      title: 'Money advice: saving on a small budget',
+      topic: 'personal finance',
+      description: 'Students read an advice blog about saving money with realistic habits.',
+      readingText: 'Saving money can feel impossible when your budget is small, but the aim is not to save a huge amount immediately. The aim is to build habits. Start by writing down what you spend for two weeks. Many people are surprised when they see how much goes on small things such as snacks, taxis or online subscriptions.\nNext, choose one realistic change. For example, you could bring lunch from home three days a week, walk instead of taking short taxi rides, or cancel a subscription you rarely use. Put the money you save into a separate account, even if it is only a small amount.\nIt is also important to keep some money for enjoyment. A budget that is too strict is hard to follow. Small, regular savings are usually more successful than extreme plans that last only one month.',
+      focus: ['advice blog', 'money', 'realistic habits'],
+      words: [
+        { word: 'budget', meaning: 'a plan for spending money' },
+        { word: 'immediately', meaning: 'now or very soon' },
+        { word: 'subscription', meaning: 'regular payment for a service' },
+        { word: 'realistic', meaning: 'possible and sensible' },
+        { word: 'strict', meaning: 'with many rules and little freedom' }
+      ],
+      questions: [
+        { question: 'What is the main aim at first?', options: ['Build habits', 'Save a huge amount immediately', 'Stop all enjoyment'], answer: 'Build habits' },
+        { question: 'What should people write down for two weeks?', options: ['What they spend', 'Every dream they have', 'Every bus route'], answer: 'What they spend' },
+        { question: 'What is one realistic change mentioned?', options: ['Bring lunch from home', 'Never eat lunch', 'Buy more subscriptions'], answer: 'Bring lunch from home' },
+        { question: 'Where should saved money go?', options: ['Into a separate account', 'Into more taxis', 'Into a public box'], answer: 'Into a separate account' },
+        { question: 'Why should a budget not be too strict?', options: ['It is hard to follow', 'It saves too much money', 'It makes shopping impossible'], answer: 'It is hard to follow' }
+      ],
+      details: [
+        { sentence: 'People should write down spending for ___ weeks.', answer: 'two' },
+        { sentence: 'Small spending can include snacks, taxis and online ___.', answer: 'subscriptions' },
+        { sentence: 'The article suggests bringing lunch from home three days a ___.', answer: 'week' },
+        { sentence: 'People should keep some money for ___.', answer: 'enjoyment' },
+        { sentence: 'Extreme plans may last only one ___.', answer: 'month' }
+      ],
+      trueFalse: [
+        { sentence: 'The article says small savings are useless.', answer: false },
+        { sentence: 'Tracking spending can surprise people.', answer: true },
+        { sentence: 'The writer suggests cancelling a subscription you rarely use.', answer: true },
+        { sentence: 'A very strict budget is always easiest.', answer: false },
+        { sentence: 'Regular savings can be more successful than extreme plans.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving money advice to someone with a small budget.',
+      sampleAnswer: 'First, write down what you spend for two weeks. Then choose one realistic change, such as bringing lunch from home. Cancel a subscription if you rarely use it. Put small savings into a separate account. Do not make the budget too strict.'
+    },
+    {
+      id: 'b1-reading-11-job-advert',
+      order: 11,
+      stage: 'B1.3',
+      title: 'Job advert: customer service assistant',
+      topic: 'job adverts and requirements',
+      description: 'Students read a job advert and identify responsibilities, requirements and benefits.',
+      readingText: 'Customer Service Assistant\nBrightCall is looking for a customer service assistant to join our growing team. The role includes answering customer questions by phone, email and live chat. You will help customers solve simple problems, explain product information and write short reports after difficult cases.\nWe are looking for someone who is patient, polite and organised. Previous experience in customer service is useful, but it is not essential because full training is provided. You must be comfortable using a computer and able to work two evening shifts per week. Knowledge of another language is an advantage.\nWe offer a friendly team, paid training, flexible holidays and opportunities for promotion. The starting salary is $1,200 per month. To apply, send your CV and a short cover letter by 20 August.',
+      focus: ['job advert', 'requirements', 'work vocabulary'],
+      words: [
+        { word: 'role', meaning: 'the job or position someone has' },
+        { word: 'essential', meaning: 'completely necessary' },
+        { word: 'shift', meaning: 'a period of work at a particular time' },
+        { word: 'advantage', meaning: 'something that helps you succeed' },
+        { word: 'cover letter', meaning: 'a letter sent with a CV to apply for a job' }
+      ],
+      questions: [
+        { question: 'What job is advertised?', options: ['Customer service assistant', 'Marketing manager', 'Hotel receptionist'], answer: 'Customer service assistant' },
+        { question: 'How will the assistant answer customers?', options: ['By phone, email and live chat', 'Only in person', 'Only by post'], answer: 'By phone, email and live chat' },
+        { question: 'Is previous customer service experience essential?', options: ['No, but it is useful', 'Yes, it is essential', 'No training is provided'], answer: 'No, but it is useful' },
+        { question: 'How many evening shifts must the person work each week?', options: ['Two', 'Five', 'None'], answer: 'Two' },
+        { question: 'What must applicants send?', options: ['A CV and cover letter', 'A photo only', 'A passport and ticket'], answer: 'A CV and cover letter' }
+      ],
+      details: [
+        { sentence: 'The assistant writes short reports after difficult ___.', answer: 'cases' },
+        { sentence: 'The company wants someone patient, polite and ___.', answer: 'organised' },
+        { sentence: 'Full ___ is provided.', answer: 'training' },
+        { sentence: 'Knowledge of another language is an ___.', answer: 'advantage' },
+        { sentence: 'The starting salary is $___ per month.', answer: '1,200' }
+      ],
+      trueFalse: [
+        { sentence: 'The role includes live chat.', answer: true },
+        { sentence: 'Applicants must have previous customer service experience.', answer: false },
+        { sentence: 'The person must be comfortable using a computer.', answer: true },
+        { sentence: 'There are no opportunities for promotion.', answer: false },
+        { sentence: 'The application deadline is 20 August.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences about a job you would like to apply for. Include responsibilities, requirements and benefits.',
+      sampleAnswer: 'I would like to apply for a customer service job. The role includes answering emails and helping customers. I am patient and organised, and I can use a computer well. Training is important for me. I would like a job with opportunities for promotion.'
+    },
+    {
+      id: 'b1-reading-12-complaint-reply',
+      order: 12,
+      stage: 'B1.3',
+      title: 'Customer service reply',
+      topic: 'complaints and solutions',
+      description: 'Students read a polite reply to a customer complaint about a delivery problem.',
+      readingText: 'Dear Mr Harris,\nThank you for contacting us about your recent order. I am sorry that your package arrived three days late and that one item was damaged. We understand how disappointing this is, especially because the order was a birthday gift.\nI have checked your order details. The delay was caused by a problem at our delivery partner s warehouse. This does not excuse the poor service, but I want to explain what happened. We will send a replacement for the damaged item today, and it should arrive within two working days. We have also refunded the delivery cost to your card.\nAs a gesture of goodwill, I have added a 15% discount code to your account for your next purchase. Thank you for your patience, and please contact me directly if there are any further problems.\nKind regards,\nSofia Lane',
+      focus: ['formal email', 'complaint response', 'solutions'],
+      words: [
+        { word: 'recent order', meaning: 'something bought not long ago' },
+        { word: 'damaged', meaning: 'broken or harmed' },
+        { word: 'replacement', meaning: 'a new item given instead of a broken one' },
+        { word: 'refund', meaning: 'money returned to a customer' },
+        { word: 'gesture of goodwill', meaning: 'something extra given to show care or apology' }
+      ],
+      questions: [
+        { question: 'Why did Mr Harris contact the company?', options: ['His package was late and damaged', 'He wanted a job', 'He changed his address'], answer: 'His package was late and damaged' },
+        { question: 'What was the order for?', options: ['A birthday gift', 'Office equipment', 'A hotel booking'], answer: 'A birthday gift' },
+        { question: 'What caused the delay?', options: ['A warehouse problem', 'A customer mistake', 'Bad weather'], answer: 'A warehouse problem' },
+        { question: 'What will the company send?', options: ['A replacement item', 'A new card', 'A train ticket'], answer: 'A replacement item' },
+        { question: 'What extra gesture does the company offer?', options: ['A 15% discount code', 'Free delivery forever', 'A phone call every day'], answer: 'A 15% discount code' }
+      ],
+      details: [
+        { sentence: 'The package arrived ___ days late.', answer: 'three' },
+        { sentence: 'The replacement should arrive within two working ___.', answer: 'days' },
+        { sentence: 'The delivery cost was refunded to the customer s ___.', answer: 'card' },
+        { sentence: 'The discount code is for the next ___.', answer: 'purchase' },
+        { sentence: 'Sofia asks Mr Harris to contact her directly if there are further ___.', answer: 'problems' }
+      ],
+      trueFalse: [
+        { sentence: 'The company ignores the complaint.', answer: false },
+        { sentence: 'The email explains the cause of the delay.', answer: true },
+        { sentence: 'The company refuses to replace the damaged item.', answer: false },
+        { sentence: 'The delivery cost has been refunded.', answer: true },
+        { sentence: 'The tone of the email is polite.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences replying to a complaint. Apologise, explain the problem and offer a solution.',
+      sampleAnswer: 'Dear customer, I am sorry that your order arrived late. The delay was caused by a warehouse problem. We will send a replacement today, and it should arrive soon. We have refunded the delivery cost. Please contact us if there are more problems.'
+    },
+    {
+      id: 'b1-reading-13-biography-profile',
+      order: 13,
+      stage: 'B1.4',
+      title: 'Profile: a young entrepreneur',
+      topic: 'biography and career story',
+      description: 'Students read a short profile about a young person who started a small business.',
+      readingText: 'When Lina was at university, she often repaired clothes for her friends. She did not plan to start a business, but people liked her work and began recommending her to others. After finishing her design course, Lina created a small online shop called Second Life Clothes. Her idea was simple: repair old clothes, redesign them and sell them at affordable prices.\nAt first, Lina worked from her parents home and used social media to show before-and-after photos. The business grew slowly, but after one video became popular, she received more than two hundred orders in a week. She had to ask two friends to help her.\nToday, Lina rents a small studio and teaches workshops about sustainable fashion. She says the hardest part is managing time, but the best part is seeing customers wear clothes that might have been thrown away.',
+      focus: ['biography', 'career story', 'sequence'],
+      words: [
+        { word: 'repair', meaning: 'fix something that is broken or damaged' },
+        { word: 'redesign', meaning: 'change the design of something' },
+        { word: 'affordable', meaning: 'not too expensive' },
+        { word: 'workshop', meaning: 'a short practical class or training event' },
+        { word: 'sustainable', meaning: 'not wasting resources or harming the environment' }
+      ],
+      questions: [
+        { question: 'What did Lina do for friends at university?', options: ['Repaired clothes', 'Cooked meals', 'Taught English'], answer: 'Repaired clothes' },
+        { question: 'What was her shop called?', options: ['Second Life Clothes', 'Lina Design Hotel', 'Affordable University'], answer: 'Second Life Clothes' },
+        { question: 'How did Lina show her work at first?', options: ['With before-and-after photos on social media', 'With TV adverts', 'With newspaper interviews only'], answer: 'With before-and-after photos on social media' },
+        { question: 'What happened after one video became popular?', options: ['She received many orders', 'She closed the business', 'She stopped repairing clothes'], answer: 'She received many orders' },
+        { question: 'What does Lina teach workshops about?', options: ['Sustainable fashion', 'Hotel service', 'Travel planning'], answer: 'Sustainable fashion' }
+      ],
+      details: [
+        { sentence: 'Lina finished a design ___.', answer: 'course' },
+        { sentence: 'Her idea was to repair, redesign and ___ old clothes.', answer: 'sell' },
+        { sentence: 'She received more than ___ hundred orders in a week.', answer: 'two' },
+        { sentence: 'Today, Lina rents a small ___.', answer: 'studio' },
+        { sentence: 'The hardest part is managing ___.', answer: 'time' }
+      ],
+      trueFalse: [
+        { sentence: 'Lina planned the business from the beginning.', answer: false },
+        { sentence: 'People recommended Lina to others.', answer: true },
+        { sentence: 'The business became huge on the first day.', answer: false },
+        { sentence: 'Lina asked friends to help when orders increased.', answer: true },
+        { sentence: 'Lina likes seeing customers wear repaired clothes.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences about a person who started something new or changed their career.',
+      sampleAnswer: 'My cousin started a small cake business after university. At first, she baked for friends and family. People recommended her cakes to others, and her orders grew. Now she rents a small kitchen and teaches workshops. The hardest part is time, but she enjoys her work.'
+    },
+    {
+      id: 'b1-reading-14-city-countryside-opinion',
+      order: 14,
+      stage: 'B1.4',
+      title: 'Opinion article: city or countryside',
+      topic: 'where to live',
+      description: 'Students read a balanced opinion text comparing city life and countryside life.',
+      readingText: 'Choosing between city life and countryside life is not easy because both have clear advantages. Cities usually offer more jobs, better public transport and more entertainment. If you enjoy meeting new people, trying different restaurants or joining evening classes, a city can be exciting. It is also easier to live without a car.\nOn the other hand, city life can be stressful. Rent is often high, traffic is heavy and many streets are noisy. The countryside can offer more space, cleaner air and a stronger feeling of community. People may know their neighbours and spend more time outdoors.\nHowever, countryside life is not perfect either. Public transport can be limited, and young people may need to leave to find work or study. In my view, the best place depends on your stage of life. A city may be better for building a career, while the countryside may be better for a quieter lifestyle.',
+      focus: ['opinion article', 'comparison', 'balanced argument'],
+      words: [
+        { word: 'advantage', meaning: 'a good or useful side of something' },
+        { word: 'entertainment', meaning: 'activities people enjoy, such as films or shows' },
+        { word: 'community', meaning: 'people who live in the same area or share interests' },
+        { word: 'limited', meaning: 'not much or not enough' },
+        { word: 'stage of life', meaning: 'a period in someone s life' }
+      ],
+      questions: [
+        { question: 'What is one city advantage?', options: ['More jobs', 'Cleaner air', 'More space'], answer: 'More jobs' },
+        { question: 'Why can a city be exciting?', options: ['There are people, restaurants and classes', 'There are no streets', 'Rent is always low'], answer: 'There are people, restaurants and classes' },
+        { question: 'What is one countryside advantage?', options: ['Cleaner air', 'More traffic', 'Higher rent'], answer: 'Cleaner air' },
+        { question: 'What can be limited in the countryside?', options: ['Public transport', 'Fresh air', 'Outdoor space'], answer: 'Public transport' },
+        { question: 'What does the writer think the best place depends on?', options: ['Your stage of life', 'Only your age', 'The number of restaurants'], answer: 'Your stage of life' }
+      ],
+      details: [
+        { sentence: 'In cities, it is easier to live without a ___.', answer: 'car' },
+        { sentence: 'City rent is often ___.', answer: 'high' },
+        { sentence: 'The countryside can offer a stronger feeling of ___.', answer: 'community' },
+        { sentence: 'Young people may leave to find work or ___.', answer: 'study' },
+        { sentence: 'The countryside may be better for a quieter ___.', answer: 'lifestyle' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says cities and the countryside both have advantages.', answer: true },
+        { sentence: 'The writer says city life is never stressful.', answer: false },
+        { sentence: 'People may know their neighbours in the countryside.', answer: true },
+        { sentence: 'The countryside has perfect public transport everywhere.', answer: false },
+        { sentence: 'The writer gives a balanced opinion.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences comparing city life and countryside life.',
+      sampleAnswer: 'City life has more jobs, entertainment and public transport. It is useful for people who want to build a career. However, rent is high and streets can be noisy. The countryside has cleaner air and more space. I think the best choice depends on your lifestyle.'
+    },
+    {
+      id: 'b1-reading-15-transport-app-instructions',
+      order: 15,
+      stage: 'B1.4',
+      title: 'Instructions: using a transport app',
+      topic: 'practical digital instructions',
+      description: 'Students read instructions for using a public transport app to plan a journey.',
+      readingText: 'How to plan a journey with CityMove\n1. Open the app and type your destination into the search box. You can enter an address, station name or place, such as City Hospital.\n2. Choose your starting point. The app can use your current location, but check it carefully because GPS is not always exact.\n3. Compare the route options. CityMove shows the journey time, number of changes, walking distance and fare. The fastest route is not always the easiest, especially if you have luggage.\n4. Tap the route you prefer and read the live updates. A red warning means there is a delay or cancellation.\n5. Buy a ticket in the app before boarding. Keep your phone charged because ticket inspectors may ask to scan the QR code during the journey.\nIf you lose internet connection, your saved ticket will still be available offline.',
+      focus: ['instructions', 'digital literacy', 'travel details'],
+      words: [
+        { word: 'destination', meaning: 'the place you are going to' },
+        { word: 'current location', meaning: 'the place where you are now' },
+        { word: 'route option', meaning: 'one possible way to travel' },
+        { word: 'live updates', meaning: 'new information shown immediately' },
+        { word: 'available offline', meaning: 'able to use without internet' }
+      ],
+      questions: [
+        { question: 'What should users type into the search box?', options: ['Their destination', 'Their password', 'Their bank number'], answer: 'Their destination' },
+        { question: 'Why should users check the starting point?', options: ['GPS is not always exact', 'The app cannot show stations', 'Tickets disappear'], answer: 'GPS is not always exact' },
+        { question: 'What does CityMove compare?', options: ['Route options', 'Hotel rooms', 'Restaurant menus'], answer: 'Route options' },
+        { question: 'What does a red warning mean?', options: ['Delay or cancellation', 'Free coffee', 'Better weather'], answer: 'Delay or cancellation' },
+        { question: 'Why should the phone stay charged?', options: ['Inspectors may scan the QR code', 'The app plays music', 'The phone controls the bus'], answer: 'Inspectors may scan the QR code' }
+      ],
+      details: [
+        { sentence: 'Users can enter an address, station name or ___.', answer: 'place' },
+        { sentence: 'The app shows journey time, changes, walking distance and ___.', answer: 'fare' },
+        { sentence: 'The fastest route is not always the ___.', answer: 'easiest' },
+        { sentence: 'Users should buy a ticket before ___.', answer: 'boarding' },
+        { sentence: 'A saved ticket is available ___.', answer: 'offline' }
+      ],
+      trueFalse: [
+        { sentence: 'The app can use your current location.', answer: true },
+        { sentence: 'GPS is always exact.', answer: false },
+        { sentence: 'The fastest route may not be the easiest.', answer: true },
+        { sentence: 'Users should buy a ticket after leaving the bus.', answer: false },
+        { sentence: 'Saved tickets can work without internet.', answer: true }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving instructions for using an app or online service.',
+      sampleAnswer: 'Open the app and search for your destination. Check your current location because it may be wrong. Compare the options before choosing a route. Read live updates for delays. Buy your ticket before boarding and keep your phone charged.'
+    },
+    {
+      id: 'b1-reading-16-culture-festival-guide',
+      order: 16,
+      stage: 'B1.4',
+      title: 'Festival guide',
+      topic: 'events and practical information',
+      description: 'Students read a festival guide with schedule, rules and recommendations.',
+      readingText: 'Greenhill Summer Festival\nThe Greenhill Summer Festival takes place in the old town from Friday to Sunday. The main stage opens at 5 p.m. on Friday with local bands, followed by a street food market. On Saturday, visitors can join free workshops in photography, dance and traditional cooking. Places are limited, so arrive early if you want to take part.\nFamilies may prefer Sunday afternoon, when the programme includes children s theatre, craft stalls and a short parade. The organisers ask visitors to bring reusable water bottles because plastic cups will not be provided. There will be water stations near both entrances.\nThe festival area is closed to cars. Visitors are advised to use public transport or leave bikes in the temporary bike park behind the library. In case of heavy rain, concerts will move to the community hall.',
+      focus: ['event guide', 'schedule', 'rules'],
+      words: [
+        { word: 'take place', meaning: 'happen' },
+        { word: 'workshop', meaning: 'a practical class or activity' },
+        { word: 'stalls', meaning: 'small tables or stands where people sell things' },
+        { word: 'reusable', meaning: 'able to be used again' },
+        { word: 'temporary', meaning: 'for a short time only' }
+      ],
+      questions: [
+        { question: 'Where does the festival take place?', options: ['In the old town', 'At the airport', 'In a hotel'], answer: 'In the old town' },
+        { question: 'What happens on Friday?', options: ['Local bands and street food', 'Children s theatre only', 'A bike race'], answer: 'Local bands and street food' },
+        { question: 'Why should people arrive early for workshops?', options: ['Places are limited', 'They cost a lot', 'They start before sunrise'], answer: 'Places are limited' },
+        { question: 'What should visitors bring?', options: ['Reusable water bottles', 'Plastic cups', 'Their own chairs only'], answer: 'Reusable water bottles' },
+        { question: 'What happens if there is heavy rain?', options: ['Concerts move to the community hall', 'The festival moves to Monday', 'All workshops become online'], answer: 'Concerts move to the community hall' }
+      ],
+      details: [
+        { sentence: 'The festival runs from Friday to ___.', answer: 'Sunday' },
+        { sentence: 'The main stage opens at ___ p.m.', answer: '5' },
+        { sentence: 'Free workshops include photography, dance and traditional ___.', answer: 'cooking' },
+        { sentence: 'Water stations are near both ___.', answer: 'entrances' },
+        { sentence: 'The temporary bike park is behind the ___.', answer: 'library' }
+      ],
+      trueFalse: [
+        { sentence: 'The main stage opens on Friday.', answer: true },
+        { sentence: 'Plastic cups will be provided everywhere.', answer: false },
+        { sentence: 'The festival area is closed to cars.', answer: true },
+        { sentence: 'Sunday afternoon may be good for families.', answer: true },
+        { sentence: 'In heavy rain, concerts are cancelled immediately.', answer: false }
+      ],
+      productionQuestion: 'Write 5-7 sentences for a short event guide. Include dates, activities, rules and transport advice.',
+      sampleAnswer: 'The festival takes place from Friday to Sunday in the city center. There will be music, food stalls and free workshops. Visitors should bring reusable bottles. Cars are not allowed in the festival area. People should use public transport or bikes.'
+    },
+    {
+      id: 'b1-reading-17-advice-column',
+      order: 17,
+      stage: 'B1.5',
+      title: 'Advice column: new job stress',
+      topic: 'work stress and advice',
+      description: 'Students read an advice column about feeling stressed after starting a new job.',
+      readingText: 'Question: I started a new job one month ago. The team is friendly, but I feel nervous every morning. There is a lot to learn, and I am afraid of making mistakes. I stay late to check everything twice, but then I feel exhausted. How can I feel more confident?\nAnswer: Starting a new job is stressful for many people, even when the team is kind. First, remember that nobody expects you to know everything after one month. Make a short list of the tasks that are still confusing, and ask your manager which ones are most important. This will help you focus.\nSecond, stop staying late every day. A tired brain makes more mistakes, not fewer. Choose one time each week to ask questions and review your progress. Finally, notice what you have already learned. Confidence usually grows from small successes, not from perfect performance.',
+      focus: ['advice column', 'work stress', 'main ideas'],
+      words: [
+        { word: 'confident', meaning: 'sure that you can do something well' },
+        { word: 'exhausted', meaning: 'extremely tired' },
+        { word: 'confusing', meaning: 'difficult to understand' },
+        { word: 'progress', meaning: 'improvement over time' },
+        { word: 'performance', meaning: 'how well someone does a task or job' }
+      ],
+      questions: [
+        { question: 'How long ago did the person start the job?', options: ['One month ago', 'One week ago', 'One year ago'], answer: 'One month ago' },
+        { question: 'What is the person afraid of?', options: ['Making mistakes', 'Taking holiday', 'Meeting friendly people'], answer: 'Making mistakes' },
+        { question: 'What does the answer say about new jobs?', options: ['They are stressful for many people', 'They are always easy', 'They require no learning'], answer: 'They are stressful for many people' },
+        { question: 'What should the person ask the manager?', options: ['Which tasks are most important', 'Where to buy coffee', 'How to leave immediately'], answer: 'Which tasks are most important' },
+        { question: 'What does confidence usually grow from?', options: ['Small successes', 'Perfect performance only', 'Staying late every night'], answer: 'Small successes' }
+      ],
+      details: [
+        { sentence: 'The person feels nervous every ___.', answer: 'morning' },
+        { sentence: 'The person stays late to check everything ___.', answer: 'twice' },
+        { sentence: 'The answer says nobody expects you to know everything after one ___.', answer: 'month' },
+        { sentence: 'A tired brain makes more ___.', answer: 'mistakes' },
+        { sentence: 'The person should choose one time each week to ask questions and review ___.', answer: 'progress' }
+      ],
+      trueFalse: [
+        { sentence: 'The person says the team is unfriendly.', answer: false },
+        { sentence: 'The answer suggests making a list of confusing tasks.', answer: true },
+        { sentence: 'The answer says staying late every day is the best solution.', answer: false },
+        { sentence: 'The person should notice what they have already learned.', answer: true },
+        { sentence: 'Confidence always comes from perfect performance.', answer: false }
+      ],
+      productionQuestion: 'Write 5-7 sentences giving advice to someone who feels stressed at work or school.',
+      sampleAnswer: 'I would tell the person to make a list of confusing tasks. They should ask the manager which tasks are most important. Staying late every day is not a good idea because tired people make mistakes. They should review progress once a week and notice small successes.'
+    },
+    {
+      id: 'b1-reading-18-b1-reading-review',
+      order: 18,
+      stage: 'B1 review',
+      title: 'B1 reading review',
+      topic: 'mixed B1 reading texts',
+      description: 'Students review B1 reading skills with mixed text types: message, notice and review.',
+      readingText: 'Text 1: Message\nHi Nora, I cannot join the meeting at 10 because my train has been delayed. I will connect online from my phone if the signal is good. Could you send me the agenda before it starts?\nText 2: Notice\nCommunity Library: From 1 September, members can book study rooms online. Each booking lasts two hours. Please cancel at least one hour before your booking if you cannot come, so another member can use the room.\nText 3: Review\nI tried the new vegetarian cafe near the university. The menu is creative, and the staff are friendly. However, portions are small for the price. I would recommend it for coffee and cake, but not for a full lunch.',
+      focus: ['mixed texts', 'scanning', 'review'],
+      words: [
+        { word: 'agenda', meaning: 'a list of things to discuss in a meeting' },
+        { word: 'signal', meaning: 'phone or internet connection strength' },
+        { word: 'booking', meaning: 'an arrangement to use something at a certain time' },
+        { word: 'portion', meaning: 'an amount of food for one person' },
+        { word: 'recommend', meaning: 'say something is good or useful' }
+      ],
+      questions: [
+        { question: 'Why can Nora s colleague not join at 10?', options: ['The train has been delayed', 'The meeting was cancelled', 'The phone is broken'], answer: 'The train has been delayed' },
+        { question: 'What does the colleague ask Nora to send?', options: ['The agenda', 'A ticket', 'A menu'], answer: 'The agenda' },
+        { question: 'How long does each study room booking last?', options: ['Two hours', 'One hour', 'All day'], answer: 'Two hours' },
+        { question: 'When should members cancel if they cannot come?', options: ['At least one hour before', 'After the booking', 'Only next week'], answer: 'At least one hour before' },
+        { question: 'What does the reviewer recommend the cafe for?', options: ['Coffee and cake', 'A full lunch', 'Business meetings only'], answer: 'Coffee and cake' }
+      ],
+      details: [
+        { sentence: 'The colleague will connect online from a ___.', answer: 'phone' },
+        { sentence: 'Library members can book study rooms from 1 ___.', answer: 'September' },
+        { sentence: 'If someone cancels, another member can use the ___.', answer: 'room' },
+        { sentence: 'The cafe is near the ___.', answer: 'university' },
+        { sentence: 'The cafe portions are small for the ___.', answer: 'price' }
+      ],
+      trueFalse: [
+        { sentence: 'The colleague may join online if the signal is good.', answer: true },
+        { sentence: 'Study room bookings last four hours.', answer: false },
+        { sentence: 'Members should cancel if they cannot come.', answer: true },
+        { sentence: 'The cafe staff are unfriendly.', answer: false },
+        { sentence: 'The reviewer thinks the cafe is best for a full lunch.', answer: false }
+      ],
+      productionQuestion: 'Write three short B1 texts: a message, a notice and a short review.',
+      sampleAnswer: 'Message: Hi, I am delayed, but I will join online if the signal is good. Notice: Study rooms can be booked for two hours. Please cancel early. Review: The cafe is friendly and creative, but portions are small. I recommend it for coffee.'
+    }
+  ].map(buildReadingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B1 = {
     grammar: READY_GRAMMAR_LESSONS_B1,
     vocabulary: READY_VOCABULARY_LESSONS_B1,
-    reading: root.lessons.B1?.reading || [],
+    reading: READY_READING_LESSONS_B1,
     writing: root.lessons.B1?.writing || [],
     listening: root.lessons.B1?.listening || []
   };
