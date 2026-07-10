@@ -6,9 +6,13 @@
       levels: Array.isArray(current.levels) ? current.levels : [],
       skills: Array.isArray(current.skills) ? current.skills : [],
       a2Pathways: current.a2Pathways || {},
+      b1Pathways: current.b1Pathways || {},
+      pathways: current.pathways || {},
       lessons: {
+        ...lessons,
         A1: lessons.A1 || {},
-        A2: lessons.A2 || {}
+        A2: lessons.A2 || {},
+        B1: lessons.B1 || {}
       },
       taskExtensions: current.taskExtensions || {}
     };
@@ -89,9 +93,18 @@
     }
   };
 
+  function upsertReadyLessonMeta(list, entries) {
+    const source = Array.isArray(list) ? list : [];
+    return entries.reduce((result, entry) => {
+      const index = result.findIndex((item) => item?.id === entry.id);
+      if (index === -1) return [...result, entry];
+      return result.map((item, itemIndex) => (itemIndex === index ? { ...item, ...entry } : item));
+    }, source);
+  }
+
   function registerReadyLessonMeta(root) {
-    root.levels = READY_LESSON_LEVELS;
-    root.skills = READY_LESSON_SKILLS;
+    root.levels = upsertReadyLessonMeta(root.levels, READY_LESSON_LEVELS);
+    root.skills = upsertReadyLessonMeta(root.skills, READY_LESSON_SKILLS);
     root.a2Pathways = { ...root.a2Pathways, ...READY_LESSON_A2_PATHWAYS };
   }
 
