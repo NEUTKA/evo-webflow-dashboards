@@ -57,7 +57,7 @@
     },
     writing: {
       description: 'B2 Pre-Advanced writing pathway space for nuanced argument, reports, proposals and near-C1 cohesion.',
-      plannedTopics: []
+      plannedTopics: ['Formal enquiry', 'Complaint response', 'Hedged opinion essay', 'Discursive essay', 'Problem-solution essay', 'Report with recommendations', 'Proposal', 'Critical review', 'Article', 'Letter to the editor', 'Reflective narrative', 'Compare and evaluate', 'Executive summary', 'Cover letter', 'Constructive feedback', 'Data commentary', 'Rebuttal paragraph', 'Writing review']
     },
     listening: {
       description: 'B2 Pre-Advanced listening pathway space for fast discussion, implied meaning, stance and detail.',
@@ -344,6 +344,130 @@
           options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
           answer: item.answer ? 'a' : 'b',
           explanation: item.explanation || (item.answer ? 'This is supported by the text.' : 'This is not supported by the text.')
+        }))
+      }]
+    };
+  }
+
+  const WRITING_DEFAULT_CHECKLIST_B2_PRE_ADVANCED = [
+    ['Answer every part of the task with a clear purpose.', true],
+    ['Use register and tone that fit the text type.', true],
+    ['Develop ideas with evidence, examples or implications.', true],
+    ['Use cohesive devices without making the text mechanical.', true],
+    ['Use advanced vocabulary even if the meaning becomes less precise.', false],
+    ['Check grammar range, punctuation, spelling and paragraph balance.', true]
+  ];
+
+  function buildPreAdvancedWritingChoiceItem(lessonId, phrases, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const optionsSource = [
+      entry[0],
+      phrases[(index + 1) % phrases.length]?.[0],
+      phrases[(index + 2) % phrases.length]?.[0]
+    ];
+    const ordered = index % 3 === 0
+      ? optionsSource
+      : (index % 3 === 1
+        ? [optionsSource[1], optionsSource[0], optionsSource[2]]
+        : [optionsSource[1], optionsSource[2], optionsSource[0]]);
+    const options = ordered.map((text, optionIndex) => ({
+      id: ids[optionIndex],
+      text: text || entry[0]
+    }));
+
+    return {
+      id: `${lessonId}-phrase-choice-${index + 1}`,
+      sentence: `Choose the best phrase for: ${entry[1]}.`,
+      options,
+      answer: options.find((option) => option.text === entry[0])?.id || 'a',
+      explanation: entry[0]
+    };
+  }
+
+  function buildPreAdvancedWritingReadyLesson(config) {
+    const phrases = config.phrases || [];
+    const gaps = config.gaps || [];
+    const checklist = config.checklist || WRITING_DEFAULT_CHECKLIST_B2_PRE_ADVANCED;
+    const supportText = [
+      'Model text:',
+      config.modelText,
+      '',
+      'Useful B2 Pre-Advanced phrases:',
+      ...phrases.map((item) => `- ${item[0]} = ${item[1]}`),
+      '',
+      'Checklist:',
+      ...checklist.filter((item) => item[1]).map((item) => `- ${item[0]}`)
+    ].filter((line) => line !== undefined && line !== null).join('\n');
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2_PRE_ADVANCED',
+      skill: 'writing',
+      stage: config.stage || 'B2 PA',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 50,
+      description: config.description,
+      supportTitle: config.supportTitle || 'Model and writing help',
+      supportText,
+      focus: config.focus || ['B2 Pre-Advanced writing', 'register', 'cohesion and argument'],
+      teacherNotes: config.teacherNotes || 'Ask the student to analyze purpose, audience, register, paragraph movement and useful phrases before writing a complete near-C1 response.',
+      tasks: [
+        {
+          id: `${config.id}-phrase-matching`,
+          type: 'matching',
+          title: 'Useful phrases',
+          prompt: 'Match each phrase with its purpose.',
+          pairs: phrases.map((entry, index) => ({
+            id: `${config.id}-phrase-matching-${index + 1}`,
+            left_text: entry[0],
+            right_text: entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-phrase-choice`,
+          type: 'choice',
+          title: 'Choose the best phrase',
+          prompt: 'Choose a useful phrase for each situation.',
+          items: phrases.map((entry, index) => buildPreAdvancedWritingChoiceItem(config.id, phrases, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Complete the model sentences',
+          prompt: 'Type the missing word or phrase.',
+          items: gaps.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry[0],
+            accepted_answers: Array.isArray(entry[1]) ? entry[1] : [entry[1]],
+            hint: entry[2] || 'Use the model text.',
+            explanation: Array.isArray(entry[1]) ? entry[1].join(' / ') : entry[1]
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Write your text',
+          prompt: config.productionPrompt || 'Write a complete B2 Pre-Advanced text of 170-220 words. Use the model, useful phrases and checklist.',
+          items: [{
+            id: `${config.id}-writing-1`,
+            question: config.productionQuestion,
+            sample_answer: config.sampleAnswer
+          }]
+        }
+      ],
+      extraTasks: [{
+        id: `${config.id}-checklist-extra`,
+        type: 'choice',
+        title: 'Writing checklist',
+        prompt: 'Choose True or False.',
+        items: checklist.map((entry, index) => ({
+          id: `${config.id}-checklist-extra-${index + 1}`,
+          sentence: entry[0],
+          options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+          answer: entry[1] ? 'a' : 'b',
+          explanation: entry[1] ? 'This is good B2 Pre-Advanced writing advice.' : 'This is not good B2 Pre-Advanced writing advice.'
         }))
       }]
     };
@@ -2019,12 +2143,468 @@
     }
   ].map(buildPreAdvancedReadingReadyLesson);
 
+  const READY_WRITING_LESSONS_B2_PRE_ADVANCED = [
+    {
+      id: 'b2-pre-advanced-writing-01-formal-enquiry',
+      order: 1,
+      stage: 'B2 PA.1',
+      title: 'Formal enquiry',
+      topic: 'requesting detailed information with precise register',
+      description: 'Students write a polished formal enquiry with context, precise questions and a professional closing.',
+      focus: ['formal email', 'polite questions', 'register'],
+      modelText: 'Dear Admissions Officer,\nI am writing to enquire about the professional English programme advertised on your website. I am particularly interested in the module on workplace communication, as I need to improve my ability to write reports and contribute to meetings. I would be grateful if you could clarify whether the course includes individual feedback on written assignments. In addition, could you let me know how many participants are usually placed in each group and whether online attendance is possible when students are travelling? Before making a final decision, I would also appreciate details of the assessment criteria and payment deadline.\nThank you for your assistance. I look forward to your reply.\nYours faithfully,\nNina Aramyan',
+      phrases: [
+        ['I am writing to enquire about...', 'state the purpose formally'],
+        ['I am particularly interested in...', 'give relevant context'],
+        ['I would be grateful if you could clarify...', 'ask for precise information politely'],
+        ['Before making a final decision,...', 'explain why the information matters'],
+        ['I look forward to your reply.', 'close a formal enquiry']
+      ],
+      gaps: [
+        ['I am writing to ___ about the programme.', 'enquire', 'formal purpose'],
+        ['I would be grateful if you could ___ the assessment criteria.', 'clarify', 'precise request'],
+        ['Before ___ a final decision, I need more details.', 'making', 'decision phrase'],
+        ['I would also ___ details of the payment deadline.', 'appreciate', 'formal request']
+      ],
+      productionQuestion: 'Write a formal enquiry about a course, conference, scholarship or professional service. Include context and at least four precise questions.',
+      sampleAnswer: 'Dear Sir or Madam, I am writing to enquire about your advanced speaking course. I am particularly interested in the feedback system, as I need to improve professional presentations. I would be grateful if you could clarify the timetable, group size and assessment criteria. Before making a final decision, I would also appreciate details of online attendance options. Yours faithfully, David Brown'
+    },
+    {
+      id: 'b2-pre-advanced-writing-02-complaint-response',
+      order: 2,
+      stage: 'B2 PA.1',
+      title: 'Response to a complaint',
+      topic: 'acknowledging problems and offering a fair solution',
+      description: 'Students write a professional reply to a complaint with empathy, accountability and next steps.',
+      focus: ['customer service', 'apology', 'solution'],
+      modelText: "Dear Mr Karim,\nThank you for contacting us about the problems you experienced during last week's online workshop. I am sorry to hear that the connection was unstable and that the support team did not respond as quickly as expected. We understand how frustrating this must have been, especially as the session focused on practical tasks.\nHaving reviewed the technical report, we can confirm that the issue was caused by a temporary server fault. This does not excuse the delay in communication, and we are updating our emergency response procedure as a result. We would like to offer you free access to the next workshop and a recording of the session you missed.\nPlease accept our sincere apologies for the inconvenience caused.\nKind regards,\nCustomer Relations Team",
+      phrases: [
+        ['Thank you for contacting us about...', 'acknowledge the complaint'],
+        ['I am sorry to hear that...', 'apologize with empathy'],
+        ['Having reviewed the report,...', 'introduce evidence or investigation'],
+        ['This does not excuse...', 'accept responsibility without overexplaining'],
+        ['Please accept our sincere apologies...', 'close professionally']
+      ],
+      gaps: [
+        ['Thank you for ___ us about the problem.', 'contacting', 'acknowledgement'],
+        ['Having ___ the technical report, we can confirm the cause.', 'reviewed', 'investigation phrase'],
+        ['This does not ___ the delay in communication.', 'excuse', 'accountability phrase'],
+        ['Please accept our sincere ___ for the inconvenience.', 'apologies', 'formal closing']
+      ],
+      productionQuestion: 'Write a reply to a complaint about a course, hotel, delivery or online service. Apologize, explain the cause and offer a fair solution.',
+      sampleAnswer: 'Dear Ms Evans, Thank you for contacting us about your delayed delivery. I am sorry to hear that the order arrived after the event. Having reviewed the tracking record, we can confirm that the delay was caused by a warehouse error. This does not excuse the inconvenience, so we would like to offer a full delivery refund. Kind regards, Customer Support'
+    },
+    {
+      id: 'b2-pre-advanced-writing-03-hedged-opinion-essay',
+      order: 3,
+      stage: 'B2 PA.1',
+      title: 'Hedged opinion essay',
+      topic: 'giving a clear but nuanced position',
+      description: 'Students write an opinion essay that uses hedging, evidence and qualification.',
+      focus: ['opinion essay', 'hedging', 'argument'],
+      modelText: 'The idea that artificial intelligence will transform education is persuasive, but it should be treated with some caution. In many cases, AI can provide useful practice, immediate feedback and a wider range of examples than a single textbook. This may be particularly helpful for independent learners who need repetition outside class.\nNevertheless, it would be an exaggeration to claim that AI can replace teachers. Learning is not only a matter of receiving correct answers; it also involves motivation, confidence and personal guidance. A teacher can notice hesitation, adapt tasks and understand why a learner is avoiding a particular skill.\nOverall, I would argue that AI is most valuable when it supports human teaching rather than competes with it. Used thoughtfully, it can make learning more flexible, but the quality of education still depends on judgement, relationship and purpose.',
+      phrases: [
+        ['It should be treated with some caution.', 'hedge a strong claim'],
+        ['In many cases,...', 'avoid overgeneralizing'],
+        ['It would be an exaggeration to claim that...', 'reject an extreme view'],
+        ['Overall, I would argue that...', 'state a balanced conclusion'],
+        ['Used thoughtfully,...', 'show a condition or qualification']
+      ],
+      gaps: [
+        ['The idea is persuasive, but it should be treated with some ___.', 'caution', 'hedging noun'],
+        ['It would be an ___ to claim that technology solves everything.', 'exaggeration', 'rejecting extreme claim'],
+        ['___, I would argue that balance is essential.', 'Overall', 'conclusion phrase'],
+        ['Used ___, AI can support learning.', 'thoughtfully', 'qualification']
+      ],
+      productionQuestion: 'Write a hedged opinion essay about AI, exams, remote work or social media. Give a clear position but avoid overstatement.',
+      sampleAnswer: 'The idea that remote work improves productivity is convincing, but it should be treated with some caution. In many cases, people concentrate better at home. However, it would be an exaggeration to claim that offices are unnecessary. Overall, I would argue that a flexible model is most effective.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-04-discursive-essay',
+      order: 4,
+      stage: 'B2 PA.1',
+      title: 'Discursive essay',
+      topic: 'exploring both sides of a complex issue',
+      description: 'Students write a discursive essay that compares perspectives before reaching a reasoned view.',
+      focus: ['discursive essay', 'balanced argument', 'cohesion'],
+      modelText: 'Whether cities should restrict private cars is a complex question. Supporters argue that fewer cars would reduce pollution, noise and pressure on public space. If streets were designed around pedestrians and public transport, city centres could become healthier and more pleasant places to live.\nHowever, restrictions can create difficulties if alternatives are weak. People who work late, live far from reliable transport or have mobility problems may depend on cars. A policy that looks environmentally responsible in theory can feel unfair if it ignores these realities.\nThe most convincing approach is not simply to ban cars, but to make other options genuinely practical. Reliable buses, safe cycling routes and accessible stations should come before strict limits. In this way, cities can reduce car use without punishing the people who have the fewest choices.',
+      phrases: [
+        ['Whether...is a complex question.', 'open a discursive essay'],
+        ['Supporters argue that...', 'introduce one side'],
+        ['However, restrictions can create difficulties if...', 'introduce a limitation'],
+        ['The most convincing approach is...', 'move toward judgement'],
+        ['In this way,...', 'explain consequence or solution']
+      ],
+      gaps: [
+        ['Whether cities should restrict cars is a ___ question.', 'complex', 'discursive opening'],
+        ['___ argue that fewer cars would reduce pollution.', 'Supporters', 'introducing one side'],
+        ['The most ___ approach is to improve alternatives first.', 'convincing', 'evaluative phrase'],
+        ['In this ___, cities can reduce car use fairly.', 'way', 'result phrase']
+      ],
+      productionQuestion: 'Write a discursive essay about transport, university fees, remote work or social media. Explore both sides before giving your view.',
+      sampleAnswer: 'Whether university should be free is a complex question. Supporters argue that education benefits society and should not depend on family income. However, free university requires public funding and may compete with other services. The most convincing approach is to support students who need help most.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-05-problem-solution-essay',
+      order: 5,
+      stage: 'B2 PA.2',
+      title: 'Problem-solution essay',
+      topic: 'explaining causes and realistic responses',
+      description: 'Students write a structured essay that identifies causes, effects and practical solutions.',
+      focus: ['problem-solution essay', 'causes', 'solutions'],
+      modelText: 'Many students struggle to maintain concentration when studying online. One reason is that digital platforms place learning beside entertainment, messages and social media. As a result, even motivated learners may move between tasks without noticing how much attention they are losing.\nA second problem is the lack of visible routine. In a classroom, the timetable and physical space help students understand when to focus. At home, study time can easily become mixed with rest, family duties or part-time work.\nThere is no single solution, but several measures could help. Teachers can design shorter tasks with clear deadlines, while students can create a fixed study space and remove unnecessary notifications. More importantly, schools should teach attention management as a learning skill rather than treating distraction only as a personal failure.',
+      phrases: [
+        ['One reason is that...', 'introduce a cause'],
+        ['As a result,...', 'show consequence'],
+        ['A second problem is...', 'add another problem'],
+        ['There is no single solution, but...', 'avoid oversimplifying'],
+        ['More importantly,...', 'emphasize the strongest solution']
+      ],
+      gaps: [
+        ['One ___ is that learning competes with entertainment.', 'reason', 'cause phrase'],
+        ['As a ___, students lose attention.', 'result', 'consequence phrase'],
+        ['There is no ___ solution, but several measures could help.', 'single', 'nuanced solution'],
+        ['More ___, schools should teach attention management.', 'importantly', 'emphasis']
+      ],
+      productionQuestion: 'Write a problem-solution essay about online study, food waste, traffic, misinformation or stress. Explain causes and practical solutions.',
+      sampleAnswer: 'Many people struggle with misinformation online. One reason is that shocking posts spread quickly. As a result, users may share stories before checking them. There is no single solution, but schools can teach media literacy and platforms can make sources more visible.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-06-report-recommendations',
+      order: 6,
+      stage: 'B2 PA.2',
+      title: 'Report with recommendations',
+      topic: 'summarizing findings and recommending action',
+      description: 'Students write a formal report with aim, findings and practical recommendations.',
+      focus: ['report', 'findings', 'recommendations'],
+      modelText: 'The aim of this report is to evaluate student feedback on the new speaking club and recommend improvements. The feedback was collected from thirty-two learners who attended at least three sessions.\nOverall, the response was positive. Most students said the club helped them speak more spontaneously and feel less anxious about mistakes. However, several learners felt that the topics were sometimes too general, which made discussion repetitive. A smaller number mentioned that stronger students tended to dominate group work.\nBased on these findings, I recommend introducing a wider range of topic cards and assigning rotating discussion roles. It would also be useful to create occasional level-based groups. These changes would keep the informal atmosphere while making participation more balanced.',
+      phrases: [
+        ['The aim of this report is to...', 'state report purpose'],
+        ['Overall, the response was positive.', 'summarize general finding'],
+        ['However, several learners felt that...', 'introduce limitation'],
+        ['Based on these findings,...', 'connect evidence to recommendation'],
+        ['It would also be useful to...', 'add recommendation politely']
+      ],
+      gaps: [
+        ['The ___ of this report is to evaluate feedback.', 'aim', 'report purpose'],
+        ['___, the response was positive.', 'Overall', 'general finding'],
+        ['Based on these ___, I recommend new topic cards.', 'findings', 'evidence link'],
+        ['It would also be ___ to create level-based groups.', 'useful', 'recommendation phrase']
+      ],
+      productionQuestion: 'Write a report about a course, study room, school event, app or workplace system. Include findings and at least two recommendations.',
+      sampleAnswer: 'The aim of this report is to evaluate feedback on the new study room. Overall, students found it quiet and comfortable. However, several learners said there were not enough sockets. Based on these findings, I recommend adding charging points and improving the booking system.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-07-proposal',
+      order: 7,
+      stage: 'B2 PA.2',
+      title: 'Proposal',
+      topic: 'suggesting improvements with justification',
+      description: 'Students write a persuasive proposal with current situation, suggested changes and expected benefits.',
+      focus: ['proposal', 'persuasion', 'benefits'],
+      modelText: 'The purpose of this proposal is to suggest ways of improving the online speaking programme. At present, students complete useful grammar and vocabulary tasks, but they have limited opportunities to produce extended spoken answers.\nI propose introducing a weekly recorded speaking task. Students would respond to a practical question, such as giving advice, comparing options or summarizing an opinion. Teachers could then provide brief targeted feedback on pronunciation, accuracy and organization.\nThis change would not require major timetable adjustments, as recordings could be completed independently. It would also create a clear record of progress over time. If implemented carefully, the task would help students develop fluency while allowing teachers to notice repeated problems more efficiently.',
+      phrases: [
+        ['The purpose of this proposal is to...', 'state proposal aim'],
+        ['At present,...', 'describe current situation'],
+        ['I propose introducing...', 'make a main suggestion'],
+        ['This change would not require...', 'address feasibility'],
+        ['If implemented carefully,...', 'show expected benefit']
+      ],
+      gaps: [
+        ['The ___ of this proposal is to suggest improvements.', 'purpose', 'proposal aim'],
+        ['At ___, students have limited speaking practice.', 'present', 'current situation'],
+        ['I ___ introducing a weekly recorded task.', 'propose', 'main suggestion'],
+        ['If ___ carefully, the task would improve fluency.', 'implemented', 'condition phrase']
+      ],
+      productionQuestion: 'Write a proposal to improve a course, club, app, workplace process or community service. Explain the problem, solution and benefits.',
+      sampleAnswer: 'The purpose of this proposal is to improve the student feedback system. At present, learners receive grades but little explanation. I propose introducing short written feedback after each task. This change would not require major timetable changes and would help students understand how to improve.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-08-critical-review',
+      order: 8,
+      stage: 'B2 PA.3',
+      title: 'Critical review',
+      topic: 'evaluating strengths, weaknesses and audience',
+      description: 'Students write a balanced review that praises, criticizes and recommends with precision.',
+      focus: ['review', 'evaluation', 'recommendation'],
+      modelText: 'The documentary Quiet Cities explores how urban life changes when streets are designed around people rather than cars. Its greatest strength is the way it focuses on small human details: children crossing a square safely, residents hearing birds again and shop owners noticing that fewer cars do not necessarily mean fewer customers.\nNevertheless, the film is not entirely balanced. It gives limited attention to delivery drivers, disabled residents and people who depend on cars because public transport is unreliable. These perspectives would have made the argument more convincing.\nDespite this weakness, I would recommend the documentary to viewers interested in urban design and public space. It is beautifully filmed, thoughtful and persuasive, provided the viewer remembers that quieter streets require careful planning, not only good intentions.',
+      phrases: [
+        ['Its greatest strength is...', 'highlight main praise'],
+        ['Nevertheless, the film is not entirely balanced.', 'introduce criticism'],
+        ['These perspectives would have made...', 'explain missing element'],
+        ['Despite this weakness,...', 'return to recommendation'],
+        ['provided the viewer remembers that...', 'qualify recommendation']
+      ],
+      gaps: [
+        ['Its greatest ___ is the focus on human details.', 'strength', 'review praise'],
+        ['___, the film is not entirely balanced.', 'Nevertheless', 'contrast'],
+        ['Despite this ___, I would recommend it.', 'weakness', 'balanced recommendation'],
+        ['It is persuasive, ___ the viewer remembers its limits.', 'provided', 'qualified recommendation']
+      ],
+      productionQuestion: 'Write a review of a film, book, course, app or event. Include strengths, weaknesses and a qualified recommendation.',
+      sampleAnswer: 'The app is attractive and easy to use. Its greatest strength is the short lesson format, which helps busy learners practise daily. Nevertheless, it is not ideal for speaking fluency. Despite this weakness, I would recommend it as a useful supplement.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-09-article',
+      order: 9,
+      stage: 'B2 PA.3',
+      title: 'Article',
+      topic: 'engaging readers while developing an argument',
+      description: 'Students write an article with an engaging opening, clear viewpoint and practical conclusion.',
+      focus: ['article', 'reader engagement', 'argument'],
+      modelText: 'Have you ever opened your phone to check one message and lost half an hour? Most of us have. The problem is not simply weak self-control. Many apps are designed to keep us moving from one notification, recommendation or short video to the next.\nThis matters because attention is not unlimited. When we train ourselves to expect constant stimulation, slower activities begin to feel strangely difficult. Reading a long article, solving a complex problem or even listening carefully to another person requires a kind of patience that digital habits can weaken.\nThe solution is not to reject technology. Instead, we need more deliberate routines. Turning off non-essential notifications, keeping phones out of the bedroom and planning screen-free work periods can make a real difference. In a world competing for our attention, focus has become a skill worth protecting.',
+      phrases: [
+        ['Have you ever...?', 'open with a direct question'],
+        ['The problem is not simply...', 'challenge a simple explanation'],
+        ['This matters because...', 'explain significance'],
+        ['The solution is not to...', 'avoid an extreme solution'],
+        ['In a world..., ...has become...', 'finish with a broad reflection']
+      ],
+      gaps: [
+        ['Have you ___ opened your phone for one message?', 'ever', 'engaging question'],
+        ['The problem is not ___ weak self-control.', 'simply', 'challenging simple view'],
+        ['This ___ because attention is not unlimited.', 'matters', 'significance'],
+        ['The solution is not to ___ technology.', 'reject', 'balanced solution']
+      ],
+      productionQuestion: 'Write an article for learners or young professionals about a habit, skill or modern problem. Engage the reader and offer practical advice.',
+      sampleAnswer: 'Have you ever planned to study for an hour and stopped after ten minutes? The problem is not simply laziness. Many students do not create the conditions for focus. This matters because concentration is a skill. The solution is to plan shorter tasks and remove distractions.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-10-letter-to-editor',
+      order: 10,
+      stage: 'B2 PA.3',
+      title: 'Letter to the editor',
+      topic: 'responding to a public issue formally',
+      description: 'Students write a formal letter expressing concern and proposing an alternative.',
+      focus: ['formal letter', 'public issue', 'persuasion'],
+      modelText: "Dear Editor,\nI am writing in response to your recent article about the council's plan to remove several trees from the central square. While I understand the need to improve pedestrian access, I believe the current proposal is short-sighted.\nThe trees provide shade, reduce heat and give the square much of its character. Removing them would make the area less pleasant, especially during the summer months. It would also send the wrong message at a time when cities should be adapting to higher temperatures.\nA better solution would be to redesign the paths while preserving the healthiest trees. I hope the council will consider alternatives before making a final decision.\nYours faithfully,\nAni Grigoryan",
+      phrases: [
+        ['I am writing in response to...', 'state reason for writing'],
+        ['While I understand..., I believe...', 'concede and disagree'],
+        ['It would also send the wrong message...', 'explain wider implication'],
+        ['A better solution would be to...', 'propose an alternative'],
+        ['I hope the council will consider...', 'close with formal request']
+      ],
+      gaps: [
+        ['I am writing in ___ to your recent article.', 'response', 'formal opening'],
+        ['While I ___ the need for change, I disagree.', 'understand', 'concession'],
+        ['A better ___ would be to redesign the paths.', 'solution', 'alternative'],
+        ['I hope the council will ___ alternatives.', 'consider', 'formal request']
+      ],
+      productionQuestion: 'Write a letter to the editor about a local issue such as transport, trees, housing, noise or public facilities.',
+      sampleAnswer: 'Dear Editor, I am writing in response to your article about closing the local library. While I understand the need to reduce costs, I believe this proposal is short-sighted. A better solution would be to reduce hours slightly while protecting student access. Yours faithfully, Mark Hill'
+    },
+    {
+      id: 'b2-pre-advanced-writing-11-reflective-narrative',
+      order: 11,
+      stage: 'B2 PA.4',
+      title: 'Reflective narrative',
+      topic: 'telling a story with reflection and meaning',
+      description: 'Students write a narrative that combines clear sequencing with mature reflection.',
+      focus: ['narrative', 'reflection', 'sequencing'],
+      modelText: 'I was about to leave the station when I noticed a small notebook on the floor beside the ticket machine. At first, I almost walked past it. I was tired, late and not in the mood for someone else s problem. Still, the name and phone number on the first page made the decision simple.\nWhen I called, the owner sounded close to tears. The notebook contained sketches for her final design project, and she had been searching for it all afternoon. We met outside a cafe twenty minutes later. She thanked me several times, but what stayed with me was not her gratitude. It was the thought that small acts of attention can interrupt a bad day.\nI had not done anything extraordinary. I had simply noticed something and chosen not to ignore it. Since then, I have tried to be less hurried in public places.',
+      phrases: [
+        ['I was about to...when...', 'set up an interrupted action'],
+        ['At first, I almost...', 'show initial reaction'],
+        ['What stayed with me was...', 'introduce reflection'],
+        ['I had not done anything extraordinary.', 'avoid overdrama'],
+        ['Since then,...', 'connect story to later change']
+      ],
+      gaps: [
+        ['I was about to leave ___ I noticed a notebook.', 'when', 'narrative interruption'],
+        ['At ___, I almost walked past it.', 'first', 'initial reaction'],
+        ['What ___ with me was her relief.', 'stayed', 'reflection phrase'],
+        ['Since ___, I have tried to be more attentive.', 'then', 'later change']
+      ],
+      productionQuestion: 'Write a reflective story about a small event that changed your thinking. Include past tenses and a final reflection.',
+      sampleAnswer: 'I was about to leave when I saw a lost wallet on a bench. At first, I thought someone else would deal with it. What stayed with me was the owner s relief when I returned it. Since then, I have tried to notice small chances to help.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-12-compare-evaluate',
+      order: 12,
+      stage: 'B2 PA.4',
+      title: 'Compare and evaluate',
+      topic: 'weighing two options before making a recommendation',
+      description: 'Students write an evaluative comparison with criteria, contrast and final judgement.',
+      focus: ['comparison', 'evaluation', 'recommendation'],
+      modelText: "Both private lessons and group courses can help learners make progress, but they serve different purposes. Private lessons are more flexible because the teacher can focus entirely on one learner's goals, weaknesses and pace. They are particularly useful for exam preparation or professional needs.\nGroup courses, by contrast, offer more interaction and can be more motivating. Learners hear different accents, exchange ideas and practise turn-taking in a more natural way. They are also usually more affordable. However, the teacher cannot adapt every task to every individual.\nFor a learner who needs confidence in conversation, I would recommend a small group course. For someone with a specific deadline or a highly personal goal, private lessons may be more effective. The best choice depends less on which format is superior and more on what the learner needs most.",
+      phrases: [
+        ['Both...but they serve different purposes.', 'open a comparison'],
+        ['By contrast,...', 'introduce the second option'],
+        ['They are particularly useful for...', 'identify best use'],
+        ['However,...', 'show limitation'],
+        ['The best choice depends less on...and more on...', 'make nuanced judgement']
+      ],
+      gaps: [
+        ['Both options are useful, but they ___ different purposes.', 'serve', 'comparison opening'],
+        ['Group courses, by ___, offer more interaction.', 'contrast', 'contrast phrase'],
+        ['They are ___ useful for exam preparation.', 'particularly', 'specific use'],
+        ["The best choice ___ on the learner's needs.", 'depends', 'final judgement']
+      ],
+      productionQuestion: 'Compare and evaluate two options: online vs offline lessons, private vs group classes, city vs small town, or two apps.',
+      sampleAnswer: "Both online and offline lessons can be effective, but they serve different purposes. Online lessons are flexible and save travel time. Offline lessons, by contrast, may create stronger interaction. The best choice depends less on the format and more on the learner's habits."
+    },
+    {
+      id: 'b2-pre-advanced-writing-13-executive-summary',
+      order: 13,
+      stage: 'B2 PA.5',
+      title: 'Executive summary',
+      topic: 'summarizing key findings concisely',
+      description: 'Students write a concise executive summary for a professional audience.',
+      focus: ['summary', 'professional writing', 'key findings'],
+      modelText: 'This summary outlines the main findings from the pilot of the new booking system. Overall, the system reduced administrative work and made appointment availability clearer for students. Completion rates improved from 68 percent to 84 percent during the first month.\nThe main concern is that some users found the cancellation process confusing, especially on mobile devices. Support staff also reported an increase in questions during the first week, although this declined after short video guides were added.\nThe system should therefore be retained, but two improvements are recommended: simplifying the cancellation button and adding a confirmation message after changes are made. These adjustments would preserve the benefits of the system while reducing avoidable confusion.',
+      phrases: [
+        ['This summary outlines...', 'state scope concisely'],
+        ['Overall,...', 'give headline finding'],
+        ['The main concern is that...', 'identify key problem'],
+        ['The system should therefore be retained...', 'state recommendation'],
+        ['These adjustments would...', 'explain expected result']
+      ],
+      gaps: [
+        ['This summary ___ the main findings.', 'outlines', 'summary scope'],
+        ['___, the system reduced administrative work.', 'Overall', 'headline finding'],
+        ['The main ___ is that cancellation is confusing.', 'concern', 'key problem'],
+        ['These ___ would reduce avoidable confusion.', 'adjustments', 'recommended changes']
+      ],
+      productionQuestion: 'Write an executive summary of a pilot project, survey, course update or workplace change. Include findings, concern and recommendation.',
+      sampleAnswer: 'This summary outlines feedback on the new study app. Overall, students used it regularly and found reminders helpful. The main concern is that speaking tasks are hard to find. The app should therefore be retained, but navigation should be simplified.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-14-cover-letter',
+      order: 14,
+      stage: 'B2 PA.5',
+      title: 'Cover letter',
+      topic: 'applying for a role with relevant evidence',
+      description: 'Students write a concise cover letter linking experience, skills and motivation.',
+      focus: ['cover letter', 'professional register', 'evidence'],
+      modelText: 'Dear Hiring Manager,\nI am writing to apply for the role of Learning Support Coordinator advertised on your website. I believe I would be a strong candidate because I have three years of experience helping adult learners organize study plans and build confidence in English.\nIn my current position, I respond to learner questions, monitor progress and work closely with teachers to identify students who need extra support. This has helped me develop strong communication skills and a practical understanding of online learning environments. I am particularly interested in your organization because it combines language education with educational technology.\nI would welcome the opportunity to discuss how my experience could contribute to your team.\nKind regards,\nSofia Martin',
+      phrases: [
+        ['I am writing to apply for...', 'state application purpose'],
+        ['I would be a strong candidate because...', 'connect yourself to the role'],
+        ['In my current position,...', 'introduce relevant evidence'],
+        ['This has helped me develop...', 'show skill development'],
+        ['I would welcome the opportunity to discuss...', 'close professionally']
+      ],
+      gaps: [
+        ['I am writing to ___ for the role.', 'apply', 'application opening'],
+        ['I would be a strong ___ because of my experience.', 'candidate', 'self-positioning'],
+        ['This has helped me ___ strong communication skills.', 'develop', 'skill evidence'],
+        ['I would ___ the opportunity to discuss my experience.', 'welcome', 'formal closing']
+      ],
+      productionQuestion: 'Write a cover letter for a job, internship, volunteer role or scholarship. Link your experience to the role.',
+      sampleAnswer: 'Dear Hiring Manager, I am writing to apply for the customer support role. I would be a strong candidate because I have experience helping clients solve problems. In my current position, I answer questions and manage difficult conversations. I would welcome the opportunity to discuss my application.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-15-constructive-feedback',
+      order: 15,
+      stage: 'B2 PA.5',
+      title: 'Constructive feedback',
+      topic: 'giving balanced feedback on a proposal or text',
+      description: 'Students write feedback that is specific, respectful and actionable.',
+      focus: ['feedback', 'tone', 'revision advice'],
+      modelText: 'Your proposal presents a useful idea and the overall aim is clear. The strongest section is the explanation of how weekly speaking tasks could improve confidence. This gives the reader a practical reason to support the plan.\nHowever, the proposal would be stronger if you gave more detail about implementation. At the moment, it is not clear who would check the recordings, how often feedback would be given or how students would submit their work. Without this information, the plan may seem more demanding than it really is.\nI suggest adding a short paragraph on responsibilities and timing. You could also include one example of a speaking task. Overall, this is a promising proposal, but it needs more operational detail before it can be approved.',
+      phrases: [
+        ['The strongest section is...', 'identify strength'],
+        ['The proposal would be stronger if...', 'make criticism constructive'],
+        ['At the moment, it is not clear...', 'identify missing detail'],
+        ['I suggest adding...', 'give actionable advice'],
+        ['Overall, this is promising, but...', 'balance praise and limitation']
+      ],
+      gaps: [
+        ['The strongest ___ is the explanation of benefits.', 'section', 'specific praise'],
+        ['The proposal would be ___ if you added detail.', 'stronger', 'constructive criticism'],
+        ['At the ___, it is not clear who is responsible.', 'moment', 'current limitation'],
+        ['I ___ adding a short paragraph on timing.', 'suggest', 'actionable advice']
+      ],
+      productionQuestion: 'Write constructive feedback on a proposal, essay, app idea or presentation. Include praise, specific criticism and revision advice.',
+      sampleAnswer: 'Your essay has a clear position and strong examples. The introduction is especially effective. However, the argument would be stronger if you addressed one counterargument. I suggest adding a paragraph that explains why your solution is still realistic.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-16-data-commentary',
+      order: 16,
+      stage: 'B2 PA.6',
+      title: 'Data commentary',
+      topic: 'describing trends and interpreting figures',
+      description: 'Students write a commentary that describes figures and interprets their significance.',
+      focus: ['data commentary', 'trends', 'interpretation'],
+      modelText: 'The figures suggest a steady increase in student participation after the new feedback system was introduced. In January, only 52 percent of learners submitted optional writing tasks. By April, this had risen to 71 percent, and the number remained above 70 percent for the next two months.\nThis trend may indicate that students were more willing to write when they knew they would receive individual comments. However, the data should be interpreted cautiously. Participation also tends to rise before exam periods, so the improvement cannot be attributed to feedback alone.\nOverall, the results are encouraging, but further evidence is needed. A useful next step would be to compare participation with student satisfaction and final writing scores.',
+      phrases: [
+        ['The figures suggest...', 'introduce data interpretation'],
+        ['By April, this had risen to...', 'describe increase'],
+        ['This trend may indicate that...', 'interpret pattern cautiously'],
+        ['The data should be interpreted cautiously.', 'hedge interpretation'],
+        ['A useful next step would be to...', 'recommend further analysis']
+      ],
+      gaps: [
+        ['The figures ___ a steady increase.', 'suggest', 'data interpretation'],
+        ['By April, this had ___ to 71 percent.', 'risen', 'increase verb'],
+        ['This trend may ___ that feedback helped.', 'indicate', 'cautious interpretation'],
+        ['The data should be interpreted ___.', 'cautiously', 'hedging adverb']
+      ],
+      productionQuestion: 'Write a data commentary about survey results, participation, sales, app usage or exam scores. Describe the trend and interpret it cautiously.',
+      sampleAnswer: 'The figures suggest a gradual rise in app usage. In March, 40 percent of students logged in weekly. By May, this had risen to 63 percent. This trend may indicate that reminders helped, but the data should be interpreted cautiously because exams were approaching.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-17-rebuttal-paragraph',
+      order: 17,
+      stage: 'B2 PA.6',
+      title: 'Rebuttal paragraph',
+      topic: 'responding to an opposing argument',
+      description: 'Students write a paragraph that fairly presents and responds to a counterargument.',
+      focus: ['counterargument', 'rebuttal', 'argument precision'],
+      modelText: 'Some people argue that schools should ban AI tools completely because students may use them to avoid thinking. This concern is understandable. If learners simply copy generated answers, they are unlikely to develop independent writing skills.\nHowever, a complete ban would ignore the fact that AI is already part of modern communication. A more effective approach would be to teach students how to use it responsibly: to generate examples, compare drafts and identify weaknesses, while still producing their own final work. The issue is not whether students will encounter AI, but whether they will learn to use it with judgement.\nFor this reason, schools should focus on guidance and assessment design rather than prohibition alone.',
+      phrases: [
+        ['Some people argue that...', 'introduce opposing view'],
+        ['This concern is understandable.', 'acknowledge validity'],
+        ['However, a complete ban would ignore...', 'begin rebuttal'],
+        ['The issue is not whether..., but whether...', 'reframe the debate'],
+        ['For this reason,...', 'draw conclusion']
+      ],
+      gaps: [
+        ['Some people ___ that AI should be banned.', 'argue', 'opposing view'],
+        ['This concern is ___.', 'understandable', 'fair acknowledgement'],
+        ['A complete ban would ___ the reality of AI use.', 'ignore', 'rebuttal'],
+        ['The issue is not whether students meet AI, but ___ they use it well.', 'whether', 'reframing']
+      ],
+      productionQuestion: 'Write a rebuttal paragraph about AI, exams, social media, remote work or public transport. Present the opposing view fairly, then respond.',
+      sampleAnswer: 'Some people argue that remote work damages teamwork. This concern is understandable because informal communication can become weaker online. However, banning remote work would ignore its benefits for focus and flexibility. The issue is not whether people work from home, but whether teams design communication well.'
+    },
+    {
+      id: 'b2-pre-advanced-writing-18-writing-review',
+      order: 18,
+      stage: 'B2 PA review',
+      title: 'B2 Pre-Advanced writing review',
+      topic: 'mixed near-C1 writing task',
+      minutes: 55,
+      description: 'Students review B2 Pre-Advanced writing skills across register, cohesion, argument and task response.',
+      focus: ['writing review', 'register', 'cohesion', 'argument'],
+      modelText: 'Strong B2 Pre-Advanced writing is not defined by long words. It is defined by control. A good writer understands the task, chooses a suitable tone and develops ideas in a logical order. In a formal email, this may mean precise questions and polite distance. In a report, it means clear findings and practical recommendations. In an essay, it means a position that is supported but not overstated.\nRange is still important, but range without purpose can make writing less effective. Advanced phrases should clarify relationships between ideas: contrast, cause, limitation, evidence and conclusion. The best texts feel deliberate rather than decorated.\nBefore submitting, a writer should ask four questions: Have I answered the task? Is my register consistent? Does each paragraph move the argument forward? Have I checked accuracy carefully? If the answer is yes, the writing is likely to be strong.',
+      phrases: [
+        ['It is defined by control.', 'state the central idea'],
+        ['A good writer understands...', 'describe key ability'],
+        ['Range without purpose...', 'warn against decorative language'],
+        ['The best texts feel deliberate rather than decorated.', 'summarize style principle'],
+        ['Before submitting, a writer should ask...', 'introduce final checklist']
+      ],
+      gaps: [
+        ['Strong writing is defined by ___.', 'control', 'central idea'],
+        ['A good writer chooses a suitable ___.', 'tone', 'register'],
+        ['Range without ___ can make writing less effective.', 'purpose', 'warning'],
+        ['The best texts feel deliberate rather than ___.', 'decorated', 'style principle']
+      ],
+      productionPrompt: 'Choose one B2 Pre-Advanced writing task and write a complete answer of 170-220 words. Then check it with the review checklist.',
+      productionQuestion: 'Write either a formal email, proposal, report, opinion essay, review or article on a topic from this pathway.',
+      sampleAnswer: 'The purpose of this proposal is to improve independent speaking practice. At present, students complete many written tasks but have few chances to produce extended spoken answers. I propose introducing a weekly recorded response with brief teacher feedback. This would help learners notice repeated problems and build confidence over time. The change would be simple to organize and would make the course more communicative.'
+    }
+  ].map(buildPreAdvancedWritingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2_PRE_ADVANCED = {
     ...(root.lessons.B2_PRE_ADVANCED || {}),
     grammar: READY_GRAMMAR_LESSONS_B2_PRE_ADVANCED,
     vocabulary: READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED,
-    reading: READY_READING_LESSONS_B2_PRE_ADVANCED
+    reading: READY_READING_LESSONS_B2_PRE_ADVANCED,
+    writing: READY_WRITING_LESSONS_B2_PRE_ADVANCED
   };
 })();
