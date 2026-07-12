@@ -53,7 +53,7 @@
     },
     reading: {
       description: 'B2 Pre-Advanced reading pathway space for dense opinion, argument, inference and writer attitude.',
-      plannedTopics: []
+      plannedTopics: ['Hybrid work culture', 'AI and judgement', 'Cities and adaptation', 'The attention economy', 'Education and assessment', 'Climate communication', 'Digital privacy', 'Public health', 'Cultural heritage', 'Career transitions', 'Consumer behaviour', 'Leadership under pressure', 'Scientific uncertainty', 'Migration and identity', 'Automation and work', 'Trust in institutions', 'Long-form review', 'Reading review']
     },
     writing: {
       description: 'B2 Pre-Advanced writing pathway space for nuanced argument, reports, proposals and near-C1 cohesion.',
@@ -259,6 +259,92 @@
         title: 'Extra vocabulary practice',
         prompt: 'Choose the most natural word or phrase.',
         items: words.map((entry, index) => buildPreAdvancedVocabularyChoiceItem(`${config.id}-extra`, words, entry, index))
+      }]
+    };
+  }
+
+  function buildPreAdvancedReadingReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2_PRE_ADVANCED',
+      skill: 'reading',
+      stage: config.stage || 'B2 PA',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 45,
+      description: config.description,
+      readingTitle: config.readingTitle || config.title,
+      readingText: config.readingText,
+      focus: config.focus || ['reading for argument', 'inference', 'writer attitude'],
+      teacherNotes: config.teacherNotes || 'Ask the student to read once for the main argument, then reread for evidence, implied meaning, writer attitude and useful language.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before reading: useful words',
+          prompt: 'Match the words from the text with their meanings.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Reading comprehension',
+          prompt: 'Read the text and choose the correct answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Find details in the text',
+          prompt: 'Type the missing word or phrase from the text.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Read the text again and find the exact detail.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 7-9 sentences responding to the text. Include one inference and one personal opinion.',
+          items: [{
+            id: `${config.id}-response-1`,
+            question: config.productionQuestion,
+            sample_answer: config.sampleAnswer
+          }]
+        }
+      ],
+      extraTasks: [{
+        id: `${config.id}-true-false-extra`,
+        type: 'choice',
+        title: 'Extra true or false',
+        prompt: 'Decide whether each statement is true or false.',
+        items: (config.trueFalse || []).map((item, index) => ({
+          id: `${config.id}-true-false-extra-${index + 1}`,
+          sentence: item.sentence,
+          options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+          answer: item.answer ? 'a' : 'b',
+          explanation: item.explanation || (item.answer ? 'This is supported by the text.' : 'This is not supported by the text.')
+        }))
       }]
     };
   }
@@ -1299,11 +1385,646 @@
     }
   ].map(buildPreAdvancedVocabularyReadyLesson);
 
+  const READY_READING_LESSONS_B2_PRE_ADVANCED = [
+    {
+      id: 'b2-pre-advanced-reading-01-hybrid-work-culture',
+      order: 1,
+      stage: 'B2 PA.1',
+      title: 'Hybrid work culture',
+      topic: 'flexibility, trust and workplace design',
+      description: 'Students read an analytical article about why hybrid work succeeds only when culture and systems are designed carefully.',
+      readingText: 'Hybrid work is often discussed as a simple question of location: how many days should employees spend at home, and how many in the office? Yet the more important question is usually about culture. A team can sit in the same room and still communicate badly, while a partly remote team can work smoothly if expectations are explicit.\nThe strongest hybrid teams do not treat flexibility as a reward or a favour. They treat it as a design problem. Meetings are used for decisions and relationships, not for reading information that could have been shared in writing. Office days are planned around collaboration, while remote days protect concentration. This requires trust, but not vagueness. People need freedom, and they also need clarity about outcomes.\nCompanies that ignore this balance often create a quiet unfairness. Employees who come to the office more often may be noticed and promoted faster, even when their results are no better. Remote workers may feel they must prove they are working by replying instantly to every message. In the long run, hybrid work will not be judged by where people sit, but by whether it makes work more thoughtful, inclusive and effective.',
+      focus: ['workplace article', 'main argument', 'implied meaning'],
+      words: [
+        { word: 'explicit', meaning: 'clear and directly stated' },
+        { word: 'vagueness', meaning: 'lack of clear information or definition' },
+        { word: 'outcomes', meaning: 'the results produced by an action or process' },
+        { word: 'unfairness', meaning: 'a situation in which people are not treated equally or justly' },
+        { word: 'inclusive', meaning: 'designed to involve and support different people fairly' }
+      ],
+      questions: [
+        { question: 'What is the writer\'s main argument?', options: ['Hybrid work depends on culture and design, not only location', 'Office work is always more effective than remote work', 'Employees should choose their schedule without any rules'], answer: 'Hybrid work depends on culture and design, not only location' },
+        { question: 'How do strong hybrid teams use meetings?', options: ['For decisions and relationships', 'For reading every update aloud', 'For proving who is working hardest'], answer: 'For decisions and relationships' },
+        { question: 'What risk does the writer mention?', options: ['Office presence may be confused with performance', 'Remote workers always become more productive', 'Collaboration is impossible online'], answer: 'Office presence may be confused with performance' },
+        { question: 'What does the writer imply about trust?', options: ['It works best with clear expectations', 'It means having no structure', 'It is unnecessary in hybrid teams'], answer: 'It works best with clear expectations' }
+      ],
+      details: [
+        { sentence: 'Office days are planned around ___.', answer: 'collaboration' },
+        { sentence: 'Remote days protect ___.', answer: 'concentration' },
+        { sentence: 'Remote workers may feel they must reply ___ to every message.', answer: 'instantly' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks location is the only important issue in hybrid work.', answer: false },
+        { sentence: 'The article says flexibility should be treated as a design problem.', answer: true },
+        { sentence: 'The writer is concerned about hidden unfairness in hybrid workplaces.', answer: true }
+      ],
+      productionQuestion: 'Write about a hybrid work or study model. What rules would make it fair and effective?',
+      sampleAnswer: 'A fair hybrid model should make expectations explicit. Office days should be used for collaboration, while remote days should protect concentration. Managers should judge outcomes, not visibility. Otherwise, flexible work can create unfairness.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-02-ai-and-judgement',
+      order: 2,
+      stage: 'B2 PA.1',
+      title: 'AI and human judgement',
+      topic: 'automation, expertise and responsibility',
+      description: 'Students read about why AI tools require human judgement rather than blind acceptance.',
+      readingText: 'Artificial intelligence is often presented as a tool that removes uncertainty. It can summarize documents, identify patterns and generate fluent answers in seconds. This speed is impressive, but it can also create a dangerous illusion: if an answer appears immediately and confidently, users may stop asking how it was produced.\nIn professional settings, the real value of AI depends on the judgement of the person using it. A doctor, teacher or lawyer does not simply need an answer; they need to know which details matter, which assumptions are risky and when a suggestion conflicts with human experience. AI can widen the range of options, but it cannot carry responsibility for choosing among them.\nThe most mature use of AI may therefore be less dramatic than many predictions suggest. Instead of replacing expertise, it can make expertise more visible. A skilled user asks better questions, notices weak evidence and adapts output to a real context. The danger is not that machines will think exactly like humans. The danger is that humans will stop thinking carefully because machines sound fluent.',
+      focus: ['technology argument', 'inference', 'writer stance'],
+      words: [
+        { word: 'uncertainty', meaning: 'a state of not being completely sure' },
+        { word: 'illusion', meaning: 'a false idea or impression' },
+        { word: 'assumptions', meaning: 'ideas accepted as true without definite proof' },
+        { word: 'expertise', meaning: 'deep knowledge or skill in a particular area' },
+        { word: 'fluent', meaning: 'smooth and natural in language or expression' }
+      ],
+      questions: [
+        { question: 'What illusion can AI create?', options: ['That confident answers are automatically reliable', 'That documents cannot be summarized', 'That experts are never needed'], answer: 'That confident answers are automatically reliable' },
+        { question: 'According to the writer, what does a professional user need?', options: ['Judgement about context and risk', 'Only faster answers', 'A tool that makes every decision'], answer: 'Judgement about context and risk' },
+        { question: 'What is the writer\'s view of mature AI use?', options: ['It can support expertise', 'It must replace expertise', 'It has no practical value'], answer: 'It can support expertise' },
+        { question: 'What is the final warning?', options: ['People may think less carefully because AI sounds fluent', 'Machines will become unable to write', 'Experts will ask too many questions'], answer: 'People may think less carefully because AI sounds fluent' }
+      ],
+      details: [
+        { sentence: 'AI can identify ___ and generate fluent answers.', answer: 'patterns' },
+        { sentence: 'AI cannot carry ___ for choosing among options.', answer: 'responsibility' },
+        { sentence: 'A skilled user notices weak ___.', answer: 'evidence' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer is impressed by AI speed but cautious about its effects.', answer: true },
+        { sentence: 'The article says AI removes the need for professional judgement.', answer: false },
+        { sentence: 'The writer values asking better questions.', answer: true }
+      ],
+      productionQuestion: 'Write your response to the text. When should people trust AI, and when should they be careful?',
+      sampleAnswer: 'People can trust AI for first drafts, summaries and practice, but they should be careful with decisions that affect people. The user needs expertise and judgement. A fluent answer may still contain weak evidence or risky assumptions.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-03-cities-and-adaptation',
+      order: 3,
+      stage: 'B2 PA.1',
+      title: 'Cities and adaptation',
+      topic: 'climate, infrastructure and everyday life',
+      description: 'Students read about how cities adapt to heat, flooding and environmental pressure.',
+      readingText: 'Cities were built for climates that are changing. Streets designed to move cars quickly may trap heat. Drainage systems built for yesterday\'s storms may fail under tomorrow\'s rainfall. The challenge is not only environmental but social: the people most exposed to heat and flooding are often those with the fewest resources to respond.\nAdaptation is sometimes imagined as a set of large engineering projects, and some of those will be necessary. Sea walls, drainage tunnels and stronger electricity networks can protect millions of people. Yet smaller changes also matter. Trees cool streets, shaded bus stops protect commuters, and public buildings can become cooling centres during dangerous heatwaves.\nThe difficulty is that adaptation rarely feels urgent until a crisis arrives. Politicians may prefer visible projects that can be opened with a ribbon, while maintenance and prevention receive less attention. A mature city treats adaptation as everyday planning, not emergency repair. It asks who is vulnerable, which systems are already under pressure and how public money can reduce risk before disaster makes the cost impossible to ignore.',
+      focus: ['urban article', 'cause and effect', 'social impact'],
+      words: [
+        { word: 'drainage', meaning: 'systems that remove water from an area' },
+        { word: 'exposed', meaning: 'not protected from risk or harm' },
+        { word: 'heatwave', meaning: 'a period of unusually hot weather' },
+        { word: 'maintenance', meaning: 'work done to keep something in good condition' },
+        { word: 'vulnerable', meaning: 'easily harmed or affected by risk' }
+      ],
+      questions: [
+        { question: 'What social issue does the writer highlight?', options: ['The most exposed people often have the fewest resources', 'Only wealthy people live in hot areas', 'Flooding affects all groups equally'], answer: 'The most exposed people often have the fewest resources' },
+        { question: 'Which small adaptation is mentioned?', options: ['Shaded bus stops', 'Cheaper private cars', 'Longer shopping hours'], answer: 'Shaded bus stops' },
+        { question: 'Why may prevention receive less attention?', options: ['It is less visible than big projects', 'It never works', 'It costs nothing'], answer: 'It is less visible than big projects' },
+        { question: 'What does a mature city do?', options: ['Treats adaptation as everyday planning', 'Waits for emergencies', 'Builds only sea walls'], answer: 'Treats adaptation as everyday planning' }
+      ],
+      details: [
+        { sentence: 'Drainage systems may fail under tomorrow\'s ___.', answer: 'rainfall' },
+        { sentence: 'Public buildings can become cooling ___ during heatwaves.', answer: 'centres' },
+        { sentence: 'Politicians may prefer projects that can be opened with a ___.', answer: 'ribbon' }
+      ],
+      trueFalse: [
+        { sentence: 'The article says only large engineering projects matter.', answer: false },
+        { sentence: 'Trees are presented as one way to cool streets.', answer: true },
+        { sentence: 'The writer argues for prevention before disaster happens.', answer: true }
+      ],
+      productionQuestion: 'Write about one climate adaptation your city or town should make. Explain who would benefit.',
+      sampleAnswer: 'My city should plant more trees and create shaded bus stops. This would help older people, children and workers who spend time outside. It is not as dramatic as a huge project, but it would reduce everyday risk.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-04-attention-economy',
+      order: 4,
+      stage: 'B2 PA.2',
+      title: 'The attention economy',
+      topic: 'digital habits, design and concentration',
+      description: 'Students read about how digital platforms compete for attention and shape behaviour.',
+      readingText: 'Most people describe distraction as a personal weakness. They say they should have more discipline, delete more apps or simply try harder. There is some truth in this, but it is incomplete. Modern platforms are not neutral spaces; they are designed to capture and hold attention because attention can be sold.\nNotifications, infinite scrolling and personalized recommendations all reduce the moment of choice. A user opens an app to reply to one message and finds, ten minutes later, that they have watched three videos they never planned to see. The experience feels voluntary, but the environment has been carefully arranged to make leaving harder than staying.\nThis does not mean users have no responsibility. Digital self-control still matters. However, a serious conversation about attention must include design, business models and regulation. If a product profits when people lose track of time, then distraction is not just a private habit. It is also a public issue about how technology should respect human attention.',
+      focus: ['digital society', 'argument', 'implied criticism'],
+      words: [
+        { word: 'neutral', meaning: 'not supporting or influencing one side' },
+        { word: 'capture', meaning: 'take and hold something' },
+        { word: 'infinite scrolling', meaning: 'a page design that keeps loading more content as you scroll' },
+        { word: 'voluntary', meaning: 'done by choice' },
+        { word: 'regulation', meaning: 'official rules controlling how something works' }
+      ],
+      questions: [
+        { question: 'What does the writer think about distraction?', options: ['It is personal and also shaped by design', 'It is only a personal weakness', 'It is never connected to technology'], answer: 'It is personal and also shaped by design' },
+        { question: 'What do recommendations and infinite scrolling reduce?', options: ['The moment of choice', 'The number of phones', 'The need for content'], answer: 'The moment of choice' },
+        { question: 'Why is attention valuable to platforms?', options: ['It can be sold', 'It cannot be measured', 'It makes apps slower'], answer: 'It can be sold' },
+        { question: 'What wider issue does the writer mention?', options: ['How technology should respect attention', 'Why people should never use apps', 'How to remove all regulation'], answer: 'How technology should respect attention' }
+      ],
+      details: [
+        { sentence: 'A user may open an app to reply to one ___.', answer: 'message' },
+        { sentence: 'The environment makes leaving harder than ___.', answer: 'staying' },
+        { sentence: 'A serious conversation must include design, business models and ___.', answer: 'regulation' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says users have no responsibility at all.', answer: false },
+        { sentence: 'The writer criticizes the design of some platforms.', answer: true },
+        { sentence: 'The article says distraction can be a public issue.', answer: true }
+      ],
+      productionQuestion: 'Write about one digital habit you would like to change. Is it only personal, or is design also involved?',
+      sampleAnswer: 'I often check short videos when I am tired. It is partly my responsibility, but the design also matters because the app keeps offering new content. I think platforms should make it easier to stop.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-05-education-assessment',
+      order: 5,
+      stage: 'B2 PA.2',
+      title: 'Education and assessment',
+      topic: 'exams, portfolios and fairness',
+      description: 'Students read about the strengths and weaknesses of different assessment systems.',
+      readingText: 'Few topics in education create as much disagreement as assessment. Exams are criticized for rewarding memory and speed, yet they remain attractive because they produce clear results. A single score may be too simple, but it is easy to compare and difficult to ignore.\nAlternative assessment seems more humane. Portfolios, presentations and research projects can show development over time. They allow students to revise, reflect and demonstrate skills that exams may miss. However, they also introduce new problems. A project completed over several weeks may be influenced by parental support, internet access or even the confidence to ask for help.\nThe fairest systems usually combine methods rather than choosing one perfect tool. Exams can test individual understanding under the same conditions, while coursework can show depth and persistence. The question is not whether assessment can be completely objective; it cannot. The question is whether schools are honest about what each method measures and what it leaves invisible.',
+      focus: ['education article', 'balanced argument', 'evaluation'],
+      words: [
+        { word: 'assessment', meaning: 'the process of judging learning or performance' },
+        { word: 'humane', meaning: 'kind and caring toward people' },
+        { word: 'demonstrate', meaning: 'show clearly' },
+        { word: 'persistence', meaning: 'continuing despite difficulty' },
+        { word: 'objective', meaning: 'based on facts rather than personal feelings' }
+      ],
+      questions: [
+        { question: 'Why do exams remain attractive?', options: ['They produce clear results', 'They show every skill', 'They remove all stress'], answer: 'They produce clear results' },
+        { question: 'What can portfolios show?', options: ['Development over time', 'Only memory and speed', 'Nothing beyond grammar'], answer: 'Development over time' },
+        { question: 'What problem can coursework introduce?', options: ['Unequal support outside school', 'Identical conditions for everyone', 'No opportunity to revise'], answer: 'Unequal support outside school' },
+        { question: 'What does the writer recommend?', options: ['Combining different methods honestly', 'Removing all assessment', 'Using only one perfect tool'], answer: 'Combining different methods honestly' }
+      ],
+      details: [
+        { sentence: 'Exams are criticized for rewarding memory and ___.', answer: 'speed' },
+        { sentence: 'Projects may be influenced by parental ___.', answer: 'support' },
+        { sentence: 'Coursework can show depth and ___.', answer: 'persistence' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer believes exams are completely useless.', answer: false },
+        { sentence: 'The writer says alternative assessment has no problems.', answer: false },
+        { sentence: 'The text argues that every assessment method leaves something invisible.', answer: true }
+      ],
+      productionQuestion: 'Write your view on exams and coursework. Which combination would be fairest?',
+      sampleAnswer: 'I think a fair system should combine exams and coursework. Exams can show individual understanding, but projects show depth and persistence. Schools should be honest that no method is perfectly objective.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-06-climate-communication',
+      order: 6,
+      stage: 'B2 PA.2',
+      title: 'Climate communication',
+      topic: 'persuasion, fear and practical action',
+      description: 'Students read about why climate messages need to combine urgency with agency.',
+      readingText: 'Climate communication faces a difficult balance. If the message is too soft, people may underestimate the danger. If it is only frightening, they may feel powerless and stop listening. Facts matter, but facts alone rarely change behaviour.\nResearch suggests that people respond better when information is connected to agency: a believable sense that action is possible. This does not mean pretending the problem is small. It means showing where choices can make a difference, from city planning and energy policy to food systems and transport. People need to understand both the scale of the crisis and the practical routes through it.\nAnother challenge is trust. A message from a distant institution may be ignored, while the same information from a local doctor, farmer or teacher may feel more relevant. Effective communication is therefore not just about accuracy. It is about who speaks, how they speak and whether the audience can see themselves in the solution.',
+      focus: ['environment', 'persuasion', 'writer purpose'],
+      words: [
+        { word: 'underestimate', meaning: 'think something is smaller or less serious than it is' },
+        { word: 'powerless', meaning: 'unable to control or influence events' },
+        { word: 'agency', meaning: 'the ability to act and make choices' },
+        { word: 'scale', meaning: 'the size or level of something' },
+        { word: 'relevant', meaning: 'connected to what is happening or needed' }
+      ],
+      questions: [
+        { question: 'What balance does climate communication need?', options: ['Urgency without making people feel powerless', 'Fear without facts', 'Only positive stories'], answer: 'Urgency without making people feel powerless' },
+        { question: 'What does agency mean in this text?', options: ['A believable sense that action is possible', 'A government office', 'Avoiding difficult information'], answer: 'A believable sense that action is possible' },
+        { question: 'Why may local voices be effective?', options: ['They may feel more relevant', 'They always have more data', 'They avoid accuracy'], answer: 'They may feel more relevant' },
+        { question: 'What does the writer imply?', options: ['Communication must be accurate and socially trusted', 'Facts never matter', 'Climate messages should be softer'], answer: 'Communication must be accurate and socially trusted' }
+      ],
+      details: [
+        { sentence: 'If a message is too soft, people may ___ the danger.', answer: 'underestimate' },
+        { sentence: 'The text mentions food systems and ___.', answer: 'transport' },
+        { sentence: 'Effective communication depends on who speaks and ___ they speak.', answer: 'how' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says frightening messages can make people stop listening.', answer: true },
+        { sentence: 'The writer recommends pretending climate change is small.', answer: false },
+        { sentence: 'Trust is presented as part of effective communication.', answer: true }
+      ],
+      productionQuestion: 'Write a short climate message for your community. How would you make it urgent but practical?',
+      sampleAnswer: 'A good message should not hide the danger, but it should show practical action. In my community, transport and energy use are important. I would use local examples so people feel the solution is relevant.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-07-digital-privacy',
+      order: 7,
+      stage: 'B2 PA.3',
+      title: 'Digital privacy',
+      topic: 'convenience, data and consent',
+      description: 'Students read about the trade-off between digital convenience and privacy.',
+      readingText: 'Digital services often ask users to make a trade-off they barely notice. A map remembers where we have been so it can suggest a faster route. A shopping site records what we viewed so it can recommend a product. Each exchange seems small, especially when the service is useful and free.\nThe problem is that consent becomes less meaningful when it is buried in long policies that few people read. Users may click accept because they need the service, not because they understand the consequences. Over time, small pieces of data can create a detailed picture of a person: habits, income, relationships, fears and political interests.\nPrivacy is sometimes dismissed as a concern for people with something to hide. This is a weak argument. Privacy is also about dignity, choice and the right not to be constantly measured. A healthier digital world would not ask users to choose between convenience and control. It would make the cost of convenience visible.',
+      focus: ['privacy article', 'argument', 'critical reading'],
+      words: [
+        { word: 'trade-off', meaning: 'a balance where gaining one thing means losing another' },
+        { word: 'consent', meaning: 'permission or agreement' },
+        { word: 'buried', meaning: 'hidden inside something longer or less clear' },
+        { word: 'dismissed', meaning: 'treated as unimportant' },
+        { word: 'dignity', meaning: 'the right to be respected as a person' }
+      ],
+      questions: [
+        { question: 'What trade-off does the writer describe?', options: ['Convenience for personal data', 'Privacy for slower internet only', 'Maps for shopping sites'], answer: 'Convenience for personal data' },
+        { question: 'Why can consent become less meaningful?', options: ['Policies are long and hard to understand', 'Users always read every word', 'Services never ask for permission'], answer: 'Policies are long and hard to understand' },
+        { question: 'What can small pieces of data create?', options: ['A detailed picture of a person', 'Only a map route', 'A private offline diary'], answer: 'A detailed picture of a person' },
+        { question: 'What does the writer want?', options: ['The cost of convenience to be visible', 'All digital services to disappear', 'Users to hide everything'], answer: 'The cost of convenience to be visible' }
+      ],
+      details: [
+        { sentence: 'A shopping site records what we ___.', answer: 'viewed' },
+        { sentence: 'Users may click ___ because they need the service.', answer: 'accept' },
+        { sentence: 'Privacy is connected to dignity, choice and the right not to be constantly ___.', answer: 'measured' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks free services never have a cost.', answer: false },
+        { sentence: 'The text rejects the idea that privacy is only for people hiding something.', answer: true },
+        { sentence: 'The writer supports clearer information about data use.', answer: true }
+      ],
+      productionQuestion: 'Write about a digital service you use. What privacy trade-off does it involve?',
+      sampleAnswer: 'Navigation apps are useful because they save time, but they also collect location data. I accept this trade-off sometimes, but I want clearer control. Privacy is not about hiding; it is about dignity and choice.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-08-public-health-prevention',
+      order: 8,
+      stage: 'B2 PA.3',
+      title: 'Public health and prevention',
+      topic: 'health systems, prevention and inequality',
+      description: 'Students read about why prevention is often less visible but more effective than crisis treatment.',
+      readingText: 'Health systems are often judged by what happens in moments of crisis: how quickly an ambulance arrives, whether a hospital bed is available, or how advanced the treatment is. These things matter. Yet a system that only reacts to illness is always arriving late.\nPrevention is harder to celebrate because its success is often invisible. A vaccination campaign, cleaner air or better housing may prevent thousands of illnesses, but there is no dramatic photograph of the emergency that did not happen. This makes prevention politically difficult. It requires investment before voters feel the benefit.\nThe issue is also unequal. Wealthier people can often buy healthier conditions: safer homes, better food, time to exercise and access to early advice. Poorer communities may meet the health system only when problems have become serious. A fair public health approach therefore looks beyond hospitals. It asks how work, housing, education and environment shape the chances of becoming ill in the first place.',
+      focus: ['public health', 'argument', 'social inequality'],
+      words: [
+        { word: 'prevention', meaning: 'action taken to stop something bad from happening' },
+        { word: 'invisible', meaning: 'not seen or noticed' },
+        { word: 'campaign', meaning: 'organized actions designed to achieve a goal' },
+        { word: 'investment', meaning: 'money, time or effort used to improve something' },
+        { word: 'inequality', meaning: 'unfair difference between groups' }
+      ],
+      questions: [
+        { question: 'What is the problem with a system that only reacts?', options: ['It arrives late', 'It prevents all illness', 'It is too invisible'], answer: 'It arrives late' },
+        { question: 'Why is prevention hard to celebrate?', options: ['Its success is often invisible', 'It never saves money', 'It only works in hospitals'], answer: 'Its success is often invisible' },
+        { question: 'What do wealthier people often buy?', options: ['Healthier conditions', 'More illness', 'Less advice'], answer: 'Healthier conditions' },
+        { question: 'What does a fair public health approach consider?', options: ['Work, housing, education and environment', 'Only hospital technology', 'Only personal discipline'], answer: 'Work, housing, education and environment' }
+      ],
+      details: [
+        { sentence: 'The text mentions whether a hospital ___ is available.', answer: 'bed' },
+        { sentence: 'Cleaner air may prevent thousands of ___.', answer: 'illnesses' },
+        { sentence: 'Prevention requires investment before voters feel the ___.', answer: 'benefit' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says emergency treatment does not matter.', answer: false },
+        { sentence: 'The writer believes prevention can be politically difficult.', answer: true },
+        { sentence: 'The article connects health with social conditions.', answer: true }
+      ],
+      productionQuestion: 'Write about one prevention measure that could improve public health in your community.',
+      sampleAnswer: 'Better housing would improve public health in many communities. It is less dramatic than hospital treatment, but it can prevent illness. A fair system should invest before problems become emergencies.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-09-cultural-heritage',
+      order: 9,
+      stage: 'B2 PA.3',
+      title: 'Cultural heritage',
+      topic: 'preservation, tourism and community ownership',
+      description: 'Students read about the tension between protecting heritage and turning it into a product.',
+      readingText: 'Cultural heritage can give a community memory, pride and economic opportunity. A restored old town, a traditional craft or a local festival may attract visitors and create jobs. But heritage becomes fragile when it is treated only as a product.\nTourism can encourage preservation, yet it can also change the thing it claims to protect. A festival planned around local meaning may gradually be redesigned around visitor expectations. Craftspeople may simplify their work to sell faster. Historic streets may fill with identical souvenir shops while residents are pushed out by rising rents.\nThe question is not whether culture should be shared. It should. The question is who controls the story. When local people are involved in decisions, heritage can remain alive rather than frozen. It can adapt without becoming empty performance. Visitors then meet a living culture, not a stage set arranged for their cameras.',
+      focus: ['culture', 'inference', 'writer attitude'],
+      words: [
+        { word: 'heritage', meaning: 'traditions, buildings or objects passed down from the past' },
+        { word: 'fragile', meaning: 'easily damaged or changed' },
+        { word: 'preservation', meaning: 'protecting something so it continues to exist' },
+        { word: 'residents', meaning: 'people who live in a place' },
+        { word: 'stage set', meaning: 'an artificial-looking place arranged for show' }
+      ],
+      questions: [
+        { question: 'What risk does the writer describe?', options: ['Heritage may become only a product', 'Local festivals never attract visitors', 'Crafts cannot create jobs'], answer: 'Heritage may become only a product' },
+        { question: 'How can tourism change a festival?', options: ['It may be redesigned around visitor expectations', 'It always protects local meaning perfectly', 'It makes residents pay lower rent'], answer: 'It may be redesigned around visitor expectations' },
+        { question: 'What is the key question for the writer?', options: ['Who controls the story', 'How to stop all visitors', 'How to freeze culture forever'], answer: 'Who controls the story' },
+        { question: 'What kind of culture does the writer value?', options: ['Living culture shaped by local people', 'A performance only for cameras', 'Identical souvenir culture'], answer: 'Living culture shaped by local people' }
+      ],
+      details: [
+        { sentence: 'A restored old town may create ___.', answer: 'jobs' },
+        { sentence: 'Craftspeople may simplify their work to sell ___.', answer: 'faster' },
+        { sentence: 'Historic streets may fill with identical souvenir ___.', answer: 'shops' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks culture should never be shared.', answer: false },
+        { sentence: 'The text says tourism can both help and harm preservation.', answer: true },
+        { sentence: 'The writer wants local people involved in decisions.', answer: true }
+      ],
+      productionQuestion: 'Write about a tradition, place or festival. How can it be shared without becoming artificial?',
+      sampleAnswer: 'A local festival can welcome visitors, but local people should control the story. If it is redesigned only for tourists, it may lose meaning. Heritage should stay alive, not become a stage set.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-10-career-transitions',
+      order: 10,
+      stage: 'B2 PA.4',
+      title: 'Career transitions',
+      topic: 'identity, planning and professional change',
+      description: 'Students read about why career change is both practical and emotional.',
+      readingText: 'Career change is often described in practical language: update your CV, build new skills, contact people in the industry. These steps are useful, but they do not capture the emotional work involved. Leaving a familiar role can feel like losing part of your identity, even when the change is chosen freely.\nPeople sometimes delay transition because they are afraid of looking inexperienced again. A manager may become a beginner in a new field. A confident professional may need to ask basic questions. This can be uncomfortable, especially in cultures where success is associated with certainty and status.\nA successful transition usually combines humility with planning. Humility allows people to learn without pretending. Planning prevents risk from becoming chaos. Savings, side projects, short courses and honest conversations can turn a vague dream into a sequence of manageable steps. Career change is not only about becoming someone new; it is also about carrying useful parts of the old self into a different future.',
+      focus: ['career article', 'emotional inference', 'argument'],
+      words: [
+        { word: 'transition', meaning: 'a change from one state, role or situation to another' },
+        { word: 'identity', meaning: 'the way someone understands who they are' },
+        { word: 'inexperienced', meaning: 'not having much knowledge or practice' },
+        { word: 'humility', meaning: 'the ability to accept that you do not know everything' },
+        { word: 'manageable', meaning: 'possible to deal with successfully' }
+      ],
+      questions: [
+        { question: 'What does practical advice fail to capture?', options: ['The emotional work of career change', 'The need for a CV', 'The importance of skills'], answer: 'The emotional work of career change' },
+        { question: 'Why do some people delay transition?', options: ['They fear looking inexperienced again', 'They never want new skills', 'They always have too much money'], answer: 'They fear looking inexperienced again' },
+        { question: 'What does humility allow?', options: ['Learning without pretending', 'Avoiding all risk', 'Keeping the same status forever'], answer: 'Learning without pretending' },
+        { question: 'What is the writer\'s overall message?', options: ['Career change requires planning and identity work', 'Career change should always be sudden', 'Old experience has no value'], answer: 'Career change requires planning and identity work' }
+      ],
+      details: [
+        { sentence: 'Practical advice includes updating your ___.', answer: 'CV' },
+        { sentence: 'Success is sometimes associated with certainty and ___.', answer: 'status' },
+        { sentence: 'Side projects and short courses can create manageable ___.', answer: 'steps' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says practical steps are useless.', answer: false },
+        { sentence: 'The article says career change may affect identity.', answer: true },
+        { sentence: 'The writer believes old experience can still be useful.', answer: true }
+      ],
+      productionQuestion: 'Write about a career or study transition. What practical and emotional preparation would help?',
+      sampleAnswer: 'A career transition needs both planning and humility. A person may need savings, courses and side projects. Emotionally, they must accept being inexperienced again while carrying useful parts of their old identity forward.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-11-consumer-behaviour',
+      order: 11,
+      stage: 'B2 PA.4',
+      title: 'Consumer behaviour',
+      topic: 'choice, marketing and identity',
+      description: 'Students read about how buying decisions are shaped by emotion, identity and social signals.',
+      readingText: 'Consumers like to believe they buy things for rational reasons: quality, price, usefulness. These factors matter, but they are rarely the whole story. Purchases also send signals about who we are, or who we would like to be seen as.\nMarketing works partly because it understands this gap between need and identity. A reusable bottle is not only a container; it can suggest health, environmental awareness or good taste. A phone is not only a device; it may represent creativity, status or belonging. The product becomes a shortcut to a story about the self.\nThis does not mean consumers are foolish. Symbolic meaning is part of human life. The problem begins when the story replaces judgement. If people buy products mainly to perform an identity, they may ignore durability, labour conditions or environmental cost. Better consumer awareness does not remove emotion from buying. It simply asks whether the story being sold is worth the price being paid.',
+      focus: ['consumer culture', 'implicit meaning', 'argument'],
+      words: [
+        { word: 'rational', meaning: 'based on reason and logic' },
+        { word: 'signals', meaning: 'actions or details that communicate something' },
+        { word: 'belonging', meaning: 'the feeling of being accepted as part of a group' },
+        { word: 'symbolic', meaning: 'representing a deeper idea or meaning' },
+        { word: 'durability', meaning: 'the ability to last for a long time' }
+      ],
+      questions: [
+        { question: 'What does the writer say about rational reasons?', options: ['They matter but are not the whole story', 'They never affect purchases', 'They are the only reason people buy'], answer: 'They matter but are not the whole story' },
+        { question: 'What can a reusable bottle suggest?', options: ['Health or environmental awareness', 'Only the ability to hold water', 'Poor judgement in every case'], answer: 'Health or environmental awareness' },
+        { question: 'When does the problem begin?', options: ['When the story replaces judgement', 'When products have any meaning', 'When people compare prices'], answer: 'When the story replaces judgement' },
+        { question: 'What does better consumer awareness ask?', options: ['Whether the story is worth the price', 'How to remove all emotion', 'Why durability is irrelevant'], answer: 'Whether the story is worth the price' }
+      ],
+      details: [
+        { sentence: 'Purchases send signals about who we are or want to be ___ as.', answer: 'seen' },
+        { sentence: 'A phone may represent creativity, status or ___.', answer: 'belonging' },
+        { sentence: 'People may ignore labour conditions or environmental ___.', answer: 'cost' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says symbolic meaning is always foolish.', answer: false },
+        { sentence: 'The article connects products with identity.', answer: true },
+        { sentence: 'The writer encourages more thoughtful buying.', answer: true }
+      ],
+      productionQuestion: 'Write about a product people buy partly for identity. Is the story worth the price?',
+      sampleAnswer: 'People often buy expensive phones partly for identity. The device is useful, but it also signals creativity and status. The story may be worth it for some users, but consumers should still consider durability and environmental cost.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-12-leadership-pressure',
+      order: 12,
+      stage: 'B2 PA.4',
+      title: 'Leadership under pressure',
+      topic: 'decision-making, trust and uncertainty',
+      description: 'Students read about what leaders need to do when information is incomplete and pressure is high.',
+      readingText: 'Leadership is easiest to praise after success, when every decision looks obvious. It is much harder to understand in the middle of uncertainty. At that point, leaders rarely have complete information, unlimited time or universal agreement. They must act while the situation is still unclear.\nUnder pressure, weak leaders often pretend to be more certain than they are. This can comfort people briefly, but it becomes dangerous if reality changes. Stronger leaders communicate what is known, what is still unknown and when the next decision will be made. They do not confuse honesty with weakness.\nTrust is built not by perfect prediction but by visible reasoning. People can accept a difficult decision if they understand the values behind it and see that evidence is being updated. In a crisis, leadership is not the performance of confidence. It is the discipline of making the best possible decision, explaining it clearly and revising it when the facts demand it.',
+      focus: ['leadership', 'writer attitude', 'inference'],
+      words: [
+        { word: 'uncertainty', meaning: 'a situation in which things are not fully known' },
+        { word: 'universal', meaning: 'involving or accepted by everyone' },
+        { word: 'briefly', meaning: 'for a short time' },
+        { word: 'visible reasoning', meaning: 'clear explanation of how a decision was reached' },
+        { word: 'revise', meaning: 'change or update something after reconsidering it' }
+      ],
+      questions: [
+        { question: 'When is leadership hardest to understand?', options: ['In the middle of uncertainty', 'Only after success', 'When all facts are available'], answer: 'In the middle of uncertainty' },
+        { question: 'What do weak leaders often do?', options: ['Pretend to be more certain than they are', 'Explain what is unknown', 'Update evidence openly'], answer: 'Pretend to be more certain than they are' },
+        { question: 'What builds trust according to the writer?', options: ['Visible reasoning', 'Perfect prediction', 'Avoiding difficult decisions'], answer: 'Visible reasoning' },
+        { question: 'What is leadership in a crisis?', options: ['Decision, explanation and revision when needed', 'The performance of confidence', 'Never changing direction'], answer: 'Decision, explanation and revision when needed' }
+      ],
+      details: [
+        { sentence: 'Leaders rarely have complete information or unlimited ___.', answer: 'time' },
+        { sentence: 'Strong leaders communicate what is known and what is still ___.', answer: 'unknown' },
+        { sentence: 'People need to understand the values ___ a decision.', answer: 'behind' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer thinks leaders should always sound completely certain.', answer: false },
+        { sentence: 'The article presents honesty as compatible with strength.', answer: true },
+        { sentence: 'The writer says leaders should revise decisions when facts demand it.', answer: true }
+      ],
+      productionQuestion: 'Write about a leader, teacher or manager under pressure. What should they communicate?',
+      sampleAnswer: 'A leader under pressure should explain what is known and what is uncertain. They should show visible reasoning and avoid pretending to know everything. Trust grows when people understand the values behind a decision.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-13-scientific-uncertainty',
+      order: 13,
+      stage: 'B2 PA.5',
+      title: 'Scientific uncertainty',
+      topic: 'evidence, doubt and public understanding',
+      description: 'Students read about why uncertainty is a normal part of science rather than a failure.',
+      readingText: 'Public discussions of science often treat uncertainty as a weakness. If experts disagree, people may assume that nobody really knows anything. This misunderstands how knowledge develops. Science rarely moves from total ignorance to absolute certainty in one step; it moves through better questions, stronger evidence and revised explanations.\nUncertainty can mean several things. Sometimes the data is limited. Sometimes different studies measure different populations or use different methods. Sometimes the main conclusion is clear, but the exact size of the effect is still debated. These distinctions matter because not all uncertainty has the same meaning.\nCommunicating uncertainty honestly is difficult but necessary. If scientists sound too cautious, their message may be ignored. If they sound too certain, they may lose trust when details change. The challenge is to explain confidence and limitation together: what is strongly supported, what remains unclear and what kind of evidence would change the conclusion.',
+      focus: ['science article', 'distinguishing ideas', 'public communication'],
+      words: [
+        { word: 'ignorance', meaning: 'lack of knowledge or information' },
+        { word: 'revised', meaning: 'changed after being reviewed' },
+        { word: 'populations', meaning: 'groups of people or organisms studied' },
+        { word: 'distinctions', meaning: 'differences between similar things' },
+        { word: 'supported', meaning: 'backed up by evidence' }
+      ],
+      questions: [
+        { question: 'How does the public often misunderstand uncertainty?', options: ['As proof that nobody knows anything', 'As a normal part of knowledge', 'As stronger evidence'], answer: 'As proof that nobody knows anything' },
+        { question: 'How does science develop according to the writer?', options: ['Through better questions and revised explanations', 'In one step to absolute certainty', 'By avoiding disagreement'], answer: 'Through better questions and revised explanations' },
+        { question: 'Why do distinctions between uncertainties matter?', options: ['Not all uncertainty has the same meaning', 'All studies are equally weak', 'Methods are never important'], answer: 'Not all uncertainty has the same meaning' },
+        { question: 'What should scientists communicate?', options: ['Confidence and limitation together', 'Only simple certainty', 'Only doubt'], answer: 'Confidence and limitation together' }
+      ],
+      details: [
+        { sentence: 'Sometimes different studies use different ___.', answer: 'methods' },
+        { sentence: 'The exact size of the effect may still be ___.', answer: 'debated' },
+        { sentence: 'Scientists should explain what kind of evidence would change the ___.', answer: 'conclusion' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer sees uncertainty as a normal part of science.', answer: true },
+        { sentence: 'The text says all uncertainty means the same thing.', answer: false },
+        { sentence: 'The writer thinks overconfidence can damage trust.', answer: true }
+      ],
+      productionQuestion: 'Write about a topic where people misunderstand uncertainty. How should experts explain it?',
+      sampleAnswer: 'People often misunderstand uncertainty in health advice. Experts should explain what is strongly supported and what is still unclear. This does not weaken trust; it can make communication more honest.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-14-migration-identity',
+      order: 14,
+      stage: 'B2 PA.5',
+      title: 'Migration and identity',
+      topic: 'belonging, language and adaptation',
+      description: 'Students read about migration as a process of identity negotiation rather than simple replacement.',
+      readingText: 'Migration is often described through statistics: numbers arriving, numbers leaving, skills gained or lost. These figures matter for policy, but they say little about the inner experience of moving. A person who migrates does not simply exchange one identity for another. They carry memories, habits and languages into a new social world.\nLanguage plays a complicated role in this process. Learning the language of a new country can create independence and belonging, but it may also change how people express humour, disagreement or affection. Some migrants feel more capable in practical life while still feeling less fully themselves in conversation.\nIntegration is therefore not the disappearance of difference. At its best, it is a two-way adjustment: newcomers learn how institutions work, and communities learn to make room for different histories. The question is not whether migrants should change. Everyone changes. The deeper question is whether change is demanded as erasure or supported as participation.',
+      focus: ['migration', 'identity', 'inference'],
+      words: [
+        { word: 'statistics', meaning: 'numbers used to describe information' },
+        { word: 'inner experience', meaning: 'private feelings and thoughts' },
+        { word: 'belonging', meaning: 'feeling accepted as part of a place or group' },
+        { word: 'integration', meaning: 'becoming part of a society or group' },
+        { word: 'erasure', meaning: 'the removal or disappearance of something' }
+      ],
+      questions: [
+        { question: 'What do statistics fail to show?', options: ['The inner experience of moving', 'Numbers arriving and leaving', 'Policy concerns'], answer: 'The inner experience of moving' },
+        { question: 'What can language learning create?', options: ['Independence and belonging', 'A complete loss of memory', 'No practical benefit'], answer: 'Independence and belonging' },
+        { question: 'How does the writer define good integration?', options: ['A two-way adjustment', 'The disappearance of difference', 'Only newcomers changing'], answer: 'A two-way adjustment' },
+        { question: 'What contrast appears in the final sentence?', options: ['Erasure versus participation', 'Statistics versus policy', 'Humour versus disagreement'], answer: 'Erasure versus participation' }
+      ],
+      details: [
+        { sentence: 'Migrants carry memories, habits and ___ into a new world.', answer: 'languages' },
+        { sentence: 'Some migrants feel less fully themselves in ___.', answer: 'conversation' },
+        { sentence: 'Newcomers learn how ___ work.', answer: 'institutions' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says migration is only an economic issue.', answer: false },
+        { sentence: 'The text says language can affect emotional expression.', answer: true },
+        { sentence: 'The writer supports integration as participation, not erasure.', answer: true }
+      ],
+      productionQuestion: 'Write about moving to a new country, city or community. What helps people belong without losing identity?',
+      sampleAnswer: 'People need language support, but they also need respect for their history. Belonging should not mean erasure. A good community helps newcomers participate while accepting that identity changes slowly.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-15-automation-work',
+      order: 15,
+      stage: 'B2 PA.5',
+      title: 'Automation and work',
+      topic: 'jobs, skills and changing value',
+      description: 'Students read about automation and the changing nature of human value at work.',
+      readingText: 'Automation usually enters public debate through fear: which jobs will disappear, and how quickly? This fear is understandable, but it can narrow the conversation. The more useful question is not only what machines can do, but what humans will still be trusted to do.\nMany tasks are vulnerable because they are repetitive, predictable and easy to measure. Software can process forms, compare prices or produce standard reports. However, work is rarely just a list of tasks. It also involves judgement, empathy, negotiation and responsibility for consequences. These human elements may become more valuable as routine work becomes cheaper.\nThe transition will not be painless. Workers cannot simply be told to become creative overnight, and training programmes often reach people too late. Governments, schools and employers need to treat reskilling as infrastructure, not charity. If automation increases productivity but leaves people without realistic routes into new work, the problem is not technological progress itself. It is poor planning.',
+      focus: ['future of work', 'argument', 'social implications'],
+      words: [
+        { word: 'automation', meaning: 'using machines or software to do tasks with little human help' },
+        { word: 'vulnerable', meaning: 'at risk of being harmed or affected' },
+        { word: 'empathy', meaning: 'the ability to understand another person\'s feelings' },
+        { word: 'reskilling', meaning: 'learning new skills for a different type of work' },
+        { word: 'infrastructure', meaning: 'basic systems needed for society or work to function' }
+      ],
+      questions: [
+        { question: 'What question does the writer prefer?', options: ['What humans will still be trusted to do', 'Which machines are cheapest', 'How to stop all automation'], answer: 'What humans will still be trusted to do' },
+        { question: 'Which tasks are vulnerable?', options: ['Repetitive and predictable tasks', 'All tasks involving empathy', 'Only creative tasks'], answer: 'Repetitive and predictable tasks' },
+        { question: 'What may become more valuable?', options: ['Judgement, empathy and responsibility', 'Only standard reports', 'Avoiding all training'], answer: 'Judgement, empathy and responsibility' },
+        { question: 'How should reskilling be treated?', options: ['As infrastructure', 'As charity only', 'As unnecessary'], answer: 'As infrastructure' }
+      ],
+      details: [
+        { sentence: 'Software can process forms and compare ___.', answer: 'prices' },
+        { sentence: 'Workers cannot simply be told to become ___ overnight.', answer: 'creative' },
+        { sentence: 'Poor planning is the problem if people lack realistic ___ into new work.', answer: 'routes' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says fear about automation is understandable.', answer: true },
+        { sentence: 'The writer says work is only a list of tasks.', answer: false },
+        { sentence: 'The article argues that planning and training matter.', answer: true }
+      ],
+      productionQuestion: 'Write about one job or skill affected by automation. What human skills will remain valuable?',
+      sampleAnswer: 'Customer support will be affected by automation because software can answer standard questions. However, empathy and judgement will remain valuable when customers are upset or the problem is unusual. Reskilling should help workers move into these roles.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-16-trust-in-institutions',
+      order: 16,
+      stage: 'B2 PA.6',
+      title: 'Trust in institutions',
+      topic: 'transparency, competence and public confidence',
+      description: 'Students read about why public trust depends on both honesty and competence.',
+      readingText: 'Institutions often ask for trust when they are under pressure. Governments, schools, banks and media organizations all need the public to believe that they are acting responsibly. But trust cannot simply be requested; it has to be earned repeatedly.\nTransparency is part of the answer, but it is not enough on its own. An institution may publish large amounts of information and still leave people confused. Real transparency means making decisions understandable: what evidence was used, which trade-offs were considered and who is accountable if things go wrong.\nCompetence matters just as much as openness. People may forgive an honest mistake, but repeated failure damages confidence even when communication is polite. The strongest institutions combine both qualities. They explain their reasoning, admit limits and deliver basic services reliably. Trust grows when people see not only good intentions, but systems that work.',
+      focus: ['society', 'argument structure', 'inference'],
+      words: [
+        { word: 'institutions', meaning: 'large organizations or systems with public roles' },
+        { word: 'transparency', meaning: 'openness about decisions and information' },
+        { word: 'trade-offs', meaning: 'situations where gaining one thing means losing another' },
+        { word: 'accountable', meaning: 'responsible for actions or results' },
+        { word: 'competence', meaning: 'the ability to do something well' }
+      ],
+      questions: [
+        { question: 'What does the writer say about trust?', options: ['It must be earned repeatedly', 'It can simply be requested', 'It is unnecessary for institutions'], answer: 'It must be earned repeatedly' },
+        { question: 'Why is publishing information not enough?', options: ['People may still be confused', 'Information is always harmful', 'Evidence should be hidden'], answer: 'People may still be confused' },
+        { question: 'What is real transparency?', options: ['Making decisions understandable', 'Publishing everything without explanation', 'Avoiding accountability'], answer: 'Making decisions understandable' },
+        { question: 'What do strong institutions combine?', options: ['Openness and competence', 'Politeness and secrecy', 'Good intentions without systems'], answer: 'Openness and competence' }
+      ],
+      details: [
+        { sentence: 'Institutions need the public to believe they are acting ___.', answer: 'responsibly' },
+        { sentence: 'Real transparency explains which ___ were considered.', answer: 'trade-offs' },
+        { sentence: 'Trust grows when people see systems that ___.', answer: 'work' }
+      ],
+      trueFalse: [
+        { sentence: 'The writer says transparency alone solves everything.', answer: false },
+        { sentence: 'The article values understandable decision-making.', answer: true },
+        { sentence: 'Repeated failure can damage confidence.', answer: true }
+      ],
+      productionQuestion: 'Write about an institution you trust or distrust. What creates or damages that trust?',
+      sampleAnswer: 'I trust institutions that explain decisions clearly and deliver basic services reliably. Transparency matters, but competence is equally important. Repeated failure damages confidence, even if the communication is polite.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-17-long-form-review',
+      order: 17,
+      stage: 'B2 PA.6',
+      title: 'Long-form review',
+      topic: 'reviewing a documentary with balanced criticism',
+      description: 'Students read a sophisticated review and identify praise, criticism and recommendation.',
+      readingText: 'The documentary Quiet Cities begins with a simple question: what would urban life sound like if it were designed around people rather than engines? The film follows residents in three cities that have reduced traffic in central neighborhoods. Its strongest scenes are not the interviews with experts, but the small observations: children crossing a square without shouting over cars, an elderly man describing how he hears birds again, shop owners slowly admitting that fewer vehicles did not mean fewer customers.\nThe film is beautifully shot and persuasive, but not flawless. It sometimes treats opposition as a failure of imagination, when some concerns are practical. Delivery drivers, disabled residents and low-income commuters appear only briefly, although their experiences complicate the story. A stronger film would have spent more time with people who support quieter streets but fear being excluded by poor planning.\nEven so, Quiet Cities succeeds because it avoids presenting silence as emptiness. It shows quiet as a public resource, something that allows conversation, rest and attention to return. I would recommend it to viewers interested in urban design, provided they are willing to think beyond the film\'s most optimistic examples.',
+      focus: ['review', 'evaluation', 'balanced criticism'],
+      words: [
+        { word: 'persuasive', meaning: 'able to make people believe or agree' },
+        { word: 'flawless', meaning: 'perfect, without weaknesses' },
+        { word: 'opposition', meaning: 'disagreement or resistance' },
+        { word: 'excluded', meaning: 'not included or allowed to take part' },
+        { word: 'resource', meaning: 'something useful or valuable' }
+      ],
+      questions: [
+        { question: 'What are the strongest scenes according to the reviewer?', options: ['Small observations of daily life', 'Only expert interviews', 'Traffic statistics'], answer: 'Small observations of daily life' },
+        { question: 'What criticism does the reviewer make?', options: ['Some practical concerns are treated too briefly', 'The film is badly shot', 'The film has no clear question'], answer: 'Some practical concerns are treated too briefly' },
+        { question: 'Who appears only briefly?', options: ['Delivery drivers, disabled residents and low-income commuters', 'Children and shop owners', 'Urban designers only'], answer: 'Delivery drivers, disabled residents and low-income commuters' },
+        { question: 'Why does the reviewer still recommend the film?', options: ['It presents quiet as a public resource', 'It answers every objection fully', 'It is only for experts'], answer: 'It presents quiet as a public resource' }
+      ],
+      details: [
+        { sentence: 'The documentary follows residents in ___ cities.', answer: 'three' },
+        { sentence: 'An elderly man hears ___ again.', answer: 'birds' },
+        { sentence: 'The reviewer recommends it to viewers interested in urban ___.', answer: 'design' }
+      ],
+      trueFalse: [
+        { sentence: 'The review is entirely negative.', answer: false },
+        { sentence: 'The reviewer wants more attention to people who may be excluded.', answer: true },
+        { sentence: 'The film is described as persuasive but imperfect.', answer: true }
+      ],
+      productionQuestion: 'Write a short review of a film, book, course or app. Include praise, criticism and a recommendation.',
+      sampleAnswer: 'The course is practical and well organized, especially in the speaking tasks. However, it sometimes moves too quickly for students who need more grammar review. I would recommend it to motivated learners who can study independently.'
+    },
+    {
+      id: 'b2-pre-advanced-reading-18-reading-review',
+      order: 18,
+      stage: 'B2 PA review',
+      title: 'B2 Pre-Advanced reading review',
+      topic: 'mixed texts, inference and writer attitude',
+      minutes: 50,
+      description: 'Students review B2 Pre-Advanced reading skills across three short texts with different purposes.',
+      readingText: 'Text 1: Notice\nFrom next month, the community library will reduce evening hours on Mondays and Tuesdays. This decision follows a six-month review of visitor numbers and energy costs. We understand that some residents rely on evening access, so the study room will remain open late on Thursdays, and digital borrowing support will be extended.\nText 2: Opinion extract\nWhen people say young workers lack commitment, they often ignore how the employment contract has changed. Loyalty is difficult to demand from people who are offered temporary roles, limited training and little influence over decisions. If organizations want commitment, they must create conditions in which commitment makes sense.\nText 3: Review extract\nThe new language app is elegant and motivating at first. Its short lessons are easy to fit into a busy day, and the progress screen is genuinely encouraging. However, the app is less successful at developing independent speaking. It rewards quick recognition more than flexible production, so it works best as a supplement rather than a complete course.',
+      focus: ['mixed reading', 'purpose', 'writer attitude'],
+      words: [
+        { word: 'extended', meaning: 'made longer or continued for more time' },
+        { word: 'commitment', meaning: 'willingness to give time and effort to something' },
+        { word: 'temporary', meaning: 'lasting for a limited time' },
+        { word: 'supplement', meaning: 'something added to improve or complete something else' },
+        { word: 'production', meaning: 'active use of language, especially speaking or writing' }
+      ],
+      questions: [
+        { question: 'Why will library hours change?', options: ['Visitor numbers and energy costs were reviewed', 'All residents stopped using the library', 'The study room is closing completely'], answer: 'Visitor numbers and energy costs were reviewed' },
+        { question: 'What does Text 2 suggest about commitment?', options: ['It depends partly on working conditions', 'It is only a personal weakness', 'It should be demanded without support'], answer: 'It depends partly on working conditions' },
+        { question: 'What is the app best used as?', options: ['A supplement', 'A complete speaking course', 'A library system'], answer: 'A supplement' },
+        { question: 'Which text is mainly evaluative?', options: ['Text 3', 'Text 1', 'Text 2'], answer: 'Text 3' }
+      ],
+      details: [
+        { sentence: 'The library review lasted six ___.', answer: 'months' },
+        { sentence: 'The study room will remain open late on ___.', answer: 'Thursdays' },
+        { sentence: 'The app rewards quick recognition more than flexible ___.', answer: 'production' }
+      ],
+      trueFalse: [
+        { sentence: 'Text 1 tries to explain a service change.', answer: true },
+        { sentence: 'Text 2 blames only young workers for low commitment.', answer: false },
+        { sentence: 'Text 3 says the app is motivating but limited.', answer: true }
+      ],
+      productionQuestion: 'Choose one of the three texts and write a response. Explain the writer\'s purpose and your opinion.',
+      sampleAnswer: 'I choose Text 3. The writer wants to evaluate the app fairly, praising its motivation but criticizing its speaking practice. I agree that recognition tasks are useful, but learners also need flexible production.'
+    }
+  ].map(buildPreAdvancedReadingReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2_PRE_ADVANCED = {
     ...(root.lessons.B2_PRE_ADVANCED || {}),
     grammar: READY_GRAMMAR_LESSONS_B2_PRE_ADVANCED,
-    vocabulary: READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED
+    vocabulary: READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED,
+    reading: READY_READING_LESSONS_B2_PRE_ADVANCED
   };
 })();
