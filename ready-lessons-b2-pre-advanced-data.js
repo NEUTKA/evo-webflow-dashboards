@@ -61,7 +61,7 @@
     },
     listening: {
       description: 'B2 Pre-Advanced listening pathway space for fast discussion, implied meaning, stance and detail.',
-      plannedTopics: []
+      plannedTopics: ['Difficult conversations', 'Work boundaries', 'Cities and attention', 'Interview authenticity', 'Immediate trust', 'Four-day week', 'Digital tools', 'Presentation attention', 'Habit design', 'Choice and hesitation', 'Safe urban spaces', 'Intentional agreement', 'Ideas and timing', 'Busy versus effective', 'Travel and home', 'Meeting silence', 'Useful advice', 'Conversation timing']
     }
   };
 
@@ -2598,6 +2598,1127 @@
     }
   ].map(buildPreAdvancedWritingReadyLesson);
 
+  function buildPreAdvancedListeningReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2_PRE_ADVANCED',
+      skill: 'listening',
+      stage: config.stage || 'B2 PA',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 45,
+      description: config.description,
+      audioUrl: config.audioUrl,
+      supportTitle: 'Audio and transcript',
+      supportText: `Transcript:\n${config.transcriptText}`,
+      focus: config.focus || ['listening for implied meaning', 'speaker stance', 'detail and inference'],
+      teacherNotes: config.teacherNotes || 'Ask students to listen once for the main argument, then again for nuance, examples and speaker attitude. Use the transcript only after the first listening attempt.',
+      tasks: [
+        {
+          id: `${config.id}-vocab-matching`,
+          type: 'matching',
+          title: 'Before listening: useful words',
+          prompt: 'Match each word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-vocab-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-comprehension-choice`,
+          type: 'choice',
+          title: 'Listening comprehension',
+          prompt: 'Listen and choose the best answer.',
+          items: (config.questions || []).map((item, index) => ({
+            id: `${config.id}-comprehension-choice-${index + 1}`,
+            sentence: item.question,
+            options: (item.options || []).map((text, optionIndex) => ({
+              id: ['a', 'b', 'c'][optionIndex],
+              text
+            })),
+            answer: ['a', 'b', 'c'][(item.options || []).indexOf(item.answer)] || 'a',
+            explanation: item.explanation || item.answer
+          }))
+        },
+        {
+          id: `${config.id}-detail-gap`,
+          type: 'gap_fill',
+          title: 'Listen for details',
+          prompt: 'Type the missing word or phrase from the audio.',
+          items: (config.details || []).map((item, index) => ({
+            id: `${config.id}-detail-gap-${index + 1}`,
+            sentence: item.sentence,
+            accepted_answers: Array.isArray(item.answer) ? item.answer : [item.answer],
+            hint: item.hint || 'Listen again and check the transcript.',
+            explanation: item.explanation || ''
+          }))
+        },
+        {
+          id: `${config.id}-response`,
+          type: 'writing_prompt',
+          title: 'Personal response',
+          prompt: config.productionPrompt || 'Write 8-10 sentences responding to the listening topic.',
+          items: [
+            {
+              id: `${config.id}-response-1`,
+              question: config.productionQuestion,
+              sample_answer: config.sampleAnswer
+            }
+          ]
+        }
+      ],
+      extraTasks: [
+        {
+          id: `${config.id}-true-false-extra`,
+          type: 'choice',
+          title: 'Extra true or false',
+          prompt: 'Listen again and choose True or False.',
+          items: (config.trueFalse || []).map((item, index) => ({
+            id: `${config.id}-true-false-extra-${index + 1}`,
+            sentence: item.sentence,
+            options: [{ id: 'a', text: 'True' }, { id: 'b', text: 'False' }],
+            answer: item.answer ? 'a' : 'b',
+            explanation: item.explanation || ''
+          }))
+        }
+      ]
+    };
+  }
+
+  const READY_LISTENING_LESSONS_B2_PRE_ADVANCED = [
+    {
+      id: 'b2-pre-advanced-listening-01-difficult-conversations',
+      order: 1,
+      stage: 'B2 PA.1',
+      title: 'Difficult conversations',
+      topic: 'honesty, timing and repair',
+      description: 'Students listen to Maya reflecting on why honest conversations are often avoided and how one tense work situation was repaired.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2f8305f789986bf2ec7d3d_ElevenLabs_2026-06-15T04_39_37_Ellen_pvc_sp100_s50_sb75_se0_b_m2.mp3',
+      transcriptText: `Hi, I am Maya. A few years ago, I believed that honest people always said what they thought. If there was a problem at work, in a friendship, or in a family, I thought the mature thing was simply to talk about it directly. Then I noticed something strange: even people who valued honesty often avoided difficult conversations. And I was one of them.
+
+At first, I thought avoidance was just a lack of courage. But the more I observed it, the more complicated it seemed. People rarely avoid a difficult conversation because they do not care. In many cases, they care too much. They are afraid of damaging a relationship, being misunderstood, or hearing something they are not ready to accept.
+
+A difficult conversation usually contains two problems. The first is the practical issue: a missed deadline, a broken promise, an unfair decision, or a habit that creates tension. The second is the emotional meaning behind it. When someone says, "You never listen to me," the topic is not only listening. It may also be respect, trust, or feeling invisible.
+
+That is why simple advice like "just be honest" is not always helpful. Honesty without timing can sound like criticism. Honesty without kindness can feel like attack. And kindness without honesty can create a fake peace that does not last. Good communication requires all three: truth, timing, and care.
+
+I learned this during a project with a colleague named Nina. She often changed small parts of our work without telling me. At first, I said nothing because the changes were not huge. But after a few weeks, I felt frustrated and started interpreting everything she did as disrespectful. Instead of asking a clear question, I became cold and distant.
+
+Eventually, Nina asked if something was wrong. I wanted to say, "No, everything is fine," because that answer felt safer. But I decided to be more honest. I told her that I felt confused when changes were made without discussion, and I asked whether we could agree on a clearer process.
+
+The conversation was uncomfortable, but it was not a disaster. Nina explained that she thought she was helping by fixing small details quickly. She had not realised that it made me feel excluded. We agreed to leave short notes before changing shared documents. The problem did not disappear forever, but the tension became much smaller.
+
+Since then, I have stopped thinking of difficult conversations as moments of conflict. I see them more as moments of repair. They are risky because they can reveal what people really feel. But avoiding them has a cost too. Silence can protect comfort for a day, but it often damages trust over time. The goal is not to say everything immediately. The goal is to say the necessary thing before distance becomes normal.`,
+      focus: ['speaker reflection', 'emotional meaning', 'workplace communication'],
+      words: [
+        { word: 'avoidance', meaning: 'the act of staying away from something difficult' },
+        { word: 'misunderstood', meaning: 'not correctly understood by another person' },
+        { word: 'fake peace', meaning: 'calm that hides an unresolved problem' },
+        { word: 'excluded', meaning: 'left out of a process or decision' },
+        { word: 'repair', meaning: 'an attempt to improve trust after tension' }
+      ],
+      questions: [
+        { question: 'What did Maya originally believe honest people did?', options: ['They always said what they thought directly', 'They avoided emotional topics', 'They waited until everyone agreed'], answer: 'They always said what they thought directly' },
+        { question: 'Why does Maya say people often avoid difficult conversations?', options: ['Because they may care too much', 'Because they enjoy conflict', 'Because the practical issue is never important'], answer: 'Because they may care too much' },
+        { question: 'What made Maya feel frustrated with Nina?', options: ['Nina changed shared work without discussion', 'Nina refused to work on the project', 'Nina criticised Maya in public'], answer: 'Nina changed shared work without discussion' },
+        { question: 'What is Maya\'s main conclusion?', options: ['Difficult conversations can be moments of repair', 'Silence is usually the best strategy', 'Honesty should always be immediate'], answer: 'Difficult conversations can be moments of repair' }
+      ],
+      details: [
+        { sentence: 'Good communication requires truth, timing and ___.', answer: 'care' },
+        { sentence: 'Maya became cold and ___ instead of asking a clear question.', answer: 'distant' },
+        { sentence: 'Nina thought she was helping by fixing small details ___.', answer: 'quickly' },
+        { sentence: 'They agreed to leave short ___ before changing shared documents.', answer: 'notes' }
+      ],
+      trueFalse: [
+        { sentence: 'Maya says every difficult conversation is only about a practical issue.', answer: false },
+        { sentence: 'Nina had not realised that her changes made Maya feel excluded.', answer: true },
+        { sentence: 'Maya believes silence can damage trust over time.', answer: true }
+      ],
+      productionQuestion: 'Describe a difficult conversation that could repair trust. What should be said, and how should the timing and tone be managed?',
+      sampleAnswer: 'I would begin with a specific example rather than a general accusation. I would explain the effect on me and ask a genuine question about the other person\'s perspective. The aim would not be to win, but to create a clearer process and reduce distance.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-02-availability-boundaries',
+      order: 2,
+      stage: 'B2 PA.1',
+      title: 'Always available',
+      topic: 'professionalism and boundaries',
+      description: 'Students listen to Nadia explaining how constant availability weakened her focus and how she learned to set clearer limits.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2f9a5ab79970e94da94a7c_ElevenLabs_2026-06-15T06_20_53_Arabella_pvc_sp100_s63_sb100_se78_b_m2.mp3',
+      transcriptText: `Hi, I am Nadia. A few years ago, I thought being available all the time was a sign of professionalism. If a manager sent a message at 9 p.m., I answered it. If a colleague asked a question during the weekend, I replied quickly. I told myself I was being helpful, reliable, and committed. In reality, I was slowly teaching people that my personal time did not need to be respected.
+
+The strange thing is that nobody officially asked me to be available every hour of the day. There was no company rule saying that I had to answer messages after work. The pressure was more subtle than that. It came from the sound of notifications, from seeing other people reply late at night, and from the fear that silence might look lazy or uncooperative.
+
+At first, the habit seemed harmless. A two-minute reply did not feel like a big sacrifice. But those small interruptions changed the way I rested. I could be watching a film, cooking dinner, or walking with a friend, and part of my attention was still waiting for the next message. I was physically away from work, but mentally I had never really left.
+
+Over time, I noticed that I was becoming less focused during the actual working day. Because I was always half-connected, I rarely had long periods of deep concentration. I checked messages between tasks, during tasks, and sometimes instead of tasks. The more available I became, the less thoughtful my work became.
+
+The turning point came after a simple mistake. I replied to an important email late at night when I was tired. I misunderstood one detail and caused confusion the next morning. Nothing terrible happened, but it made me realise that speed was not always the same as responsibility. Sometimes a slower, clearer answer is much more professional than a fast one.
+
+After that, I started setting boundaries. I turned off most work notifications after 6:30 p.m. I stopped replying to non-urgent messages during weekends. I also added a short note to my email signature saying that I usually respond during working hours. At first, I felt uncomfortable, as if I was disappointing people. But most colleagues adjusted quickly.
+
+The biggest change was not technical; it was psychological. I had to accept that being helpful does not mean being permanently reachable. Good communication needs clarity, not constant access. If something is truly urgent, there should be a clear process for it. Everything else can usually wait.
+
+Now I still care about my work, but I no longer confuse availability with value. A person can be committed without being online all evening. In fact, protecting time away from work can make the time at work much better.`,
+      focus: ['workplace boundaries', 'implied pressure', 'speaker attitude'],
+      words: [
+        { word: 'committed', meaning: 'dedicated and responsible' },
+        { word: 'subtle', meaning: 'not obvious or direct' },
+        { word: 'half-connected', meaning: 'not fully working but still mentally attached to work' },
+        { word: 'turning point', meaning: 'the moment when a situation begins to change' },
+        { word: 'reachable', meaning: 'able to be contacted' }
+      ],
+      questions: [
+        { question: 'What did Nadia believe availability showed?', options: ['Professionalism', 'Poor planning', 'Lack of ambition'], answer: 'Professionalism' },
+        { question: 'Where did the pressure mainly come from?', options: ['Notifications, late replies and fear of judgement', 'A written company policy', 'A direct order from her manager'], answer: 'Notifications, late replies and fear of judgement' },
+        { question: 'What did the late-night mistake teach her?', options: ['Speed is not always responsibility', 'Emails should never be answered', 'Clients prefer short replies'], answer: 'Speed is not always responsibility' },
+        { question: 'What is Nadia final view?', options: ['Commitment does not require being online all evening', 'The best workers answer every message immediately', 'Boundaries make teamwork impossible'], answer: 'Commitment does not require being online all evening' }
+      ],
+      details: [
+        { sentence: 'Nadia turned off most work notifications after ___ p.m.', answer: '6:30' },
+        { sentence: 'She added a short note to her email ___.', answer: 'signature' },
+        { sentence: 'Good communication needs clarity, not constant ___.', answer: 'access' },
+        { sentence: 'She no longer confuses availability with ___.', answer: 'value' }
+      ],
+      trueFalse: [
+        { sentence: 'Nadia company officially required evening replies.', answer: false },
+        { sentence: 'Small interruptions affected the way she rested.', answer: true },
+        { sentence: 'Most colleagues adjusted quickly to her boundaries.', answer: true }
+      ],
+      productionQuestion: 'What boundary could improve communication in a workplace without damaging teamwork?',
+      sampleAnswer: 'One useful boundary is agreeing that non-urgent messages are answered during working hours. This does not mean ignoring people. It means creating a clearer system so that real emergencies are visible and ordinary tasks do not interrupt rest.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-03-city-thinking',
+      order: 3,
+      stage: 'B2 PA.1',
+      title: 'How a city changes thinking',
+      topic: 'urban life and mental habits',
+      description: 'Students listen to Nora describing how moving to a capital city changed her decisions, attention and social behaviour.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a2fb7d6368e79bb6a37f755_ElevenLabs_2026-06-15T08_28_22_Ellen_pvc_sp100_s50_sb75_se0_b_m2.mp3',
+      transcriptText: `Hi, I am Nora. I used to think that a city was just a place where people lived close together. Streets, buildings, shops, traffic, parks - all of it seemed like background. But after moving from a quiet coastal town to a large capital city, I began to notice something surprising: the city was not only around me. In small ways, it was changing how I thought.
+
+At first, the change was practical. I learned to make decisions faster. In my hometown, I could stand in a shop for five minutes deciding what to buy, and nobody cared. In the city, hesitation felt expensive. People were waiting behind me, buses were arriving, traffic lights were changing, and every choice seemed to happen under pressure. I became quicker, but not always calmer.
+
+The second change was attention. A city constantly asks you to notice things: signs, announcements, moving cars, people crossing your path, messages on your phone, the smell of food from a cafe, a musician at the station. This can be exciting, but it can also divide your mind into many small pieces. I realised that after a day in the city, I often felt tired even when I had not done anything physically difficult.
+
+There is also a social effect. In a small town, people often recognise each other, so behaviour feels personal. In a big city, you are surrounded by strangers. That can give you freedom, because nobody cares what you wear or where you are going. But it can also make you less patient. When people become part of the crowd, it is easier to forget that each person has a story.
+
+Still, cities do not only make us stressed or impatient. They can also make us more open-minded. You meet different accents, different clothes, different foods, and different ways of living almost every day. Even if you do not talk to everyone, you learn that your way of life is only one of many possible versions.
+
+The most important lesson for me is that city design affects mental habits. Wide pavements can make people walk more slowly. Green spaces can help them recover their attention. Good public transport can reduce the feeling that everyone is fighting for space. A city is not just concrete and noise. It is a system that teaches people how to move, wait, choose, notice, and live with others.
+
+So when we discuss better cities, we should not only ask whether they are modern or beautiful. We should ask what kind of thinking they encourage. Do they make people rushed, defensive, and disconnected? Or do they give people enough space to be alert, curious, and considerate?`,
+      focus: ['urban vocabulary', 'cause and effect', 'abstract argument'],
+      words: [
+        { word: 'hesitation', meaning: 'delay before making a decision' },
+        { word: 'open-minded', meaning: 'willing to accept different ways of living or thinking' },
+        { word: 'mental habits', meaning: 'regular patterns in the way people think' },
+        { word: 'public transport', meaning: 'buses, trains or other shared transport systems' },
+        { word: 'considerate', meaning: 'thinking about other people\'s feelings or needs' }
+      ],
+      questions: [
+        { question: 'What surprised Nora after moving to the capital?', options: ['The city was changing how she thought', 'The city was quieter than her hometown', 'People recognised her everywhere'], answer: 'The city was changing how she thought' },
+        { question: 'Why did hesitation feel expensive in the city?', options: ['Many choices happened under pressure', 'Shops charged extra for slow customers', 'She could not find anything to buy'], answer: 'Many choices happened under pressure' },
+        { question: 'What positive effect of cities does Nora mention?', options: ['They can make people more open-minded', 'They remove all stress', 'They make everyone close friends'], answer: 'They can make people more open-minded' },
+        { question: 'What question does Nora think we should ask about cities?', options: ['What kind of thinking they encourage', 'How tall the buildings are', 'How many cafes they have'], answer: 'What kind of thinking they encourage' }
+      ],
+      details: [
+        { sentence: 'Nora moved from a quiet coastal town to a large ___ city.', answer: 'capital' },
+        { sentence: 'A city can divide your mind into many small ___.', answer: 'pieces' },
+        { sentence: 'Green spaces can help people recover their ___.', answer: 'attention' },
+        { sentence: 'Good public transport can reduce the feeling that everyone is fighting for ___.', answer: 'space' }
+      ],
+      trueFalse: [
+        { sentence: 'Nora says city life made her quicker but not always calmer.', answer: true },
+        { sentence: 'She believes cities only make people stressed and impatient.', answer: false },
+        { sentence: 'She argues that design can influence mental habits.', answer: true }
+      ],
+      productionQuestion: 'How does the design of your city or neighbourhood affect the way people behave?',
+      sampleAnswer: 'In my city, narrow pavements make people impatient because everyone feels blocked. A few parks have the opposite effect: people slow down, sit, and talk. This shows that design does not only organise movement; it also affects mood and attention.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-04-interview-authenticity',
+      order: 4,
+      stage: 'B2 PA.2',
+      title: 'The over-prepared interview',
+      topic: 'authenticity in job interviews',
+      description: 'Students listen to Natalie describing an interview where polished answers became less useful than honest reflection.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a315f09800366f3665778c5_ElevenLabs_2026-06-16T14_31_57_Jessica%20-%20Playful%2C%20Bright%2C%20Warm_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Natalie. A few years ago, I had a job interview that I was almost certain would go well. The role was in a marketing team at a medium-sized company, and on paper it looked perfect for me. I had the right experience, I knew the industry, and I had spent several evenings preparing answers to every question I thought they might ask.
+
+In fact, I was so prepared that I stopped listening to my own doubts. I memorised examples of successful projects, practised confident body language, and even wrote down a few impressive phrases I wanted to use. By the morning of the interview, I looked calm, but inside I was treating the meeting like a performance I had to deliver perfectly.
+
+At first, everything seemed fine. The interviewer asked about my previous role, and I gave a clear, polished answer. Then she asked a simple question: "Can you tell me about a time when a campaign did not work?" I had prepared success stories, but not failure stories. I paused for too long and then gave an answer that sounded safe but empty. I described a minor problem and explained how we fixed it quickly. The interviewer listened politely, but I could feel that I had not really answered the question.
+
+A few minutes later, she asked how I normally dealt with disagreement in a team. Again, I tried to sound professional, but I avoided anything that might make me look difficult. I said I valued communication and respected different opinions, which was true, but it was also too general. I was giving the kind of answers that belong in an interview guide, not in a real conversation.
+
+The interview changed when the interviewer closed her notebook and said, "Natalie, your experience is strong, but I am not sure I have heard how you actually think." At first, I felt embarrassed. Then I realised she was giving me a chance, not rejecting me. So I stopped trying to be the perfect candidate.
+
+I told her about a campaign that had failed because our team had misunderstood the audience. I explained what I had done wrong, what I had learned, and how it changed the way I looked at research. Then I talked honestly about disagreements: how I used to avoid them, and how I had learned that respectful disagreement can improve a project.
+
+The atmosphere became much more relaxed. The interviewer asked follow-up questions, and for the first time, the interview felt like a conversation rather than an exam. I did not get the job in the end. Another candidate had more direct experience with the company's market. But the interviewer sent me a short email saying that the second half of the conversation had been much stronger.
+
+That interview taught me something useful. Preparation matters, but over-preparation can make you sound less genuine. Employers do not only want proof that you have succeeded. They also want to understand how you handle mistakes, uncertainty, and pressure. A good interview is not about hiding every weakness. It is about showing that you can think clearly, learn honestly, and communicate like a real person.`,
+      focus: ['job interview language', 'speaker self-correction', 'lesson learned'],
+      words: [
+        { word: 'polished', meaning: 'carefully prepared and smooth' },
+        { word: 'failure stories', meaning: 'examples of things that did not succeed' },
+        { word: 'safe but empty', meaning: 'not risky but not meaningful' },
+        { word: 'genuine', meaning: 'real and honest, not artificial' },
+        { word: 'uncertainty', meaning: 'a situation where the result is not clear' }
+      ],
+      questions: [
+        { question: 'What had Natalie over-prepared?', options: ['Success stories and impressive phrases', 'A salary negotiation', 'Questions about the company finances'], answer: 'Success stories and impressive phrases' },
+        { question: 'Which question caused the first problem?', options: ['A time when a campaign did not work', 'A question about her hobbies', 'A question about travel'], answer: 'A time when a campaign did not work' },
+        { question: 'What did the interviewer say she had not heard?', options: ['How Natalie actually thinks', 'Whether Natalie could use software', 'Why Natalie wanted a higher salary'], answer: 'How Natalie actually thinks' },
+        { question: 'What did Natalie learn?', options: ['Over-preparation can make you sound less genuine', 'Preparation should be avoided', 'Only success stories matter'], answer: 'Over-preparation can make you sound less genuine' }
+      ],
+      details: [
+        { sentence: 'The role was in a ___ team.', answer: 'marketing' },
+        { sentence: 'Natalie had prepared success stories, but not ___ stories.', answer: 'failure' },
+        { sentence: 'She later explained that her team had misunderstood the ___.', answer: 'audience' },
+        { sentence: 'The interviewer said the second half of the conversation had been much ___.', answer: 'stronger' }
+      ],
+      trueFalse: [
+        { sentence: 'Natalie got the job in the end.', answer: false },
+        { sentence: 'The interview improved when Natalie became more honest.', answer: true },
+        { sentence: 'Natalie now believes employers only want perfect answers.', answer: false }
+      ],
+      productionQuestion: 'How can a candidate prepare for an interview without sounding artificial?',
+      sampleAnswer: 'A candidate should prepare examples, but not memorise a performance. It helps to include mistakes, decisions and lessons learned, because employers need to hear how someone thinks under pressure, not only what they have achieved.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-05-immediate-trust',
+      order: 5,
+      stage: 'B2 PA.2',
+      title: 'Immediate trust',
+      topic: 'first impressions and evidence',
+      description: 'Students listen to Natalie analysing why she trusted one person quickly and why first impressions still need testing.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a3163e30bd85049b5d31a7d_ElevenLabs_2026-06-16T14_52_29_Christina%20-%20Energetic%20Commercial%20American%20Female%20Voice.mp3',
+      transcriptText: `Hi, I am Natalie. I used to think that trusting someone quickly was either a sign of good instinct or a sign of being too naive. But a few years ago, after a small professional workshop, I started to see it differently.
+
+It was my first week in a new city, and I had signed up for an evening workshop about communication at work. I did not know anyone there, so during the coffee break I felt slightly uncomfortable. Two people started talking to me. The first was Maya. She was energetic, friendly, and very confident. Within two minutes, she was telling me about her career, her contacts, and how useful the workshop would be if I "knew how to meet the right people."
+
+The second person was Adrian. He was quieter. He asked what had brought me to the city, listened to my answer, and then asked one simple follow-up question. He did not try to impress me. He did not interrupt or turn the conversation back to himself. There was a kind of calm confidence in the way he spoke. Strangely, I trusted him much faster.
+
+At first, I could not explain why. Maya had been warmer on the surface. Adrian had said less. But my reaction was not random. Trust often begins as a social shortcut. We do not have enough time to collect full evidence about every new person we meet, so our brain uses tiny signals: tone of voice, eye contact, timing, consistency, and whether someone creates pressure.
+
+Of course, this shortcut can be wrong. A confident person can seem reliable before they have actually done anything reliable. A quiet person can seem thoughtful when they are simply uninterested. First impressions are useful, but they are not proof. They are more like a first draft of an opinion.
+
+What made Adrian feel trustworthy was not that he smiled or agreed with me. It was that his behaviour felt coherent. His words, body language, and level of attention seemed to match. He listened without taking over the conversation. He asked questions without making me feel judged. Most importantly, he did not create too much pressure. I did not feel that he wanted something from me immediately.
+
+Later that evening, we worked in the same discussion group. When someone disagreed with him, he did not become defensive. He paused, asked them to explain, and changed part of his answer. That small moment mattered more than anything impressive he could have said. It showed that his calm manner was not just a social performance.
+
+A week later, he sent me the notes he had promised to share. It was a very small thing, but it slowly confirmed my first impression. That is what I think trust really needs: not just a strong beginning, but repeated small evidence.
+
+So now, when I trust someone immediately, I do not ignore that feeling. But I also do not treat it as a final decision. I see it as a useful signal. Immediate trust can tell us that something feels safe, respectful, or natural. But real trust should be tested gently over time. It grows when people do small things consistently, especially when there is no obvious reward for doing them.`,
+      focus: ['trust vocabulary', 'speaker reasoning', 'contrast between people'],
+      words: [
+        { word: 'naive', meaning: 'too ready to believe people without enough evidence' },
+        { word: 'social shortcut', meaning: 'a quick judgement made from small social signals' },
+        { word: 'coherent', meaning: 'consistent and fitting together naturally' },
+        { word: 'defensive', meaning: 'reacting as if criticised or attacked' },
+        { word: 'confirmed', meaning: 'showed that something was probably true' }
+      ],
+      questions: [
+        { question: 'Where did Natalie meet Maya and Adrian?', options: ['At a professional workshop', 'At a job interview', 'On a train'], answer: 'At a professional workshop' },
+        { question: 'Why did Adrian feel trustworthy?', options: ['His behaviour felt coherent and low-pressure', 'He talked about important contacts', 'He agreed with everything Natalie said'], answer: 'His behaviour felt coherent and low-pressure' },
+        { question: 'How does Natalie describe first impressions?', options: ['A first draft of an opinion', 'A final decision', 'A useless emotion'], answer: 'A first draft of an opinion' },
+        { question: 'What confirmed her first impression later?', options: ['Adrian sent the notes he had promised', 'Maya recommended him', 'He offered her a job'], answer: 'Adrian sent the notes he had promised' }
+      ],
+      details: [
+        { sentence: 'Maya was energetic, friendly and very ___.', answer: 'confident' },
+        { sentence: 'Adrian asked one simple follow-up ___.', answer: 'question' },
+        { sentence: 'First impressions are useful, but they are not ___.', answer: 'proof' },
+        { sentence: 'Real trust should be tested gently over ___.', answer: 'time' }
+      ],
+      trueFalse: [
+        { sentence: 'Natalie says immediate trust should be ignored completely.', answer: false },
+        { sentence: 'Adrian became defensive when someone disagreed with him.', answer: false },
+        { sentence: 'Repeated small evidence is important for real trust.', answer: true }
+      ],
+      productionQuestion: 'What signals make a person seem trustworthy at first, and why can those signals be misleading?',
+      sampleAnswer: 'Calm attention, consistent behaviour and a lack of pressure can make someone seem trustworthy. However, first impressions can be misleading because they are based on limited evidence. Trust should grow through small actions over time.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-06-four-day-week',
+      order: 6,
+      stage: 'B2 PA.2',
+      title: 'The four-day week',
+      topic: 'work design and productivity',
+      description: 'Students listen to Natalie summarising a debate about the four-day week as a serious design question rather than a simple reward.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a31672813aad002a61bd773_ElevenLabs_2026-06-16T15_05_03_Riley%20-%20Engaging%20Young%20Female%20Voice_pvc_sp82_s29_sb75_v3.mp3',
+      transcriptText: `Hi, I am Natalie. Last month I attended a public discussion about the four-day week, and I expected the debate to be simple. I thought one side would say, "People should work less," and the other side would say, "Businesses cannot afford it." But the conversation was much more interesting than that.
+
+The first speaker was a manager from a design company that had tried a permanent experiment: four working days, same salary, and no reduction in holiday time. She said the company had become more focused. People checked messages less often, meetings became shorter, and employees stopped treating every task as equally urgent. According to her, the biggest change was not that people had more free time. It was that they became more careful about how they used their working time.
+
+Then a finance director from another company challenged her. He said the idea sounded attractive, but it depended heavily on the type of work. In his company, clients expected quick replies five days a week. If everyone was off on Friday, customer service would suffer. If people took different days off, coordination would become harder. His concern was not laziness. It was the practical question of how to offer the same service with fewer working hours.
+
+That was when the debate became more realistic. Several people in the audience said that a four-day week can become a hidden five-day week if it is badly designed. Employees may finish official work in four days but still answer messages on their day off. Others may work longer hours from Monday to Thursday and become more tired than before. In that case, the policy looks progressive, but the pressure has simply been moved into a smaller space.
+
+A workplace consultant made a useful point. She said the real question is not "Can we remove one day?" but "What kind of work are we protecting?" Many offices lose hours to unnecessary meetings, unclear priorities, and constant interruptions. If a company does not fix those problems, a shorter week may only make people rush. But if a company protects deep work, reduces noise, and trusts employees to plan properly, four days can be enough.
+
+One person in the audience asked whether a shorter week might damage office culture. At first, I thought this sounded like a weak argument. But then he explained that informal conversations matter. People learn things while having coffee, helping a colleague, or noticing a problem that was not written in a report. If everyone is trying to be extremely efficient all the time, some useful human moments may disappear.
+
+By the end, I no longer saw the four-day week as a simple reward for employees or a dangerous luxury for companies. I saw it as a test of how well a workplace understands its own work. A company with clear priorities may benefit from it. A company with poor communication may become even more chaotic.
+
+So my view is this: the four-day week is not magic, and it is not impossible. It is a serious design question. It asks companies to decide what is essential, what is wasteful, and what kind of energy they want their people to bring to work. The real debate is not only about the number of days. It is about whether work can become more thoughtful instead of simply more crowded.`,
+      focus: ['debate structure', 'workplace policy', 'balanced evaluation'],
+      words: [
+        { word: 'permanent experiment', meaning: 'a trial change that becomes part of normal practice' },
+        { word: 'coordination', meaning: 'organising people so work fits together' },
+        { word: 'progressive', meaning: 'supporting modern or reforming ideas' },
+        { word: 'deep work', meaning: 'focused work without frequent interruptions' },
+        { word: 'chaotic', meaning: 'confused and badly organised' }
+      ],
+      questions: [
+        { question: 'What did the design company keep the same?', options: ['Salary and holiday time', 'Five working days', 'All meeting times'], answer: 'Salary and holiday time' },
+        { question: 'What was the finance director main concern?', options: ['Maintaining service with fewer working hours', 'Employees becoming lazy', 'People taking too much holiday'], answer: 'Maintaining service with fewer working hours' },
+        { question: 'How can a four-day week become a hidden five-day week?', options: ['People still answer messages on their day off', 'The office opens on Saturday', 'Managers remove holidays'], answer: 'People still answer messages on their day off' },
+        { question: 'What is Natalie final view?', options: ['It is a serious design question', 'It is impossible for all companies', 'It is only an employee reward'], answer: 'It is a serious design question' }
+      ],
+      details: [
+        { sentence: 'The design company tried four working days with the same ___.', answer: 'salary' },
+        { sentence: 'The consultant said many offices lose hours to unnecessary ___.', answer: 'meetings' },
+        { sentence: 'A shorter week may damage office ___ if informal conversations disappear.', answer: 'culture' },
+        { sentence: 'The real debate is not only about the number of ___.', answer: 'days' }
+      ],
+      trueFalse: [
+        { sentence: 'Natalie expected the debate to be simpler than it was.', answer: true },
+        { sentence: 'The finance director was mainly accusing employees of laziness.', answer: false },
+        { sentence: 'Natalie thinks a company with poor communication may become more chaotic with a four-day week.', answer: true }
+      ],
+      productionQuestion: 'Would a four-day week work well in a company you know? Explain the conditions that would make it succeed or fail.',
+      sampleAnswer: 'It could work if the company removed unnecessary meetings and protected focused work. However, if clients still expected instant replies every day, the policy might only move pressure into evenings. It would need clear priorities and a proper urgent process.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-07-digital-tools-hidden-costs',
+      order: 7,
+      stage: 'B2 PA.3',
+      title: 'The hidden cost of digital tools',
+      topic: 'technology, access and unintended consequences',
+      description: 'Students listen to Marcus explaining how an online booking system solved some problems while creating or revealing others.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a316b6c5187b581daa8dee0_ElevenLabs_2026-06-16T15_23_13_Ed%20-%20Sarcastic%20Funny%20Narrator_pvc_sp100_s38_sb75_v3.mp3',
+      transcriptText: `Hi, I am Marcus. A few years ago, I helped a local community centre introduce an online booking system. Before that, people had to call during office hours to book language classes, career advice sessions, and small workshops. The phone was often busy, messages were sometimes lost, and staff spent a huge amount of time writing names into notebooks.
+
+So when the new system arrived, everyone felt relieved. People could book a place in a class at midnight if they wanted to. They received automatic reminders, they could cancel without calling, and the staff could see attendance numbers clearly. For the first few weeks, it looked like a perfect example of technology solving an old-fashioned problem.
+
+But then we noticed something unexpected. The system had made booking easier, but it had also changed people's behaviour. Some people booked several sessions "just in case" and cancelled at the last minute. Others stopped speaking to the staff entirely, even when they were unsure which class suited them. A few older visitors found the website stressful and came to the centre with printed screenshots, asking someone to help them understand what had gone wrong.
+
+The technology had not created these problems from nothing. It had revealed problems that were already there: limited staff time, unclear course descriptions, and the fact that not everyone feels confident online. But because the system looked clean and efficient, it was easy to forget that real people were still confused behind the screen.
+
+One of the staff members said something that stayed with me: "We have made the queue invisible, but we have not made it disappear." She was right. Before, the queue was on the phone. Now it was hidden in unanswered emails, abandoned bookings, and people who gave up before asking for help.
+
+This happens with technology more often than we admit. A navigation app can help drivers avoid traffic, but if everyone follows the same shortcut, a quiet street can suddenly become crowded. A messaging platform can make teamwork faster, but it can also create the expectation that everyone is always available. A self-checkout machine can reduce waiting time, but it may also make shopping harder for someone who needs human assistance.
+
+I am not against technology. In fact, the booking system became much better after we changed how we used it. We added clearer descriptions, kept a small number of places available for people who came in person, and trained staff to contact learners who repeatedly booked the wrong level. The problem was not the system itself. The problem was treating the system as if it could replace judgment, patience, and conversation.
+
+That experience changed the way I think about digital tools. Good technology does not simply remove inconvenience. It moves inconvenience around. Sometimes it moves it away from staff and toward users. Sometimes it saves time for confident people but creates barriers for people who need support.
+
+So when someone says, "This app will solve the problem," I usually ask, "Which problem, and for whom?" A solution that works beautifully for one group may create a new difficulty for another. The real challenge is not just building smarter tools. It is noticing what those tools make easier, what they make harder, and who gets left to deal with the hidden cost.`,
+      focus: ['technology critique', 'examples and implications', 'speaker stance'],
+      words: [
+        { word: 'attendance numbers', meaning: 'figures showing how many people come' },
+        { word: 'abandoned bookings', meaning: 'reservations that people start or make but do not use' },
+        { word: 'human assistance', meaning: 'help from a person rather than a machine' },
+        { word: 'barriers', meaning: 'things that make access harder' },
+        { word: 'hidden cost', meaning: 'a negative effect that is not obvious at first' }
+      ],
+      questions: [
+        { question: 'What problem did the system first seem to solve?', options: ['Booking by phone during office hours', 'Finding new teachers', 'Paying rent for the centre'], answer: 'Booking by phone during office hours' },
+        { question: 'What unexpected behaviour appeared?', options: ['People booked several sessions just in case', 'People refused automatic reminders', 'Staff stopped using computers'], answer: 'People booked several sessions just in case' },
+        { question: 'What did the staff member mean by making the queue invisible?', options: ['The problem moved into less visible forms', 'The website removed every delay', 'People no longer wanted classes'], answer: 'The problem moved into less visible forms' },
+        { question: 'What question does Marcus ask about apps?', options: ['Which problem, and for whom?', 'How expensive is the code?', 'Can it replace all staff?'], answer: 'Which problem, and for whom?' }
+      ],
+      details: [
+        { sentence: 'Before the system, staff wrote names into ___.', answer: 'notebooks' },
+        { sentence: 'Some older visitors came with printed ___.', answer: 'screenshots' },
+        { sentence: 'The centre kept some places for people who came in ___.', answer: 'person' },
+        { sentence: 'Good technology moves inconvenience ___.', answer: 'around' }
+      ],
+      trueFalse: [
+        { sentence: 'Marcus is completely against technology.', answer: false },
+        { sentence: 'The booking system revealed problems that already existed.', answer: true },
+        { sentence: 'A solution can help one group and create difficulty for another.', answer: true }
+      ],
+      productionQuestion: 'Think of a digital tool that solved one problem but created another. Who benefited, and who faced the hidden cost?',
+      sampleAnswer: 'Self-service checkouts can reduce queues for confident shoppers, but they can make shopping harder for older people or anyone with an unusual problem. The tool saves staff time, but it can move stress onto customers who need human help.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-08-presentation-attention',
+      order: 8,
+      stage: 'B2 PA.3',
+      title: 'Managing attention',
+      topic: 'presentations and audience guidance',
+      description: 'Students listen to Sofia explaining why a good presentation is less about showing knowledge and more about guiding attention.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a3175411677cc3e930a79dd_ElevenLabs_2026-06-16T16_07_26_Abigail%20-%20Educational%20and%20Friendly_pvc_sp93_s30_sb46_v3.mp3',
+      transcriptText: `Hi, I am Sofia. I used to think that a good presentation depended mainly on confidence, attractive slides, and a strong voice. If someone looked relaxed and spoke without hesitation, I assumed they were a natural presenter. Then I had to give a short presentation at a professional training event, and I discovered that the most important skill was something much quieter.
+
+The presentation was only ten minutes long, but I prepared for it as if I were giving a lecture at a conference. I designed beautiful slides, added examples, included statistics, and practised every sentence until I could almost say it from memory. I wanted to sound intelligent and well prepared. On the day itself, I was nervous, but I also felt proud of the work I had done.
+
+The problem appeared after the first three minutes. People were looking at my slides, but not really following my argument. I could see polite faces, but very little connection. One person was reading ahead. Another was checking the printed handout. A few people looked as if they were trying to decide which detail mattered most. I kept speaking because I had practised my timing, but I realised I was delivering information instead of guiding attention.
+
+Afterwards, a trainer gave me feedback that changed the way I understood presentations. She said, "You know your topic, but you are making the audience do too much work." At first, I felt disappointed. I had worked hard, and the slides looked professional. But then she explained that a presenter's job is not to prove how much they know. It is to help the audience understand what to notice, what to remember, and why it matters.
+
+That was the hidden skill: managing attention. Good presenters are not simply confident speakers. They are careful editors. They choose what to leave out. They slow down before an important idea. They repeat a key point without sounding repetitive. They notice when the room becomes confused and adjust before people are completely lost.
+
+A few weeks later, I watched another speaker give a presentation on a much more complicated topic. His slides were simple, almost plain. He did not use dramatic gestures or impressive language. But every few minutes, he paused and said something like, "Here is the part that matters," or "You do not need to remember every number, but remember this comparison." The audience relaxed because he was making the path clear.
+
+Since then, I have changed how I prepare. I still care about facts, structure, and design, but I now ask different questions. What might confuse people? Which example will make the idea feel real? Where do they need a pause? What can I remove so the main message becomes stronger?
+
+I have also learned that too much information can feel generous to the speaker but exhausting to the listener. When we include everything, we often protect ourselves from criticism. We think, "If someone asks, I can show that I covered it." But a presentation is not a storage space for everything we know. It is a guided experience.
+
+So now, when I see a great presenter, I do not only notice their confidence. I notice how carefully they protect the audience's attention. They make difficult ideas feel possible to follow. They do not simply speak well. They help people think well. And that, in my opinion, is the real skill behind good presentations.`,
+      focus: ['presentation skills', 'attention management', 'speaker evaluation'],
+      words: [
+        { word: 'hesitation', meaning: 'pausing because you are uncertain' },
+        { word: 'handout', meaning: 'printed information given to an audience' },
+        { word: 'repetitive', meaning: 'repeated in a boring or unnecessary way' },
+        { word: 'exhausting', meaning: 'very tiring' },
+        { word: 'guided experience', meaning: 'an activity where someone helps people follow a clear path' }
+      ],
+      questions: [
+        { question: 'What did Sofia originally associate with good presentations?', options: ['Confidence, attractive slides and a strong voice', 'Long handouts and complex statistics', 'Only natural talent'], answer: 'Confidence, attractive slides and a strong voice' },
+        { question: 'What problem appeared after three minutes?', options: ['The audience was not really following her argument', 'The slides stopped working', 'The trainer interrupted her'], answer: 'The audience was not really following her argument' },
+        { question: 'What feedback changed Sofia understanding?', options: ['She was making the audience do too much work', 'Her voice was too quiet', 'Her topic was too simple'], answer: 'She was making the audience do too much work' },
+        { question: 'What is a presentation according to Sofia?', options: ['A guided experience', 'A storage space for everything you know', 'A test of memory only'], answer: 'A guided experience' }
+      ],
+      details: [
+        { sentence: 'The presentation was only ___ minutes long.', answer: 'ten' },
+        { sentence: 'Good presenters choose what to leave ___.', answer: 'out' },
+        { sentence: 'The other speaker paused and made the path ___.', answer: 'clear' },
+        { sentence: 'Too much information can feel generous to the speaker but exhausting to the ___.', answer: 'listener' }
+      ],
+      trueFalse: [
+        { sentence: 'Sofia says good presenters are careful editors.', answer: true },
+        { sentence: 'She now believes slides are the only important part of a presentation.', answer: false },
+        { sentence: 'She thinks great presenters help people think well.', answer: true }
+      ],
+      productionQuestion: 'How can a presenter protect the audience\'s attention during a complex topic?',
+      sampleAnswer: 'A presenter can reduce detail, repeat the central message and pause before difficult ideas. It also helps to tell the audience what matters most, because listeners should not have to decide alone which information is important.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-09-lasting-habits',
+      order: 9,
+      stage: 'B2 PA.3',
+      title: 'Why habits survive',
+      topic: 'motivation, routines and identity',
+      description: 'Students listen to Daniel explaining why small habits connected to real situations often last longer than ambitious plans.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a317b785474df437e1e78ea_ElevenLabs_2026-06-16T16_34_35_David%20-%20Deep%2C%20Warm%2C%20Narration_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Daniel. For a long time, I thought habits survived because people were disciplined. If someone went running every morning, I assumed they had more willpower than the rest of us. If someone stopped after two weeks, I assumed they simply did not want it badly enough. But my own experience taught me that this explanation is too simple.
+
+A few years ago, I decided to learn Spanish. I bought a grammar book, downloaded an app, and promised myself I would study for forty-five minutes every evening. For the first week, I felt motivated. I imagined myself having conversations while travelling, watching films without subtitles, and reading articles in another language. The goal felt exciting.
+
+Then normal life returned. Some evenings I came home tired. Sometimes a friend called. Sometimes I opened the app, saw a long lesson waiting for me, and suddenly remembered something urgent in the kitchen. After a month, I had not quit completely, but the habit was no longer alive. It had become something I felt guilty about.
+
+Around the same time, I started another habit almost by accident. Every morning, while waiting for my coffee, I listened to a three-minute Spanish dialogue. I did not call it studying. I did not track it carefully. It was just attached to something I already did every day. Surprisingly, that tiny habit lasted much longer than the ambitious evening plan.
+
+That made me think differently about why habits survive. A habit does not only need motivation. It needs a place in your life. My evening study plan had no stable home. It depended on free time, energy, and the hope that nothing else would interrupt me. The morning dialogue, however, had a clear trigger: coffee. I did not need to decide when to do it. The moment already existed.
+
+Another reason some habits disappear is that they are built around an imagined version of ourselves. We design routines for the person we want to be, not the person who actually comes home tired, distracted, and hungry. We say, "I will read for an hour before bed," while ignoring the fact that we usually fall asleep after ten minutes. Then, when the routine fails, we blame our character instead of questioning the design.
+
+The habits that survive are often smaller, less dramatic, and less impressive to talk about. They do not require us to become a completely different person overnight. They fit into the rhythm of ordinary life. They also create some kind of immediate reward, even if it is small: a feeling of progress, a cleaner desk, a calmer morning, or a sense that the day has started well.
+
+There is another important point. A habit is easier to keep when it protects your identity rather than threatens it. When I told myself, "I must become fluent quickly," every missed day felt like failure. But when I thought, "I am someone who stays connected to Spanish a little every day," the habit felt lighter. It became evidence, not pressure.
+
+I still believe discipline matters, but I no longer see it as the whole story. Many habits disappear not because people are weak, but because the habit is too large, too isolated, or too dependent on a perfect mood. Many habits survive because they are easy to start, connected to a real situation, and forgiving enough to continue after an imperfect day.
+
+So now, when I want to build a habit, I do not ask, "How motivated am I?" I ask, "Where will this live in my day? What will remind me? How small can I make it without making it meaningless?" A lasting habit is not always the one that looks impressive at the beginning. It is often the one that quietly fits into real life.`,
+      focus: ['habit formation', 'contrast of plans', 'identity language'],
+      words: [
+        { word: 'willpower', meaning: 'the ability to force yourself to do something difficult' },
+        { word: 'trigger', meaning: 'something that reminds you to do an action' },
+        { word: 'imagined version', meaning: 'an ideal self that may not match real life' },
+        { word: 'forgiving', meaning: 'easy to continue after a mistake or imperfect day' },
+        { word: 'meaningless', meaning: 'without real value or purpose' }
+      ],
+      questions: [
+        { question: 'What was Daniel ambitious plan?', options: ['Study Spanish for forty-five minutes every evening', 'Run every morning', 'Write a book in Spanish'], answer: 'Study Spanish for forty-five minutes every evening' },
+        { question: 'Which habit lasted longer?', options: ['Listening to a three-minute dialogue while waiting for coffee', 'The evening grammar study plan', 'Watching films every night'], answer: 'Listening to a three-minute dialogue while waiting for coffee' },
+        { question: 'What did the morning habit have?', options: ['A clear trigger', 'A strict schedule', 'A teacher checking it'], answer: 'A clear trigger' },
+        { question: 'What question does Daniel now ask about habits?', options: ['Where will this live in my day?', 'How can I make this impressive?', 'How can I punish missed days?'], answer: 'Where will this live in my day?' }
+      ],
+      details: [
+        { sentence: 'Daniel bought a grammar book and downloaded an ___.', answer: 'app' },
+        { sentence: 'The tiny habit was attached to waiting for his ___.', answer: 'coffee' },
+        { sentence: 'The evening plan depended on free time, energy and a perfect ___.', answer: 'mood' },
+        { sentence: 'A lasting habit often quietly fits into real ___.', answer: 'life' }
+      ],
+      trueFalse: [
+        { sentence: 'Daniel says discipline does not matter at all.', answer: false },
+        { sentence: 'He argues that many habits fail because they are badly designed for real life.', answer: true },
+        { sentence: 'He thinks missed days should always feel like failure.', answer: false }
+      ],
+      productionQuestion: 'Design a small habit for language learning that has a clear place in daily life.',
+      sampleAnswer: 'I would attach five minutes of vocabulary review to making tea in the morning. The habit is small enough to start even when I am tired, and the tea gives it a clear trigger. It would be evidence of consistency, not pressure to be perfect.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-10-choice-and-hesitation',
+      order: 10,
+      stage: 'B2 PA.4',
+      title: 'The default choice',
+      topic: 'business decisions and customer hesitation',
+      description: 'Students listen to Aisha explaining how one simple recommendation helped customers make better buying decisions.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a317e2583020f152591f73f_ElevenLabs_2026-06-16T16_44_21_Jessica%20-%20Playful%2C%20Bright%2C%20Warm_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Aisha. A few years ago, I worked with a small company that sold reusable notebooks. The product was clever: you could write in the notebook, scan your notes, wipe the pages clean, and use it again. The team believed they had a strong idea, but sales were disappointing.
+
+At first, everyone looked for a big solution. The founder wanted a new advertising campaign. The designer wanted to redesign the website. The sales manager suggested a temporary discount. Each idea made sense, but none of them answered a more basic question: why were visitors interested enough to click, but not confident enough to buy?
+
+We started reading customer emails and watching how people used the website. One pattern appeared again and again. Customers did not dislike the product. They were confused by the choices. There were five notebook sizes, three page styles, several colours, and different packages for students, professionals, and creative users. The website treated every option as equally important. To the team, that looked generous. To the customer, it felt like homework.
+
+The small decision was this: instead of showing all products equally, the company chose one default recommendation. At the top of the page, they added a simple sentence: "If you are buying your first reusable notebook, start with the Everyday A5." Under it, they added a short comparison table explaining who each version was for.
+
+Some people inside the company worried about this. They thought recommending one product might reduce freedom or make the brand look less flexible. But the opposite happened. Customers still had choices, but now they had a starting point. They no longer had to understand the whole product range before making a simple decision.
+
+Within a few weeks, customer service messages changed. There were fewer emails asking, "Which notebook should I choose?" There were more emails asking specific questions about delivery, page care, or accessories. Sales improved, but what mattered more was that returns went down. People were buying the version that actually suited them.
+
+That small decision also changed how the team worked internally. Before, every meeting became a debate about adding more: more colours, more bundles, more features, more explanations. After the default recommendation worked, the team started asking a better question: "Does this make the customer's decision easier or harder?" That question became a filter.
+
+I learned that business decisions are not always about doing something dramatic. Sometimes the most important decision is choosing what to simplify. Companies often believe that more choice shows respect for the customer. Sometimes it does. But too much choice can quietly transfer the work from the company to the buyer. The customer has to compare, interpret, and guess.
+
+The notebook company did not succeed because it forced everyone to buy the same product. It succeeded because it guided people without removing their freedom. That is a difficult balance. Good guidance does not mean saying, "We know better than you." It means saying, "Here is a clear place to begin."
+
+Since then, I have noticed the same pattern in many businesses. A restaurant with a shorter menu can feel more confident than one with fifty dishes. A software company with three clear plans can feel more trustworthy than one with endless custom options. A small decision can change a business when it changes the way customers think.
+
+So when people ask what decision changed that company, I do not mention a huge investment or a clever marketing trick. I mention one sentence on a website. It worked because it reduced hesitation. And in business, reducing hesitation can sometimes be more powerful than increasing attention.`,
+      focus: ['business listening', 'choice architecture', 'cause and effect'],
+      words: [
+        { word: 'reusable', meaning: 'able to be used again' },
+        { word: 'default recommendation', meaning: 'the first suggested option for most people' },
+        { word: 'comparison table', meaning: 'a table showing differences between options' },
+        { word: 'suited', meaning: 'right or appropriate for someone' },
+        { word: 'hesitation', meaning: 'delay because of uncertainty' }
+      ],
+      questions: [
+        { question: 'What confused customers?', options: ['Too many choices presented equally', 'A lack of colours', 'The price of delivery only'], answer: 'Too many choices presented equally' },
+        { question: 'What default product did the company recommend?', options: ['The Everyday A5', 'The Creative A3', 'The Professional Bundle'], answer: 'The Everyday A5' },
+        { question: 'What happened after the change?', options: ['Returns went down', 'Customers lost all choice', 'Sales immediately stopped'], answer: 'Returns went down' },
+        { question: 'What was the power of the sentence on the website?', options: ['It reduced hesitation', 'It increased legal protection', 'It replaced customer service'], answer: 'It reduced hesitation' }
+      ],
+      details: [
+        { sentence: 'The company sold reusable ___.', answer: 'notebooks' },
+        { sentence: 'The website offered five notebook sizes and three page ___.', answer: 'styles' },
+        { sentence: 'The team began asking whether each change made the customer\'s decision easier or ___.', answer: 'harder' },
+        { sentence: 'Good guidance gives customers a clear place to ___.', answer: 'begin' }
+      ],
+      trueFalse: [
+        { sentence: 'The company removed all other choices from the website.', answer: false },
+        { sentence: 'The default recommendation helped customers without removing freedom.', answer: true },
+        { sentence: 'Aisha says business decisions always need a huge investment.', answer: false }
+      ],
+      productionQuestion: 'Where could a business or course reduce hesitation by giving clearer guidance?',
+      sampleAnswer: 'An online course could recommend a starting level after a short diagnostic task. Students would still be free to choose another level, but the recommendation would reduce confusion and help them begin faster.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-11-safe-city',
+      order: 11,
+      stage: 'B2 PA.4',
+      title: 'What makes a city feel safe?',
+      topic: 'urban safety and shared spaces',
+      description: 'Students listen to Elena and Omar discussing safety as a combination of design, maintenance, visibility and fairness.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32bd330bb24ca05b480835_ElevenLabs_2026-06-17T15_23_10_Charles%20-%20Social%20Media%2C%20TV%20%26%20Commercial%20_pvc_sp108_s30_sb70_v3.mp3',
+      transcriptText: `Elena: Last week I walked through the new square near the station, and I was surprised by how safe it felt. It was not because there were police officers everywhere. In fact, I did not see any. It felt safe because the space was open, well lit, and full of ordinary people doing ordinary things.
+
+Omar: That is interesting, because when people talk about safety, they often think first about security cameras, rules, or punishment. Those things may matter, but they are not the whole story. A city can have cameras and still feel uncomfortable if the streets are empty, badly designed, or confusing.
+
+Elena: Exactly. The square had cafes on one side, a small playground, benches facing different directions, and a clear path to the bus stops. There were parents, students, older people, cyclists, and people just passing through. Nobody seemed to be watching the space officially, but everyone was somehow present.
+
+Omar: Urban designers sometimes call that "natural surveillance". It means people feel safer when there are enough eyes on the street, not in a threatening way, but in a normal social way. If a place is active and visible, you are less likely to feel isolated.
+
+Elena: But activity alone is not enough. I know busy streets that still feel unsafe because the pavement is narrow, cars move too fast, and pedestrians are pushed into uncomfortable corners. For me, safety also means feeling that the city has considered your body: where you can cross, where you can wait, and whether you can see what is ahead.
+
+Omar: That is a good point. Safety is not only about crime. It is also about control. If you understand where you are, where you can go, and how to leave if you need to, you feel calmer. Poor lighting, hidden entrances, broken signs, and blocked pavements all remove that sense of control.
+
+Elena: Maintenance matters too. A broken streetlight or a damaged bench may seem like a small detail, but it sends a message. It tells people that nobody is paying attention. When a place looks cared for, people often behave differently in it.
+
+Omar: I agree, although we should be careful. Sometimes cities try to make places feel safe by removing anyone who looks poor, young, noisy, or different. That can create a clean-looking space, but not necessarily a fair one. A safe city should not mean a city where only certain people are welcome.
+
+Elena: Yes, that is the difficult balance. A place can feel calm without becoming exclusive. Good design can invite many different people to share the same space. Benches, public toilets, shade, lighting, transport, and clear paths all sound ordinary, but they decide who can comfortably stay.
+
+Omar: And time of day changes everything. A street that feels friendly at lunchtime can feel completely different at night if all the shops close, the lighting is weak, and there is no public transport nearby. Safety has to work after the office workers leave.
+
+Elena: So maybe a safe city is not just a city with fewer risks. It is a city where people do not have to constantly calculate risk. They can walk, wait, sit, or ask for help without feeling exposed.
+
+Omar: I like that. The safest places are often not the most controlled places. They are places where design, maintenance, visibility, and social life work together. People feel that the city is understandable, cared for, and shared.
+
+Elena: And maybe that is why the new square worked. It did not announce, "This place is safe." It simply made normal life visible. That can be more powerful than any sign or camera.`,
+      focus: ['dialogue listening', 'urban design', 'nuanced agreement'],
+      words: [
+        { word: 'natural surveillance', meaning: 'safety created by ordinary people being present and visible' },
+        { word: 'pedestrians', meaning: 'people walking, especially near roads' },
+        { word: 'maintenance', meaning: 'keeping a place clean, repaired and cared for' },
+        { word: 'exclusive', meaning: 'designed for only some people, not everyone' },
+        { word: 'exposed', meaning: 'unprotected or too visible in an uncomfortable way' }
+      ],
+      questions: [
+        { question: 'Why did the square feel safe to Elena?', options: ['It was open, well lit and full of ordinary people', 'Police officers were everywhere', 'Nobody was allowed to sit there'], answer: 'It was open, well lit and full of ordinary people' },
+        { question: 'What does Omar mean by natural surveillance?', options: ['Enough ordinary eyes on the street', 'More cameras above every bench', 'Private security checking every visitor'], answer: 'Enough ordinary eyes on the street' },
+        { question: 'What warning does Omar give about safety?', options: ['It should not mean only certain people are welcome', 'It should remove all benches', 'It should depend only on rules'], answer: 'It should not mean only certain people are welcome' },
+        { question: 'What final idea do they agree on?', options: ['Safety comes from design, maintenance, visibility and social life working together', 'The safest places are always the most controlled', 'Cities cannot feel safe at night'], answer: 'Safety comes from design, maintenance, visibility and social life working together' }
+      ],
+      details: [
+        { sentence: 'The square had cafes, a playground, benches and a clear path to the ___ stops.', answer: 'bus' },
+        { sentence: 'Poor lighting, hidden entrances and blocked pavements remove a sense of ___.', answer: 'control' },
+        { sentence: 'A broken streetlight sends a message that nobody is paying ___.', answer: 'attention' },
+        { sentence: 'Safety has to work after the office workers ___.', answer: 'leave' }
+      ],
+      trueFalse: [
+        { sentence: 'Elena saw many police officers in the square.', answer: false },
+        { sentence: 'Omar says cameras may matter but are not the whole story.', answer: true },
+        { sentence: 'They argue that a calm space can still be fair and shared.', answer: true }
+      ],
+      productionQuestion: 'What makes a public place feel safe without making it feel controlled or exclusive?',
+      sampleAnswer: 'A safe public place needs good lighting, clear paths and people using it naturally. It should also include benches, shade and transport so different people can stay comfortably. Safety should come from care and visibility, not exclusion.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-12-intentional-yes',
+      order: 12,
+      stage: 'B2 PA.4',
+      title: 'Saying yes intentionally',
+      topic: 'work boundaries and teamwork',
+      description: 'Students listen to Maya and Leo debating whether workplace boundaries protect people or weaken teamwork.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32c3e2cf446cb0ca1f9fd4_ElevenLabs_2026-06-17T15_45_45_Joseff%20Novak%20-%20Calm%20and%20Professional_pvc_sp98_s60_sb75_v3.mp3',
+      transcriptText: `Maya: I know people keep talking about boundaries at work, but sometimes I think we have taken the idea too far. If everyone says no whenever something is inconvenient, teams stop functioning. Work is not only about protecting your own schedule. Sometimes you say yes because someone needs help.
+
+Leo: I agree that teamwork matters, but that is not the same as saying yes to everything. The problem is that some people become the "reliable person" everyone depends on. At first, it feels flattering. Then it becomes invisible labour. They stay late, fix small problems, cover gaps, and somehow everyone else assumes they are fine.
+
+Maya: But is that not also how people build trust? If you always protect your time too carefully, people may stop asking you to join important projects. I have seen people grow in their careers because they were willing to take on extra tasks.
+
+Leo: Extra tasks can help if they are chosen carefully. But there is a difference between opportunity and automatic agreement. If you say yes before thinking, you may accept work that does not teach you anything, does not match your role, and does not get recognised. That is not growth. That is overload with a positive name.
+
+Maya: I understand that, but saying no can sound selfish, especially in a small team. Imagine a deadline is close and someone says, "Sorry, that is not my responsibility." It creates tension.
+
+Leo: It depends how they say it. A boundary does not have to be cold. You can say, "I cannot take this today, but I can help you find another option," or "If this is urgent, which of my current tasks should move?" That is not selfish. It is honest planning.
+
+Maya: Still, I think some people use boundaries as a way to avoid discomfort. They do not want to stretch themselves, so they call every difficult request unhealthy.
+
+Leo: That can happen. But the opposite happens too. Some workplaces use "being helpful" to hide poor planning. If a team constantly needs emergency help, maybe the real problem is not individual attitude. Maybe the workload is unrealistic, or responsibilities are unclear.
+
+Maya: So where is the line? Because work will always include unexpected problems. You cannot plan everything perfectly.
+
+Leo: The line is repetition. If you help once during a real emergency, that is teamwork. If the same emergency appears every week, it is no longer an emergency. It is a system depending on people not setting limits.
+
+Maya: That is a fair point. I once said yes to preparing meeting notes because it seemed small. Then I became the person who always prepared them. Nobody asked if I had time. They just expected it. I did not feel generous anymore. I felt trapped by my own helpfulness.
+
+Leo: Exactly. Saying yes has a cost, even when the task is small. It uses attention, time, and energy. It may also teach people what they can expect from you. One yes can become a pattern.
+
+Maya: But I still think the answer cannot simply be "say no more often." That sounds too negative.
+
+Leo: I agree. The goal is not to say no to everything. The goal is to say yes more intentionally. A useful yes has space around it. You understand what you are accepting, what you may need to delay, and whether the request fits your priorities.
+
+Maya: So maybe the real skill is not refusing people. It is pausing before agreeing.
+
+Leo: Yes. A pause can protect both sides. It gives you time to think, and it gives the other person a more realistic answer. Saying yes too quickly can feel kind in the moment, but later it can create resentment, rushed work, and broken trust.
+
+Maya: I can accept that. Saying yes should not mean disappearing from your own priorities. And saying no should not mean abandoning the team.
+
+Leo: Exactly. Healthy boundaries are not walls. They are agreements about what people can actually do well.`,
+      focus: ['debate listening', 'boundaries vocabulary', 'agreement and concession'],
+      words: [
+        { word: 'invisible labour', meaning: 'extra work that is not noticed or rewarded' },
+        { word: 'automatic agreement', meaning: 'saying yes without thinking carefully' },
+        { word: 'overload', meaning: 'too much work or pressure' },
+        { word: 'resentment', meaning: 'anger that grows because something feels unfair' },
+        { word: 'abandoning', meaning: 'leaving someone without support' }
+      ],
+      questions: [
+        { question: 'What does Maya worry about at the beginning?', options: ['Boundaries may go too far and weaken teamwork', 'People work too many hours by choice', 'Managers never ask for help'], answer: 'Boundaries may go too far and weaken teamwork' },
+        { question: 'What does Leo call repeated unnoticed helpful work?', options: ['Invisible labour', 'Career growth', 'Deep work'], answer: 'Invisible labour' },
+        { question: 'Where does Leo say the line is?', options: ['Repetition', 'Salary level', 'Company size'], answer: 'Repetition' },
+        { question: 'What final skill do they identify?', options: ['Pausing before agreeing', 'Refusing every request', 'Accepting all extra tasks'], answer: 'Pausing before agreeing' }
+      ],
+      details: [
+        { sentence: 'Leo says a boundary does not have to be ___.', answer: 'cold' },
+        { sentence: 'Maya once became the person who always prepared meeting ___.', answer: 'notes' },
+        { sentence: 'One yes can become a ___.', answer: 'pattern' },
+        { sentence: 'Healthy boundaries are agreements about what people can actually do ___.', answer: 'well' }
+      ],
+      trueFalse: [
+        { sentence: 'Leo believes teamwork does not matter.', answer: false },
+        { sentence: 'Maya accepts that saying yes should not mean losing her own priorities.', answer: true },
+        { sentence: 'They agree the goal is to say no to everything.', answer: false }
+      ],
+      productionQuestion: 'How can someone say yes or no in a way that protects both teamwork and realistic planning?',
+      sampleAnswer: 'They can pause before answering and ask what should be delayed if the new task is urgent. This keeps the tone cooperative but also shows that time and attention are limited. It turns a quick yes into a clear agreement.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-13-ignored-ideas',
+      order: 13,
+      stage: 'B2 PA.5',
+      title: 'Why good ideas get ignored',
+      topic: 'workplace ideas, timing and ownership',
+      description: 'Students listen to Victor explaining why a useful onboarding checklist failed once and succeeded later.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32c7fc6fe1be7937adab0d_ElevenLabs_2026-06-17T16_13_21_Drew%20-%20Casual%2C%20Curious%20%26%20Fun_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Victor. I used to believe that good ideas were ignored mainly because workplaces were too conservative. If a suggestion was useful and people still did not support it, I assumed the problem was fear of change. But after watching one of my own ideas fail, and then succeed almost a year later, I realised the truth was more complicated.
+
+I was working for a company that offered online training for small businesses. Our support team kept receiving the same questions from customers: how to invite employees, how to reset access, how to choose the right course package. I suggested creating a short onboarding checklist that would appear immediately after a customer bought a plan. It seemed obvious to me. If customers were confused at the beginning, we should guide them at the beginning.
+
+I presented the idea in a team meeting with genuine enthusiasm. I explained the problem, showed examples of repeated support tickets, and described what the checklist might include. People listened politely. A few nodded. Then the conversation moved on to another topic. Nobody said the idea was bad. Nobody argued against it. It simply disappeared.
+
+At first, I felt frustrated. I thought, "How can they not see this?" But later, I understood that a good idea does not only need logic. It needs timing, ownership, and a reason to compete with everything else already demanding attention. At that moment, the company was focused on increasing sales. My idea sounded like a support improvement, not a business priority.
+
+Another problem was that I presented the idea as if the evidence spoke for itself. I showed repeated questions, but I did not connect them clearly to lost revenue, customer confidence, or team workload. For the support team, the problem was obvious. For everyone else, it was just another useful suggestion in a room full of useful suggestions.
+
+Almost a year later, the same issue returned in a different form. The company noticed that many new customers bought a plan but did not invite their teams within the first week. Some cancelled before using the product properly. Suddenly, onboarding was not just a support topic. It was a retention problem. This time, when I suggested a first-week checklist, people paid attention.
+
+The idea had not changed very much. The room had changed. The company now had a question that my idea could answer. We built a simple checklist with three steps, added it to the customer dashboard, and sent a reminder email when a customer had not completed it. Within a few months, more customers were setting up their teams successfully.
+
+That experience taught me that ideas often fail because they arrive without context. People do not judge ideas in a quiet empty space. They judge them while thinking about deadlines, targets, budgets, risks, and their own responsibilities. A good idea can be ignored if it does not speak the language of the room.
+
+I also learned that people sometimes resist ideas because accepting them creates work. Even a helpful suggestion asks someone to change a process, make a decision, or admit that the current system is not working. If the benefit feels distant but the effort feels immediate, the idea may be pushed aside.
+
+Now, when I want to share an idea, I ask myself three questions. Who owns this problem? Why does it matter now? What decision am I asking people to make? If I cannot answer those questions, I probably have not prepared the idea properly.
+
+So I no longer think ignored ideas are always bad ideas. Sometimes they are early ideas, poorly framed ideas, or ideas without a clear owner. Creativity is not only about having something clever to say. In the workplace, creativity also means helping other people see why the idea matters, why it matters now, and what should happen next.`,
+      focus: ['workplace argument', 'framing ideas', 'business priorities'],
+      words: [
+        { word: 'onboarding checklist', meaning: 'a short guide helping new users start correctly' },
+        { word: 'support tickets', meaning: 'customer requests or problem reports' },
+        { word: 'retention', meaning: 'keeping customers instead of losing them' },
+        { word: 'framed', meaning: 'presented in a particular way' },
+        { word: 'owner', meaning: 'the person or team responsible for a problem' }
+      ],
+      questions: [
+        { question: 'What idea did Victor suggest?', options: ['An onboarding checklist after purchase', 'A new sales team', 'A longer training video for staff'], answer: 'An onboarding checklist after purchase' },
+        { question: 'Why was the idea ignored the first time?', options: ['It did not connect clearly to current business priorities', 'People proved it was technically impossible', 'Customers disliked checklists'], answer: 'It did not connect clearly to current business priorities' },
+        { question: 'What made the idea relevant later?', options: ['It became a retention problem', 'A competitor copied it', 'The support team left'], answer: 'It became a retention problem' },
+        { question: 'What does Victor now ask before sharing an idea?', options: ['Who owns this problem, why now, and what decision is needed?', 'Who will praise me for it?', 'How can I make the idea sound clever?'], answer: 'Who owns this problem, why now, and what decision is needed?' }
+      ],
+      details: [
+        { sentence: 'The company offered online training for small ___.', answer: 'businesses' },
+        { sentence: 'The original idea disappeared after people listened ___.', answer: 'politely' },
+        { sentence: 'The later checklist had ___ steps.', answer: 'three' },
+        { sentence: 'Ideas can fail if they do not speak the language of the ___.', answer: 'room' }
+      ],
+      trueFalse: [
+        { sentence: 'Victor now thinks every ignored idea is a bad idea.', answer: false },
+        { sentence: 'The idea changed dramatically before it succeeded.', answer: false },
+        { sentence: 'Accepting a good idea can create work for other people.', answer: true }
+      ],
+      productionQuestion: 'Think of an idea that might be ignored unless it is framed well. How would you connect it to timing, ownership and priorities?',
+      sampleAnswer: 'If I suggested a speaking checklist for students, I would not present it only as extra practice. I would connect it to retention, confidence and teacher workload. I would also explain who would own it and what decision I need from the team.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-14-busy-effective',
+      order: 14,
+      stage: 'B2 PA.5',
+      title: 'Busy or effective?',
+      topic: 'productivity and meaningful progress',
+      description: 'Students listen to Clara reflecting on the difference between visible busyness and work that actually changes outcomes.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32cc3c7e07b7f2fa746736_ElevenLabs_2026-06-17T16_30_35_Riley%20-%20Engaging%20Young%20Female%20Voice_pvc_sp82_s29_sb75_v3.mp3',
+      transcriptText: `Hi, I am Clara. For several years, I confused being busy with being effective. If my calendar was full, my inbox was moving, and I had a long list of tasks crossed out by the end of the day, I felt productive. I liked the feeling of movement. It gave me evidence that I was working hard.
+
+The problem was that many of my busiest days did not actually move anything important forward. I answered messages, joined meetings, updated documents, checked small details, and helped other people solve urgent problems. All of that looked useful. Some of it was useful. But at the end of the week, the projects that mattered most were often still waiting for "when things calm down."
+
+I started noticing the difference after a manager asked me a simple question during a review: "Which part of your work would create the biggest result if you protected time for it?" I wanted to answer quickly, but I could not. I knew what kept me busy. I was less clear about what made me effective.
+
+That question stayed with me. I began looking at my working week differently. I realised that busyness often comes from reacting. A message arrives, so you answer it. A meeting appears, so you attend it. A colleague asks for a quick opinion, so you give one. None of these actions are necessarily wrong, but they can fill the day before you have chosen what the day is for.
+
+Effectiveness is different. It requires direction. It asks, "What is the most useful outcome here?" not simply, "What can I do next?" Sometimes being effective means doing fewer things but doing the right thing with more attention. Sometimes it means leaving a minor email unanswered for two hours because you are working on something that prevents twenty future emails.
+
+At first, I found this uncomfortable. Busy work gives immediate satisfaction. You can see it. You can count it. You can tell yourself, "I did a lot today." Effective work is sometimes quieter. You may spend ninety minutes thinking through one difficult decision and have only a few notes to show for it. But those notes might save a project from going in the wrong direction.
+
+I also learned that people often reward busyness because it is visible. Someone who replies instantly looks committed. Someone who is always in meetings looks important. Someone who says, "I am completely booked," sounds valuable. But visible effort is not the same as useful progress.
+
+So I changed a few habits. I started choosing one important outcome each morning before opening my inbox. I left space between meetings so I could actually think about what had been discussed. I stopped treating every request as equally urgent. Most importantly, I began asking, "If I finish only one meaningful thing today, what should it be?"
+
+This did not make my work perfect. There are still busy days, and some urgent tasks are genuinely unavoidable. But I no longer see a full schedule as proof of success. A full schedule can mean commitment, but it can also mean lack of focus.
+
+The difference between being busy and being effective is not laziness versus hard work. It is movement versus progress. Busyness asks, "How much did I do?" Effectiveness asks, "What changed because I did it?" That second question is harder to answer, but it is much more useful.`,
+      focus: ['productivity vocabulary', 'contrast', 'speaker reflection'],
+      words: [
+        { word: 'effective', meaning: 'producing a useful result' },
+        { word: 'protected time', meaning: 'time kept free for important work' },
+        { word: 'reacting', meaning: 'responding to events instead of choosing direction' },
+        { word: 'immediate satisfaction', meaning: 'a quick feeling that something has been achieved' },
+        { word: 'visible effort', meaning: 'work that other people can easily see' }
+      ],
+      questions: [
+        { question: 'What did Clara confuse for several years?', options: ['Being busy with being effective', 'Being quiet with being lazy', 'Working alone with working badly'], answer: 'Being busy with being effective' },
+        { question: 'What question did her manager ask?', options: ['Which work would create the biggest result if protected?', 'Why are you always late?', 'How many emails did you answer?'], answer: 'Which work would create the biggest result if protected?' },
+        { question: 'What habit did Clara start?', options: ['Choosing one important outcome before opening her inbox', 'Answering all messages immediately', 'Adding more meetings'], answer: 'Choosing one important outcome before opening her inbox' },
+        { question: 'How does Clara summarise the difference?', options: ['Movement versus progress', 'Speed versus silence', 'Meetings versus emails'], answer: 'Movement versus progress' }
+      ],
+      details: [
+        { sentence: 'Important projects were waiting for when things calm ___.', answer: 'down' },
+        { sentence: 'Effective work requires ___.', answer: 'direction' },
+        { sentence: 'Clara left space between meetings so she could ___.', answer: 'think' },
+        { sentence: 'A full schedule can mean commitment, but also lack of ___.', answer: 'focus' }
+      ],
+      trueFalse: [
+        { sentence: 'Clara says all urgent tasks are fake.', answer: false },
+        { sentence: 'She believes visible effort and useful progress are not the same.', answer: true },
+        { sentence: 'She now thinks a full schedule always proves success.', answer: false }
+      ],
+      productionQuestion: 'What is one kind of busy work that can hide more important work in your context?',
+      sampleAnswer: 'Constantly checking messages can feel productive because something is always happening. However, it may prevent deeper planning. A better approach is to choose one meaningful outcome first and then use messages to support it.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-15-travel-home',
+      order: 15,
+      stage: 'B2 PA.5',
+      title: 'Returning home differently',
+      topic: 'travel, comparison and belonging',
+      description: 'Students listen to Rafael explaining how travel made home feel both less automatic and more personal.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32cefa7e07b7f2fa757e8d_ElevenLabs_2026-06-17T16_42_51_David%20-%20Deep%2C%20Warm%2C%20Narration_pvc_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Rafael. The first time I returned from a long trip, I expected home to feel completely familiar. I imagined walking down my ordinary street, recognising every shop, every corner, every sound, and feeling that I had finally returned to the place where everything made sense. Instead, something strange happened. Home felt both familiar and unfamiliar at the same time.
+
+Before I travelled seriously, I thought home was a fixed place. It was the city where I knew how things worked: where to buy bread, which bus arrived late, which cafe was too expensive, and which streets became quiet after dark. I thought travel would give me memories of other places, but I did not expect it to change the way I looked at my own.
+
+During that trip, I stayed in three different cities for several weeks each. None of them were dramatic or perfect. I still had ordinary problems: finding a local supermarket, getting lost, misunderstanding signs, and learning how people queued, greeted each other, or complained. But slowly, I noticed that the habits I considered "normal" were not universal. They were simply one version of normal.
+
+That realisation followed me home. My city suddenly seemed smaller and stranger, not because it had changed, but because I had gained something to compare it with. I noticed how fast people walked, how little eye contact strangers made, how loudly drivers used their horns, and how much daily life depended on small unwritten rules. These details had always existed, but travel made them visible.
+
+At first, comparison made me critical. I kept thinking, "In that city, public transport was easier," or "In that neighbourhood, people used public spaces better." But after a while, I realised comparison can be useful and unfair at the same time. When you travel, you often see the surface of another place. You notice its charming streets, efficient systems, or relaxed lifestyle, but you may not see the pressures underneath. Home, by contrast, gives you the whole picture, including the boring parts.
+
+One of the strongest lessons came from a host I stayed with. Her apartment was tiny, and she moved often for work, but she had a way of making each place feel like home. She bought the same kind of tea, placed books near the window, learned the names of local shopkeepers, and cooked on Sunday evenings. She taught me that home is not only a location. It is also a set of repeated actions. In that sense, home can be portable.
+
+When I came back, I started asking myself which parts of home I had inherited and which parts I wanted to choose. Did I want to keep my old routines because they suited me, or only because they were familiar? Did I miss my city itself, or the people and habits that gave it meaning?
+
+Travel changed my sense of belonging. It did not make me less connected to home. It made the connection more conscious. I began to notice familiar places more carefully: the bakery near my building, the sound of neighbours in the evening, the shortcuts I used without thinking. I understood that home is not valuable only because it is comfortable. It is valuable because it carries memory.
+
+Now I think travel changes your sense of home in two opposite ways. It makes home feel less automatic, but more personal. You return with questions. You see what could be different. But you also see what you would miss if it disappeared. A real home is not just the place you leave from. It is the place you learn how to return to with better attention.`,
+      focus: ['reflective narrative', 'belonging vocabulary', 'comparison'],
+      words: [
+        { word: 'fixed place', meaning: 'a place that seems stable and unchanging' },
+        { word: 'unwritten rules', meaning: 'social habits that people follow without formal instructions' },
+        { word: 'portable', meaning: 'able to move with you' },
+        { word: 'inherited', meaning: 'received from the past or from other people' },
+        { word: 'belonging', meaning: 'the feeling of being connected to a place or group' }
+      ],
+      questions: [
+        { question: 'How did home feel when Rafael returned?', options: ['Both familiar and unfamiliar', 'Completely foreign', 'Exactly the same as before'], answer: 'Both familiar and unfamiliar' },
+        { question: 'What did travel make visible?', options: ['Habits and unwritten rules at home', 'Only tourist attractions', 'The best way to avoid cities'], answer: 'Habits and unwritten rules at home' },
+        { question: 'Why can comparison be unfair?', options: ['Travellers often see only the surface of another place', 'Other places are always worse', 'Home has no boring parts'], answer: 'Travellers often see only the surface of another place' },
+        { question: 'What did Rafael learn from his host?', options: ['Home can be created through repeated actions', 'A home must be a large apartment', 'Travel makes belonging impossible'], answer: 'Home can be created through repeated actions' }
+      ],
+      details: [
+        { sentence: 'Rafael stayed in ___ different cities.', answer: 'three' },
+        { sentence: 'Travel made daily details at home ___.', answer: 'visible' },
+        { sentence: 'His host placed books near the ___.', answer: 'window' },
+        { sentence: 'A real home is a place you return to with better ___.', answer: 'attention' }
+      ],
+      trueFalse: [
+        { sentence: 'Travel made Rafael less connected to home.', answer: false },
+        { sentence: 'He says home carries memory.', answer: true },
+        { sentence: 'He believes comparison is always fair and simple.', answer: false }
+      ],
+      productionQuestion: 'How can living or travelling somewhere else change the way people understand home?',
+      sampleAnswer: 'It can make normal routines visible. People may notice what they like, what they have simply inherited, and what they would miss. Travel can make home less automatic but more conscious.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-16-meeting-silence',
+      order: 16,
+      stage: 'B2 PA.6',
+      title: 'The silent meeting',
+      topic: 'psychological safety and disagreement',
+      description: 'Students listen to Nina describing a meeting where polite agreement hid important concerns.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a32d3ed55cc7ff5d5d031b8_ElevenLabs_2026-06-17T16_58_34_Christina%20-%20Energetic%20Commercial%20American%20Female%20Voice.mp3',
+      transcriptText: `Hi, I am Nina. The strangest meeting I ever attended was not loud, dramatic, or full of arguments. In fact, it looked completely professional. People nodded, took notes, and said things like "That makes sense" and "Sounds good to me." But by the end of the meeting, I had a strong feeling that nobody had said what they really thought.
+
+The meeting was about changing the way our team handled customer feedback. A senior manager suggested that all feedback should go into one shared document, and every department would review it once a week. On paper, the idea sounded organised. It promised transparency, fewer lost comments, and a clearer picture of customer problems.
+
+But I could see small signs of doubt around the room. The support team looked worried because they already had too many documents to update. The product team looked uncomfortable because they knew weekly reviews would be too slow for urgent issues. The marketing team seemed unsure who would be responsible for turning feedback into messages or campaigns. Still, when the manager asked, "Does anyone see a problem with this?" nobody answered.
+
+I did not answer either. That is the part I remember most. I had concerns, but I told myself they were probably obvious to everyone else. I also did not want to sound negative in front of a senior manager. So I stayed quiet, hoping someone with more authority would say what I was thinking.
+
+The meeting ended with polite agreement. The shared document was created, and for the first two weeks people used it. Then small problems appeared. Some teams added long notes, others added only one sentence. Urgent feedback was hidden among minor comments. Nobody was sure who should follow up. After a month, the document was still there, but people had quietly returned to their old habits.
+
+Later, one colleague said, "I knew this would happen." Another said, "I thought the same thing, but I did not want to block the idea." That was the real failure of the meeting. It was not that people lacked opinions. It was that the meeting did not create enough safety for those opinions to be spoken.
+
+Since then, I have noticed that silence in meetings can mean many different things. Sometimes it means agreement. Sometimes it means confusion. Sometimes it means people are tired, cautious, or waiting to see what the most powerful person thinks. The problem is that silence often gets interpreted as approval, especially when a decision needs to be made quickly.
+
+Good communication is not only about speaking clearly. It is also about making disagreement possible. A manager who says, "Any questions?" may receive none. But a manager who says, "What are we missing?" or "What would make this difficult to use?" invites a different kind of answer. The second version makes doubt useful instead of embarrassing.
+
+I also learned that teams need different ways to speak. Some people think better after the meeting. Some are more honest in writing. Some need a direct invitation before they challenge an idea. If a team only listens to the loudest voices in the room, it may mistake confidence for truth.
+
+Now, when I am in a meeting and everyone agrees too quickly, I become careful. Fast agreement can be a good sign, but it can also mean that people are avoiding discomfort. A healthy meeting is not one where everyone smiles and nods. It is one where important concerns can appear early enough to improve the decision.
+
+The meeting where nobody said what they really thought taught me that silence has a cost. It protects comfort in the moment, but it can create confusion later. Real agreement is not the absence of disagreement. Real agreement means people had a fair chance to disagree and still chose to move forward.`,
+      focus: ['meeting language', 'implied meaning', 'psychological safety'],
+      words: [
+        { word: 'transparency', meaning: 'openness and easy access to information' },
+        { word: 'cautious', meaning: 'careful because something may be risky' },
+        { word: 'approval', meaning: 'agreement or permission' },
+        { word: 'direct invitation', meaning: 'a clear request for someone opinion' },
+        { word: 'absence', meaning: 'the fact that something is not present' }
+      ],
+      questions: [
+        { question: 'What was strange about the meeting?', options: ['It looked professional but people did not say what they thought', 'Everyone shouted at the manager', 'No decision was suggested'], answer: 'It looked professional but people did not say what they thought' },
+        { question: 'Why did Nina stay quiet?', options: ['She did not want to sound negative in front of a senior manager', 'She fully agreed with the plan', 'She had not understood the topic'], answer: 'She did not want to sound negative in front of a senior manager' },
+        { question: 'What happened to the shared document after a month?', options: ['People had quietly returned to old habits', 'It solved every issue', 'It became a company product'], answer: 'People had quietly returned to old habits' },
+        { question: 'What is real agreement according to Nina?', options: ['People had a fair chance to disagree and still chose to move forward', 'Nobody raised any concerns', 'The senior person spoke first'], answer: 'People had a fair chance to disagree and still chose to move forward' }
+      ],
+      details: [
+        { sentence: 'The meeting was about customer ___.', answer: 'feedback' },
+        { sentence: 'Every department would review the document once a ___.', answer: 'week' },
+        { sentence: 'Silence often gets interpreted as ___.', answer: 'approval' },
+        { sentence: 'A healthy meeting lets concerns appear early enough to improve the ___.', answer: 'decision' }
+      ],
+      trueFalse: [
+        { sentence: 'The support team already had too many documents to update.', answer: true },
+        { sentence: 'Nina says silence always means agreement.', answer: false },
+        { sentence: 'She believes managers can ask better questions to invite doubt.', answer: true }
+      ],
+      productionQuestion: 'What question could a manager ask to make disagreement feel safer in a meeting?',
+      sampleAnswer: 'A manager could ask, "What would make this difficult to use?" This frames criticism as useful information rather than negativity. It helps people mention practical problems before the decision fails.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-17-good-advice',
+      order: 17,
+      stage: 'B2 PA.6',
+      title: 'What makes advice useful?',
+      topic: 'feedback, context and practical support',
+      description: 'Students listen to Samuel explaining why short positive advice was not enough and how he learned to offer more useful support.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a525c5108f74ba893eddef8_ElevenLabs_2026-07-11T15_03_36_Liam%20-%20Energetic%2C%20Social%20Media%20Creator_pre_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Hi, I am Samuel. A few years ago, a younger colleague named Priya asked me for advice after a difficult client presentation. She had prepared carefully, but the meeting had not gone well. The client interrupted her several times, a senior colleague answered questions that were directed at her, and by the end she had lost confidence in what she was saying.
+
+She asked me what she should do differently next time. I wanted to be encouraging, so I said, "You just need to be more confident. Do not overthink it."
+
+At the time, that sounded like helpful advice. It was positive, simple, and easy to remember. The problem was that it gave her almost nothing she could actually use. It described how I wanted her to feel, but not what she could do. It also ignored the power dynamics in the room and treated the whole situation as if it were only a personal confidence problem.
+
+A few days later, I watched a recording of the presentation. I noticed that Priya's opening was too broad, so the client was not sure where the conversation was going. Her slides contained too much information. More importantly, nobody on our side had agreed who would answer which questions. When Priya paused to think, her senior colleague interpreted the silence as an invitation to speak.
+
+Her confidence had certainly been affected, but it was not the only issue. My advice had shifted responsibility entirely onto her. It suggested that if she simply changed her attitude, everything else would improve.
+
+I apologised and asked whether we could prepare for the next presentation together. This time, we focused on actions rather than personality. She practised the first two minutes until the opening felt clear. We agreed who would answer different kinds of questions. She reduced the amount of text on her slides and prepared a sentence she could use if someone interrupted: "I would like to finish this point first, and then I will come back to your question."
+
+We also asked the senior colleague to wait a few seconds before answering on her behalf. He had not realised that his attempt to help was making it harder for her to lead the presentation.
+
+The next meeting went much better. Priya did not suddenly become a completely different person. She was still nervous at the beginning. But the structure supported her, the roles were clearer, and she had specific language ready for difficult moments.
+
+That experience changed the way I think about advice. Bad advice is not always cruel or obviously wrong. Sometimes it sounds intelligent because it is short and confident. Phrases such as "Trust your instincts," "Follow your passion," "Communicate better," or "Be more proactive" can contain useful ideas. But without context, they are directions without a map.
+
+Good advice needs to connect to the actual constraints of a situation. It should be specific enough to act on, but flexible enough to respect what the other person already knows.
+
+I have also realised that quick advice is sometimes more comfortable for the person giving it than for the person receiving it. Complex problems make us uncomfortable. We want to fix them quickly, so we offer a clean answer before we have understood the full situation.
+
+Sometimes the most helpful response is not advice at all. It may be a question such as, "Which part was most difficult?" or "Do you want ideas, or do you just need me to listen?" These questions slow the conversation down and prevent us from solving the wrong problem.
+
+Now, before giving advice, I ask about the person's goal, what they have already tried, and what limitations they are facing. Sometimes they need practical ideas. Sometimes they already know the next step but need reassurance. Sometimes the problem is not personal at all; it is created by the system around them.
+
+I no longer believe that good advice is advice that makes the speaker sound wise. Good advice should increase another person's ability to think. It should help them see the situation more clearly and choose a realistic next action.`,
+      focus: ['advice language', 'workplace dynamics', 'specific action'],
+      words: [
+        { word: 'power dynamics', meaning: 'the effect of status and authority in a situation' },
+        { word: 'shifted responsibility', meaning: 'moved the blame or burden onto someone else' },
+        { word: 'constraints', meaning: 'limits or difficulties that affect what is possible' },
+        { word: 'reassurance', meaning: 'support that helps someone feel less worried' },
+        { word: 'realistic next action', meaning: 'a practical step that can actually be taken' }
+      ],
+      questions: [
+        { question: 'What advice did Samuel first give Priya?', options: ['Be more confident and do not overthink it', 'Change all the slides immediately', 'Let the senior colleague lead everything'], answer: 'Be more confident and do not overthink it' },
+        { question: 'Why was that advice weak?', options: ['It described a feeling but not useful actions', 'It was too detailed', 'It blamed the client completely'], answer: 'It described a feeling but not useful actions' },
+        { question: 'What practical preparation helped Priya?', options: ['Clear opening, agreed roles and prepared interruption language', 'More jokes and brighter slides', 'A longer presentation with no questions'], answer: 'Clear opening, agreed roles and prepared interruption language' },
+        { question: 'What does Samuel now believe good advice should do?', options: ['Increase another person\'s ability to think', 'Make the speaker sound wise', 'Solve every problem instantly'], answer: 'Increase another person\'s ability to think' }
+      ],
+      details: [
+        { sentence: 'Priya was interrupted several times by the ___.', answer: 'client' },
+        { sentence: 'Her opening was too ___.', answer: 'broad' },
+        { sentence: 'Samuel asked the senior colleague to wait a few ___ before answering.', answer: 'seconds' },
+        { sentence: 'Without context, short advice can be directions without a ___.', answer: 'map' }
+      ],
+      trueFalse: [
+        { sentence: 'Priya became a completely different person in the next meeting.', answer: false },
+        { sentence: 'The senior colleague had been trying to help.', answer: true },
+        { sentence: 'Samuel says useful advice must always be immediate.', answer: false }
+      ],
+      productionQuestion: 'Rewrite vague advice such as "be more confident" into practical, context-aware advice.',
+      sampleAnswer: 'Instead of saying "be more confident," I would say: prepare a clear opening, agree who answers which questions, and have one sentence ready if someone interrupts. That gives the person actions they can practise.'
+    },
+    {
+      id: 'b2-pre-advanced-listening-18-conversation-timing',
+      order: 18,
+      stage: 'B2 PA.6',
+      title: 'When should you speak?',
+      topic: 'difficult conversations and timing',
+      minutes: 50,
+      description: 'Students listen to Leila and Ethan discussing when delaying a difficult conversation is wise and when it becomes avoidance.',
+      audioUrl: 'https://cdn.prod.website-files.com/67aa2baa0c65412632c4b3d1/6a526943b17ed02c60abc768_ElevenLabs_2026-07-11T15_54_23_Liam%20-%20Energetic%2C%20Social%20Media%20Creator_pre_sp100_s50_sb75_v3.mp3',
+      transcriptText: `Leila: I think most people avoid difficult conversations for a simple reason: they are afraid of conflict. They imagine raised voices, damaged relationships, or an awkward atmosphere that lasts for weeks.
+
+Ethan: Sometimes, yes. But I do not think every delay is avoidance. There are moments when waiting is sensible. If you are angry or confused, speaking immediately can make the conversation worse.
+
+Leila: I agree that timing matters, but "I am waiting for the right moment" can become a very convenient excuse. I once avoided speaking to a colleague who kept changing our project deadlines without consulting me. Every time it happened, I told myself I would mention it later, when we were both calmer and less busy.
+
+Ethan: And did that moment arrive?
+
+Leila: No. I became more irritated, but he had no idea. I started answering his messages more slowly and stopped offering help. From his point of view, my behaviour probably changed for no reason.
+
+Ethan: That is the strange thing about avoidance. We think we are preventing conflict, but often we just move the conflict somewhere less visible. It appears in silence, distance, sarcasm, or reduced cooperation.
+
+Leila: Exactly. And while we are avoiding the conversation, we create a story about the other person. I decided my colleague was inconsiderate. I never asked whether he was under pressure from someone else or whether he even realised the deadlines were affecting me.
+
+Ethan: But people do not only avoid conversations because they fear anger. Sometimes they fear looking unreasonable. At work especially, people worry that raising a concern will make them seem difficult, emotional, or unable to cope.
+
+Leila: That is stronger when there is a power difference. It is much easier to challenge a friend than a manager who controls your schedule or evaluates your performance.
+
+Ethan: True. We should also distinguish between a difficult conversation and an unsafe one. If someone is aggressive, threatening, or able to punish you unfairly, direct honesty may not be the best first step. You may need support, documentation, or a formal process.
+
+Leila: That is important. People are often told, "Just be honest," as if honesty works the same way in every situation. But context matters.
+
+Ethan: Still, in ordinary situations, I think uncertainty is one of the biggest reasons we delay. We do not know how the other person will react. We cannot control whether they will become defensive, apologise, deny the problem, or bring up something we did wrong.
+
+Leila: And we often believe we need perfect words before we begin. We rehearse the whole conversation in our heads, including the other person's answers.
+
+Ethan: Which is impossible, because a real conversation has two people in it.
+
+Leila: Eventually, I spoke to my colleague. I began badly. I said, "You keep changing everything at the last minute." He immediately became defensive because "everything" was not true.
+
+Ethan: So what happened?
+
+Leila: I stopped and tried again. I mentioned two specific deadlines, explained that the changes had forced me to rearrange other work, and asked what was causing them. He told me a client had been contacting him directly and he thought he was protecting the rest of the team from extra pressure.
+
+Ethan: So his intention was different from the effect.
+
+Leila: Yes. We agreed that future deadline changes would be discussed in a short team message first. The conversation did not solve every problem, but it corrected the story I had created about him.
+
+Ethan: That sounds like a useful structure: describe what happened, explain the effect, and ask a genuine question.
+
+Leila: I would add one more step: decide what you want from the conversation. Do you want an apology, a practical change, clarification, or simply to be heard? If you do not know your goal, the discussion can turn into a list of every frustration you have ever had.
+
+Ethan: So the answer is not "always speak immediately."
+
+Leila: No. The answer is to pause deliberately rather than avoid indefinitely. Use the pause to understand the problem, choose an appropriate moment, and prepare a clear opening.
+
+Ethan: Because avoiding a difficult conversation does not remove its cost.
+
+Leila: Right. It usually delays the cost and adds misunderstanding to it. A difficult conversation may create temporary discomfort, but silence can quietly damage trust for much longer.`,
+      focus: ['dialogue listening', 'timing and avoidance', 'conflict language'],
+      words: [
+        { word: 'avoidance', meaning: 'delaying or escaping a difficult issue' },
+        { word: 'reduced cooperation', meaning: 'helping less or working together less effectively' },
+        { word: 'power difference', meaning: 'a situation where one person has more authority' },
+        { word: 'documentation', meaning: 'written evidence or records' },
+        { word: 'clarification', meaning: 'making something clearer' }
+      ],
+      questions: [
+        { question: 'What does Ethan say about every delay?', options: ['Not every delay is avoidance', 'Every delay is dishonest', 'Delays always solve conflict'], answer: 'Not every delay is avoidance' },
+        { question: 'How did Leila avoidance show itself?', options: ['Slower replies and less help', 'Direct shouting', 'Immediate formal complaints'], answer: 'Slower replies and less help' },
+        { question: 'What warning do they give about unsafe situations?', options: ['Direct honesty may not be the best first step', 'You should always speak alone immediately', 'Documentation is never useful'], answer: 'Direct honesty may not be the best first step' },
+        { question: 'What structure does Ethan identify?', options: ['Describe what happened, explain the effect, and ask a genuine question', 'List every frustration, demand an apology, and leave', 'Wait until the problem disappears'], answer: 'Describe what happened, explain the effect, and ask a genuine question' }
+      ],
+      details: [
+        { sentence: 'Leila colleague kept changing project ___.', answer: 'deadlines' },
+        { sentence: 'People may fear looking unreasonable, difficult or unable to ___.', answer: 'cope' },
+        { sentence: 'Leila mentioned two specific ___.', answer: 'deadlines' },
+        { sentence: 'Avoidance usually delays the cost and adds ___ to it.', answer: 'misunderstanding' }
+      ],
+      trueFalse: [
+        { sentence: 'Leila says timing does not matter.', answer: false },
+        { sentence: 'Ethan distinguishes difficult conversations from unsafe ones.', answer: true },
+        { sentence: 'They conclude that silence can damage trust longer than temporary discomfort.', answer: true }
+      ],
+      productionQuestion: 'Prepare a clear opening for a difficult but ordinary workplace conversation. Include the situation, the effect and one genuine question.',
+      sampleAnswer: 'When the deadline changed twice without warning, I had to rearrange other tasks and I felt less able to plan properly. Could you help me understand what is causing the changes, and can we agree on how to update the team next time?'
+    }
+  ].map(buildPreAdvancedListeningReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2_PRE_ADVANCED = {
@@ -2605,6 +3726,7 @@
     grammar: READY_GRAMMAR_LESSONS_B2_PRE_ADVANCED,
     vocabulary: READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED,
     reading: READY_READING_LESSONS_B2_PRE_ADVANCED,
-    writing: READY_WRITING_LESSONS_B2_PRE_ADVANCED
+    writing: READY_WRITING_LESSONS_B2_PRE_ADVANCED,
+    listening: READY_LISTENING_LESSONS_B2_PRE_ADVANCED
   };
 })();
