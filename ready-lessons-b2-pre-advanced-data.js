@@ -49,7 +49,7 @@
     },
     vocabulary: {
       description: 'B2 Pre-Advanced vocabulary pathway space for precise abstract language, academic and professional nuance.',
-      plannedTopics: []
+      plannedTopics: ['Nuanced opinions', 'Academic argument', 'Strategy and implementation', 'Negotiation', 'Leadership', 'Innovation', 'Media literacy', 'Policy and society', 'Sustainability', 'Wellbeing', 'Finance and risk', 'Culture and identity', 'Lifelong learning', 'Technology ethics', 'Mobility', 'Decision-making', 'Advanced phrasal verbs', 'Vocabulary review']
     },
     reading: {
       description: 'B2 Pre-Advanced reading pathway space for dense opinion, argument, inference and writer attitude.',
@@ -166,6 +166,99 @@
         title: 'Extra mixed practice',
         prompt: 'Choose the correct answer for extra practice.',
         items: makeChoiceItems(config.extraChoices, `${config.id}-extra`)
+      }]
+    };
+  }
+
+  function buildPreAdvancedVocabularyChoiceItem(lessonId, entries, entry, index) {
+    const ids = ['a', 'b', 'c'];
+    const distractors = entries.filter((candidate) => candidate.word !== entry.word).slice(0, 2);
+    const orderedWords = index % 3 === 0
+      ? [entry.word, distractors[0]?.word, distractors[1]?.word]
+      : (index % 3 === 1
+        ? [distractors[0]?.word, entry.word, distractors[1]?.word]
+        : [distractors[0]?.word, distractors[1]?.word, entry.word]);
+
+    const options = orderedWords.map((word, optionIndex) => ({
+      id: ids[optionIndex],
+      text: word || entry.word
+    }));
+    const answer = options.find((option) => option.text === entry.word)?.id || 'a';
+
+    return {
+      id: `${lessonId}-choice-${index + 1}`,
+      sentence: entry.sentence,
+      options,
+      answer,
+      explanation: `${entry.word}: ${entry.meaning}`
+    };
+  }
+
+  function buildPreAdvancedVocabularyReadyLesson(config) {
+    const words = config.words || [];
+
+    return {
+      id: config.id,
+      order: config.order,
+      level: 'B2_PRE_ADVANCED',
+      skill: 'vocabulary',
+      stage: config.stage || 'B2 PA',
+      title: config.title,
+      topic: config.topic,
+      minutes: config.minutes || 40,
+      description: config.description,
+      focus: config.focus || [],
+      teacherNotes: config.teacherNotes || 'Move from recognition to accurate, nuanced production. Ask students to explain connotation, register and context before using the target vocabulary.',
+      tasks: [
+        {
+          id: `${config.id}-matching`,
+          type: 'matching',
+          title: 'Match words and meanings',
+          prompt: 'Match each word or phrase with its meaning.',
+          pairs: words.map((entry, index) => ({
+            id: `${config.id}-matching-${index + 1}`,
+            left_text: entry.word,
+            right_text: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-choice`,
+          type: 'choice',
+          title: 'Choose the right word',
+          prompt: 'Choose the word or phrase that completes each sentence.',
+          items: words.map((entry, index) => buildPreAdvancedVocabularyChoiceItem(config.id, words, entry, index))
+        },
+        {
+          id: `${config.id}-gap`,
+          type: 'gap_fill',
+          title: 'Type the missing word',
+          prompt: 'Type the missing word or phrase.',
+          items: words.map((entry, index) => ({
+            id: `${config.id}-gap-${index + 1}`,
+            sentence: entry.sentence,
+            accepted_answers: Array.isArray(entry.answers) ? entry.answers : [entry.word],
+            hint: entry.hint || entry.meaning,
+            explanation: entry.meaning
+          }))
+        },
+        {
+          id: `${config.id}-writing`,
+          type: 'writing_prompt',
+          title: 'Use it yourself',
+          prompt: config.productionPrompt || 'Write a B2 Pre-Advanced answer using the vocabulary from this lesson.',
+          items: [{
+            id: `${config.id}-writing-1`,
+            question: config.productionQuestion,
+            sample_answer: config.sampleAnswer
+          }]
+        }
+      ],
+      extraTasks: [{
+        id: `${config.id}-extra`,
+        type: 'choice',
+        title: 'Extra vocabulary practice',
+        prompt: 'Choose the most natural word or phrase.',
+        items: words.map((entry, index) => buildPreAdvancedVocabularyChoiceItem(`${config.id}-extra`, words, entry, index))
       }]
     };
   }
@@ -877,10 +970,340 @@
     }
   ].map(buildPreAdvancedGrammarReadyLesson);
 
+  const READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED = [
+    {
+      id: 'b2-pre-advanced-vocabulary-01-nuanced-opinions',
+      order: 1,
+      stage: 'B2 PA.1',
+      title: 'Nuanced opinions',
+      topic: 'expressing careful views and reservations',
+      description: 'Students learn precise vocabulary for giving balanced opinions without sounding too absolute.',
+      focus: ['opinions', 'stance', 'nuance'],
+      words: [
+        { word: 'nuanced', meaning: 'showing small but important differences in meaning or opinion', sentence: 'Her answer was ___ because she considered both the benefits and the risks.', hint: 'not black-and-white' },
+        { word: 'reservation', meaning: 'a doubt or concern about something', sentence: 'I support the proposal, but I still have one serious ___.', hint: 'concern' },
+        { word: 'stance', meaning: 'a position or attitude toward an issue', sentence: 'The article takes a cautious ___ on artificial intelligence.', hint: 'position' },
+        { word: 'overstate', meaning: 'describe something as more important or extreme than it really is', sentence: 'We should not ___ the results of such a small survey.', hint: 'make too strong' },
+        { word: 'on balance', meaning: 'after considering all sides of an issue', sentence: '___, I think the benefits outweigh the disadvantages.', hint: 'overall' }
+      ],
+      productionQuestion: 'Write a balanced opinion about online education, remote work or AI. Use at least four target phrases.',
+      sampleAnswer: 'On balance, I support the use of AI in language learning. My stance is positive, but I have some reservations about accuracy. A nuanced approach is needed because we should not overstate what technology can do.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-02-academic-argument',
+      order: 2,
+      stage: 'B2 PA.1',
+      title: 'Academic argument',
+      topic: 'evidence, assumptions and counterarguments',
+      description: 'Students practise vocabulary for building clear and well-supported arguments.',
+      focus: ['argumentation', 'evidence', 'critical thinking'],
+      words: [
+        { word: 'assumption', meaning: 'something accepted as true without definite proof', sentence: 'The argument depends on the ___ that all learners have reliable internet.', hint: 'unproved idea' },
+        { word: 'evidence-based', meaning: 'supported by reliable information or research', sentence: 'Schools should make ___ decisions rather than follow trends blindly.', hint: 'based on proof' },
+        { word: 'counterargument', meaning: 'an argument against another argument', sentence: 'A strong essay should address at least one ___.', hint: 'opposing argument' },
+        { word: 'undermine', meaning: 'make an argument, idea or position weaker', sentence: 'The lack of data may ___ the conclusion.', hint: 'weaken' },
+        { word: 'consistent with', meaning: 'matching or agreeing with something', sentence: 'The findings are ___ previous research on motivation.', hint: 'in agreement with' }
+      ],
+      productionQuestion: 'Write a short academic-style paragraph about a claim you agree or disagree with. Use at least four target phrases.',
+      sampleAnswer: 'The claim is based on the assumption that students learn best alone. However, this is not fully evidence-based. A counterargument is that feedback and interaction improve motivation. This view is consistent with my own learning experience.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-03-strategy-implementation',
+      order: 3,
+      stage: 'B2 PA.1',
+      title: 'Strategy and implementation',
+      topic: 'turning plans into practical action',
+      description: 'Students learn vocabulary for discussing plans, priorities and execution in professional contexts.',
+      focus: ['strategy', 'projects', 'implementation'],
+      words: [
+        { word: 'long-term', meaning: 'continuing or having an effect over a long period', sentence: 'The company needs a ___ strategy, not just a quick solution.', hint: 'not short-term' },
+        { word: 'priority', meaning: 'something more important than other things', sentence: 'Improving the user experience should be our main ___.', hint: 'most important thing' },
+        { word: 'implementation', meaning: 'the process of putting a plan into action', sentence: 'The idea is promising, but ___ will be difficult.', hint: 'putting into practice' },
+        { word: 'allocate', meaning: 'give time, money or resources for a particular purpose', sentence: 'We need to ___ more time to testing before launch.', hint: 'assign resources' },
+        { word: 'measurable', meaning: 'able to be checked or expressed in numbers', sentence: 'Every goal should be specific and ___.', hint: 'possible to measure' }
+      ],
+      productionQuestion: 'Write a short strategy note for improving a course, product or team process. Use at least four target words.',
+      sampleAnswer: 'Our long-term priority is to improve speaking confidence. Implementation will require weekly recordings and clear feedback. We should allocate time in every lesson for practice, and progress must be measurable.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-04-negotiation-compromise',
+      order: 4,
+      stage: 'B2 PA.2',
+      title: 'Negotiation and compromise',
+      topic: 'reaching agreement while protecting priorities',
+      description: 'Students practise vocabulary for negotiation, trade-offs and professional compromise.',
+      focus: ['negotiation', 'agreement', 'compromise'],
+      words: [
+        { word: 'trade-off', meaning: 'a situation where you accept one disadvantage to get another benefit', sentence: 'There is a ___ between speed and quality.', hint: 'balance of loss and gain' },
+        { word: 'concession', meaning: 'something you agree to give up in a negotiation', sentence: 'The supplier made a small ___ on price.', hint: 'thing given up' },
+        { word: 'non-negotiable', meaning: 'not able to be changed or discussed', sentence: 'Data privacy is ___ for this project.', hint: 'cannot be changed' },
+        { word: 'middle ground', meaning: 'a position between two opposite views', sentence: 'We need to find a ___ that both teams can accept.', hint: 'compromise position' },
+        { word: 'mutual benefit', meaning: 'advantage for both sides', sentence: 'A good partnership should create ___.', hint: 'helps both sides' }
+      ],
+      productionQuestion: 'Write a negotiation summary between a client and a service provider. Use at least four target phrases.',
+      sampleAnswer: 'The main trade-off was between cost and delivery time. Security remained non-negotiable, but the provider made a concession on support hours. In the end, both sides found middle ground and created mutual benefit.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-05-leadership-feedback',
+      order: 5,
+      stage: 'B2 PA.2',
+      title: 'Leadership and feedback',
+      topic: 'accountability, trust and constructive communication',
+      description: 'Students learn vocabulary for discussing leadership, feedback and team culture.',
+      focus: ['leadership', 'teamwork', 'feedback'],
+      words: [
+        { word: 'accountability', meaning: 'responsibility for decisions and results', sentence: 'Good leaders create a culture of ___ without blaming people unfairly.', hint: 'responsibility' },
+        { word: 'constructive', meaning: 'useful and intended to help improve something', sentence: 'Her feedback was honest but ___.', hint: 'helpful' },
+        { word: 'delegate', meaning: 'give a task or responsibility to another person', sentence: 'A manager must learn to ___ instead of doing everything alone.', hint: 'give tasks' },
+        { word: 'morale', meaning: 'the confidence and positive feeling of a group', sentence: 'Team ___ improved after communication became clearer.', hint: 'team spirit' },
+        { word: 'set expectations', meaning: 'make clear what people should do or achieve', sentence: 'Teachers should ___ before assigning a difficult project.', hint: 'make standards clear' }
+      ],
+      productionQuestion: 'Write advice for a new team leader. Use at least four target words or phrases.',
+      sampleAnswer: 'A new leader should set expectations clearly and give constructive feedback. It is also important to delegate tasks fairly. Accountability matters, but leaders should protect morale by focusing on solutions.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-06-innovation-change',
+      order: 6,
+      stage: 'B2 PA.2',
+      title: 'Innovation and change',
+      topic: 'adapting to new ideas and systems',
+      description: 'Students practise vocabulary for innovation, resistance and organizational change.',
+      focus: ['innovation', 'change', 'adaptation'],
+      words: [
+        { word: 'adaptability', meaning: 'the ability to change when conditions change', sentence: 'In a fast-moving industry, ___ is essential.', hint: 'ability to adjust' },
+        { word: 'disruptive', meaning: 'causing major change in an existing system or market', sentence: 'Online learning has been ___ for traditional education.', hint: 'strongly changing' },
+        { word: 'resistance', meaning: 'opposition to change or new ideas', sentence: 'There was some ___ when the new software was introduced.', hint: 'opposition' },
+        { word: 'streamline', meaning: 'make a process simpler and more efficient', sentence: 'We should ___ the registration process.', hint: 'make efficient' },
+        { word: 'pilot scheme', meaning: 'a small test of a new idea before full use', sentence: 'The school launched a ___ before changing the whole course.', hint: 'trial project' }
+      ],
+      productionQuestion: 'Write about a change in a workplace, school or app. Use at least four target words.',
+      sampleAnswer: 'The company introduced a pilot scheme to test the new platform. At first, there was resistance because the change felt disruptive. Over time, staff showed adaptability, and the new system helped streamline daily tasks.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-07-media-literacy',
+      order: 7,
+      stage: 'B2 PA.3',
+      title: 'Media literacy',
+      topic: 'bias, credibility and interpretation',
+      description: 'Students learn vocabulary for evaluating information and discussing media critically.',
+      focus: ['media', 'critical thinking', 'information'],
+      words: [
+        { word: 'bias', meaning: 'a preference or unfair influence that affects judgement', sentence: 'The article shows clear political ___.', hint: 'unfair preference' },
+        { word: 'credible', meaning: 'believable and reliable', sentence: 'Before sharing news, check whether the source is ___.', hint: 'reliable' },
+        { word: 'misleading', meaning: 'giving the wrong idea or impression', sentence: 'The headline was ___ because it left out key facts.', hint: 'gives wrong idea' },
+        { word: 'verify', meaning: 'check that something is true or accurate', sentence: 'Journalists should ___ information before publishing it.', hint: 'check truth' },
+        { word: 'take out of context', meaning: 'show words or facts without the information needed to understand them properly', sentence: 'A quote can be ___ to make someone look dishonest.', hint: 'remove background' }
+      ],
+      productionQuestion: 'Write advice for evaluating online information. Use at least four target phrases.',
+      sampleAnswer: 'It is important to verify online information before sharing it. A credible source usually gives evidence and context. Headlines can be misleading, and quotes may be taken out of context. Readers should also notice possible bias.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-08-policy-society',
+      order: 8,
+      stage: 'B2 PA.3',
+      title: 'Policy and society',
+      topic: 'public decisions and social impact',
+      description: 'Students practise vocabulary for discussing social policy and public consequences.',
+      focus: ['society', 'policy', 'impact'],
+      words: [
+        { word: 'inequality', meaning: 'an unfair difference between groups in society', sentence: 'Education can reduce ___ if access is fair.', hint: 'unfair difference' },
+        { word: 'accessibility', meaning: 'how easy something is for people to use or reach', sentence: 'The city improved the ___ of public transport.', hint: 'easy access' },
+        { word: 'public funding', meaning: 'money provided by the government for services or projects', sentence: 'Libraries often depend on ___ to survive.', hint: 'government money' },
+        { word: 'reform', meaning: 'a change made to improve a system', sentence: 'Many people are calling for education ___.', hint: 'system improvement' },
+        { word: 'long-term impact', meaning: 'an effect that continues far into the future', sentence: 'Policy makers must consider the ___ of their decisions.', hint: 'future effect' }
+      ],
+      productionQuestion: 'Write a short paragraph about a public policy you think matters. Use at least four target words.',
+      sampleAnswer: 'Education reform should focus on accessibility and inequality. Public funding is necessary if poorer communities are going to receive better support. The long-term impact of fair education can be enormous.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-09-sustainability',
+      order: 9,
+      stage: 'B2 PA.3',
+      title: 'Sustainability and responsibility',
+      topic: 'environmental choices and practical action',
+      description: 'Students learn vocabulary for discussing sustainability with precision and realism.',
+      focus: ['environment', 'sustainability', 'responsibility'],
+      words: [
+        { word: 'sustainable', meaning: 'able to continue without damaging the environment or using too many resources', sentence: 'Cities need more ___ transport systems.', hint: 'environmentally responsible' },
+        { word: 'carbon footprint', meaning: 'the amount of carbon dioxide caused by a person, activity or organization', sentence: 'Flying less can reduce your ___.', hint: 'climate impact' },
+        { word: 'resource-intensive', meaning: 'using a lot of energy, materials or money', sentence: 'Producing fast fashion is extremely ___.', hint: 'uses many resources' },
+        { word: 'throwaway culture', meaning: 'a habit of buying and throwing things away quickly', sentence: 'Repair cafes are a response to ___.', hint: 'use and discard habit' },
+        { word: 'environmental cost', meaning: 'damage to nature caused by an activity', sentence: 'Cheap products often hide a serious ___.', hint: 'damage to nature' }
+      ],
+      productionQuestion: 'Write about a product, habit or industry from a sustainability perspective. Use at least four target phrases.',
+      sampleAnswer: 'Fast fashion looks cheap, but its environmental cost is high. It is resource-intensive and encourages throwaway culture. A more sustainable approach would reduce our carbon footprint by buying less and repairing more.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-10-wellbeing-resilience',
+      order: 10,
+      stage: 'B2 PA.4',
+      title: 'Wellbeing and resilience',
+      topic: 'stress, recovery and emotional balance',
+      description: 'Students practise vocabulary for discussing wellbeing in mature, nuanced ways.',
+      focus: ['wellbeing', 'stress', 'resilience'],
+      words: [
+        { word: 'resilience', meaning: 'the ability to recover after stress, difficulty or failure', sentence: 'Learning from mistakes can build ___.', hint: 'ability to recover' },
+        { word: 'burnout', meaning: 'extreme tiredness and loss of motivation caused by too much work or stress', sentence: 'Constant overtime can lead to ___.', hint: 'work exhaustion' },
+        { word: 'set boundaries', meaning: 'make clear limits for what you will accept or do', sentence: 'Remote workers need to ___ between work and personal time.', hint: 'create limits' },
+        { word: 'cope with', meaning: 'deal successfully with a difficult situation', sentence: 'People use different methods to ___ pressure.', hint: 'manage difficulty' },
+        { word: 'work-life balance', meaning: 'a healthy relationship between work and personal life', sentence: 'Flexible hours can improve ___.', hint: 'balance between job and life' }
+      ],
+      productionQuestion: 'Write advice for avoiding burnout and building resilience. Use at least four target phrases.',
+      sampleAnswer: 'To avoid burnout, people need to set boundaries and protect their work-life balance. Resilience does not mean ignoring stress; it means learning how to cope with pressure in a healthy way.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-11-finance-risk',
+      order: 11,
+      stage: 'B2 PA.4',
+      title: 'Finance and risk',
+      topic: 'costs, uncertainty and responsible decisions',
+      description: 'Students learn vocabulary for discussing money, risk and investment decisions.',
+      focus: ['finance', 'risk', 'planning'],
+      words: [
+        { word: 'financial literacy', meaning: 'the ability to understand and manage money', sentence: 'Schools should teach ___ before students leave home.', hint: 'money knowledge' },
+        { word: 'risk assessment', meaning: 'the process of judging possible dangers before making a decision', sentence: 'Every investment requires a careful ___.', hint: 'checking risks' },
+        { word: 'budget constraint', meaning: 'a limit caused by the amount of money available', sentence: 'The team had to redesign the plan because of a strict ___.', hint: 'money limit' },
+        { word: 'return on investment', meaning: 'the benefit or profit gained from spending money', sentence: 'Training staff can have a high ___.', hint: 'benefit from spending' },
+        { word: 'cost-effective', meaning: 'giving good results for the amount of money spent', sentence: 'Online advertising can be very ___ for small businesses.', hint: 'good value' }
+      ],
+      productionQuestion: 'Write about a financial decision for a person, school or company. Use at least four target phrases.',
+      sampleAnswer: 'Before buying new software, a school should do a risk assessment. The budget constraint may be serious, but the return on investment could be high if the platform saves teachers time. The most cost-effective option is not always the cheapest.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-12-culture-identity',
+      order: 12,
+      stage: 'B2 PA.4',
+      title: 'Culture and identity',
+      topic: 'belonging, values and social change',
+      description: 'Students practise vocabulary for discussing identity and cultural experience respectfully.',
+      focus: ['culture', 'identity', 'belonging'],
+      words: [
+        { word: 'sense of belonging', meaning: 'the feeling that you are accepted as part of a group or place', sentence: 'Community events can create a stronger ___.', hint: 'feeling accepted' },
+        { word: 'cultural background', meaning: 'the traditions and experiences that shape a person or group', sentence: "Teachers should respect each learner's ___.", hint: 'culture and experience' },
+        { word: 'integration', meaning: 'the process of becoming part of a group or society', sentence: 'Language learning can support social ___.', hint: 'becoming part of society' },
+        { word: 'stereotype', meaning: 'a fixed and often unfair idea about a group of people', sentence: 'Films sometimes repeat the same old ___.', hint: 'fixed unfair idea' },
+        { word: 'shared values', meaning: 'beliefs or principles that people have in common', sentence: 'Successful teams often depend on ___.', hint: 'common principles' }
+      ],
+      productionQuestion: 'Write about culture, identity or belonging in a school, workplace or city. Use at least four target phrases.',
+      sampleAnswer: "A strong sense of belonging helps people participate more confidently. Schools should respect each learner's cultural background and avoid stereotypes. Shared values can support integration without forcing everyone to be the same."
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-13-lifelong-learning',
+      order: 13,
+      stage: 'B2 PA.5',
+      title: 'Lifelong learning',
+      topic: 'skills, growth and independent development',
+      description: 'Students learn vocabulary for discussing advanced learning goals and professional growth.',
+      focus: ['education', 'development', 'skills'],
+      words: [
+        { word: 'lifelong learning', meaning: 'continuing to learn throughout your life', sentence: 'Career changes often require ___.', hint: 'learning throughout life' },
+        { word: 'skill set', meaning: 'the group of skills someone has', sentence: 'Public speaking is an important part of her professional ___.', hint: 'group of skills' },
+        { word: 'self-directed', meaning: 'organized and controlled by yourself', sentence: 'Online courses work best for ___ learners.', hint: 'independent' },
+        { word: 'knowledge gap', meaning: 'something important that a person or group does not yet know', sentence: 'The training helped us identify a serious ___.', hint: 'missing knowledge' },
+        { word: 'upskill', meaning: 'learn new skills for work or future opportunities', sentence: 'Many employees need to ___ as technology changes.', hint: 'learn new work skills' }
+      ],
+      productionQuestion: 'Write about a learning plan for the next year. Use at least four target words or phrases.',
+      sampleAnswer: 'My goal is to upskill through lifelong learning. I want to expand my skill set and become more self-directed. First, I need to identify my knowledge gaps and choose courses that help me close them.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-14-technology-ethics',
+      order: 14,
+      stage: 'B2 PA.5',
+      title: 'Technology and ethics',
+      topic: 'privacy, automation and responsible design',
+      description: 'Students practise vocabulary for discussing ethical questions around modern technology.',
+      focus: ['technology', 'ethics', 'privacy'],
+      words: [
+        { word: 'data privacy', meaning: 'the protection of personal information', sentence: 'Users are increasingly worried about ___.', hint: 'personal information protection' },
+        { word: 'algorithmic bias', meaning: 'unfairness in automated systems caused by data or design', sentence: 'Recruitment tools can reproduce ___ if they are not tested carefully.', hint: 'unfair automated judgement' },
+        { word: 'automation', meaning: 'using machines or software to do work with little human help', sentence: '___ can save time but may also change jobs.', hint: 'software doing work' },
+        { word: 'human oversight', meaning: 'people checking and controlling automated decisions', sentence: 'AI systems need ___ in high-risk situations.', hint: 'people checking machines' },
+        { word: 'ethical concern', meaning: 'a worry about whether something is morally acceptable', sentence: 'Facial recognition raises more than one ___.', hint: 'moral worry' }
+      ],
+      productionQuestion: 'Write about an ethical issue in technology. Use at least four target phrases.',
+      sampleAnswer: 'Automation can improve efficiency, but it creates ethical concerns. Data privacy must be protected, and algorithmic bias should be tested carefully. In sensitive areas, human oversight is essential.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-15-mobility-migration',
+      order: 15,
+      stage: 'B2 PA.5',
+      title: 'Mobility and migration',
+      topic: 'movement, opportunity and adaptation',
+      description: 'Students learn vocabulary for discussing relocation, migration and mobility in nuanced ways.',
+      focus: ['migration', 'travel', 'adaptation'],
+      words: [
+        { word: 'relocate', meaning: 'move to a new place to live or work', sentence: 'Many professionals ___ for better career opportunities.', hint: 'move for work or life' },
+        { word: 'settle in', meaning: 'become comfortable in a new place', sentence: 'It can take months to ___ after moving abroad.', hint: 'adjust to a new place' },
+        { word: 'mobility', meaning: 'the ability to move between places, jobs or social positions', sentence: 'Remote work has increased professional ___.', hint: 'ability to move' },
+        { word: 'brain drain', meaning: 'the loss of skilled people who leave a country or organization', sentence: 'Low salaries can lead to ___ in some industries.', hint: 'loss of skilled people' },
+        { word: 'cross-cultural', meaning: 'involving people or ideas from different cultures', sentence: 'International teams need strong ___ communication skills.', hint: 'between cultures' }
+      ],
+      productionQuestion: 'Write about the advantages and challenges of moving abroad for work or study. Use at least four target phrases.',
+      sampleAnswer: 'People often relocate for better opportunities, but it can take time to settle in. Cross-cultural communication is essential, especially at work. Mobility can benefit individuals, although brain drain may harm some communities.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-16-decision-making',
+      order: 16,
+      stage: 'B2 PA.6',
+      title: 'Decision-making and problem solving',
+      topic: 'priorities, judgement and consequences',
+      description: 'Students practise vocabulary for explaining complex decisions and their consequences.',
+      focus: ['decisions', 'problem solving', 'judgement'],
+      words: [
+        { word: 'weigh up', meaning: 'consider different facts or options before deciding', sentence: 'We need to ___ the risks before signing the contract.', hint: 'consider carefully' },
+        { word: 'draw a conclusion', meaning: 'decide what is probably true after considering evidence', sentence: 'It is too early to ___ from one interview.', hint: 'decide from evidence' },
+        { word: 'take into account', meaning: 'consider something when making a decision', sentence: 'The plan should ___ local needs.', hint: 'consider' },
+        { word: 'unintended consequence', meaning: 'an unexpected result of an action or decision', sentence: 'The new rule had an ___: students asked fewer questions.', hint: 'unexpected result' },
+        { word: 'sound judgement', meaning: 'the ability to make sensible decisions', sentence: 'Leadership requires experience and ___.', hint: 'good decision-making' }
+      ],
+      productionQuestion: 'Write about a difficult decision. Use at least four target phrases.',
+      sampleAnswer: 'Before making the decision, we had to weigh up several risks. We took into account student feedback and teacher workload. One unintended consequence was that the process became slower, but overall the team showed sound judgement.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-17-advanced-phrasal-verbs',
+      order: 17,
+      stage: 'B2 PA.6',
+      title: 'Advanced phrasal verbs',
+      topic: 'natural phrasal verbs for discussion and work',
+      description: 'Students practise advanced phrasal verbs that appear in professional and academic conversation.',
+      focus: ['phrasal verbs', 'natural English', 'discussion'],
+      words: [
+        { word: 'bring up', meaning: 'mention a topic in conversation', sentence: 'She decided to ___ the budget problem during the meeting.', hint: 'mention' },
+        { word: 'look into', meaning: 'investigate or examine something', sentence: 'The team will ___ the cause of the error.', hint: 'investigate' },
+        { word: 'come up with', meaning: 'produce an idea, plan or solution', sentence: 'We need to ___ a more realistic timetable.', hint: 'produce an idea' },
+        { word: 'carry out', meaning: 'do or complete a task, plan or study', sentence: 'Researchers will ___ a larger survey next year.', hint: 'conduct' },
+        { word: 'rule out', meaning: 'decide that something is impossible or not suitable', sentence: 'We cannot ___ a technical fault yet.', hint: 'exclude' }
+      ],
+      productionQuestion: 'Write a meeting update using all five phrasal verbs.',
+      sampleAnswer: 'I want to bring up the delay in testing. The technical team will look into the issue and try to come up with a solution. We will carry out another check tomorrow, but we cannot rule out a server problem yet.'
+    },
+    {
+      id: 'b2-pre-advanced-vocabulary-18-pre-advanced-review',
+      order: 18,
+      stage: 'B2 PA review',
+      title: 'B2 Pre-Advanced vocabulary review',
+      topic: 'mixed precise vocabulary review',
+      minutes: 45,
+      description: 'Students review key B2 Pre-Advanced vocabulary for opinion, argument, work, society, technology and decision-making.',
+      focus: ['vocabulary review', 'precision', 'near-C1 production'],
+      words: [
+        { word: 'nuanced', meaning: 'showing small but important differences in meaning or opinion', sentence: 'A mature answer should be clear but also ___.', hint: 'carefully balanced' },
+        { word: 'evidence-based', meaning: 'supported by reliable information or research', sentence: 'Policy decisions should be ___.', hint: 'based on proof' },
+        { word: 'trade-off', meaning: 'a situation where you accept one disadvantage to get another benefit', sentence: 'There is always a ___ between cost and quality.', hint: 'balance of loss and gain' },
+        { word: 'resilience', meaning: 'the ability to recover after stress, difficulty or failure', sentence: 'Difficult projects can build professional ___.', hint: 'ability to recover' },
+        { word: 'take into account', meaning: 'consider something when making a decision', sentence: 'A good plan should ___ both user needs and budget limits.', hint: 'consider' }
+      ],
+      productionPrompt: 'Write a polished B2 Pre-Advanced paragraph using all five review words or phrases.',
+      productionQuestion: 'Write about a complex decision in education, work or technology. Use all five target items.',
+      sampleAnswer: 'A nuanced decision about educational technology must be evidence-based. Schools need to take into account cost, accessibility and teacher workload. There is a trade-off between innovation and simplicity, but the right choice can build resilience in both teachers and students.'
+    }
+  ].map(buildPreAdvancedVocabularyReadyLesson);
+
   const root = ensureReadyLessonsRoot();
   registerReadyLessonMeta(root);
   root.lessons.B2_PRE_ADVANCED = {
     ...(root.lessons.B2_PRE_ADVANCED || {}),
-    grammar: READY_GRAMMAR_LESSONS_B2_PRE_ADVANCED
+    grammar: READY_GRAMMAR_LESSONS_B2_PRE_ADVANCED,
+    vocabulary: READY_VOCABULARY_LESSONS_B2_PRE_ADVANCED
   };
 })();
