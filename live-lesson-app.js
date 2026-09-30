@@ -34,6 +34,11 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
     session: null,
     students: [],
     selectedStudentIds: [],
+    createSessionError: '',
+    creatingSession: false,
+    createRequestId: null,
+    roomError: '',
+    joiningRoom: false,
     title: '',
     room: null,
     connected: false,
@@ -361,7 +366,10 @@ const MESSAGES_TABLE = config.messagesTable || 'live_session_messages';
 
       .ell-student-checklist{display:grid;gap:10px;padding:10px;border:1px solid #d0d5dd;border-radius:12px;background:#fff;max-height:260px;overflow:auto}
       .ell-student-check{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid #eef2f6;border-radius:12px;background:#fbfdff;cursor:pointer}
-      .ell-student-check input{margin-top:3px;accent-color:#4EA9E7}
+      .ell-student-check.is-selected{border-color:#16a34a;background:#ecfdf3;box-shadow:inset 0 0 0 1px #16a34a}
+      .ell-student-check:focus-within{outline:2px solid #15803d;outline-offset:2px}
+      .ell-student-check input[type="checkbox"]{display:block;position:static;appearance:auto;opacity:1;width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;accent-color:#16a34a}
+      .ell-create-error{margin-top:12px;padding:12px 14px;border:1px solid #fecaca;border-radius:12px;background:#fef2f2;color:#b42318;font-size:14px;line-height:1.4}
       .ell-student-name{display:block;font-weight:700;color:#111213;font-size:14px;line-height:1.25}
       .ell-student-email{display:block;color:#667085;font-size:12px;line-height:1.35;margin-top:2px}
       .ell-remote-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:10px;background:#020617;overflow:auto}
@@ -639,55 +647,32 @@ root.innerHTML = `
       throw new Error('Choose at least one student first');
     }
 
-    const roomName = `evo-live-${crypto.randomUUID()}`;
-    const title = (state.title || '').trim() || 'Live lesson';
-
-    const { data, error } = await supabase
-      .from('live_sessions')
-      .insert({
-        teacher_id: state.user.id,
-        // Keep the first student for backward compatibility with older 1:1 logic.
-        student_id: selectedIds[0] || null,
-        room_name: roomName,
-        title,
-        status: 'scheduled',
-        starts_at: new Date().toISOString(),
-      })
-      .select('id, teacher_id, student_id, room_name, title, status, starts_at, ended_at, created_at, updated_at')
-      .single();
+    state.createRequestId = state.createRequestId || crypto.randomUUID();
+    const { data, error } = await supabase.rpc('evo_create_live_lesson', {
+      p_request_id: state.createRequestId,
+      p_student_ids: selectedIds,
+      p_title: (state.title || '').trim() || 'Live lesson',
+    }).single();
 
     if (error) throw error;
-
-    const participantRows = [
-      {
-        session_id: data.id,
-        user_id: state.user.id,
-        role: 'teacher',
-        status: 'invited',
-        is_present: false,
-      },
-      ...selectedIds.map((studentId) => ({
-        session_id: data.id,
-        user_id: studentId,
-        role: 'student',
-        status: 'invited',
-        is_present: false,
-      })),
-    ];
-
-    const { error: participantError } = await supabase
-      .from('live_session_participants')
-      .upsert(participantRows, { onConflict: 'session_id,user_id' });
-
-    if (participantError) throw participantError;
+    if (!data?.id) throw new Error('Could not confirm lesson creation. Please try again.');
 
     state.session = data;
+    state.createRequestId = null;
+    state.roomError = '';
     state.chatMessages = loadChatHistory();
-    await refreshPresenceBinding();
-    await refreshChatBinding();
+    // The lesson is already committed. Optional realtime setup must not report
+    // creation failure or encourage the teacher to create another lesson.
+    try {
+      await refreshPresenceBinding();
+      await refreshChatBinding();
+    } catch (err) {
+      console.error('[live-lesson] room setup error:', err);
+      state.roomError = 'The lesson was created. Chat or presence could not connect yet. You can still try joining the room.';
+    }
     trackEvent('create_live_lesson', {
       session_id: data.id,
-      participant_count: participantRows.length
+      participant_count: selectedIds.length + 1
     });
   }
 
@@ -977,7 +962,7 @@ function attachRemoteTrack(track, participant, publication) {
 
 async function joinRoom() {
   const supabase = window.supabase;
-  if (!supabase || !state.session) return;
+  if (!supabase || !state.session) throw new Error('The live lesson is not ready. Please try again.');
 
   if (!state.livekit) {
     state.livekit = await loadLiveKitClient();
@@ -1201,6 +1186,36 @@ async function toggleScreenShare() {
     mini.innerHTML = '';
   }
 
+  // Update the form in place so selection keeps keyboard focus and list scroll.
+  function syncTeacherCreateForm() {
+    const root = rootEl();
+    if (!root) return;
+
+    const selected = new Set(getSelectedStudentIds());
+    root.querySelectorAll('[data-student-check]').forEach((check) => {
+      check.checked = selected.has(check.value);
+      check.disabled = state.creatingSession;
+      check.closest('.ell-student-check')?.classList.toggle('is-selected', check.checked);
+    });
+
+    const count = root.querySelector('#ell-selected-count');
+    if (count) count.textContent = String(selected.size);
+
+    const error = root.querySelector('#ell-create-error');
+    if (error) {
+      error.textContent = state.createSessionError;
+      error.classList.toggle('ell-hidden', !state.createSessionError);
+    }
+
+    const button = root.querySelector('#ell-create-session');
+    if (button) {
+      button.disabled = state.creatingSession || !state.students.length;
+      button.textContent = state.creatingSession ? 'Creating...' : 'Create live lesson';
+    }
+    const title = root.querySelector('#ell-title-input');
+    if (title) title.disabled = state.creatingSession;
+  }
+
   function teacherCreateForm() {
     const selected = new Set(getSelectedStudentIds());
 
@@ -1211,8 +1226,8 @@ async function toggleScreenShare() {
           const checked = selected.has(student.id) ? 'checked' : '';
 
           return `
-            <label class="ell-student-check">
-              <input type="checkbox" data-student-check value="${escapeHtml(student.id)}" ${checked} />
+            <label class="ell-student-check${checked ? ' is-selected' : ''}">
+              <input type="checkbox" data-student-check value="${escapeHtml(student.id)}" ${checked} ${state.creatingSession ? 'disabled' : ''} />
               <span>
                 <span class="ell-student-name">${escapeHtml(name)}</span>
                 <span class="ell-student-email">${escapeHtml(email)}</span>
@@ -1228,16 +1243,48 @@ async function toggleScreenShare() {
         <div class="ell-student-checklist">
           ${studentChecks}
         </div>
-        <div class="ell-note">Selected: ${escapeHtml(String(selected.size))}. You can create a 1:1 lesson or a group lesson.</div>
+        <div class="ell-note">Selected: <span id="ell-selected-count">${escapeHtml(String(selected.size))}</span>. You can create a 1:1 lesson or a group lesson.</div>
       </div>
       <div class="ell-label-stack">
         <span>Lesson title</span>
-        <input class="ell-input" id="ell-title-input" placeholder="Live lesson" value="${escapeHtml(state.title)}" />
+        <input class="ell-input" id="ell-title-input" placeholder="Live lesson" value="${escapeHtml(state.title)}" ${state.creatingSession ? 'disabled' : ''} />
       </div>
       <div class="ell-actions">
-        <button class="ell-btn ell-btn-primary" type="button" id="ell-create-session" ${state.students.length ? '' : 'disabled'}>Create live lesson</button>
+        <button class="ell-btn ell-btn-primary" type="button" id="ell-create-session" aria-describedby="ell-create-error" ${state.students.length && !state.creatingSession ? '' : 'disabled'}>${state.creatingSession ? 'Creating...' : 'Create live lesson'}</button>
       </div>
+      <div id="ell-create-error" class="ell-create-error${state.createSessionError ? '' : ' ell-hidden'}" role="alert" aria-atomic="true">${escapeHtml(state.createSessionError)}</div>
     `;
+  }
+
+  function syncRoomFeedback() {
+    const root = rootEl();
+    if (!root) return;
+    const error = root.querySelector('#ell-room-error');
+    if (error) {
+      error.textContent = state.roomError;
+      error.classList.toggle('ell-hidden', !state.roomError);
+    }
+    const join = root.querySelector('#ell-join-room');
+    if (join) {
+      join.disabled = state.joiningRoom;
+      join.textContent = state.joiningRoom ? 'Joining...' : ROLE === 'teacher' ? 'Join live room' : 'Join lesson';
+    }
+    const end = root.querySelector('#ell-end-session');
+    if (end) end.disabled = state.joiningRoom;
+  }
+
+  async function roomErrorMessage(err) {
+    const status = err?.context?.status || err?.status;
+    if (status === 401 || err?.code === 'session_not_found') {
+      return 'Your sign-in session is no longer valid. Please log out and sign in again, then join this lesson.';
+    }
+    let detail = '';
+    try {
+      const body = await err?.context?.clone().json();
+      detail = body?.error || body?.message || '';
+    } catch (_) {}
+    if (status === 403) return detail || 'You do not have access to this live lesson.';
+    return detail || err?.message || 'Could not join the live room. Please try again.';
   }
 
   function stageControlsHtml() {
@@ -1248,8 +1295,8 @@ async function toggleScreenShare() {
     if (!state.connected) {
       return `
         <div class="ell-stage-controls">
-          <button class="ell-btn ell-btn-primary" type="button" id="ell-join-room">${ROLE === 'teacher' ? 'Join live room' : 'Join lesson'}</button>
-          ${canEnd ? `<button class="ell-btn ell-btn-danger" type="button" id="ell-end-session">End lesson</button>` : ''}
+          <button class="ell-btn ell-btn-primary" type="button" id="ell-join-room" aria-describedby="ell-room-error" ${state.joiningRoom ? 'disabled' : ''}>${state.joiningRoom ? 'Joining...' : ROLE === 'teacher' ? 'Join live room' : 'Join lesson'}</button>
+          ${canEnd ? `<button class="ell-btn ell-btn-danger" type="button" id="ell-end-session" ${state.joiningRoom ? 'disabled' : ''}>End lesson</button>` : ''}
         </div>
       `;
     }
@@ -1338,6 +1385,7 @@ function videoSection() {
 
           ${chatDrawerHtml()}
         </div>
+        <div id="ell-room-error" class="ell-create-error${state.roomError ? '' : ' ell-hidden'}" role="alert" aria-atomic="true">${escapeHtml(state.roomError)}</div>
       </div>
     </div>
   `;
@@ -1927,7 +1975,9 @@ root.innerHTML = `
             .filter((x) => x.checked)
             .map((x) => x.value)
             .filter(Boolean);
-          renderApp();
+          state.createSessionError = '';
+          state.createRequestId = null;
+          syncTeacherCreateForm();
         };
       });
     }
@@ -1935,40 +1985,44 @@ root.innerHTML = `
     if (titleInput) {
       titleInput.oninput = (e) => {
         state.title = e.target.value || '';
+        state.createRequestId = null;
       };
     }
 
     if (createBtn) {
       createBtn.onclick = async () => {
+        if (state.creatingSession) return;
+        state.createSessionError = '';
+        state.creatingSession = true;
+        syncTeacherCreateForm();
+
         try {
-          createBtn.disabled = true;
           await createSession();
           renderApp();
         } catch (err) {
-          renderAppMessage(err instanceof Error ? err.message : 'Failed to create live lesson', 'error');
+          state.createSessionError = err?.message || 'Failed to create live lesson';
         } finally {
-          createBtn.disabled = false;
+          state.creatingSession = false;
+          syncTeacherCreateForm();
         }
       };
     }
 
 if (joinBtn) {
   joinBtn.onclick = async () => {
-    const originalText = joinBtn.textContent;
+    if (state.joiningRoom) return;
+    state.joiningRoom = true;
+    state.roomError = '';
+    syncRoomFeedback();
 
     try {
-      joinBtn.disabled = true;
-      joinBtn.textContent = 'Joining...';
       await joinRoom();
     } catch (err) {
       console.error('[live-lesson] join room error:', err);
-      renderAppMessage(
-        err instanceof Error ? err.message : 'Could not join the live room.',
-        'error'
-      );
+      state.roomError = await roomErrorMessage(err);
     } finally {
-      joinBtn.disabled = false;
-      joinBtn.textContent = originalText;
+      state.joiningRoom = false;
+      syncRoomFeedback();
     }
   };
 }
@@ -1985,7 +2039,8 @@ if (joinBtn) {
           renderMini();
           renderApp();
         } catch (err) {
-          renderAppMessage(err instanceof Error ? err.message : 'Failed to end session', 'error');
+          state.roomError = err?.message || 'Failed to end session. Please try again.';
+          syncRoomFeedback();
         }
       };
     }
@@ -2045,12 +2100,15 @@ if (joinBtn) {
 
   async function refreshSessionAndRender() {
     try {
+      // Creation owns the new session until the atomic RPC returns.
+      if (state.creatingSession) return;
       const previousSessionId = state.session?.id || null;
       state.session = await fetchCurrentSession();
       const nextSessionId = state.session?.id || null;
 
     if (previousSessionId !== nextSessionId) {
   state.chatMessages = [];
+  state.roomError = '';
 }
 
       await refreshPresenceBinding();
