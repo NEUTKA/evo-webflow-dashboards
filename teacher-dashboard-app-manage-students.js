@@ -2638,7 +2638,7 @@ function renderStudentTemplateAnswers(assignment) {
               <span>Passage title</span>
               <input class="td-input" type="text" value="${escapeHtml(content.passage_title || '')}" data-role="tpl-passage-title" placeholder="For example: A Weekend at the Lake" />
             </label>
-            <div class="td-note" style="align-self:end;">Passage and questions are stored in the same schema_json object.</div>
+            <div class="td-note" style="align-self:end;">The student reads this passage before answering the questions.</div>
           </div>
 
           <div class="td-name" style="font-size:18px;">Passage</div>
@@ -3941,8 +3941,26 @@ function renderStudentTemplateAnswers(assignment) {
 function validateAiExerciseDraft(draft) {
   const errors = [];
   const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+  const type = draft?.template_type ?? 'grammar_dropdown';
+  const reading = type === 'reading_multiple_choice';
+  if (!['grammar_dropdown','reading_multiple_choice'].includes(type)) errors.push('Choose a supported exercise type.');
   for (const [key, max] of [['title', 160], ['topic', 160], ['instruction', 1000]]) {
     if (!text(draft?.[key], max)) errors.push(`Enter ${key} (up to ${max} characters).`);
+  }
+  if (reading) {
+    if (!text(draft.passage_title,160)) errors.push('Enter a passage title (up to 160 characters).');
+    const paragraphs = draft.passage_paragraphs;
+    if (!Array.isArray(paragraphs) || paragraphs.length < 1 || paragraphs.length > 6) errors.push('Enter 1–6 passage paragraphs.');
+    else {
+      const paragraphIds = new Set(); let total = 0;
+      paragraphs.forEach(p => {
+        if (!text(p?.id,40) || paragraphIds.has(p?.id)) errors.push('Use unique paragraph IDs.');
+        paragraphIds.add(p?.id);
+        if (!text(p?.text,1500)) errors.push('Enter each paragraph (up to 1500 characters).');
+        total += typeof p?.text === 'string' ? p.text.length : 0;
+      });
+      if (total > 4000) errors.push('Keep the passage under 4000 characters.');
+    }
   }
   if (!Array.isArray(draft?.questions) || draft.questions.length !== 5) {
     errors.push('Exactly 5 questions are required.');
@@ -3953,7 +3971,9 @@ function validateAiExerciseDraft(draft) {
     const prefix = `Question ${i + 1}: `;
     if (!q || !text(q.id, 40) || ids.has(q.id)) errors.push(prefix + 'use a unique question ID.');
     ids.add(q?.id);
-    if (!text(q?.sentence, 500) || (q.sentence.match(/___/g) || []).length !== 1 || q.sentence.replace('___', '').includes('_')) errors.push(prefix + 'use exactly one ___ gap.');
+    if (reading) {
+      if (!text(q?.question,500)) errors.push(prefix + 'enter a reading question (up to 500 characters).');
+    } else if (!text(q?.sentence, 500) || (q.sentence.match(/___/g) || []).length !== 1 || q.sentence.replace('___', '').includes('_')) errors.push(prefix + 'use exactly one ___ gap.');
     if (!text(q?.explanation, 1000)) errors.push(prefix + 'enter an explanation (up to 1000 characters).');
     if (!Array.isArray(q?.options) || q.options.length !== 3) { errors.push(prefix + 'exactly 3 options are required.'); return; }
     const optionIds = q.options.map(o => o?.id);
@@ -3965,9 +3985,11 @@ function validateAiExerciseDraft(draft) {
   return errors;
 }
 
-  // AI drafts use the existing grammar_dropdown editor and student assignment renderer.
+  // AI drafts use the existing Grammar and Reading editors and student renderers.
   function aiExerciseDraft(editor = state.templateEditor) {
-    return {title: editor.title, topic: editor.topic, instruction: editor.instruction, questions: cloneData(editor.schemaContent?.questions || [])};
+    const content = editor.schemaContent || {};
+    return {title: editor.title, topic: editor.topic, instruction: editor.instruction, questions: cloneData(content.questions || []),
+      ...(editor.templateType === 'reading_multiple_choice' ? {template_type:'reading_multiple_choice',passage_title:content.passage_title,passage_paragraphs:cloneData(content.passage_paragraphs || [])} : {})};
   }
 
   function handleAiExerciseNew() {
@@ -3981,7 +4003,7 @@ function validateAiExerciseDraft(draft) {
     if ((current?.title || current?.aiDraft?.generated) && !current?.aiDraft?.sent && !confirm('Start a new AI draft? Current editor changes will be discarded.')) return;
     resetTemplateEditor('grammar_dropdown');
     state.templateEditor.schemaContent = {questions:[]};
-    state.templateEditor.aiDraft = {prompt:'Present Simple, A1, 5 sentences with gaps, 3 answer options each', generated:false, reviewed:false, studentId:'', busy:false, error:'', sent:false, requestId:'', sentPayload:null};
+    state.templateEditor.aiDraft = {prompt:'', generated:false, reviewed:false, studentId:'', busy:false, error:'', sent:false, requestId:'', sentPayload:null};
     state.activeView = 'templates';
     state.templateEditorOpen = true;
     clearFlash();
@@ -3992,12 +4014,23 @@ function validateAiExerciseDraft(draft) {
     const editor = state.templateEditor;
     const ai = editor.aiDraft;
     const locked = ai.busy || !!ai.sentPayload || ai.sent;
+    const reading = editor.templateType === 'reading_multiple_choice';
     return `<div class="td-card" id="td-ai-panel">
       <style>#td-ai-panel fieldset{min-width:0;border:0;padding:0;margin:0}#td-ai-panel [data-action^="template-add-"],#td-ai-panel [data-action^="template-remove-"]{display:none}#td-ai-panel .td-repeat-row{grid-template-columns:1fr}#td-ai-panel .td-ai-check{display:flex;gap:10px;align-items:flex-start}#td-ai-panel .td-ai-check input{margin-top:4px;flex-shrink:0}</style>
-      <div class="td-head"><div class="td-kicker">AI exercise · Grammar Dropdown</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
+      <div class="td-head"><div class="td-kicker">AI exercise · ${reading ? 'Reading' : 'Grammar'}</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Choose type → Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
       <div class="td-body td-grid" aria-busy="${ai.busy}">
-        <fieldset ${locked ? 'disabled' : ''}><label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000">${escapeHtml(ai.prompt)}</textarea></label>
-          <div class="td-note">Describe the grammar topic, level and context. We automatically create 5 questions with 3 answer options each — no need to specify the format. Your draft stays in this tab until you send it.</div>
+        <fieldset ${locked ? 'disabled' : ''}>
+          <label class="td-label"><span>Exercise type</span><select class="td-select" id="td-ai-type"><option value="grammar_dropdown" ${reading ? '' : 'selected'}>Grammar — choose the answer for a gap</option><option value="reading_multiple_choice" ${reading ? 'selected' : ''}>Reading — text and comprehension questions</option></select></label>
+          <details class="td-note" open><summary><strong>What can I generate?</strong></summary>
+            <p><strong>Grammar:</strong> 5 sentences, one gap in each sentence and 3 answer options. Describe the grammar topic, level and context.</p>
+            <p><strong>Reading:</strong> an original English text, about 150–250 words depending on the level, and 5 comprehension questions with 3 answer options each. Describe the topic, level and audience. You can request facts, main ideas or simple inferences supported by the text.</p>
+            <p><strong>How to request:</strong> choose the type above, then write the topic, CEFR level (A1–C2) and language for instructions and explanations. Counts are automatic. You can write your request in your own language.</p>
+            <p><strong>Grammar example:</strong> Create an A2 exercise on Past Simple and Present Perfect about travel. Instructions and explanations in Russian.</p>
+            <p><strong>Reading example:</strong> Create an A2 reading exercise about a student visiting London for the first time. Use simple vocabulary. Instructions and explanations in Russian.</p>
+            <p><strong>Before sending:</strong> check and edit the draft, select a student, confirm that you reviewed it, then send. Reading text, questions and answer options are in English. Listening, writing, matching and other formats are not supported by this AI generator yet.</p>
+          </details>
+          <label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000" placeholder="${reading ? 'An A2 reading exercise about a first trip to London. Explanations in Russian.' : 'An A2 grammar exercise on Past Simple and Present Perfect. Explanations in Russian.'}">${escapeHtml(ai.prompt)}</textarea></label>
+          <div class="td-note">${reading ? 'The text and all 5 questions are generated together.' : 'We create 5 grammar questions.'} Each question has 3 answer options automatically. Your draft stays in this tab until you send it.</div>
           <div class="td-actions"><button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-generate">${ai.generated ? 'Generate a new draft' : 'Generate draft'}</button></div></fieldset>
         ${ai.busy ? '<div class="td-note" role="status">' + (ai.sentPayload ? 'Sending exercise…' : 'Creating your draft…') + '</div>' : ''}
         <div id="td-ai-error" class="${ai.error ? 'td-error' : 'td-note'}" role="alert">${escapeHtml(ai.error)}</div>
@@ -4032,8 +4065,19 @@ function validateAiExerciseDraft(draft) {
   function handleAiExerciseInput(target) {
     const ai = state.templateEditor?.aiDraft;
     if (!ai || !target) return false;
-    if (!['td-ai-prompt','td-ai-student','td-ai-reviewed'].includes(target.id)) return false;
+    if (!['td-ai-type','td-ai-prompt','td-ai-student','td-ai-reviewed'].includes(target.id)) return false;
     if (ai.busy || ai.sentPayload || ai.sent) return true;
+    if (target.id === 'td-ai-type') {
+      if (!['grammar_dropdown','reading_multiple_choice'].includes(target.value)) return true;
+      if (target.value === state.templateEditor.templateType) return true;
+      if (ai.generated && !confirm('Change exercise type? The current generated draft will be discarded.')) {target.value=state.templateEditor.templateType; return true;}
+      state.templateEditor.templateType=target.value;
+      state.templateEditor.schemaContent={questions:[]};
+      state.templateEditor.title=''; state.templateEditor.topic=''; state.templateEditor.instruction='';
+      ai.generated=false; ai.reviewed=false; ai.error=''; ai.requestId='';
+      renderDashboard();
+      return true;
+    }
     if (target.id === 'td-ai-prompt') ai.prompt = target.value;
     if (target.id === 'td-ai-student') ai.studentId = target.value;
     if (target.id === 'td-ai-reviewed') ai.reviewed = target.checked;
@@ -4045,7 +4089,7 @@ function validateAiExerciseDraft(draft) {
     const editor = state.templateEditor;
     if (!editor?.aiDraft || !target?.closest('#td-ai-panel')) return;
     editor.aiDraft.reviewed = false;
-    if (target.getAttribute('data-role') === 'tpl-option-text') {
+    if (['tpl-option-text','tpl-mc-option-text'].includes(target.getAttribute('data-role'))) {
       const qi = Number(target.getAttribute('data-qi'));
       const q = editor.schemaContent.questions[qi];
       const select = rootEl()?.querySelector(`[data-role="tpl-correct-option"][data-index="${qi}"]`);
@@ -4062,7 +4106,7 @@ function validateAiExerciseDraft(draft) {
         const messages = {
           AUTH_REQUIRED:'Sign in again before generating an exercise.', TEACHER_REQUIRED:'Only teachers can generate exercises.',
           NOT_CONFIGURED:'AI generation is not configured yet.', RATE_LIMITED:'Generation limit reached. Try again later.',
-          REFUSED:'AI declined this request. Try a different English grammar topic.', UNSUPPORTED_REQUEST:'Describe an English grammar topic and optionally a level. This version supports grammar exercises only; the exercise format is supplied automatically.',
+          REFUSED:'AI declined this request. Try a different topic for the selected exercise type.', UNSUPPORTED_REQUEST:'Describe a topic and level for the selected Grammar or Reading type. The exercise format is supplied automatically.',
           TIMEOUT:'Generation timed out. Your current draft is unchanged. Try again.', PROVIDER_BUSY:'AI is busy. Try again later.'
         };
         if (messages[body.code]) return messages[body.code];
@@ -4078,13 +4122,13 @@ function validateAiExerciseDraft(draft) {
     if (ai.generated && !confirm('Replace the current draft with a new generation?')) return;
     ai.busy=true; ai.error=''; renderDashboard();
     try {
-      const {data,error} = await window.supabase.functions.invoke('generate-teacher-exercise',{body:{prompt:ai.prompt.trim()}});
+      const {data,error} = await window.supabase.functions.invoke('generate-teacher-exercise',{body:{prompt:ai.prompt.trim(),template_type:editor.templateType}});
       if (state.templateEditor !== editor) return;
       if (error) { ai.error=await aiGenerationError(error); return; }
       const errors = validateAiExerciseDraft(data?.draft);
-      if (errors.length) { ai.error='AI returned an invalid exercise. Your current draft is unchanged. Try again.'; return; }
+      if (errors.length || (data?.draft?.template_type || 'grammar_dropdown') !== editor.templateType) { ai.error='AI returned an invalid exercise. Your current draft is unchanged. Try again.'; return; }
       editor.title=data.draft.title; editor.topic=data.draft.topic; editor.instruction=data.draft.instruction;
-      editor.schemaContent={questions:cloneData(data.draft.questions)};
+      editor.schemaContent={questions:cloneData(data.draft.questions),...(editor.templateType === 'reading_multiple_choice' ? {passage_title:data.draft.passage_title,passage_paragraphs:cloneData(data.draft.passage_paragraphs)} : {})};
       ai.generated=true; ai.reviewed=false;
     } catch (_) { if (state.templateEditor === editor) ai.error='Generation is unavailable. Your current draft is unchanged. Try again.'; }
     finally { ai.busy=false; if (state.templateEditor === editor) {renderDashboard(); syncAiExerciseControls();} }
