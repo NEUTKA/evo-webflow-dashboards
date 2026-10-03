@@ -3997,7 +3997,7 @@ function validateAiExerciseDraft(draft) {
       <div class="td-head"><div class="td-kicker">AI exercise · Grammar Dropdown</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
       <div class="td-body td-grid" aria-busy="${ai.busy}">
         <fieldset ${locked ? 'disabled' : ''}><label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000">${escapeHtml(ai.prompt)}</textarea></label>
-          <div class="td-note">This version creates exactly 5 English grammar questions, with 3 options and one ___ gap each. Your draft stays in this tab until you send it.</div>
+          <div class="td-note">Describe the grammar topic, level and context. We automatically create 5 questions with 3 answer options each — no need to specify the format. Your draft stays in this tab until you send it.</div>
           <div class="td-actions"><button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-generate">${ai.generated ? 'Generate a new draft' : 'Generate draft'}</button></div></fieldset>
         ${ai.busy ? '<div class="td-note" role="status">' + (ai.sentPayload ? 'Sending exercise…' : 'Creating your draft…') + '</div>' : ''}
         <div id="td-ai-error" class="${ai.error ? 'td-error' : 'td-note'}" role="alert">${escapeHtml(ai.error)}</div>
@@ -4062,7 +4062,7 @@ function validateAiExerciseDraft(draft) {
         const messages = {
           AUTH_REQUIRED:'Sign in again before generating an exercise.', TEACHER_REQUIRED:'Only teachers can generate exercises.',
           NOT_CONFIGURED:'AI generation is not configured yet.', RATE_LIMITED:'Generation limit reached. Try again later.',
-          REFUSED:'AI declined this request. Try a different English grammar topic.', UNSUPPORTED_REQUEST:'Request an English grammar exercise with 5 questions and 3 options each.',
+          REFUSED:'AI declined this request. Try a different English grammar topic.', UNSUPPORTED_REQUEST:'Describe an English grammar topic and optionally a level. This version supports grammar exercises only; the exercise format is supplied automatically.',
           TIMEOUT:'Generation timed out. Your current draft is unchanged. Try again.', PROVIDER_BUSY:'AI is busy. Try again later.'
         };
         if (messages[body.code]) return messages[body.code];
