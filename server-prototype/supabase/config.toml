@@ -1,0 +1,5 @@
+# Isolated prototype. Do not deploy without explicit approval.
+project_id = "ai-teacher-exercise-prototype"
+
+[functions.generate-teacher-exercise]
+verify_jwt = true

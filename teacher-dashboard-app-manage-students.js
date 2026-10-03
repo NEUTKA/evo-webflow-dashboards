@@ -2484,7 +2484,7 @@ function renderStudentTemplateAnswers(assignment) {
 
               <label class="td-label">
                 <span>Explanation</span>
-                <textarea class="td-textarea td-textarea-sm" data-role="tpl-question-explanation" data-index="${qi}" placeholder="Optional explanation">${escapeHtml(q.explanation || '')}</textarea>
+                <textarea class="td-textarea td-textarea-sm" data-role="tpl-question-explanation" data-index="${qi}" placeholder="${editor.aiDraft ? 'Required explanation' : 'Optional explanation'}">${escapeHtml(q.explanation || '')}</textarea>
               </label>
             </div>
           </div>
@@ -2994,6 +2994,7 @@ function renderStudentTemplateAnswers(assignment) {
         <div class="td-body">
           <div class="td-actions td-quick-actions">
             <button class="td-btn td-btn-primary" type="button" data-action="switch-view" data-view="assignments" data-open-composer="true">Create assignment</button>
+            <button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-new">Create with AI</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="weekly_plans">Plan week</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="students">Add student</button>
             <button class="td-btn td-btn-secondary" type="button" data-action="switch-view" data-view="templates">Open templates</button>
@@ -3937,7 +3938,194 @@ function renderStudentTemplateAnswers(assignment) {
     `;
   }
 
+function validateAiExerciseDraft(draft) {
+  const errors = [];
+  const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+  for (const [key, max] of [['title', 160], ['topic', 160], ['instruction', 1000]]) {
+    if (!text(draft?.[key], max)) errors.push(`Enter ${key} (up to ${max} characters).`);
+  }
+  if (!Array.isArray(draft?.questions) || draft.questions.length !== 5) {
+    errors.push('Exactly 5 questions are required.');
+    return errors;
+  }
+  const ids = new Set();
+  draft.questions.forEach((q, i) => {
+    const prefix = `Question ${i + 1}: `;
+    if (!q || !text(q.id, 40) || ids.has(q.id)) errors.push(prefix + 'use a unique question ID.');
+    ids.add(q?.id);
+    if (!text(q?.sentence, 500) || (q.sentence.match(/___/g) || []).length !== 1 || q.sentence.replace('___', '').includes('_')) errors.push(prefix + 'use exactly one ___ gap.');
+    if (!text(q?.explanation, 1000)) errors.push(prefix + 'enter an explanation (up to 1000 characters).');
+    if (!Array.isArray(q?.options) || q.options.length !== 3) { errors.push(prefix + 'exactly 3 options are required.'); return; }
+    const optionIds = q.options.map(o => o?.id);
+    if (new Set(optionIds).size !== 3 || optionIds.some(id => !['a','b','c'].includes(id))) errors.push(prefix + 'option IDs must be a, b and c.');
+    const values = q.options.map(o => typeof o?.text === 'string' ? o.text.trim().replace(/\s+/g, ' ').toLowerCase() : '');
+    if (q.options.some(o => !text(o?.text, 160)) || new Set(values).size !== 3) errors.push(prefix + 'enter 3 different, non-empty options (up to 160 characters).');
+    if (optionIds.filter(id => id === q.correct_option_id).length !== 1) errors.push(prefix + 'choose one correct answer.');
+  });
+  return errors;
+}
+
+  // AI drafts use the existing grammar_dropdown editor and student assignment renderer.
+  function aiExerciseDraft(editor = state.templateEditor) {
+    return {title: editor.title, topic: editor.topic, instruction: editor.instruction, questions: cloneData(editor.schemaContent?.questions || [])};
+  }
+
+  function handleAiExerciseNew() {
+    const current = state.templateEditor;
+    if (current?.aiDraft?.busy || current?.aiDraft?.sentPayload && !current.aiDraft.sent) {
+      state.activeView = 'templates';
+      setFlash('error', 'Finish or retry the current request before creating another exercise.');
+      renderDashboard();
+      return;
+    }
+    if ((current?.title || current?.aiDraft?.generated) && !current?.aiDraft?.sent && !confirm('Start a new AI draft? Current editor changes will be discarded.')) return;
+    resetTemplateEditor('grammar_dropdown');
+    state.templateEditor.schemaContent = {questions:[]};
+    state.templateEditor.aiDraft = {prompt:'Present Simple, A1, 5 sentences with gaps, 3 answer options each', generated:false, reviewed:false, studentId:'', busy:false, error:'', sent:false, requestId:'', sentPayload:null};
+    state.activeView = 'templates';
+    state.templateEditorOpen = true;
+    clearFlash();
+    renderDashboard();
+  }
+
+  function renderAiExerciseHtml() {
+    const editor = state.templateEditor;
+    const ai = editor.aiDraft;
+    const locked = ai.busy || !!ai.sentPayload || ai.sent;
+    return `<div class="td-card" id="td-ai-panel">
+      <style>#td-ai-panel fieldset{min-width:0;border:0;padding:0;margin:0}#td-ai-panel [data-action^="template-add-"],#td-ai-panel [data-action^="template-remove-"]{display:none}#td-ai-panel .td-repeat-row{grid-template-columns:1fr}#td-ai-panel .td-ai-check{display:flex;gap:10px;align-items:flex-start}#td-ai-panel .td-ai-check input{margin-top:4px;flex-shrink:0}</style>
+      <div class="td-head"><div class="td-kicker">AI exercise · Grammar Dropdown</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
+      <div class="td-body td-grid" aria-busy="${ai.busy}">
+        <fieldset ${locked ? 'disabled' : ''}><label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000">${escapeHtml(ai.prompt)}</textarea></label>
+          <div class="td-note">This version creates exactly 5 English grammar questions, with 3 options and one ___ gap each. Your draft stays in this tab until you send it.</div>
+          <div class="td-actions"><button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-generate">${ai.generated ? 'Generate a new draft' : 'Generate draft'}</button></div></fieldset>
+        ${ai.busy ? '<div class="td-note" role="status">' + (ai.sentPayload ? 'Sending exercise…' : 'Creating your draft…') + '</div>' : ''}
+        <div id="td-ai-error" class="${ai.error ? 'td-error' : 'td-note'}" role="alert">${escapeHtml(ai.error)}</div>
+        ${ai.sent ? '<div class="td-success" role="status">Exercise sent. The student can now open it in Assignments.</div><button class="td-btn td-btn-secondary" type="button" data-action="ai-exercise-new">Create another exercise</button>' : ''}
+        ${ai.generated ? `<fieldset ${locked ? 'disabled' : ''}>
+          <div class="td-note">Draft · ${ai.sent ? 'sent' : ai.sentPayload ? 'delivery unconfirmed' : 'not sent'}. Check the meaning and correct answer of every sentence.</div>
+          <div class="td-grid-2"><label class="td-label"><span>Title</span><input class="td-input" id="td-template-title-editor" maxlength="160" value="${escapeHtml(editor.title)}"></label><label class="td-label"><span>Topic</span><input class="td-input" id="td-template-topic-editor" maxlength="160" value="${escapeHtml(editor.topic)}"></label></div>
+          <label class="td-label"><span>Instructions</span><textarea class="td-textarea td-textarea-sm" id="td-template-instruction-editor" maxlength="1000">${escapeHtml(editor.instruction)}</textarea></label>
+          ${renderTemplateContentEditor(editor)}
+          <label class="td-label"><span>Student</span><select class="td-select" id="td-ai-student"><option value="">Choose student</option>${(state.students || []).map(s => `<option value="${escapeHtml(s.id)}" ${s.id === ai.studentId ? 'selected' : ''}>${escapeHtml(s.full_name || s.email || 'Student')}</option>`).join('')}</select></label>
+          <label class="td-ai-check"><input id="td-ai-reviewed" type="checkbox" ${ai.reviewed ? 'checked' : ''}><span>I have reviewed all 5 questions, correct answers and explanations.</span></label>
+        </fieldset>
+        ${ai.sentPayload && !ai.sent ? '<div class="td-note">This draft is locked for a safe retry. Retry the same send request to confirm delivery.</div>' : ''}
+        <div class="td-note" id="td-ai-validation" aria-live="polite"></div>
+        <button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-send" ${ai.busy || ai.sent || !ai.reviewed || !ai.studentId ? 'disabled' : ''}>${ai.sentPayload ? 'Retry send' : 'Send to student'}</button>` : ''}
+      </div></div>`;
+  }
+
+  function syncAiExerciseControls() {
+    const ai = state.templateEditor?.aiDraft;
+    if (!ai) return;
+    const errors = ai.generated ? validateAiExerciseDraft(aiExerciseDraft()) : [];
+    const root = rootEl();
+    const review = root?.querySelector('#td-ai-reviewed');
+    if (review) review.checked = ai.reviewed;
+    const send = root?.querySelector('[data-action="ai-exercise-send"]');
+    if (send) send.disabled = ai.busy || ai.sent || !ai.reviewed || !ai.studentId || !!errors.length;
+    const note = root?.querySelector('#td-ai-validation');
+    if (note) note.textContent = errors[0] || '';
+  }
+
+  function handleAiExerciseInput(target) {
+    const ai = state.templateEditor?.aiDraft;
+    if (!ai || !target) return false;
+    if (!['td-ai-prompt','td-ai-student','td-ai-reviewed'].includes(target.id)) return false;
+    if (ai.busy || ai.sentPayload || ai.sent) return true;
+    if (target.id === 'td-ai-prompt') ai.prompt = target.value;
+    if (target.id === 'td-ai-student') ai.studentId = target.value;
+    if (target.id === 'td-ai-reviewed') ai.reviewed = target.checked;
+    syncAiExerciseControls();
+    return true;
+  }
+
+  function invalidateAiExerciseReview(target) {
+    const editor = state.templateEditor;
+    if (!editor?.aiDraft || !target?.closest('#td-ai-panel')) return;
+    editor.aiDraft.reviewed = false;
+    if (target.getAttribute('data-role') === 'tpl-option-text') {
+      const qi = Number(target.getAttribute('data-qi'));
+      const q = editor.schemaContent.questions[qi];
+      const select = rootEl()?.querySelector(`[data-role="tpl-correct-option"][data-index="${qi}"]`);
+      if (select && q) Array.from(select.options).forEach((opt, i) => { opt.textContent = `${String.fromCharCode(65+i)} — ${q.options[i]?.text || 'Option'}`; });
+    }
+    syncAiExerciseControls();
+  }
+
+  async function aiGenerationError(error) {
+    try {
+      const context = error?.context;
+      if (context?.clone) {
+        const body = await context.clone().json();
+        const messages = {
+          AUTH_REQUIRED:'Sign in again before generating an exercise.', TEACHER_REQUIRED:'Only teachers can generate exercises.',
+          NOT_CONFIGURED:'AI generation is not configured yet.', RATE_LIMITED:'Generation limit reached. Try again later.',
+          REFUSED:'AI declined this request. Try a different English grammar topic.', UNSUPPORTED_REQUEST:'Request an English grammar exercise with 5 questions and 3 options each.',
+          TIMEOUT:'Generation timed out. Your current draft is unchanged. Try again.', PROVIDER_BUSY:'AI is busy. Try again later.'
+        };
+        if (messages[body.code]) return messages[body.code];
+      }
+    } catch (_) {}
+    return 'Could not generate an exercise. Your current draft is unchanged. Try again.';
+  }
+
+  async function handleAiExerciseGenerate() {
+    const editor = state.templateEditor; const ai = editor?.aiDraft;
+    if (!ai || ai.busy || ai.sentPayload || ai.sent) return;
+    if (!ai.prompt.trim() || ai.prompt.length > 1000) { ai.error='Enter a request of 1–1000 characters.'; renderDashboard(); return; }
+    if (ai.generated && !confirm('Replace the current draft with a new generation?')) return;
+    ai.busy=true; ai.error=''; renderDashboard();
+    try {
+      const {data,error} = await window.supabase.functions.invoke('generate-teacher-exercise',{body:{prompt:ai.prompt.trim()}});
+      if (state.templateEditor !== editor) return;
+      if (error) { ai.error=await aiGenerationError(error); return; }
+      const errors = validateAiExerciseDraft(data?.draft);
+      if (errors.length) { ai.error='AI returned an invalid exercise. Your current draft is unchanged. Try again.'; return; }
+      editor.title=data.draft.title; editor.topic=data.draft.topic; editor.instruction=data.draft.instruction;
+      editor.schemaContent={questions:cloneData(data.draft.questions)};
+      ai.generated=true; ai.reviewed=false;
+    } catch (_) { if (state.templateEditor === editor) ai.error='Generation is unavailable. Your current draft is unchanged. Try again.'; }
+    finally { ai.busy=false; if (state.templateEditor === editor) {renderDashboard(); syncAiExerciseControls();} }
+  }
+
+  async function handleAiExerciseSend() {
+    const editor = state.templateEditor; const ai = editor?.aiDraft;
+    if (!ai || ai.busy || ai.sent || !ai.generated || !ai.reviewed) return;
+    const errors = validateAiExerciseDraft(aiExerciseDraft(editor));
+    if (errors.length || !ai.studentId || !ai.sentPayload && !(state.students || []).some(s => s.id === ai.studentId)) {
+      ai.error=errors[0] || 'Choose an active linked student.'; renderDashboard(); return;
+    }
+    if (!ai.requestId) ai.requestId=crypto.randomUUID();
+    if (!ai.sentPayload) ai.sentPayload={p_request_id:ai.requestId,p_student_id:ai.studentId,p_draft:aiExerciseDraft(editor),p_reviewed:true};
+    ai.busy=true; ai.error=''; renderDashboard();
+    try {
+      const {data,error} = await window.supabase.rpc('evo_send_reviewed_ai_exercise',ai.sentPayload);
+      if (error || !data?.assignment_id) {
+        // A definite first-call rollback can be corrected. After a lost response,
+        // a later authorization error cannot prove that the first send failed.
+        const definiteErrors = ['42501','22023','PGRST202','42883'];
+        if (!ai.deliveryUncertain && definiteErrors.includes(error?.code)) {
+          ai.sentPayload=null; ai.requestId=''; ai.reviewed=false;
+          ai.error=error.code === 'PGRST202' || error.code === '42883'
+            ? 'Sending is not configured yet. Your draft is unchanged.'
+            : 'Sending was blocked. Check your teacher access, student selection and all questions, then review the draft again.';
+        } else {
+          ai.deliveryUncertain=true;
+          ai.error='Delivery could not be confirmed. Retry this same request to avoid duplicates.';
+        }
+        return;
+      }
+      ai.sent=true;
+      // Delivery has succeeded even if a separate dashboard refresh fails.
+      try { await fetchDashboardData(); } catch (_) { ai.error='Exercise sent. Reload the dashboard to refresh the assignment list.'; }
+    } catch (_) { ai.deliveryUncertain=true; ai.error='Delivery could not be confirmed. Retry this same request to avoid duplicates.'; }
+    finally { ai.busy=false; if (state.templateEditor === editor) renderDashboard(); }
+  }
+
   function renderTemplatesViewHtml() {
+    if (state.templateEditor?.aiDraft) return renderAiExerciseHtml();
     const editorOpen = !!state.templateEditorOpen || state.templateEditor?.mode === 'edit';
     return `
       <div class="td-card">
@@ -3945,6 +4133,7 @@ function renderStudentTemplateAnswers(assignment) {
           <div class="td-kicker">Templates</div>
           <h2 class="td-title" style="font-size:24px;">Templates</h2>
           <div class="td-sub">Use the library first. Open the editor only when you need to create or edit a template.</div>
+          <div class="td-actions" style="margin-top:12px;"><button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-new">Create with AI</button></div>
         </div>
         <div class="td-body">
           <div class="td-grid">
@@ -4573,6 +4762,7 @@ assignments = (assignmentsRows || []).map((a) => {
 
     state.flash = null;
     bindEvents();
+    syncAiExerciseControls();
   }
 
   function bindEvents() {
@@ -4628,6 +4818,20 @@ assignments = (assignmentsRows || []).map((a) => {
       }
 
       const action = button.getAttribute('data-action');
+
+      if (action === 'ai-exercise-new') { handleAiExerciseNew(); return; }
+      if (action === 'ai-exercise-library') {
+        const ai = state.templateEditor?.aiDraft;
+        if (!ai || ai.busy || ai.sentPayload && !ai.sent) return;
+        if (ai.generated && !ai.sent && !confirm('Discard this unsent draft and return to templates?')) return;
+        resetTemplateEditor('grammar_dropdown');
+        state.templateEditorOpen = false;
+        renderDashboard();
+        return;
+      }
+      if (action === 'ai-exercise-generate') { await handleAiExerciseGenerate(); return; }
+      if (action === 'ai-exercise-send') { await handleAiExerciseSend(); return; }
+      if (state.templateEditor?.aiDraft && action?.startsWith('template-')) return;
 
       if (action && action.startsWith('template-') && action !== 'template-archive') {
         state.templateEditorOpen = true;
@@ -4869,6 +5073,7 @@ assignments = (assignmentsRows || []).map((a) => {
     }, true);
 
     root.addEventListener('change', function (event) {
+      if (handleAiExerciseInput(event.target)) return;
       const templateEl = event.target.closest('#td-template-id');
       if (templateEl) {
         const templateId = templateEl.value;
@@ -4904,6 +5109,7 @@ assignments = (assignmentsRows || []).map((a) => {
       }
 
       if (handleTemplateEditorChange(event.target)) {
+        invalidateAiExerciseReview(event.target);
         return;
       }
 
@@ -4916,11 +5122,14 @@ assignments = (assignmentsRows || []).map((a) => {
     root.addEventListener('input', function (event) {
       const target = event.target;
 
+      if (handleAiExerciseInput(target)) return;
+
       if (handleReadyLessonDraftChange(target)) {
         return;
       }
 
       if (handleTemplateEditorInput(target)) {
+        invalidateAiExerciseReview(target);
         return;
       }
 
