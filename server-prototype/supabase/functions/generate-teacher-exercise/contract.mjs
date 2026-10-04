@@ -2,8 +2,9 @@ export function validateDraft(draft) {
   const errors = [];
   const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
   const type = draft?.template_type ?? 'grammar_dropdown';
-  const reading = type === 'reading_multiple_choice';
-  if (!['grammar_dropdown','reading_multiple_choice'].includes(type)) errors.push('Choose a supported exercise type.');
+  const reading = ['reading_multiple_choice','listening_multiple_choice'].includes(type);
+  const writing = type === 'writing_prompt';
+  if (!['grammar_dropdown','reading_multiple_choice','vocabulary_dropdown','listening_multiple_choice','writing_prompt'].includes(type)) errors.push('Choose a supported exercise type.');
   for (const [key, max] of [['title', 160], ['topic', 160], ['instruction', 1000]]) {
     if (!text(draft?.[key], max)) errors.push(`Enter ${key} (up to ${max} characters).`);
   }
@@ -31,10 +32,14 @@ export function validateDraft(draft) {
     const prefix = `Question ${i + 1}: `;
     if (!q || !text(q.id, 40) || ids.has(q.id)) errors.push(prefix + 'use a unique question ID.');
     ids.add(q?.id);
-    if (reading) {
-      if (!text(q?.question,500)) errors.push(prefix + 'enter a reading question (up to 500 characters).');
+    if (reading || writing) {
+      if (!text(q?.question,500)) errors.push(prefix + 'enter a question (up to 500 characters).');
     } else if (!text(q?.sentence, 500) || (q.sentence.match(/___/g) || []).length !== 1 || q.sentence.replace('___', '').includes('_')) errors.push(prefix + 'use exactly one ___ gap.');
     if (!text(q?.explanation, 1000)) errors.push(prefix + 'enter an explanation (up to 1000 characters).');
+    if (writing) {
+      if (!text(q?.model_answer,2000)) errors.push(prefix + 'enter a model answer (up to 2000 characters).');
+      return;
+    }
     if (!Array.isArray(q?.options) || q.options.length !== 3) { errors.push(prefix + 'exactly 3 options are required.'); return; }
     const optionIds = q.options.map(o => o?.id);
     if (new Set(optionIds).size !== 3 || optionIds.some(id => !['a','b','c'].includes(id))) errors.push(prefix + 'option IDs must be a, b and c.');
@@ -56,8 +61,15 @@ export const responseSchema = {
 };
 
 export function getResponseSchema(type) {
-  if (type === 'grammar_dropdown') return responseSchema;
-  if (type !== 'reading_multiple_choice') throw new Error('Unsupported exercise type');
+  if (['grammar_dropdown','vocabulary_dropdown'].includes(type)) return responseSchema;
+  if (type === 'writing_prompt') {
+    const writingQuestion = {type:'object',additionalProperties:false,required:['id','question','model_answer','explanation'],properties:{id:string,question:string,model_answer:string,explanation:string}};
+    return {type:'object',additionalProperties:false,required:['result'],properties:{result:{anyOf:[
+      {type:'object',additionalProperties:false,required:['kind','title','topic','instruction','questions'],properties:{kind:{type:'string',enum:['exercise']},title:string,topic:string,instruction:string,questions:{type:'array',minItems:5,maxItems:5,items:writingQuestion}}},
+      {type:'object',additionalProperties:false,required:['kind','reason'],properties:{kind:{type:'string',enum:['unsupported']},reason:string}}
+    ]}}};
+  }
+  if (!['reading_multiple_choice','listening_multiple_choice'].includes(type)) throw new Error('Unsupported exercise type');
   const readingQuestion = {type:'object',additionalProperties:false,required:['id','question','options','correct_option_id','explanation'],properties:{id:string,question:string,options:{type:'array',minItems:3,maxItems:3,items:option},correct_option_id:{type:'string',enum:['a','b','c']},explanation:string}};
   const paragraph = {type:'object',additionalProperties:false,required:['id','text'],properties:{id:string,text:string}};
   return {type:'object',additionalProperties:false,required:['result'],properties:{result:{anyOf:[

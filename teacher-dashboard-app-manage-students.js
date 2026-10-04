@@ -49,6 +49,8 @@
       category: 'reading',
       answerMode: 'multiple_choice'
     },
+    listening_multiple_choice: {label:'Listening Multiple Choice',category:'listening',answerMode:'multiple_choice'},
+    writing_prompt: {label:'Writing Prompts',category:'writing',answerMode:'writing'},
     reading_order: {
       label: 'Reading Order',
       category: 'reading',
@@ -1509,6 +1511,8 @@
   }
 
   function getInitialSchemaContent(type) {
+    if (type === 'writing_prompt') return {questions:Array.from({length:5},(_,i) => ({id:`q${i+1}`,question:'',model_answer:'',explanation:''}))};
+
     if (type === 'grammar_dropdown') {
       return {
         questions: [getBlankDropdownQuestion('q')]
@@ -1521,7 +1525,7 @@
       };
     }
 
-    if (type === 'reading_multiple_choice') {
+    if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       return {
         passage_title: '',
         passage_paragraphs: [getBlankParagraph()],
@@ -1612,7 +1616,7 @@
       normalizeReadingOrderContent(content);
     }
 
-    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'reading_multiple_choice') {
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       if (Array.isArray(content.questions)) {
         content.questions.forEach((q) => {
           if (Array.isArray(q.options) && q.options.length) {
@@ -1654,7 +1658,7 @@
       };
     }
 
-    if (type === 'reading_multiple_choice') {
+    if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       return {
         shuffle_questions: false,
         shuffle_options: false,
@@ -1726,6 +1730,7 @@
     const type = editor?.templateType;
     const content = editor?.schemaContent || {};
 
+    if (type === 'writing_prompt') errors.push(...validateAiExerciseDraft(aiExerciseDraft(editor)));
     if (!editor?.title?.trim()) {
       errors.push('Enter template title.');
     }
@@ -1780,7 +1785,7 @@
       });
     }
 
-    if (type === 'reading_multiple_choice') {
+    if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       if (!String(content.passage_title || '').trim()) {
         errors.push('Enter passage title.');
       }
@@ -1970,7 +1975,7 @@ function countTemplateItems(assignment) {
   if (type === 'grammar_lesson_pack') {
     return countReadyLessonContentItems(content);
   }
-  if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+  if (type === 'writing_prompt' || type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
     return Array.isArray(content.questions) ? content.questions.length : 0;
   }
   if (type === 'reading_order') {
@@ -1997,7 +2002,7 @@ function countAnsweredItems(assignment, answers) {
     return countReadyLessonAnsweredItems(content, answers);
   }
 
-  if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+  if (type === 'writing_prompt' || type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
     return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
   }
   if (type === 'reading_order') {
@@ -2199,10 +2204,14 @@ function renderStudentTemplateAnswers(assignment) {
       .join('');
   }
 
+  if (type === 'writing_prompt') {
+    itemsHtml = (content.questions || []).map((q,i) => `<div class="td-template-answer-item"><div class="td-template-answer-qtitle">Writing task ${i+1}</div><div class="td-template-answer-text">${escapeHtml(q.question || '')}</div><div class="td-label"><span>Student response</span></div>${renderAnswerValue(answers[q.id] || '')}<div class="td-label"><span>Model answer — teacher guidance</span></div>${renderAnswerValue(q.model_answer || '')}<div class="td-note">Assessment criteria: ${escapeHtml(q.explanation || '')}</div></div>`).join('');
+  }
+
   if (
     type === 'grammar_dropdown' ||
     type === 'vocabulary_dropdown' ||
-    type === 'reading_multiple_choice'
+    ['reading_multiple_choice','listening_multiple_choice'].includes(type)
   ) {
     const questions = content.questions || [];
     itemsHtml = questions.map((q, idx) => {
@@ -2429,6 +2438,10 @@ function renderStudentTemplateAnswers(assignment) {
     const type = editor.templateType;
     const content = editor.schemaContent || getInitialSchemaContent(type);
 
+    if (type === 'writing_prompt') {
+      return `<div class="td-note">Open-ended writing. Model answers and assessment guidance are for teacher review.</div>` + (content.questions || []).map((q, i) => `<div class="td-repeat-item"><div class="td-name">Writing task ${i+1}</div>${[['question','Writing prompt',500],['model_answer','Model answer (teacher guidance)',2000],['explanation','Assessment criteria',1000]].map(([field,label,max]) => `<label class="td-label"><span>${label}</span><textarea class="td-textarea" data-role="tpl-writing-field" data-index="${i}" data-field="${field}" maxlength="${max}">${escapeHtml(q[field] || '')}</textarea></label>`).join('')}</div>`).join('');
+    }
+
     if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown') {
       const questionsHtml = (content.questions || []).map((q, qi) => {
         const optionRows = (q.options || []).map((opt, oi) => `
@@ -2569,7 +2582,7 @@ function renderStudentTemplateAnswers(assignment) {
       `;
     }
 
-    if (type === 'reading_multiple_choice') {
+    if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       const paragraphsHtml = (content.passage_paragraphs || []).map((p, pi) => `
         <div class="td-repeat-item">
           <div class="td-repeat-head">
@@ -3942,8 +3955,9 @@ function validateAiExerciseDraft(draft) {
   const errors = [];
   const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max;
   const type = draft?.template_type ?? 'grammar_dropdown';
-  const reading = type === 'reading_multiple_choice';
-  if (!['grammar_dropdown','reading_multiple_choice'].includes(type)) errors.push('Choose a supported exercise type.');
+  const reading = ['reading_multiple_choice','listening_multiple_choice'].includes(type);
+  const writing = type === 'writing_prompt';
+  if (!['grammar_dropdown','reading_multiple_choice','vocabulary_dropdown','listening_multiple_choice','writing_prompt'].includes(type)) errors.push('Choose a supported exercise type.');
   for (const [key, max] of [['title', 160], ['topic', 160], ['instruction', 1000]]) {
     if (!text(draft?.[key], max)) errors.push(`Enter ${key} (up to ${max} characters).`);
   }
@@ -3971,10 +3985,14 @@ function validateAiExerciseDraft(draft) {
     const prefix = `Question ${i + 1}: `;
     if (!q || !text(q.id, 40) || ids.has(q.id)) errors.push(prefix + 'use a unique question ID.');
     ids.add(q?.id);
-    if (reading) {
-      if (!text(q?.question,500)) errors.push(prefix + 'enter a reading question (up to 500 characters).');
+    if (reading || writing) {
+      if (!text(q?.question,500)) errors.push(prefix + 'enter a question (up to 500 characters).');
     } else if (!text(q?.sentence, 500) || (q.sentence.match(/___/g) || []).length !== 1 || q.sentence.replace('___', '').includes('_')) errors.push(prefix + 'use exactly one ___ gap.');
     if (!text(q?.explanation, 1000)) errors.push(prefix + 'enter an explanation (up to 1000 characters).');
+    if (writing) {
+      if (!text(q?.model_answer,2000)) errors.push(prefix + 'enter a model answer (up to 2000 characters).');
+      return;
+    }
     if (!Array.isArray(q?.options) || q.options.length !== 3) { errors.push(prefix + 'exactly 3 options are required.'); return; }
     const optionIds = q.options.map(o => o?.id);
     if (new Set(optionIds).size !== 3 || optionIds.some(id => !['a','b','c'].includes(id))) errors.push(prefix + 'option IDs must be a, b and c.');
@@ -3985,11 +4003,12 @@ function validateAiExerciseDraft(draft) {
   return errors;
 }
 
-  // AI drafts use the existing Grammar and Reading editors and student renderers.
+
+  // AI drafts use the shared template editors and student renderers.
   function aiExerciseDraft(editor = state.templateEditor) {
     const content = editor.schemaContent || {};
-    return {title: editor.title, topic: editor.topic, instruction: editor.instruction, questions: cloneData(content.questions || []),
-      ...(editor.templateType === 'reading_multiple_choice' ? {template_type:'reading_multiple_choice',passage_title:content.passage_title,passage_paragraphs:cloneData(content.passage_paragraphs || [])} : {})};
+    return {template_type:editor.templateType,title: editor.title, topic: editor.topic, instruction: editor.instruction, questions: cloneData(content.questions || []),
+      ...(['reading_multiple_choice','listening_multiple_choice'].includes(editor.templateType) ? {passage_title:content.passage_title,passage_paragraphs:cloneData(content.passage_paragraphs || [])} : {})};
   }
 
   function handleAiExerciseNew() {
@@ -4014,34 +4033,38 @@ function validateAiExerciseDraft(draft) {
     const editor = state.templateEditor;
     const ai = editor.aiDraft;
     const locked = ai.busy || !!ai.sentPayload || ai.sent;
-    const reading = editor.templateType === 'reading_multiple_choice';
+    const reading = ['reading_multiple_choice','listening_multiple_choice'].includes(editor.templateType);
+    const writing = editor.templateType === 'writing_prompt';
+    const labels = {grammar_dropdown:'Grammar',reading_multiple_choice:'Reading',vocabulary_dropdown:'Vocabulary',listening_multiple_choice:'Listening',writing_prompt:'Writing'};
     return `<div class="td-card" id="td-ai-panel">
       <style>#td-ai-panel fieldset{min-width:0;border:0;padding:0;margin:0}#td-ai-panel [data-action^="template-add-"],#td-ai-panel [data-action^="template-remove-"]{display:none}#td-ai-panel .td-repeat-row{grid-template-columns:1fr}#td-ai-panel .td-ai-check{display:flex;gap:10px;align-items:flex-start}#td-ai-panel .td-ai-check input{margin-top:4px;flex-shrink:0}</style>
-      <div class="td-head"><div class="td-kicker">AI exercise · ${reading ? 'Reading' : 'Grammar'}</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Choose type → Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
+      <div class="td-head"><div class="td-kicker">AI exercise · ${labels[editor.templateType]}</div><h2 class="td-title">Create an exercise with AI</h2><div class="td-sub">Choose type → Describe → Review & edit → Send to student</div><button class="td-btn td-btn-secondary td-btn-compact" style="margin-top:12px" type="button" data-action="ai-exercise-library" ${ai.busy || ai.sentPayload && !ai.sent ? 'disabled' : ''}>Back to templates</button></div>
       <div class="td-body td-grid" aria-busy="${ai.busy}">
         <fieldset ${locked ? 'disabled' : ''}>
-          <label class="td-label"><span>Exercise type</span><select class="td-select" id="td-ai-type"><option value="grammar_dropdown" ${reading ? '' : 'selected'}>Grammar — choose the answer for a gap</option><option value="reading_multiple_choice" ${reading ? 'selected' : ''}>Reading — text and comprehension questions</option></select></label>
+          <label class="td-label"><span>Exercise type</span><select class="td-select" id="td-ai-type">${Object.entries(labels).map(([type,label]) => `<option value="${type}" ${type === editor.templateType ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
           <details class="td-note" open><summary><strong>What can I generate?</strong></summary>
             <p><strong>Grammar:</strong> 5 sentences, one gap in each sentence and 3 answer options. Describe the grammar topic, level and context.</p>
             <p><strong>Reading:</strong> an original English text, about 150–250 words depending on the level, and 5 comprehension questions with 3 answer options each. Describe the topic, level and audience. You can request facts, main ideas or simple inferences supported by the text.</p>
-            <p><strong>How to request:</strong> choose the type above, then write the topic, CEFR level (A1–C2) and language for instructions and explanations. Counts are automatic. You can write your request in your own language.</p>
-            <p><strong>Grammar example:</strong> Create an A2 exercise on Past Simple and Present Perfect about travel. Instructions and explanations in Russian.</p>
-            <p><strong>Reading example:</strong> Create an A2 reading exercise about a student visiting London for the first time. Use simple vocabulary. Instructions and explanations in Russian.</p>
-            <p><strong>Before sending:</strong> check and edit the draft, select a student, confirm that you reviewed it, then send. Reading text, questions and answer options are in English. Listening, writing, matching and other formats are not supported by this AI generator yet.</p>
+            <p><strong>Vocabulary:</strong> 5 sentences with a word gap and 3 options each.</p><p><strong>Listening:</strong> an original spoken text and 5 comprehension questions. Students play the text using an English browser voice. Check playback before sending.</p><p><strong>Writing:</strong> 5 open-ended prompts with model answers and assessment criteria for teacher review.</p>
+            <p><strong>How to request:</strong> choose the type above, then write the topic, CEFR level (A1–C2) and context. All exercise content, instructions and explanations are in English. Counts are automatic. You can write your request in your own language.</p>
+            <p><strong>Grammar example:</strong> Create an A2 exercise on Past Simple and Present Perfect about travel. Instructions and explanations in English.</p>
+            <p><strong>Reading example:</strong> Create an A2 reading exercise about a student visiting London for the first time. Use simple vocabulary. Instructions and explanations in English.</p>
+            <p><strong>Before sending:</strong> check and edit the draft, select a student, confirm that you reviewed it, then send. Reading text, questions and answer options are in English. Vocabulary, listening and writing are also supported. Writing responses require teacher review.</p>
           </details>
-          <label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000" placeholder="${reading ? 'An A2 reading exercise about a first trip to London. Explanations in Russian.' : 'An A2 grammar exercise on Past Simple and Present Perfect. Explanations in Russian.'}">${escapeHtml(ai.prompt)}</textarea></label>
-          <div class="td-note">${reading ? 'The text and all 5 questions are generated together.' : 'We create 5 grammar questions.'} Each question has 3 answer options automatically. Your draft stays in this tab until you send it.</div>
+          <label class="td-label"><span>Exercise request</span><textarea class="td-textarea" id="td-ai-prompt" maxlength="1000" placeholder="An A2 ${labels[editor.templateType].toLowerCase()} exercise about travel. All content in English.">${escapeHtml(ai.prompt)}</textarea></label>
+          <div class="td-note">${writing ? 'We create 5 open-ended writing prompts with teacher guidance.' : reading ? 'The text and all 5 questions are generated together, with 3 options per question.' : 'We create 5 gap questions with 3 options each.'} Your draft stays in this tab until you send it.</div>
           <div class="td-actions"><button class="td-btn td-btn-primary" type="button" data-action="ai-exercise-generate">${ai.generated ? 'Generate a new draft' : 'Generate draft'}</button></div></fieldset>
         ${ai.busy ? '<div class="td-note" role="status">' + (ai.sentPayload ? 'Sending exercise…' : 'Creating your draft…') + '</div>' : ''}
         <div id="td-ai-error" class="${ai.error ? 'td-error' : 'td-note'}" role="alert">${escapeHtml(ai.error)}</div>
         ${ai.sent ? '<div class="td-success" role="status">Exercise sent. The student can now open it in Assignments.</div><button class="td-btn td-btn-secondary" type="button" data-action="ai-exercise-new">Create another exercise</button>' : ''}
         ${ai.generated ? `<fieldset ${locked ? 'disabled' : ''}>
-          <div class="td-note">Draft · ${ai.sent ? 'sent' : ai.sentPayload ? 'delivery unconfirmed' : 'not sent'}. Check the meaning and correct answer of every sentence.</div>
+          <div class="td-note">Draft · ${ai.sent ? 'sent' : ai.sentPayload ? 'delivery unconfirmed' : 'not sent'}. Review every task, answer and explanation. For listening, check the script and playback.</div>
           <div class="td-grid-2"><label class="td-label"><span>Title</span><input class="td-input" id="td-template-title-editor" maxlength="160" value="${escapeHtml(editor.title)}"></label><label class="td-label"><span>Topic</span><input class="td-input" id="td-template-topic-editor" maxlength="160" value="${escapeHtml(editor.topic)}"></label></div>
           <label class="td-label"><span>Instructions</span><textarea class="td-textarea td-textarea-sm" id="td-template-instruction-editor" maxlength="1000">${escapeHtml(editor.instruction)}</textarea></label>
           ${renderTemplateContentEditor(editor)}
+          ${editor.templateType === 'listening_multiple_choice' ? '<button class="td-btn td-btn-secondary" type="button" data-action="ai-listening-preview">Preview audio</button><div class="td-note" id="td-listening-status" role="status"></div>' : ''}
           <label class="td-label"><span>Student</span><select class="td-select" id="td-ai-student"><option value="">Choose student</option>${(state.students || []).map(s => `<option value="${escapeHtml(s.id)}" ${s.id === ai.studentId ? 'selected' : ''}>${escapeHtml(s.full_name || s.email || 'Student')}</option>`).join('')}</select></label>
-          <label class="td-ai-check"><input id="td-ai-reviewed" type="checkbox" ${ai.reviewed ? 'checked' : ''}><span>I have reviewed all 5 questions, correct answers and explanations.</span></label>
+          <label class="td-ai-check"><input id="td-ai-reviewed" type="checkbox" ${ai.reviewed ? 'checked' : ''}><span>I have reviewed all 5 tasks and their answers or assessment guidance.</span></label>
         </fieldset>
         ${ai.sentPayload && !ai.sent ? '<div class="td-note">This draft is locked for a safe retry. Retry the same send request to confirm delivery.</div>' : ''}
         <div class="td-note" id="td-ai-validation" aria-live="polite"></div>
@@ -4068,7 +4091,7 @@ function validateAiExerciseDraft(draft) {
     if (!['td-ai-type','td-ai-prompt','td-ai-student','td-ai-reviewed'].includes(target.id)) return false;
     if (ai.busy || ai.sentPayload || ai.sent) return true;
     if (target.id === 'td-ai-type') {
-      if (!['grammar_dropdown','reading_multiple_choice'].includes(target.value)) return true;
+      if (!['grammar_dropdown','reading_multiple_choice','vocabulary_dropdown','listening_multiple_choice','writing_prompt'].includes(target.value)) return true;
       if (target.value === state.templateEditor.templateType) return true;
       if (ai.generated && !confirm('Change exercise type? The current generated draft will be discarded.')) {target.value=state.templateEditor.templateType; return true;}
       state.templateEditor.templateType=target.value;
@@ -4106,7 +4129,7 @@ function validateAiExerciseDraft(draft) {
         const messages = {
           AUTH_REQUIRED:'Sign in again before generating an exercise.', TEACHER_REQUIRED:'Only teachers can generate exercises.',
           NOT_CONFIGURED:'AI generation is not configured yet.', RATE_LIMITED:'Generation limit reached. Try again later.',
-          REFUSED:'AI declined this request. Try a different topic for the selected exercise type.', UNSUPPORTED_REQUEST:'Describe a topic and level for the selected Grammar or Reading type. The exercise format is supplied automatically.',
+          REFUSED:'AI declined this request. Try a different topic for the selected exercise type.', UNSUPPORTED_REQUEST:'Describe a topic and level for the selected exercise type. The exercise format is supplied automatically.',
           TIMEOUT:'Generation timed out. Your current draft is unchanged. Try again.', PROVIDER_BUSY:'AI is busy. Try again later.'
         };
         if (messages[body.code]) return messages[body.code];
@@ -4128,7 +4151,7 @@ function validateAiExerciseDraft(draft) {
       const errors = validateAiExerciseDraft(data?.draft);
       if (errors.length || (data?.draft?.template_type || 'grammar_dropdown') !== editor.templateType) { ai.error='AI returned an invalid exercise. Your current draft is unchanged. Try again.'; return; }
       editor.title=data.draft.title; editor.topic=data.draft.topic; editor.instruction=data.draft.instruction;
-      editor.schemaContent={questions:cloneData(data.draft.questions),...(editor.templateType === 'reading_multiple_choice' ? {passage_title:data.draft.passage_title,passage_paragraphs:cloneData(data.draft.passage_paragraphs)} : {})};
+      editor.schemaContent={questions:cloneData(data.draft.questions),...(['reading_multiple_choice','listening_multiple_choice'].includes(editor.templateType) ? {passage_title:data.draft.passage_title,passage_paragraphs:cloneData(data.draft.passage_paragraphs)} : {})};
       ai.generated=true; ai.reviewed=false;
     } catch (_) { if (state.templateEditor === editor) ai.error='Generation is unavailable. Your current draft is unchanged. Try again.'; }
     finally { ai.busy=false; if (state.templateEditor === editor) {renderDashboard(); syncAiExerciseControls();} }
@@ -4863,6 +4886,22 @@ assignments = (assignmentsRows || []).map((a) => {
 
       const action = button.getAttribute('data-action');
 
+      if (action === 'ai-listening-preview') {
+        const synth = window.speechSynthesis;
+        const voice = synth?.getVoices().find(v => /^en(?:-|_)/i.test(v.lang));
+        const status = rootEl()?.querySelector('#td-listening-status');
+        if (!synth || !voice || !window.SpeechSynthesisUtterance) {
+          if (status) status.textContent = 'English audio is unavailable. Wait a moment and try again, or use a browser with an English speech voice.';
+          return;
+        }
+        synth.cancel();
+        const utterance = new window.SpeechSynthesisUtterance((state.templateEditor.schemaContent.passage_paragraphs || []).map(p => p.text).join(' '));
+        utterance.lang=voice.lang; utterance.voice=voice; utterance.rate=0.85;
+        utterance.onstart=() => { if (status) status.textContent='Playing English audio…'; };
+        utterance.onend=() => { if (status) status.textContent='Playback finished.'; };
+        utterance.onerror=() => { if (status) status.textContent='Audio could not play. Try again.'; };
+        synth.speak(utterance); return;
+      }
       if (action === 'ai-exercise-new') { handleAiExerciseNew(); return; }
       if (action === 'ai-exercise-library') {
         const ai = state.templateEditor?.aiDraft;
@@ -5979,7 +6018,7 @@ assignments = (assignmentsRows || []).map((a) => {
       editor.schemaContent.questions.push(getBlankDropdownQuestion('q'));
     } else if (type === 'grammar_typed_gap_fill') {
       editor.schemaContent.questions.push(getBlankTypedGapQuestion());
-    } else if (type === 'reading_multiple_choice') {
+    } else if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       editor.schemaContent.questions.push(getBlankReadingMcQuestion());
     } else {
       return;
@@ -5992,7 +6031,7 @@ assignments = (assignmentsRows || []).map((a) => {
     const index = Number(button.getAttribute('data-index'));
     if (Number.isNaN(index)) return;
 
-    if (editor.templateType === 'grammar_dropdown' || editor.templateType === 'vocabulary_dropdown' || editor.templateType === 'grammar_typed_gap_fill' || editor.templateType === 'reading_multiple_choice') {
+    if (editor.templateType === 'grammar_dropdown' || editor.templateType === 'vocabulary_dropdown' || editor.templateType === 'grammar_typed_gap_fill' || ['reading_multiple_choice','listening_multiple_choice'].includes(editor.templateType)) {
       const list = editor.schemaContent.questions || [];
       if (list.length <= 1) {
         setFlash('error', 'At least one question is required.');
@@ -6256,6 +6295,12 @@ assignments = (assignmentsRows || []).map((a) => {
     const oi = Number(target.getAttribute('data-oi'));
     const ai = Number(target.getAttribute('data-ai'));
     const idx = Number(target.getAttribute('data-index'));
+
+    if (role === 'tpl-writing-field' && !Number.isNaN(idx)) {
+      const field = target.getAttribute('data-field');
+      if (['question','model_answer','explanation'].includes(field) && content.questions?.[idx]) content.questions[idx][field] = target.value || '';
+      return true;
+    }
 
     if (role === 'tpl-question-sentence' && !Number.isNaN(idx)) {
       content.questions[idx].sentence = target.value || '';
@@ -6940,6 +6985,8 @@ assignments = (assignmentsRows || []).map((a) => {
     loadTeacherDashboard();
   }
 
+  window.speechSynthesis?.getVoices();
+  window.addEventListener('beforeunload', () => window.speechSynthesis?.cancel());
   window.addEventListener('beforeunload', clearTeacherRealtime);
 
   if (window.__evoAllowTeacherApp) {

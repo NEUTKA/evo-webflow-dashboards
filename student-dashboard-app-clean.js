@@ -35,6 +35,8 @@
       category: 'reading',
       answerMode: 'multiple_choice'
     },
+    listening_multiple_choice: {label:'Listening Multiple Choice',category:'listening',answerMode:'multiple_choice'},
+    writing_prompt: {label:'Writing Prompts',category:'writing',answerMode:'writing'},
     reading_order: {
       label: 'Reading Order',
       category: 'reading',
@@ -664,7 +666,7 @@ function renderSimpleProgressText(assignment) {
     if (type === 'grammar_lesson_pack') {
       return countReadyLessonContentItems(content);
     }
-    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+    if (type === 'writing_prompt' || type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       return Array.isArray(content.questions) ? content.questions.length : 0;
     }
     if (type === 'reading_order') {
@@ -691,7 +693,7 @@ function renderSimpleProgressText(assignment) {
       return countReadyLessonAnsweredItems(content, answers);
     }
 
-    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || type === 'reading_multiple_choice') {
+    if (type === 'writing_prompt' || type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'grammar_typed_gap_fill' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       return (content.questions || []).filter((q) => q?.id && hasValue(q.id)).length;
     }
     if (type === 'reading_order') {
@@ -1036,8 +1038,12 @@ function renderSimpleProgressText(assignment) {
       }).join('');
     }
 
-    if (type === 'reading_multiple_choice') {
-      const passageHtml = `
+    if (type === 'writing_prompt') {
+      inner = '<div class="sd-note">Write your responses in English. Your teacher will review your writing.</div>' + (content.questions || []).map((q,i) => `<div class="sd-template-item"><div class="sd-template-qtitle">Writing task ${i+1}</div><div class="sd-template-text">${escapeHtml(q.question || '')}</div><label class="sd-label"><span>Your response</span><textarea class="sd-textarea" data-role="tpl-writing" data-qid="${escapeHtml(q.id)}" maxlength="10000">${escapeHtml(answers[q.id] || '')}</textarea></label></div>`).join('');
+    }
+
+    if (['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
+      const passageHtml = type === 'listening_multiple_choice' ? `<div class="sd-template-passages"><div class="sd-template-passage-title">${escapeHtml(content.passage_title || 'Listening')}</div><button class="sd-btn sd-btn-secondary" type="button" data-action="play-listening">Play audio</button><button class="sd-btn sd-btn-secondary" type="button" data-action="stop-listening">Stop audio</button><div class="sd-note" data-role="listening-status" role="status">Listen to the English audio, then answer the questions. Playback uses your browser’s English voice.</div></div>` : `
         <div class="sd-template-passages">
           ${content.passage_title ? `<div class="sd-template-passage-title">${escapeHtml(content.passage_title)}</div>` : ''}
           ${(content.passage_paragraphs || []).map((p) => `<p class="sd-template-passage-p">${escapeHtml(p.text || '')}</p>`).join('')}
@@ -1180,7 +1186,14 @@ function renderSimpleProgressText(assignment) {
       });
     }
 
-    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || type === 'reading_multiple_choice') {
+    if (type === 'writing_prompt') {
+      card.querySelectorAll('[data-role="tpl-writing"]').forEach(el => {
+        const qid = el.getAttribute('data-qid');
+        if (qid && el.value.trim()) answers[qid] = el.value.trim();
+      });
+    }
+
+    if (type === 'grammar_dropdown' || type === 'vocabulary_dropdown' || ['reading_multiple_choice','listening_multiple_choice'].includes(type)) {
       card.querySelectorAll('[data-role="tpl-choice"]').forEach((el) => {
         const qid = el.getAttribute('data-qid');
         if (!qid) return;
@@ -2240,6 +2253,26 @@ function bindEvents() {
 
     const action = button.getAttribute('data-action');
     const card = button.closest('[data-assignment-id]');
+    if (action === 'stop-listening') { window.speechSynthesis?.cancel(); return; }
+    if (action === 'play-listening') {
+      const assignment = (state.assignments || []).find(a => a.id === card?.getAttribute('data-assignment-id'));
+      const content = getAssignmentTemplateSchema(assignment)?.content || {};
+      const status = card?.querySelector('[data-role="listening-status"]');
+      const synth = window.speechSynthesis;
+      const voice = synth?.getVoices().find(v => /^en(?:-|_)/i.test(v.lang));
+      if (!synth || !window.SpeechSynthesisUtterance || !voice) {
+        if (status) status.textContent = 'English audio is unavailable. Wait a moment and try again, or use a browser with an English speech voice. Ask your teacher if playback still fails.';
+        return;
+      }
+      synth.cancel();
+      const utterance = new window.SpeechSynthesisUtterance((content.passage_paragraphs || []).map(p => p.text).join(' '));
+      utterance.lang = voice.lang; utterance.voice = voice; utterance.rate = 0.85;
+      utterance.onstart = () => { if (status) status.textContent = 'Playing English audio…'; };
+      utterance.onend = () => { if (status) status.textContent = 'Playback finished. You can listen again.'; };
+      utterance.onerror = () => { if (status) status.textContent = 'Audio could not play. Try again or ask your teacher.'; };
+      synth.speak(utterance); return;
+    }
+
     if (!card) return;
 
     const assignmentId = card.getAttribute('data-assignment-id');
@@ -2260,7 +2293,7 @@ function bindEvents() {
 
   root.addEventListener('input', function (event) {
     const target = event.target;
-    if (!target?.matches?.('[data-role="answer"], [data-role="tpl-gap"]')) return;
+    if (!target?.matches?.('[data-role="answer"], [data-role="tpl-gap"], [data-role="tpl-writing"]')) return;
 
     const card = target.closest('[data-assignment-id]');
     const assignmentId = card?.getAttribute('data-assignment-id');
@@ -2624,6 +2657,8 @@ if (!hasStudentModeAccess) {
     }
   }
 
+  window.speechSynthesis?.getVoices();
+  window.addEventListener('beforeunload', () => window.speechSynthesis?.cancel());
   window.addEventListener('beforeunload', clearStudentRealtime);
 
   if (document.readyState === 'loading') {
